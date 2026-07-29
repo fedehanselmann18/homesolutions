@@ -8,14 +8,17 @@ import { getCategorias } from "../services/categoriaService";
 import { getTipoProducto } from "../constants/tipoProducto";
 import { calcularResumenProveedor, rubroPrincipal } from "../utils/proveedores";
 import useAuth from "../context/useAuth";
+import { useToast } from "../context/useToast";
 
 import ProveedorCard from "../components/proveedores/ProveedorCard";
 import ModalProveedor from "../components/modals/ModalProveedor";
+import { Cargando } from "../components/shared/Cargando";
 import "./Proveedores.css";
 
 export function Proveedores() {
     const { usuario } = useAuth();
     const canManage = usuario?.rol === "admin";
+    const toast = useToast();
 
     const {
         proveedores,
@@ -89,12 +92,17 @@ export function Proveedores() {
     };
 
     const handleGuardar = async (datos) => {
-        if (proveedorSeleccionado) {
-            await editarProveedor(proveedorSeleccionado.id, datos);
-        } else {
-            await agregarProveedor(datos);
+        try {
+            if (proveedorSeleccionado) {
+                await editarProveedor(proveedorSeleccionado.id, datos);
+            } else {
+                await agregarProveedor(datos);
+            }
+            cerrarModal();
+        } catch (err) {
+            console.error("Error guardando proveedor:", err);
+            toast.error("No se pudo guardar el proveedor.");
         }
-        cerrarModal();
     };
 
     const handleEliminar = async (proveedor) => {
@@ -102,10 +110,11 @@ export function Proveedores() {
             await borrarProveedor(proveedor.id);
         } catch (err) {
             console.error("Error eliminando proveedor:", err);
+            toast.error("No se pudo eliminar el proveedor.");
         }
     };
 
-    if (loading) return <p>Cargando proveedores...</p>;
+    if (loading) return <Cargando texto="Cargando proveedores..." />;
     if (error) return <p>Error al cargar los proveedores.</p>;
 
     return (

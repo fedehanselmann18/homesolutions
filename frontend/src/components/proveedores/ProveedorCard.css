@@ -2,33 +2,35 @@
 
 .proveedor-card {
     position: relative;
-    background-color: #fff;
-    border: 0.5px solid #e0ded4;
-    border-radius: 10px;
-    padding: 0.9rem 1.1rem;
-    font-family: "Public Sans", sans-serif;
+    background-color: var(--color-superficie);
+    border: 1px solid var(--color-linea);
+    border-radius: var(--radius-sm);
+    padding: var(--space-4);
+    font-family: var(--font-ui);
     cursor: pointer;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 8px;
 }
 
 .proveedor-card:hover {
-    border-color: #c9c6b8;
+    border-color: var(--color-tinta);
+    background-color: var(--color-base-1);
 }
 
 .proveedor-card:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 2px rgba(111, 127, 69, 0.3);
+    outline: 2px solid var(--color-terracota);
+    outline-offset: -2px;
 }
 
 .proveedor-card__nombre {
+    font-family: var(--font-display);
     font-weight: 600;
-    font-size: 1rem;
+    font-size: 1.05rem;
     margin: 0;
-    color: #2f2f2f;
+    color: var(--color-tinta);
     padding-right: 60px;
 }
 
@@ -36,24 +38,24 @@
     width: fit-content;
     font-size: 0.72rem;
     font-weight: 600;
-    color: #6F7F45;
-    background-color: rgba(111, 127, 69, 0.1);
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
+    color: var(--color-musgo-dark);
+    background-color: var(--color-musgo-tint);
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
 }
 
 .proveedor-card__contacto {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 4px;
     font-size: 0.8rem;
-    color: #666;
+    color: var(--color-tinta-muted);
 }
 
 .proveedor-card__contacto span {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 6px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -61,41 +63,42 @@
 
 .proveedor-card__contacto svg {
     flex-shrink: 0;
-    color: #999;
+    color: var(--color-tinta-muted);
 }
 
 .proveedor-card__productos {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 6px;
     font-size: 0.8rem;
-    color: #666;
+    color: var(--color-tinta-muted);
 }
 
 .proveedor-card__productos svg {
-    color: #999;
+    color: var(--color-tinta-muted);
     flex-shrink: 0;
 }
 
 .proveedor-card__footer {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-    border-top: 0.5px solid #eee;
-    padding-top: 0.65rem;
-    margin-top: 0.15rem;
+    gap: var(--space-3);
+    border-top: 1px solid var(--color-linea);
+    padding-top: 10px;
+    margin-top: 2px;
 }
 
 .proveedor-card__metrica {
     display: flex;
     flex-direction: column;
-    gap: 0.1rem;
+    gap: 2px;
     min-width: 0;
 }
 
 .proveedor-card__metrica-label {
     font-size: 0.68rem;
-    color: #999;
+    font-weight: 600;
+    color: var(--color-tinta-muted);
     text-transform: uppercase;
     letter-spacing: 0.02em;
 }
@@ -103,7 +106,7 @@
 .proveedor-card__metrica-valor {
     font-size: 0.9rem;
     font-weight: 700;
-    color: #2f2f2f;
+    color: var(--color-tinta);
     font-variant-numeric: tabular-nums;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -117,14 +120,12 @@
     display: flex;
     gap: 4px;
     opacity: 0;
-    transform: translateY(-2px);
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    transition: opacity 0.15s ease;
 }
 
 .proveedor-card:hover .proveedor-card__acciones-flotantes,
 .proveedor-card:focus-within .proveedor-card__acciones-flotantes {
     opacity: 1;
-    transform: translateY(0);
 }
 
 .proveedor-card__acciones-flotantes button {
@@ -133,24 +134,27 @@
     justify-content: center;
     width: 26px;
     height: 26px;
-    border: none;
-    border-radius: 6px;
-    background-color: #f7f7f2;
-    color: #888;
+    border: 1px solid var(--color-linea);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-superficie);
+    color: var(--color-tinta-muted);
     cursor: pointer;
-    transition: background-color 0.15s ease, color 0.15s ease;
+    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .proveedor-card__acciones-flotantes button:hover {
-    background-color: #ececE0;
-    color: #444;
+    background-color: var(--color-base-2);
+    color: var(--color-tinta);
+    border-color: var(--color-tinta);
 }
 
 .proveedor-card__btn-eliminar {
-    color: #c99 !important;
+    color: var(--color-oxido) !important;
+    border-color: var(--color-oxido-tint) !important;
 }
 
 .proveedor-card__btn-eliminar:hover {
-    background-color: rgba(197, 68, 68, 0.1) !important;
-    color: #c54444 !important;
+    background-color: var(--color-oxido-tint) !important;
+    border-color: var(--color-oxido) !important;
+    color: var(--color-oxido) !important;
 }

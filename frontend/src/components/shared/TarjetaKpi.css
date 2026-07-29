@@ -1,38 +1,37 @@
-/* TarjetaKpi.css -- tarjeta de número grande + barra de progreso, compartida
-   entre el Panel y el Análisis General. */
+/* TarjetaKpi.css -- número grande + barra de progreso, compartida en toda
+   la app. Sin card/sombra: es texto con jerarquía, separado por reglas a
+   nivel del contenedor que la usa (ver .panel-kpis, .analisis-kpis, etc). */
 
 .kpi {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
-    background-color: #fff;
-    border: 1px solid #e5e5e0;
-    border-radius: 12px;
-    padding: 1.1rem 1.25rem;
-    font-family: "Public Sans", sans-serif;
+    gap: 6px;
+    padding: 0;
+    font-family: var(--font-ui);
 }
 
-/* Variante sin caja, para usarla adentro de otra tarjeta */
+/* Variante sin caja, para usarla adentro de otro bloque (idéntica al
+   default hoy que el default tampoco tiene caja; se conserva la clase
+   para no tocar los componentes que la usan). */
 .kpi--plano {
-    border: none;
-    background-color: transparent;
-    padding: 0 0 0.75rem;
-    gap: 0.15rem;
+    gap: 4px;
 }
 
 .kpi-titulo {
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    color: #888;
+    color: var(--color-tinta-muted);
     text-transform: uppercase;
     letter-spacing: 0.03em;
 }
 
 .kpi-valor {
-    font-size: 1.65rem;
-    font-weight: 700;
-    color: #2f2f2f;
+    font-family: var(--font-display);
+    font-size: 1.7rem;
+    font-weight: 600;
+    color: var(--color-tinta);
     line-height: 1.15;
+    font-variant-numeric: tabular-nums;
 }
 
 .kpi-valor--destacado {
@@ -41,18 +40,18 @@
 
 .kpi-detalle {
     font-size: 0.8rem;
-    color: #777;
+    color: var(--color-tinta-muted);
 }
 
 .kpi-progreso {
-    height: 8px;
-    border-radius: 999px;
-    background-color: #f0f0eb;
+    height: 6px;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-base-2);
     overflow: hidden;
 }
 
 .kpi-progreso-relleno {
     height: 100%;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     transition: width 0.25s ease;
 }

@@ -4,8 +4,8 @@ import useAuth from "../../context/useAuth";
 import { formatMoneda } from "../../utils/formato";
 import "./ProveedorCard.css";
 
-const VERDE = "#6F7F45";
-const ROJO = "#DC2626";
+const VERDE = "#16a34a";
+const ROJO = "#dc2626";
 
 export function ProveedorCard({ proveedor, rubro, cantidadProductos, totalComprado, deuda, onEditar, onEliminar }) {
     const navigate = useNavigate();

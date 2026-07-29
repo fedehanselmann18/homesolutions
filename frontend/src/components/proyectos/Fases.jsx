@@ -9,6 +9,7 @@ import ModalFase from "../modals/ModalFase";
 import FaseCard from "./fases/FaseCard";
 import "./Fases.css";
 import useAuth from "../../context/useAuth";
+import { useToast } from "../../context/useToast";
 import { ESTADO_LABELS } from "../../constants/estados";
 
 // Orden fijo: en curso primero, después por empezar, y terminadas (incluye
@@ -22,6 +23,7 @@ const SECCIONES = [
 export function Fases({ proyectoId }) {
     const { usuario } = useAuth();
     const canManage = usuario?.rol === "admin";
+    const toast = useToast();
     const [fases, setFases] = useState([]);
     const [modalAbierto, setModalAbierto] = useState(false);
     const [faseEditando, setFaseEditando] = useState(null);
@@ -61,6 +63,7 @@ export function Fases({ proyectoId }) {
             fetchProyectoFases();
         } catch (error) {
             console.error("Error guardando fase:", error);
+            toast.error("No se pudo guardar la fase.");
         }
     };
 
@@ -70,6 +73,7 @@ export function Fases({ proyectoId }) {
             fetchProyectoFases();
         } catch (error) {
             console.error("Error eliminando fase:", error);
+            toast.error("No se pudo eliminar la fase.");
         }
     };
 
@@ -86,7 +90,7 @@ export function Fases({ proyectoId }) {
                 SECCIONES.map(({ key, titulo, estados }) => {
                     const fasesDeLaSeccion = fases.filter((f) => estados.includes(f.estado));
                     if (fasesDeLaSeccion.length === 0) return null;
-                    const color = ESTADO_LABELS[estados[0]]?.color ?? "#94A3B8";
+                    const color = ESTADO_LABELS[estados[0]]?.color ?? "#6b7280";
 
                     return (
                         <section key={key} className="fases-seccion" aria-label={titulo}>

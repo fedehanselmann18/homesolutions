@@ -11,14 +11,16 @@ import { getProveedores } from "../../services/proveedorService";
 
 import { TarjetaAlerta } from "../shared/TarjetaAlerta";
 import { TarjetaKpi } from "../shared/TarjetaKpi";
+import { Cargando } from "../shared/Cargando";
 import { calcularSeguimiento, DIAS_FASE_ESTANCADA } from "../../utils/seguimiento";
 import { formatMoneda, formatFecha } from "../../utils/formato";
+import { getCondicionPagoLabel } from "../../constants/estadoCompra";
 import "./Seguimiento.css";
 
-const VERDE = "#6F7F45";
-const ROJO = "#DC2626";
-const NARANJA = "#D97706";
-const GRIS = "#94A3B8";
+const VERDE = "#16a34a";
+const ROJO = "#dc2626";
+const NARANJA = "#d97706";
+const GRIS = "#64748b";
 
 const diasTexto = (dias) => `hace ${dias} ${dias === 1 ? "día" : "días"}`;
 
@@ -74,7 +76,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
 
     const seguimiento = useMemo(() => (datos ? calcularSeguimiento(datos) : null), [datos]);
 
-    if (cargando) return <p className="seguimiento-vacio">Cargando seguimiento...</p>;
+    if (cargando) return <Cargando texto="Cargando seguimiento..." />;
     if (error || !seguimiento) {
         return <p className="seguimiento-vacio">No se pudieron cargar los datos del seguimiento.</p>;
     }
@@ -149,7 +151,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                                 icono={Wallet}
                                 color={ROJO}
                                 titulo={compra.proveedor}
-                                detalle={`${compra.productos} · comprado el ${formatFecha(compra.fecha)}`}
+                                detalle={`${compra.productos} · comprado el ${formatFecha(compra.fecha)} · ${getCondicionPagoLabel(compra.condicionPago)}`}
                                 monto={formatMoneda(compra.monto)}
                                 extra={diasTexto(compra.dias)}
                                 onClick={irAAcciones}

@@ -1,32 +1,37 @@
 .proyecto-detalle {
-    font-family: "Public Sans", sans-serif;
+    font-family: var(--font-ui);
 }
 
+/* Pestañas de carpeta: la activa "se despega" de la línea para leerse
+   conectada al contenido de abajo, en vez de un grupo de botones pill. */
 .tabs {
     display: flex;
-    gap: 0.6rem;
-    margin: 1.5rem 0;
+    gap: 2px;
+    margin: var(--space-6) 0 0;
+    border-bottom: 1px solid var(--color-linea);
 }
 
 .tabs button {
-    font-family: inherit;
-    font-size: 0.9rem;
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
     font-weight: 600;
-    padding: 0.55rem 1.1rem;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    background-color: #fff;
-    color: #444;
+    padding: 10px 20px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    background-color: transparent;
+    color: var(--color-tinta-muted);
     cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    margin-bottom: -1px;
+    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .tabs button:hover {
-    border-color: #6F7F45;
+    color: var(--color-tinta);
 }
 
 .tabs button.active {
-    background-color: #6F7F45;
-    border-color: #6F7F45;
-    color: #fff;
+    background-color: var(--color-base-1);
+    border-color: var(--color-linea);
+    border-bottom-color: var(--color-base-1);
+    color: var(--color-terracota-dark);
 }

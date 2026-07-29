@@ -1,86 +1,87 @@
 /* Seguimiento.css -- pestaña Seguimiento del detalle de proyecto.
-   Las filas de alerta viven en components/shared/TarjetaAlerta.css */
+   Secciones separadas por línea, no por caja con sombra. Las filas de
+   alerta viven en components/shared/TarjetaAlerta.css */
 
 .seguimiento {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
-    font-family: "Public Sans", sans-serif;
+    gap: var(--space-8);
+    font-family: var(--font-ui);
 }
 
 .seguimiento-resumen {
     display: flex;
     align-items: baseline;
-    gap: 0.6rem;
-    background-color: #fff;
-    border: 1px solid #e5e5e0;
-    border-radius: 12px;
-    padding: 1.1rem 1.25rem;
+    gap: var(--space-3);
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--color-linea);
+    border-bottom: 1px solid var(--color-linea);
 }
 
 .seguimiento-resumen-valor {
+    font-family: var(--font-display);
     font-size: 2rem;
-    font-weight: 700;
-    color: #2f2f2f;
+    font-weight: 600;
+    color: var(--color-tinta);
     line-height: 1;
 }
 
 .seguimiento-resumen-texto {
     font-size: 0.9rem;
-    color: #777;
+    color: var(--color-tinta-muted);
 }
 
 .seguimiento-seccion {
-    background-color: #fff;
-    border: 1px solid #e5e5e0;
-    border-radius: 12px;
-    padding: 1.25rem 1.4rem 1.4rem;
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-linea);
 }
 
 .seguimiento-seccion-header {
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-3);
 }
 
 .seguimiento-seccion-titulo {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    font-size: 1rem;
-    font-weight: 700;
-    color: #2f2f2f;
-    margin: 0 0 0.25rem;
+    gap: var(--space-2);
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-tinta);
+    margin: 0 0 2px;
 }
 
 .seguimiento-contador {
-    font-size: 0.75rem;
+    font-family: var(--font-ui);
+    font-size: 0.72rem;
     font-weight: 700;
-    color: #888;
-    background-color: #f0f0eb;
-    padding: 0.1rem 0.55rem;
-    border-radius: 999px;
+    color: var(--color-tinta-muted);
+    background-color: var(--color-base-2);
+    padding: 1px 8px;
+    border-radius: var(--radius-pill);
 }
 
 .seguimiento-seccion-descripcion {
     font-size: 0.82rem;
-    color: #888;
+    color: var(--color-tinta-muted);
     margin: 0;
 }
 
 .seguimiento-cobranza {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
+    gap: var(--space-6);
 }
 
 .seguimiento-lista {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    border-top: 1px solid var(--color-linea);
 }
 
 .seguimiento-vacio {
     font-size: 0.85rem;
-    color: #999;
+    color: var(--color-tinta-muted);
     margin: 0;
 }
 
@@ -96,17 +97,17 @@
     text-align: left;
     font-size: 0.72rem;
     font-weight: 600;
-    color: #888;
+    color: var(--color-tinta-muted);
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #eeeee8;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-linea);
 }
 
 .seguimiento-tabla td {
-    padding: 0.55rem 0;
-    border-bottom: 1px solid #f4f4ef;
-    color: #444;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--color-linea);
+    color: var(--color-tinta);
 }
 
 .seguimiento-tabla th:last-child,
@@ -117,11 +118,11 @@
 .seguimiento-tabla-monto {
     font-variant-numeric: tabular-nums;
     font-weight: 600;
-    color: #2f2f2f;
+    color: var(--color-tinta);
 }
 
 .seguimiento-tabla tfoot td {
     border-bottom: none;
     font-weight: 700;
-    color: #2f2f2f;
+    color: var(--color-tinta);
 }

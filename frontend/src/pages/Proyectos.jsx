@@ -4,6 +4,8 @@ import ProyectoCard from "../components/proyectos/ProyectoCard";
 import ModalProyecto from "../components/modals/ModalProyecto";
 import useAuth from "../context/useAuth";
 import ProyectosHeader from "../components/proyectos/ProyectoHeader";
+import { Cargando } from "../components/shared/Cargando";
+import { useToast } from "../context/useToast";
 import { ESTADOS } from "../constants/estados";
 import "./Proyectos.css";
 
@@ -12,6 +14,7 @@ const ORDEN_SECCIONES = ["en_curso", "a_iniciar", "terminado"];
 
 export function Proyectos() {
   const { usuario } = useAuth();
+  const toast = useToast();
 
   const {
     proyectos,
@@ -26,7 +29,7 @@ export function Proyectos() {
   const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null);
 
   if (loading) {
-    return <p>Cargando proyectos...</p>;
+    return <Cargando texto="Cargando proyectos..." />;
   }
 
   if (error) {
@@ -49,12 +52,26 @@ export function Proyectos() {
   };
 
   const handleGuardar = async (datosProyecto) => {
-    if (proyectoSeleccionado) {
-      await editarProyecto(proyectoSeleccionado.id, datosProyecto);
-    } else {
-      await agregarProyecto(datosProyecto);
+    try {
+      if (proyectoSeleccionado) {
+        await editarProyecto(proyectoSeleccionado.id, datosProyecto);
+      } else {
+        await agregarProyecto(datosProyecto);
+      }
+      cerrarModal();
+    } catch (error) {
+      console.error("Error guardando proyecto:", error);
+      toast.error("No se pudo guardar el proyecto.");
     }
-    cerrarModal();
+  };
+
+  const handleEliminar = async (proyecto) => {
+    try {
+      await borrarProyecto(proyecto.id);
+    } catch (error) {
+      console.error("Error eliminando proyecto:", error);
+      toast.error("No se pudo eliminar el proyecto.");
+    }
   };
 
   const canManage = usuario.rol === "admin";
@@ -90,7 +107,7 @@ export function Proyectos() {
                     key={proyecto.id}
                     proyecto={proyecto}
                     onEditar={abrirModalEditar}
-                    onEliminar={(proyecto) => borrarProyecto(proyecto.id)}
+                    onEliminar={handleEliminar}
                   />
                 ))}
               </div>

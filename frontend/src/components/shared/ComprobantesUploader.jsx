@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Paperclip, X } from "lucide-react";
 import { extensionDeArchivo, iconoParaArchivo, nombreDeArchivo as nombreDeArchivoExistente } from "../../utils/archivos";
 import "./ComprobantesUploader.css";
 
@@ -123,7 +124,7 @@ export function ComprobantesUploader({ existentes = [], onVerExistente, onCambio
                 role="button"
                 tabIndex={0}
             >
-                <span className="comprobantes-dropzone-icono">📎</span>
+                <Paperclip size={20} strokeWidth={1.75} className="comprobantes-dropzone-icono" />
                 <span className="comprobantes-dropzone-texto">
                     Arrastrá tus comprobantes acá o hacé click para elegir archivos
                 </span>
@@ -149,48 +150,54 @@ export function ComprobantesUploader({ existentes = [], onVerExistente, onCambio
 
             {hayItems ? (
                 <ul className="comprobantes-lista">
-                    {existentesVisibles.map((c) => (
-                        <li key={c.id} className="comprobantes-chip">
-                            <span className="comprobantes-chip-icono">{iconoParaArchivo(c.archivo_path)}</span>
-                            <button
-                                type="button"
-                                className="comprobantes-chip-nombre comprobantes-chip-nombre--link"
-                                onClick={() => handleVer(c)}
-                                title={nombreDeArchivoExistente(c.archivo_path)}
-                                disabled={viendoId === c.id}
-                            >
-                                {viendoId === c.id ? "Abriendo..." : nombreDeArchivoExistente(c.archivo_path)}
-                            </button>
-                            <button
-                                type="button"
-                                className="comprobantes-chip-quitar"
-                                onClick={() => marcarParaEliminar(c.id)}
-                                disabled={disabled}
-                                title="Eliminar"
-                            >
-                                ✕
-                            </button>
-                        </li>
-                    ))}
-                    {pendientes.map((p) => (
-                        <li key={p.localId} className="comprobantes-chip comprobantes-chip--pendiente">
-                            <span className="comprobantes-chip-icono">{iconoParaArchivo(p.file.name)}</span>
-                            <span className="comprobantes-chip-nombre" title={p.file.name}>
-                                {p.file.name}
-                            </span>
-                            <span className="comprobantes-chip-tamanio">{formatearTamanio(p.file.size)}</span>
-                            <span className="comprobantes-chip-badge">nuevo</span>
-                            <button
-                                type="button"
-                                className="comprobantes-chip-quitar"
-                                onClick={() => quitarPendiente(p.localId)}
-                                disabled={disabled}
-                                title="Quitar"
-                            >
-                                ✕
-                            </button>
-                        </li>
-                    ))}
+                    {existentesVisibles.map((c) => {
+                        const IconoArchivo = iconoParaArchivo(c.archivo_path);
+                        return (
+                            <li key={c.id} className="comprobantes-chip">
+                                <IconoArchivo size={14} strokeWidth={2} className="comprobantes-chip-icono" />
+                                <button
+                                    type="button"
+                                    className="comprobantes-chip-nombre comprobantes-chip-nombre--link"
+                                    onClick={() => handleVer(c)}
+                                    title={nombreDeArchivoExistente(c.archivo_path)}
+                                    disabled={viendoId === c.id}
+                                >
+                                    {viendoId === c.id ? "Abriendo..." : nombreDeArchivoExistente(c.archivo_path)}
+                                </button>
+                                <button
+                                    type="button"
+                                    className="comprobantes-chip-quitar"
+                                    onClick={() => marcarParaEliminar(c.id)}
+                                    disabled={disabled}
+                                    title="Eliminar"
+                                >
+                                    <X size={13} strokeWidth={2.25} />
+                                </button>
+                            </li>
+                        );
+                    })}
+                    {pendientes.map((p) => {
+                        const IconoArchivo = iconoParaArchivo(p.file.name);
+                        return (
+                            <li key={p.localId} className="comprobantes-chip comprobantes-chip--pendiente">
+                                <IconoArchivo size={14} strokeWidth={2} className="comprobantes-chip-icono" />
+                                <span className="comprobantes-chip-nombre" title={p.file.name}>
+                                    {p.file.name}
+                                </span>
+                                <span className="comprobantes-chip-tamanio">{formatearTamanio(p.file.size)}</span>
+                                <span className="comprobantes-chip-badge">nuevo</span>
+                                <button
+                                    type="button"
+                                    className="comprobantes-chip-quitar"
+                                    onClick={() => quitarPendiente(p.localId)}
+                                    disabled={disabled}
+                                    title="Quitar"
+                                >
+                                    <X size={13} strokeWidth={2.25} />
+                                </button>
+                            </li>
+                        );
+                    })}
                 </ul>
             ) : (
                 <p className="comprobantes-vacio">Sin comprobantes cargados todavía.</p>

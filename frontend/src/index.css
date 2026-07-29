@@ -1,3 +1,61 @@
+/* Tokens de marca — ver DESIGN.md. Única fuente de verdad para color/tipografía/
+   espaciado de toda la app; el resto de los .css consume estas variables.
+
+   Paleta v3: identidad HomeSolutions — acento oliva de marca (#647D3B) en vez
+   del índigo genérico de v2, más un juego de superficies oscuras (negro de
+   marca #231F20) reservado para sidebar/header, estilo Spotify: navegación
+   oscura, contenido claro. Los nombres de variable quedan de paletas
+   anteriores (terracota/musgo/arcilla/acero) para no tocar cada .css que las
+   consume — lo que cambia es el valor, no el rol semántico de cada token. */
+:root {
+  /* color — acento de marca (oliva) */
+  --color-terracota: #647d3b;
+  --color-terracota-dark: #4b5e2c;
+  --color-terracota-tint: #ecefe7;
+  --color-musgo: #16a34a;
+  --color-musgo-dark: #128a3e;
+  --color-musgo-tint: #dcf3e3;
+  --color-tinta: #18181b;
+  --color-tinta-muted: #6b7280;
+  --color-base-1: #fafafa;
+  --color-base-2: #f0f0f2;
+  --color-superficie: #ffffff;
+  --color-linea: #e4e4e7;
+
+  --color-arcilla: #d97706;
+  --color-arcilla-tint: #fdf0dc;
+  --color-oxido: #dc2626;
+  --color-oxido-tint: #fbe2e2;
+  --color-acero: #64748b;
+  --color-acero-tint: #e7eaee;
+
+  /* color — superficies oscuras de marca (sidebar/header únicamente) */
+  --color-oscuro: #231f20;
+  --color-oscuro-hover: #353132;
+  --color-oscuro-borde: #423e3f;
+  --color-oscuro-texto: #f8f8f8;
+  --color-oscuro-texto-muted: #a7a5a6;
+
+  /* tipografía */
+  --font-display: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-ui: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* espaciado — escala de 4px */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* geometría */
+  --radius-sm: 6px;
+  --radius-pill: 999px;
+  --shadow-overlay: 0 16px 40px rgba(24, 24, 27, 0.16);
+}
+
 /* Reset mínimo global.
 
    El margin de 8px que traen los navegadores por defecto en <body> dejaba a
@@ -5,6 +63,141 @@
    el sidebar sticky no podía pegarse al borde de la ventana (quedaba un
    hueco de 8px arriba y abajo al scrollear). */
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
+  background: var(--color-base-1);
+  color: var(--color-tinta);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  margin: 0;
+  color: var(--color-tinta);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  color: inherit;
+}
+
+table {
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: var(--color-terracota-tint);
+  color: var(--color-terracota-dark);
+}
+
+/* Foco visible y consistente en toda la app — reemplaza los outlines
+   default del browser sin eliminarlos. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-terracota);
+  outline-offset: 2px;
+}
+
+/* Botones propios — reemplazan los <button> sin estilo/genéricos repetidos
+   en cada .css. Cantos rectos, sin sombra, color con intención. */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  line-height: 1.2;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-primary {
+  background: var(--color-terracota);
+  border-color: var(--color-terracota);
+  color: var(--color-superficie);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-terracota-dark);
+  border-color: var(--color-terracota-dark);
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--color-linea);
+  color: var(--color-tinta);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  border-color: var(--color-tinta);
+  background: var(--color-base-2);
+}
+
+.btn-peligro {
+  background: transparent;
+  border-color: var(--color-oxido);
+  color: var(--color-oxido);
+}
+
+.btn-peligro:hover:not(:disabled) {
+  background: var(--color-oxido);
+  color: var(--color-superficie);
+}
+
+/* Badge / etiqueta de estado — único lugar de la app con radio grande a
+   propósito (ver DESIGN.md §7). El color se define inline por componente
+   según la semántica (estado, tipo, etc.), esta clase solo da la forma. */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid transparent;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+/* Etiqueta tipo "ficha" para labels de formulario y meta-texto — mayúsculas
+   reservadas a este uso, nunca a títulos (ver DESIGN.md §3). */
+.label-ficha {
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-tinta-muted);
+}
+
+.cifra {
+  font-variant-numeric: tabular-nums;
 }

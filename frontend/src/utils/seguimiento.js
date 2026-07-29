@@ -48,6 +48,7 @@ export function describirCompra(compra, productos, proveedores, hoy) {
     descripcion: compra.descripcion,
     monto: compra.precio_total,
     fecha: compra.fecha,
+    condicionPago: compra.condicion_pago,
     dias: diasDesde(compra.fecha, hoy),
   };
 }

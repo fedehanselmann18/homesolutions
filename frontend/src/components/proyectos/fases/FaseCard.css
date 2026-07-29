@@ -1,13 +1,15 @@
-/* FaseCard.css */
+/* FaseCard.css — ficha de fase: plana, sin sombra, regla izquierda de
+   color de estado (mismo device que ProyectoCard/ProyectoDetalleHeader). */
 
 .fase-card {
-    background-color: #fff;
-    border: 1px solid #e6e6e6;
-    border-radius: 12px;
-    padding: 1.1rem 1.25rem;
-    font-family: "Public Sans", sans-serif;
+    background-color: var(--color-superficie);
+    border: 1px solid var(--color-linea);
+    border-left: 3px solid transparent;
+    border-radius: var(--radius-sm);
+    padding: var(--space-4);
+    font-family: var(--font-ui);
     cursor: pointer;
-    transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -15,12 +17,13 @@
 }
 
 .fase-card:hover {
-    border-color: #6F7F45;
-    box-shadow: 0 4px 14px rgba(111, 127, 69, 0.14);
+    background-color: var(--color-base-1);
+    border-color: var(--color-tinta);
+    border-left-color: inherit;
 }
 
 .fase-card:active {
-    transform: scale(0.995);
+    background-color: var(--color-base-1);
 }
 
 /* Contenido: crece para ocupar el espacio disponible, así las acciones
@@ -29,28 +32,29 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
-    margin-bottom: 0.9rem;
+    gap: 8px;
+    margin-bottom: var(--space-3);
 }
 
 .fase-card-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 0.75rem;
+    gap: 12px;
 }
 
 .fase-card-nombre {
     margin: 0;
+    font-family: var(--font-display);
     font-size: 1.05rem;
     font-weight: 600;
-    color: #2f2f2f;
+    color: var(--color-tinta);
 }
 
 .fase-card-descripcion {
     margin: 0;
-    font-size: 0.9rem;
-    color: #666;
+    font-size: 0.88rem;
+    color: var(--color-tinta-muted);
     line-height: 1.4;
 }
 
@@ -59,19 +63,14 @@
 .fase-card-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 5px;
     flex-shrink: 0;
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    padding: 0.25rem 0.65rem;
-    border-radius: 999px;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
     border: 1px solid transparent;
     white-space: nowrap;
-}
-
-.fase-card-badge-icono {
-    font-size: 0.8rem;
-    line-height: 1;
 }
 
 /* Acciones: siempre pegadas abajo (margin-top: auto) y del mismo
@@ -79,49 +78,47 @@
 
 .fase-card-acciones {
     display: flex;
-    gap: 0.5rem;
+    gap: 8px;
     margin-top: auto;
 }
 
 .fase-card-btn {
     flex: 1;
     text-align: center;
-    font-family: inherit;
+    font-family: var(--font-ui);
     font-size: 0.8rem;
     font-weight: 600;
-    padding: 0.4rem 0.75rem;
-    border-radius: 8px;
-    border: none;
+    padding: 7px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-linea);
     cursor: pointer;
-    transition: background-color 0.15s ease, transform 0.1s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .fase-card-btn--editar {
-    background-color: #eee;
-    color: #444;
+    background-color: transparent;
+    color: var(--color-tinta);
 }
 
 .fase-card-btn--editar:hover {
-    background-color: #ddd;
+    background-color: var(--color-base-2);
 }
 
 .fase-card-btn--eliminar {
-    background-color: rgba(192, 57, 43, 0.1);
-    color: #c0392b;
+    background-color: transparent;
+    color: var(--color-oxido);
+    border-color: var(--color-oxido-tint);
 }
 
 .fase-card-btn--eliminar:hover {
-    background-color: rgba(192, 57, 43, 0.18);
-}
-
-.fase-card-btn:active {
-    transform: scale(0.96);
+    background-color: var(--color-oxido-tint);
+    border-color: var(--color-oxido);
 }
 
 /* Responsive */
 
 @media (max-width: 480px) {
     .fase-card {
-        padding: 1rem;
+        padding: var(--space-3);
     }
 }

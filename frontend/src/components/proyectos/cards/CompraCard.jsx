@@ -2,18 +2,9 @@ import useAuth from "../../../context/useAuth";
 import { formatMoneda, formatFecha } from "../../../utils/formato";
 import { getTipoFacturaLabel } from "../../../constants/tipoFactura";
 import { getTipoProducto } from "../../../constants/tipoProducto";
+import { getEstadoPago, getEstadoEnvio, getCondicionPagoLabel } from "../../../constants/estadoCompra";
 import { SeccionComprobantes } from "../../shared/SeccionComprobantes";
 import "./CompraCard.css";
-
-const ESTADO_PAGO = {
-    pendiente: { color: "#F5A623", label: "Pendiente", icono: "⏳" },
-    pagado: { color: "#10B981", label: "Pagado", icono: "✅" },
-};
-
-const ESTADO_ENVIO = {
-    pedido: { color: "#94A3B8", label: "Pedido", icono: "🚚" },
-    entregado: { color: "#6F7F45", label: "Entregado", icono: "📦" },
-};
 
 export function CompraCard({
     compra,
@@ -26,15 +17,21 @@ export function CompraCard({
     onVerComprobante,
     onAgregarComprobante,
     onEliminarComprobante,
+    onTogglePago,
+    onToggleEnvio,
 }) {
     const { usuario } = useAuth();
     const canManage = usuario?.rol === "admin";
 
-    const estadoPago = ESTADO_PAGO[compra.estado_pago] ?? { color: "#94A3B8", label: compra.estado_pago, icono: "•" };
-    const estadoEnvio = ESTADO_ENVIO[compra.estado_envio] ?? { color: "#94A3B8", label: compra.estado_envio, icono: "•" };
+    const estadoPago = getEstadoPago(compra.estado_pago);
+    const estadoEnvio = getEstadoEnvio(compra.estado_envio);
+    const IconoPago = estadoPago.icono;
+    const IconoEnvio = estadoEnvio.icono;
 
     const handleEditar = () => onEditar(compra);
     const handleEliminar = () => onEliminar(compra.id);
+    const handleTogglePago = () => onTogglePago(compra);
+    const handleToggleEnvio = () => onToggleEnvio(compra);
 
     return (
         <div className="compra-card">
@@ -49,14 +46,14 @@ export function CompraCard({
                         className="compra-card-badge"
                         style={{ backgroundColor: `${estadoPago.color}1c`, color: estadoPago.color, borderColor: `${estadoPago.color}55` }}
                     >
-                        <span className="compra-card-badge-icono">{estadoPago.icono}</span>
+                        {IconoPago && <IconoPago size={12} strokeWidth={2.25} />}
                         {estadoPago.label}
                     </span>
                     <span
                         className="compra-card-badge"
                         style={{ backgroundColor: `${estadoEnvio.color}1c`, color: estadoEnvio.color, borderColor: `${estadoEnvio.color}55` }}
                     >
-                        <span className="compra-card-badge-icono">{estadoEnvio.icono}</span>
+                        {IconoEnvio && <IconoEnvio size={12} strokeWidth={2.25} />}
                         {estadoEnvio.label}
                     </span>
                 </div>
@@ -100,7 +97,7 @@ export function CompraCard({
                                                 className="compra-card-producto-tipo"
                                                 style={{ color: tipo.color, backgroundColor: `${tipo.color}1c` }}
                                             >
-                                                {tipo.icono} {tipo.label}
+                                                {tipo.icono && <tipo.icono size={12} strokeWidth={2.25} />} {tipo.label}
                                             </span>
                                         )}
                                     </li>
@@ -110,7 +107,7 @@ export function CompraCard({
                     )}
 
                     <p className="compra-card-detalle-info">
-                        Condición de pago: {compra.condicion_pago}
+                        Condición de pago: {getCondicionPagoLabel(compra.condicion_pago)}
                     </p>
 
                     <div className="compra-card-resumen">
@@ -144,6 +141,20 @@ export function CompraCard({
 
             {canManage && (
                 <div className="compra-card-acciones">
+                    <button
+                        type="button"
+                        className="compra-card-btn compra-card-btn--toggle"
+                        onClick={handleTogglePago}
+                    >
+                        {compra.estado_pago === "pagado" ? "Marcar sin pagar" : "Marcar pagado"}
+                    </button>
+                    <button
+                        type="button"
+                        className="compra-card-btn compra-card-btn--toggle"
+                        onClick={handleToggleEnvio}
+                    >
+                        {compra.estado_envio === "entregado" ? "Marcar sin entregar" : "Marcar entregado"}
+                    </button>
                     <button
                         type="button"
                         className="compra-card-btn compra-card-btn--editar"

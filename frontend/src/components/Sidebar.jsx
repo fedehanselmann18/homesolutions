@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
-import logo from "../assets/HS_logo_negro.png";
+import logo from "../assets/HS_logo_blanco.png";
 import "./Sidebar.css";
 
 const ITEMS_NAV = [

@@ -22,16 +22,17 @@ import { getProductos } from "../../services/productoService";
 import { getProveedores } from "../../services/proveedorService";
 
 import { TarjetaKpi } from "../shared/TarjetaKpi";
+import { Cargando } from "../shared/Cargando";
 import { calcularAnalisis } from "../../utils/analisis";
 import { formatMoneda, formatMonedaCorta } from "../../utils/formato";
 import "./AnalisisGeneral.css";
 
-const VERDE = "#6F7F45";
-const ROJO = "#DC2626";
-const AZUL = "#2563EB";
-const NARANJA = "#D97706";
+const VERDE = "#16a34a";
+const ROJO = "#dc2626";
+const AZUL = "#64748b";
+const NARANJA = "#d97706";
 
-const COLORES_TORTA = ["#6F7F45", "#2563EB", "#F5A623", "#B45309", "#0EA5E9", "#8B5CF6", "#EC4899", "#94A3B8"];
+const COLORES_TORTA = ["#647d3b", "#16a34a", "#d97706", "#64748b", "#7c3aed", "#0891b2", "#dc2626", "#52525b"];
 
 const COLOR_CASCADA = {
     entrada: VERDE,
@@ -196,7 +197,7 @@ export function AnalisisGeneral({ proyectoId }) {
 
     const analisis = useMemo(() => (datos ? calcularAnalisis(datos) : null), [datos]);
 
-    if (cargando) return <p className="analisis-vacio">Cargando análisis...</p>;
+    if (cargando) return <Cargando texto="Cargando análisis..." />;
     if (!analisis) return <p className="analisis-vacio">No se pudo cargar el análisis del proyecto.</p>;
 
     const {
@@ -249,7 +250,7 @@ export function AnalisisGeneral({ proyectoId }) {
             >
                 <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={cascada} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" />
                         <XAxis dataKey="nombre" tick={{ fontSize: 12 }} />
                         <YAxis
                             domain={escala.dominio}
@@ -328,7 +329,7 @@ export function AnalisisGeneral({ proyectoId }) {
             >
                 <ResponsiveContainer width="100%" height={240}>
                     <BarChart data={pagosPorTipoFactura} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" />
                         <XAxis dataKey="label" tick={{ fontSize: 12 }} />
                         <YAxis tickFormatter={formatMonedaCorta} tick={{ fontSize: 12 }} width={80} />
                         <Tooltip content={<TooltipMoneda obtenerValor={(d) => d.monto} />} />
@@ -394,7 +395,7 @@ export function AnalisisGeneral({ proyectoId }) {
                             layout="vertical"
                             margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
                         >
-                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#eee" />
+                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e4e4e7" />
                             <XAxis type="number" tickFormatter={formatMonedaCorta} tick={{ fontSize: 12 }} />
                             <YAxis type="category" dataKey="nombre" width={180} tick={{ fontSize: 12 }} interval={0} />
                             <Tooltip content={<TooltipMoneda obtenerValor={(d) => d.total} />} />

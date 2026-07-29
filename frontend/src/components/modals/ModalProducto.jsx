@@ -95,7 +95,7 @@ export function ModalProducto({ producto, proveedor, categoriasDisponibles = [],
                                 </option>
                                 {Object.entries(TIPOS_PRODUCTO).map(([valor, info]) => (
                                     <option key={valor} value={valor}>
-                                        {info.icono} {info.label}
+                                        {info.label}
                                     </option>
                                 ))}
                             </select>

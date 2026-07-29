@@ -1,12 +1,11 @@
 .proyectos-header {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
-  gap: 16px;
-  padding: 24px 0;
-  margin-bottom: 24px;
-  border-bottom: 1px solid #E5E7EB;
-  font-family: "Public Sans", sans-serif;
+  gap: var(--space-4);
+  padding-bottom: var(--space-6);
+  margin-bottom: var(--space-8);
+  border-bottom: 1px solid var(--color-linea);
 }
 
 .proyectos-header__texto {
@@ -16,15 +15,18 @@
 }
 
 .proyectos-header__titulo {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #1F2937;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-tinta);
   margin: 0;
 }
 
 .proyectos-header__subtitulo {
-  font-size: 0.95rem;
-  color: #6B7280;
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  color: var(--color-tinta-muted);
   margin: 0;
 }
 
@@ -34,24 +36,21 @@
 }
 
 .proyectos-button {
-  background-color: #6F7F45;
-  color: #FFFFFF;
-  border: none;
-  border-radius: 8px;
+  background-color: var(--color-terracota);
+  color: var(--color-superficie);
+  border: 1px solid var(--color-terracota);
+  border-radius: var(--radius-sm);
   padding: 10px 20px;
-  font-family: "Public Sans", sans-serif;
-  font-size: 0.95rem;
+  font-family: var(--font-ui);
+  font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.1s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .proyectos-button:hover {
-  background-color: #5C6938;
-}
-
-.proyectos-button:active {
-  transform: scale(0.97);
+  background-color: var(--color-terracota-dark);
+  border-color: var(--color-terracota-dark);
 }
 
 @media (max-width: 640px) {

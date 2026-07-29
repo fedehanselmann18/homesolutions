@@ -8,6 +8,7 @@ export function FaseCard({ fase, proyectoId, onEditar, onEliminar }) {
     const canManage = usuario?.rol === "admin";
     const navigate = useNavigate();
     const estadoInfo = getEstadoLabel(fase.estado);
+    const IconoEstado = estadoInfo.icono;
 
     const handleClickCard = () => {
         navigate(`/proyectos/${proyectoId}/fases/${fase.id}`);
@@ -24,7 +25,7 @@ export function FaseCard({ fase, proyectoId, onEditar, onEliminar }) {
     };
 
     return (
-        <div className="fase-card" onClick={handleClickCard}>
+        <div className="fase-card" style={{ borderLeftColor: estadoInfo.color }} onClick={handleClickCard}>
             <div className="fase-card-contenido">
                 <div className="fase-card-header">
                     <h3 className="fase-card-nombre">{fase.nombre}</h3>
@@ -36,7 +37,7 @@ export function FaseCard({ fase, proyectoId, onEditar, onEliminar }) {
                             borderColor: `${estadoInfo.color}55`,
                         }}
                     >
-                        <span className="fase-card-badge-icono">{estadoInfo.icono}</span>
+                        {IconoEstado && <IconoEstado size={12} strokeWidth={2.25} className="fase-card-badge-icono" />}
                         {estadoInfo.label}
                     </span>
                 </div>

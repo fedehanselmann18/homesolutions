@@ -1,43 +1,39 @@
 .comparador-container {
-    font-family: "Public Sans", sans-serif;
+    font-family: var(--font-ui);
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: var(--space-8);
 }
 
 .comparador-header {
-    margin-bottom: 0.25rem;
+    padding-bottom: var(--space-6);
+    border-bottom: 1px solid var(--color-linea);
 }
 
 .comparador-header__titulo {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #2f2f2f;
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--color-tinta);
     margin: 0;
 }
 
 .comparador-header__subtitulo {
-    font-size: 0.85rem;
-    color: #888;
-    margin: 0.2rem 0 0;
-}
-
-.comparador-seccion {
-    background-color: #fff;
-    border: 1px solid #e5e5e0;
-    border-radius: 12px;
-    padding: 1.25rem 1.4rem 1.4rem;
+    font-size: 0.9rem;
+    color: var(--color-tinta-muted);
+    margin: 4px 0 0;
 }
 
 .comparador-seccion-titulo {
-    margin: 0 0 1rem;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #2f2f2f;
+    margin: 0 0 var(--space-4);
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--color-tinta);
 }
 
 .comparador-feedback {
-    color: #888;
+    color: var(--color-tinta-muted);
     font-size: 0.9rem;
     margin: 0;
 }
@@ -47,67 +43,68 @@
 .comparador-grupos {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1rem;
+    gap: var(--space-4);
 }
 
 .comparador-grupo {
-    border: 1px solid #ececE0;
-    border-radius: 10px;
-    padding: 1rem 1.1rem;
+    border: 1px solid var(--color-linea);
+    border-radius: var(--radius-sm);
+    padding: var(--space-4);
 }
 
 .comparador-grupo-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 0.75rem;
-    margin-bottom: 0.75rem;
+    gap: 12px;
+    margin-bottom: var(--space-3);
 }
 
 .comparador-grupo-nombre {
-    margin: 0 0 0.4rem;
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #222220;
+    margin: 0 0 6px;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-tinta);
 }
 
 .comparador-grupo-chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.3rem;
+    gap: 4px;
 }
 
 .comparador-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    font-size: 0.72rem;
+    gap: 5px;
+    font-size: 0.7rem;
     font-weight: 600;
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
     white-space: nowrap;
 }
 
 .comparador-chip {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 600;
-    color: #555;
-    background-color: #f0f0eb;
-    padding: 0.15rem 0.5rem;
-    border-radius: 999px;
+    color: var(--color-tinta-muted);
+    background-color: var(--color-base-2);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
     white-space: nowrap;
 }
 
 .comparador-ahorro {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 5px;
     font-size: 0.75rem;
     font-weight: 700;
-    color: #6F7F45;
-    background-color: rgba(111, 127, 69, 0.1);
-    padding: 0.25rem 0.6rem;
-    border-radius: 999px;
+    color: var(--color-musgo-dark);
+    background-color: var(--color-musgo-tint);
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
     white-space: nowrap;
     flex-shrink: 0;
 }
@@ -116,23 +113,24 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
 }
 
 .comparador-tabla th {
     text-align: left;
     font-size: 0.72rem;
     font-weight: 600;
-    color: #888;
+    color: var(--color-tinta-muted);
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    padding-bottom: 0.4rem;
-    border-bottom: 1px solid #eeeee8;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--color-linea);
 }
 
 .comparador-tabla td {
-    padding: 0.5rem 0.5rem 0.5rem 0;
-    border-bottom: 1px solid #f4f4ef;
-    color: #444;
+    padding: 8px 8px 8px 0;
+    border-bottom: 1px solid var(--color-linea);
+    color: var(--color-tinta);
 }
 
 .comparador-tabla tr:last-child td {
@@ -140,18 +138,18 @@
 }
 
 .comparador-fila-mejor td {
-    color: #2f2f2f;
+    color: var(--color-tinta);
     font-weight: 700;
 }
 
 .comparador-tag-mejor {
-    margin-left: 0.5rem;
-    font-size: 0.68rem;
+    margin-left: 8px;
+    font-size: 0.66rem;
     font-weight: 700;
-    color: #6F7F45;
-    background-color: rgba(111, 127, 69, 0.12);
-    padding: 0.1rem 0.45rem;
-    border-radius: 999px;
+    color: var(--color-musgo-dark);
+    background-color: var(--color-musgo-tint);
+    padding: 2px 7px;
+    border-radius: var(--radius-pill);
     vertical-align: middle;
 }
 
@@ -159,40 +157,40 @@
 
 .comparador-filtros {
     display: flex;
-    gap: 0.75rem;
-    margin-bottom: 1.25rem;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
 }
 
 .comparador-buscador {
     flex: 1;
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    background-color: #fff;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 0.5rem 0.85rem;
-    color: #888;
+    gap: 8px;
+    background-color: var(--color-superficie);
+    border: 1px solid var(--color-linea);
+    border-radius: var(--radius-sm);
+    padding: 9px 14px;
+    color: var(--color-tinta-muted);
 }
 
 .comparador-buscador input {
     flex: 1;
     border: none;
     outline: none;
-    font-family: inherit;
+    font-family: var(--font-ui);
     font-size: 0.9rem;
-    color: #2f2f2f;
+    color: var(--color-tinta);
     background: transparent;
 }
 
 .comparador-filtros select {
-    font-family: inherit;
+    font-family: var(--font-ui);
     font-size: 0.9rem;
-    padding: 0.55rem 0.7rem;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #fff;
-    color: #2f2f2f;
+    padding: 9px 12px;
+    border: 1px solid var(--color-linea);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-superficie);
+    color: var(--color-tinta);
     min-width: 180px;
 }
 

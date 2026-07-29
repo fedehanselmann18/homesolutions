@@ -1,25 +1,25 @@
 .proveedor-detalle {
-    font-family: "Public Sans", sans-serif;
+    font-family: var(--font-ui);
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: var(--space-8);
 }
 
 .proveedor-detalle-vacio {
-    font-family: "Public Sans", sans-serif;
-    color: #888;
-    padding: 2rem;
+    font-family: var(--font-ui);
+    color: var(--color-tinta-muted);
+    padding: var(--space-8) 0;
 }
 
 .proveedor-detalle-volver {
     display: inline-flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 6px;
     align-self: flex-start;
-    font-family: inherit;
+    font-family: var(--font-ui);
     font-size: 0.85rem;
     font-weight: 600;
-    color: #6b6b68;
+    color: var(--color-tinta-muted);
     background: none;
     border: none;
     padding: 0;
@@ -27,152 +27,154 @@
 }
 
 .proveedor-detalle-volver:hover {
-    color: #6F7F45;
+    color: var(--color-tinta);
 }
 
 .proveedor-detalle-header {
-    background-color: #fff;
-    border: 1px solid #ececE0;
-    border-radius: 12px;
-    padding: 1.35rem 1.6rem;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    border-left: 4px solid var(--color-musgo);
+    padding: var(--space-2) 0 0 var(--space-4);
 }
 
 .proveedor-detalle-header-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 0.6rem;
+    gap: var(--space-4);
+    margin-bottom: 10px;
 }
 
 .proveedor-detalle-nombre {
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #222220;
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--color-tinta);
     margin: 0;
     letter-spacing: -0.01em;
 }
 
 .proveedor-detalle-header-acciones {
     display: flex;
-    gap: 0.5rem;
+    gap: 8px;
     flex-shrink: 0;
 }
 
 .proveedor-detalle-header-acciones button {
     display: inline-flex;
     align-items: center;
-    gap: 0.35rem;
-    font-family: inherit;
+    gap: 6px;
+    font-family: var(--font-ui);
     font-size: 0.82rem;
     font-weight: 600;
-    padding: 0.4rem 0.8rem;
-    border-radius: 8px;
-    border: none;
-    background-color: #eee;
-    color: #444;
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-linea);
+    background-color: transparent;
+    color: var(--color-tinta);
     cursor: pointer;
     transition: background-color 0.15s ease;
 }
 
 .proveedor-detalle-header-acciones button:hover {
-    background-color: #ddd;
+    background-color: var(--color-base-2);
 }
 
 .proveedor-detalle-btn-eliminar {
-    background-color: rgba(192, 57, 43, 0.1) !important;
-    color: #c0392b !important;
+    background-color: transparent !important;
+    border-color: var(--color-oxido-tint) !important;
+    color: var(--color-oxido) !important;
 }
 
 .proveedor-detalle-btn-eliminar:hover {
-    background-color: rgba(192, 57, 43, 0.18) !important;
+    background-color: var(--color-oxido-tint) !important;
+    border-color: var(--color-oxido) !important;
 }
 
 .proveedor-detalle-datos {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.6rem 1.5rem;
+    gap: 8px var(--space-8);
     font-size: 0.875rem;
-    color: #444441;
+    color: var(--color-tinta);
 }
 
 .proveedor-detalle-dato {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 8px;
 }
 
 .proveedor-detalle-dato svg {
-    color: #6F7F45;
+    color: var(--color-tinta-muted);
     flex-shrink: 0;
 }
 
 .proveedor-detalle-metricas {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 0.6rem 1.5rem;
-    margin-top: 0.9rem;
-    padding-top: 0.9rem;
-    border-top: 1px solid #f2f2ec;
+    gap: 8px var(--space-8);
+    margin-top: var(--space-3);
+    padding: var(--space-3) 0 var(--space-6);
+    border-top: 1px solid var(--color-linea);
 }
 
 .proveedor-detalle-metrica {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
+    gap: 2px;
 }
 
 .proveedor-detalle-metrica-label {
     font-size: 0.72rem;
-    color: #999;
+    font-weight: 600;
+    color: var(--color-tinta-muted);
     text-transform: uppercase;
     letter-spacing: 0.02em;
 }
 
 .proveedor-detalle-metrica-valor {
-    font-size: 1.15rem;
-    font-weight: 700;
-    color: #2f2f2f;
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--color-tinta);
     font-variant-numeric: tabular-nums;
 }
 
 .proveedor-detalle-seccion {
-    background-color: #fff;
-    border: 1px solid #e5e5e0;
-    border-radius: 12px;
-    padding: 1.25rem 1.4rem 1.4rem;
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-linea);
 }
 
 .proveedor-detalle-seccion-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 1rem;
+    margin-bottom: var(--space-4);
 }
 
 .proveedor-detalle-seccion-header h2 {
     margin: 0;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #2f2f2f;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-tinta);
 }
 
 .proveedor-detalle-seccion-header button {
-    font-family: inherit;
+    font-family: var(--font-ui);
     font-size: 0.85rem;
     font-weight: 600;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    border: none;
-    background-color: #6F7F45;
-    color: #fff;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-musgo);
+    background-color: var(--color-musgo);
+    color: var(--color-superficie);
     cursor: pointer;
-    transition: background-color 0.15s ease;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .proveedor-detalle-seccion-header button:hover {
-    background-color: #5c6a38;
+    background-color: var(--color-musgo-dark);
+    border-color: var(--color-musgo-dark);
 }
 
 .proveedor-detalle-tabla-wrap {
@@ -183,92 +185,91 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
 }
 
 .proveedor-detalle-tabla th {
     text-align: left;
     font-size: 0.72rem;
     font-weight: 600;
-    color: #888;
+    color: var(--color-tinta-muted);
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    padding-bottom: 0.5rem;
-    border-bottom: 1px solid #eeeee8;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--color-linea);
     white-space: nowrap;
 }
 
 .proveedor-detalle-tabla td {
-    padding: 0.65rem 0.5rem 0.65rem 0;
-    border-bottom: 1px solid #f4f4ef;
-    color: #444;
+    padding: 10px 8px 10px 0;
+    border-bottom: 1px solid var(--color-linea);
+    color: var(--color-tinta);
 }
 
 .proveedor-detalle-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
-    font-size: 0.75rem;
+    gap: 5px;
+    font-size: 0.72rem;
     font-weight: 600;
-    padding: 0.2rem 0.6rem;
-    border-radius: 999px;
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
     white-space: nowrap;
 }
 
 .proveedor-detalle-chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.3rem;
+    gap: 4px;
 }
 
 .proveedor-detalle-chip {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 600;
-    color: #555;
-    background-color: #f0f0eb;
-    padding: 0.15rem 0.5rem;
-    border-radius: 999px;
+    color: var(--color-tinta-muted);
+    background-color: var(--color-base-2);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
     white-space: nowrap;
 }
 
 .proveedor-detalle-tabla-acciones {
     display: flex;
-    gap: 0.5rem;
+    gap: 6px;
     white-space: nowrap;
 }
 
 .proveedor-detalle-tabla-acciones button {
-    font-family: inherit;
+    font-family: var(--font-ui);
     font-size: 0.78rem;
     font-weight: 600;
-    padding: 0.3rem 0.6rem;
-    border-radius: 6px;
-    border: none;
-    background-color: #eee;
-    color: #444;
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-linea);
+    background-color: transparent;
+    color: var(--color-tinta);
     cursor: pointer;
 }
 
 .proveedor-detalle-tabla-acciones button:hover {
-    background-color: #ddd;
+    background-color: var(--color-base-2);
 }
 
 .proveedor-detalle-btn-eliminar-texto {
-    background-color: rgba(192, 57, 43, 0.1) !important;
-    color: #c0392b !important;
+    background-color: transparent !important;
+    border-color: var(--color-oxido-tint) !important;
+    color: var(--color-oxido) !important;
 }
 
 .proveedor-detalle-btn-eliminar-texto:hover {
-    background-color: rgba(192, 57, 43, 0.18) !important;
+    background-color: var(--color-oxido-tint) !important;
+    border-color: var(--color-oxido) !important;
 }
 
 @media (max-width: 480px) {
-    .proveedor-detalle-header {
-        padding: 1.1rem 1.25rem;
-    }
-
     .proveedor-detalle-header-top {
         flex-direction: column;
         align-items: flex-start;
-        gap: 0.6rem;
+        gap: 10px;
     }
 }

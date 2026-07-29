@@ -1,60 +1,89 @@
-/* AnalisisGeneral.css */
+/* AnalisisGeneral.css — pantalla más densa de la app (waterfall, donuts,
+   treemap, tablas): conserva estructura de grilla porque el contenido lo
+   pide, pero sin cards con sombra — las secciones se separan con una línea
+   superior, igual que el resto de la app. */
 
 .analisis {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
-    font-family: "Public Sans", sans-serif;
+    gap: var(--space-8);
+    font-family: var(--font-ui);
 }
 
 /* Las tarjetas de KPI y la barra de progreso viven en
    components/shared/TarjetaKpi.css (las comparte con el Panel). */
 
 .analisis-kpis {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--color-linea);
+    border-bottom: 1px solid var(--color-linea);
+    padding: var(--space-4) 0;
+}
+
+.analisis-kpis > * {
+    flex: 1 1 220px;
+    padding: 0 var(--space-6);
+    border-left: 1px solid var(--color-linea);
+}
+
+.analisis-kpis > *:first-child {
+    padding-left: 0;
+    border-left: none;
+}
+
+@media (max-width: 640px) {
+    .analisis-kpis {
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+
+    .analisis-kpis > * {
+        flex-basis: auto;
+        padding: 0;
+        border-left: none;
+    }
 }
 
 /* --- Secciones --- */
 
 .analisis-seccion {
-    background-color: #fff;
-    border: 1px solid #e5e5e0;
-    border-radius: 12px;
-    padding: 1.25rem 1.4rem 1.4rem;
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-linea);
 }
 
 .analisis-fila {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 1.25rem;
+    gap: var(--space-8);
 }
 
 .analisis-seccion-titulo {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #2f2f2f;
-    margin: 0 0 0.25rem;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-tinta);
+    margin: 0 0 2px;
 }
 
 .analisis-subtitulo {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: #2f2f2f;
-    margin: 1.5rem 0 0.6rem;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-tinta);
+    margin: var(--space-6) 0 var(--space-3);
 }
 
 .analisis-seccion-descripcion {
     font-size: 0.82rem;
-    color: #888;
-    margin: 0 0 1rem;
+    color: var(--color-tinta-muted);
+    margin: 0 0 var(--space-4);
 }
 
 .analisis-vacio {
     font-size: 0.88rem;
-    color: #888;
-    margin: 0.5rem 0;
+    color: var(--color-tinta-muted);
+    margin: 8px 0;
 }
 
 /* --- Tooltip de los gráficos --- */
@@ -62,18 +91,19 @@
 .analisis-tooltip {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
-    background-color: #fff;
-    border: 1px solid #e5e5e0;
-    border-radius: 8px;
-    padding: 0.5rem 0.7rem;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    gap: 3px;
+    background-color: var(--color-superficie);
+    border: 1px solid var(--color-linea);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    box-shadow: var(--shadow-overlay);
     font-size: 0.82rem;
-    color: #444;
+    color: var(--color-tinta);
 }
 
 .analisis-tooltip strong {
-    color: #2f2f2f;
+    color: var(--color-tinta);
+    font-family: var(--font-display);
 }
 
 /* --- Tortas y leyendas --- */
@@ -81,7 +111,7 @@
 .analisis-torta {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 8px;
 }
 
 .analisis-leyenda {
@@ -90,22 +120,22 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: 6px;
 }
 
 .analisis-leyenda--horizontal {
     flex-direction: row;
     flex-wrap: wrap;
-    gap: 0.25rem 1.1rem;
-    margin-top: 0.6rem;
+    gap: 4px 18px;
+    margin-top: 10px;
 }
 
 .analisis-leyenda-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 8px;
     font-size: 0.82rem;
-    color: #444;
+    color: var(--color-tinta);
 }
 
 .analisis-leyenda-punto {
@@ -125,44 +155,45 @@
 
 .analisis-leyenda-pct {
     font-weight: 700;
-    color: #2f2f2f;
+    color: var(--color-tinta);
+    font-variant-numeric: tabular-nums;
 }
 
 .analisis-leyenda-monto {
-    color: #888;
+    color: var(--color-tinta-muted);
     font-variant-numeric: tabular-nums;
 }
 
 .analisis-leyenda-tipos {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem 1.25rem;
-    margin-bottom: 0.75rem;
+    gap: 8px 20px;
+    margin-bottom: var(--space-3);
 }
 
 .analisis-leyenda-tipo {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 6px;
     font-size: 0.82rem;
-    color: #444;
+    color: var(--color-tinta);
 }
 
 .analisis-leyenda-tipo strong {
-    color: #2f2f2f;
+    color: var(--color-tinta);
     font-variant-numeric: tabular-nums;
 }
 
 /* --- Treemap --- */
 
 .analisis-treemap-nombre {
-    fill: #fff;
+    fill: var(--color-superficie);
     font-size: 0.75rem;
     font-weight: 600;
 }
 
 .analisis-treemap-monto {
-    fill: #fff;
+    fill: var(--color-superficie);
     font-size: 0.72rem;
     opacity: 0.85;
 }
@@ -172,27 +203,27 @@
 .analisis-tabla {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 1rem;
+    margin-top: var(--space-4);
     font-size: 0.85rem;
 }
 
 .analisis-tabla th,
 .analisis-tabla td {
     text-align: left;
-    padding: 0.5rem 0.6rem;
-    border-bottom: 1px solid #f0f0eb;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--color-linea);
 }
 
 .analisis-tabla th {
-    font-size: 0.75rem;
+    font-size: 0.72rem;
     font-weight: 700;
-    color: #888;
+    color: var(--color-tinta-muted);
     text-transform: uppercase;
     letter-spacing: 0.03em;
 }
 
 .analisis-tabla td {
-    color: #444;
+    color: var(--color-tinta);
     font-variant-numeric: tabular-nums;
 }
 
@@ -205,10 +236,10 @@
 
 .analisis-avance-barra {
     display: flex;
-    height: 14px;
-    border-radius: 999px;
+    height: 12px;
+    border-radius: var(--radius-pill);
     overflow: hidden;
-    background-color: #f0f0eb;
+    background-color: var(--color-base-2);
     gap: 2px;
 }
 
@@ -224,15 +255,15 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.45rem;
+    gap: 8px;
 }
 
 .analisis-ranking-item {
     display: flex;
     align-items: center;
-    gap: 0.65rem;
+    gap: 10px;
     font-size: 0.85rem;
-    color: #444;
+    color: var(--color-tinta);
 }
 
 .analisis-ranking-puesto {
@@ -243,10 +274,10 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background-color: #f0f0eb;
+    background-color: var(--color-base-2);
     font-size: 0.72rem;
     font-weight: 700;
-    color: #6F7F45;
+    color: var(--color-musgo-dark);
 }
 
 .analisis-ranking-nombre {
@@ -259,6 +290,6 @@
 
 .analisis-ranking-monto {
     font-weight: 600;
-    color: #2f2f2f;
+    color: var(--color-tinta);
     font-variant-numeric: tabular-nums;
 }

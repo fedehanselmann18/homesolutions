@@ -6,6 +6,7 @@ import Fases from "../components/proyectos/Fases";
 import Acciones from "../components/proyectos/Acciones";
 import AnalisisGeneral from "../components/proyectos/AnalisisGeneral";
 import Seguimiento from "../components/proyectos/Seguimiento";
+import { Cargando } from "../components/shared/Cargando";
 import "./ProyectoDetalle.css";
 
 function ProyectoDetalle() {
@@ -27,7 +28,7 @@ function ProyectoDetalle() {
     }, [id]);
 
     if (!proyecto) {
-        return <div>Cargando...</div>;
+        return <Cargando texto="Cargando proyecto..." />;
     }
 
     return (

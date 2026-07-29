@@ -3,112 +3,146 @@
 .panel {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
-    font-family: "Public Sans", sans-serif;
+    gap: var(--space-8);
+    font-family: var(--font-ui);
 }
 
 .panel-header {
     display: flex;
     flex-direction: column;
-    gap: 0.2rem;
+    gap: 4px;
 }
 
 .panel-titulo {
-    font-size: 1.75rem;
-    font-weight: 700;
-    color: #2f2f2f;
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--color-tinta);
     margin: 0;
 }
 
 .panel-subtitulo {
     font-size: 0.9rem;
-    color: #888;
+    color: var(--color-tinta-muted);
     margin: 0;
 }
 
 .panel-vacio {
     font-size: 0.88rem;
-    color: #888;
-    margin: 0.5rem 0;
-    font-family: "Public Sans", sans-serif;
+    color: var(--color-tinta-muted);
+    margin: 8px 0;
+    font-family: var(--font-ui);
 }
 
-/* --- KPIs (la tarjeta en sí vive en components/shared/TarjetaKpi.css) --- */
+/* --- KPIs: franja de números, sin cards -- separados por reglas verticales --- */
 
 .panel-kpis {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(205px, 1fr));
-    gap: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--color-linea);
+    border-bottom: 1px solid var(--color-linea);
+    padding: var(--space-4) 0;
 }
 
-/* --- Secciones --- */
+.panel-kpis > * {
+    flex: 1 1 200px;
+    padding: 0 var(--space-6);
+    border-left: 1px solid var(--color-linea);
+}
+
+.panel-kpis > *:first-child {
+    padding-left: 0;
+    border-left: none;
+}
+
+@media (max-width: 640px) {
+    .panel-kpis {
+        flex-direction: column;
+        gap: var(--space-4);
+    }
+
+    .panel-kpis > * {
+        flex-basis: auto;
+        padding: 0;
+        border-left: none;
+    }
+}
+
+/* --- Secciones: separadas por línea, no por caja --- */
 
 .panel-seccion {
-    background-color: #fff;
-    border: 1px solid #e5e5e0;
-    border-radius: 12px;
-    padding: 1.25rem 1.4rem 1.4rem;
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--color-linea);
 }
 
 .panel-fila {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-    gap: 1.25rem;
+    gap: var(--space-8);
+}
+
+.panel-fila .panel-seccion:nth-child(2) {
+    border-top: none;
+    padding-top: 0;
+}
+
+@media (min-width: 780px) {
+    .panel-fila .panel-seccion:nth-child(2) {
+        border-top: none;
+        border-left: 1px solid var(--color-linea);
+        padding-left: var(--space-8);
+    }
 }
 
 .panel-seccion-titulo {
-    font-size: 1rem;
-    font-weight: 700;
-    color: #2f2f2f;
-    margin: 0 0 0.25rem;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-tinta);
+    margin: 0 0 2px;
 }
 
 .panel-seccion-descripcion {
     font-size: 0.82rem;
-    color: #888;
-    margin: 0 0 1rem;
+    color: var(--color-tinta-muted);
+    margin: 0 0 var(--space-4);
 }
 
-/* --- Tarjetas de proyecto --- */
+/* --- Proyectos activos: filas de planilla, no grid de cards --- */
 
 .panel-proyectos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem;
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--color-linea);
 }
 
 .panel-proyecto {
     display: flex;
     flex-direction: column;
-    gap: 0.6rem;
-    padding: 1rem 1.1rem 1.1rem;
-    border: 1px solid #eeeee8;
-    border-radius: 10px;
-    background-color: #fcfcfa;
+    gap: 8px;
+    padding: var(--space-4) var(--space-4);
+    border-bottom: 1px solid var(--color-linea);
+    border-left: 3px solid transparent;
     cursor: pointer;
-    transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.1s ease;
+    transition: background-color 0.15s ease;
 }
 
 .panel-proyecto:hover {
-    border-color: #6F7F45;
-    background-color: #fff;
-}
-
-.panel-proyecto:active {
-    transform: scale(0.995);
+    background-color: var(--color-base-1);
 }
 
 .panel-proyecto-header {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    gap: 0.6rem;
+    gap: var(--space-3);
 }
 
 .panel-proyecto-nombre {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #2f2f2f;
+    font-family: var(--font-display);
+    font-size: 1.02rem;
+    font-weight: 600;
+    color: var(--color-tinta);
     margin: 0;
     min-width: 0;
     overflow: hidden;
@@ -117,7 +151,7 @@
 }
 
 .panel-proyecto-disponible {
-    font-size: 0.88rem;
+    font-size: 0.9rem;
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     flex-shrink: 0;
@@ -125,8 +159,8 @@
 
 .panel-proyecto-direccion {
     font-size: 0.78rem;
-    color: #888;
-    margin: -0.4rem 0 0.2rem;
+    color: var(--color-tinta-muted);
+    margin: -4px 0 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -135,25 +169,25 @@
 .panel-proyecto-barra {
     display: flex;
     flex-direction: column;
-    gap: 0.3rem;
+    gap: 4px;
 }
 
 .panel-proyecto-barra-header {
     display: flex;
     justify-content: space-between;
     font-size: 0.78rem;
-    color: #666;
+    color: var(--color-tinta-muted);
     font-weight: 600;
 }
 
 .panel-proyecto-barra-detalle {
     font-size: 0.74rem;
-    color: #999;
+    color: var(--color-tinta-muted);
     font-variant-numeric: tabular-nums;
 }
 
 .panel-proyecto-excedido {
-    color: #DC2626;
+    color: var(--color-oxido);
 }
 
 /* Pendientes de compra del proyecto (el detalle está en su pestaña Seguimiento) */
@@ -161,23 +195,22 @@
 .panel-proyecto-compras {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem;
-    margin-top: 0.15rem;
-    padding-top: 0.7rem;
-    border-top: 1px solid #f0f0eb;
+    gap: 6px;
+    margin-top: 2px;
+    padding-top: var(--space-2);
 }
 
 .panel-proyecto-chip {
     font-size: 0.74rem;
     font-weight: 600;
-    padding: 0.2rem 0.55rem;
-    border-radius: 999px;
+    padding: 3px 9px;
+    border-radius: var(--radius-pill);
     font-variant-numeric: tabular-nums;
 }
 
 .panel-proyecto-compras-ok {
     font-size: 0.74rem;
-    color: #aaa;
+    color: var(--color-tinta-muted);
 }
 
 /* --- Tooltip del gráfico --- */
@@ -185,19 +218,20 @@
 .panel-tooltip {
     display: flex;
     flex-direction: column;
-    gap: 0.15rem;
-    background-color: #fff;
-    border: 1px solid #e5e5e0;
-    border-radius: 8px;
-    padding: 0.5rem 0.7rem;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    gap: 3px;
+    background-color: var(--color-superficie);
+    border: 1px solid var(--color-linea);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    box-shadow: var(--shadow-overlay);
     font-size: 0.82rem;
-    color: #444;
+    color: var(--color-tinta);
 }
 
 .panel-tooltip strong {
-    color: #2f2f2f;
+    color: var(--color-tinta);
     text-transform: capitalize;
+    font-family: var(--font-display);
 }
 
 /* --- Actividad reciente --- */
@@ -213,9 +247,9 @@
 .panel-actividad-item {
     display: flex;
     align-items: center;
-    gap: 0.7rem;
-    padding: 0.55rem 0;
-    border-bottom: 1px solid #f4f4ef;
+    gap: var(--space-3);
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-linea);
 }
 
 .panel-actividad-item:last-child {
@@ -223,10 +257,10 @@
 }
 
 .panel-actividad-tipo {
-    font-size: 0.7rem;
+    font-size: 0.68rem;
     font-weight: 700;
-    padding: 0.15rem 0.5rem;
-    border-radius: 999px;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
     flex-shrink: 0;
     width: 58px;
     text-align: center;
@@ -235,14 +269,14 @@
 .panel-actividad-texto {
     display: flex;
     flex-direction: column;
-    gap: 0.1rem;
+    gap: 1px;
     flex: 1;
     min-width: 0;
 }
 
 .panel-actividad-descripcion {
     font-size: 0.85rem;
-    color: #2f2f2f;
+    color: var(--color-tinta);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -250,7 +284,7 @@
 
 .panel-actividad-detalle {
     font-size: 0.75rem;
-    color: #999;
+    color: var(--color-tinta-muted);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

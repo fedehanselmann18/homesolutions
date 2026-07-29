@@ -1,7 +1,7 @@
 .comprobantes-uploader {
     display: flex;
     flex-direction: column;
-    gap: 0.65rem;
+    gap: 10px;
 }
 
 .comprobantes-dropzone {
@@ -9,24 +9,24 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.3rem;
+    gap: 4px;
     text-align: center;
-    padding: 1.1rem 1rem;
-    border: 1.5px dashed #c7cdb8;
-    border-radius: 10px;
-    background-color: #fbfbf8;
+    padding: var(--space-4);
+    border: 1.5px dashed var(--color-linea);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-base-1);
     cursor: pointer;
     transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .comprobantes-dropzone:hover {
-    border-color: #6F7F45;
-    background-color: rgba(111, 127, 69, 0.06);
+    border-color: var(--color-terracota);
+    background-color: var(--color-terracota-tint);
 }
 
 .comprobantes-dropzone--activo {
-    border-color: #6F7F45;
-    background-color: rgba(111, 127, 69, 0.12);
+    border-color: var(--color-terracota);
+    background-color: var(--color-terracota-tint);
 }
 
 .comprobantes-dropzone--disabled {
@@ -35,33 +35,31 @@
 }
 
 .comprobantes-dropzone-icono {
-    font-size: 1.4rem;
-    line-height: 1;
+    color: var(--color-tinta-muted);
 }
 
 .comprobantes-dropzone-texto {
     font-size: 0.88rem;
     font-weight: 600;
-    color: #444;
+    color: var(--color-tinta);
 }
 
 .comprobantes-dropzone-subtexto {
     font-size: 0.76rem;
-    color: #888;
+    color: var(--color-tinta-muted);
 }
 
 .comprobantes-errores {
     margin: 0;
     padding-left: 1.1rem;
     font-size: 0.78rem;
-    color: #c0392b;
+    color: var(--color-oxido);
 }
 
 .comprobantes-vacio {
     margin: 0;
     font-size: 0.82rem;
-    color: #999;
-    font-style: italic;
+    color: var(--color-tinta-muted);
 }
 
 .comprobantes-lista {
@@ -70,26 +68,26 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 6px;
 }
 
 .comprobantes-chip {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.4rem 0.6rem;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    background-color: #fff;
+    gap: 8px;
+    padding: 7px 10px;
+    border: 1px solid var(--color-linea);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-superficie);
 }
 
 .comprobantes-chip--pendiente {
-    border-color: rgba(111, 127, 69, 0.35);
-    background-color: rgba(111, 127, 69, 0.05);
+    border-color: var(--color-musgo);
+    background-color: var(--color-musgo-tint);
 }
 
 .comprobantes-chip-icono {
-    font-size: 1rem;
+    color: var(--color-tinta-muted);
     flex-shrink: 0;
 }
 
@@ -100,7 +98,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 0.85rem;
-    color: #2f2f2f;
+    color: var(--color-tinta);
     text-align: left;
 }
 
@@ -108,9 +106,9 @@
     background: none;
     border: none;
     padding: 0;
-    font-family: inherit;
+    font-family: var(--font-ui);
     cursor: pointer;
-    color: #2f6f45;
+    color: var(--color-musgo-dark);
     text-decoration: underline;
     text-decoration-color: transparent;
     transition: text-decoration-color 0.15s ease;
@@ -122,44 +120,44 @@
 
 .comprobantes-chip-nombre--link:disabled {
     cursor: default;
-    color: #999;
+    color: var(--color-tinta-muted);
 }
 
 .comprobantes-chip-tamanio {
     font-size: 0.75rem;
-    color: #888;
+    color: var(--color-tinta-muted);
     flex-shrink: 0;
 }
 
 .comprobantes-chip-badge {
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.02em;
-    color: #6F7F45;
-    background-color: rgba(111, 127, 69, 0.15);
-    padding: 0.12rem 0.4rem;
-    border-radius: 999px;
+    color: var(--color-musgo-dark);
+    background-color: var(--color-musgo-tint);
+    padding: 2px 7px;
+    border-radius: var(--radius-pill);
     flex-shrink: 0;
 }
 
 .comprobantes-chip-quitar {
-    font-family: inherit;
-    font-size: 0.8rem;
-    font-weight: 600;
-    width: 1.6rem;
-    height: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
     flex-shrink: 0;
-    border-radius: 6px;
-    border: none;
-    background-color: rgba(192, 57, 43, 0.1);
-    color: #c0392b;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-oxido-tint);
+    background-color: transparent;
+    color: var(--color-oxido);
     cursor: pointer;
     transition: background-color 0.15s ease;
 }
 
 .comprobantes-chip-quitar:hover {
-    background-color: rgba(192, 57, 43, 0.2);
+    background-color: var(--color-oxido-tint);
 }
 
 .comprobantes-chip-quitar:disabled {

@@ -31,6 +31,7 @@ import { getImpuestos } from "../services/impuestosService";
 
 import useAuth from "../context/useAuth";
 import { getEstadoLabel } from "../constants/estados";
+import { getCondicionPagoLabel } from "../constants/estadoCompra";
 import { esCompraImpaga, esCompraSinEntregar, diasDesde, describirCompra } from "../utils/seguimiento";
 import { formatMoneda, formatFecha } from "../utils/formato";
 
@@ -40,14 +41,16 @@ import GastoCard from "../components/proyectos/cards/GastoCard";
 import CompraCard from "../components/proyectos/cards/CompraCard";
 import ModalGasto from "../components/modals/ModalGasto";
 import ModalCompra from "../components/modals/ModalCompra";
+import { Cargando } from "../components/shared/Cargando";
+import { useToast } from "../context/useToast";
 
 import "../components/proyectos/Acciones.css";
 import "../components/proyectos/Seguimiento.css";
 import "../components/proyectos/AnalisisGeneral.css";
 import "./FaseDetalle.css";
 
-const ROJO = "#DC2626";
-const NARANJA = "#D97706";
+const ROJO = "#dc2626";
+const NARANJA = "#d97706";
 
 const diasTexto = (dias) => `hace ${dias} ${dias === 1 ? "día" : "días"}`;
 const sumar = (items, obtenerMonto) => items.reduce((acc, item) => acc + (obtenerMonto(item) || 0), 0);
@@ -57,6 +60,7 @@ export function FaseDetalle() {
     const navigate = useNavigate();
     const { usuario } = useAuth();
     const canManage = usuario?.rol === "admin";
+    const toast = useToast();
 
     const [fase, setFase] = useState(null);
     const [proyecto, setProyecto] = useState(null);
@@ -175,6 +179,7 @@ export function FaseDetalle() {
             setFase(actualizada);
         } catch (err) {
             console.error("Error marcando la fase como terminada:", err);
+            toast.error("No se pudo marcar la fase como terminada.");
         }
     };
 
@@ -205,6 +210,7 @@ export function FaseDetalle() {
             refetchAcciones();
         } catch (err) {
             console.error("Error guardando gasto:", err);
+            toast.error("No se pudo guardar el gasto.");
         }
     };
 
@@ -214,6 +220,7 @@ export function FaseDetalle() {
             refetchAcciones();
         } catch (err) {
             console.error("Error eliminando gasto:", err);
+            toast.error("No se pudo eliminar el gasto.");
         }
     };
 
@@ -254,6 +261,7 @@ export function FaseDetalle() {
             refetchAcciones();
         } catch (err) {
             console.error("Error guardando compra:", err);
+            toast.error("No se pudo guardar la compra.");
         }
     };
 
@@ -263,6 +271,29 @@ export function FaseDetalle() {
             refetchAcciones();
         } catch (err) {
             console.error("Error eliminando compra:", err);
+            toast.error("No se pudo eliminar la compra.");
+        }
+    };
+
+    const handleToggleEstadoPagoCompra = async (compra) => {
+        try {
+            const estado_pago = compra.estado_pago === "pagado" ? "pendiente" : "pagado";
+            await actualizarCompra(compra.id, { estado_pago });
+            refetchAcciones();
+        } catch (err) {
+            console.error("Error actualizando el estado de pago de la compra:", err);
+            toast.error("No se pudo actualizar el estado de pago.");
+        }
+    };
+
+    const handleToggleEstadoEnvioCompra = async (compra) => {
+        try {
+            const estado_envio = compra.estado_envio === "entregado" ? "pedido" : "entregado";
+            await actualizarCompra(compra.id, { estado_envio });
+            refetchAcciones();
+        } catch (err) {
+            console.error("Error actualizando el estado de envío de la compra:", err);
+            toast.error("No se pudo actualizar el estado de envío.");
         }
     };
 
@@ -276,12 +307,13 @@ export function FaseDetalle() {
         refetchAcciones();
     };
 
-    if (cargando) return <div className="fase-detalle-vacio">Cargando...</div>;
+    if (cargando) return <Cargando texto="Cargando fase..." />;
     if (error || !fase || !proyecto) {
         return <div className="fase-detalle-vacio">No se pudo cargar el detalle de la fase.</div>;
     }
 
     const estadoInfo = getEstadoLabel(fase.estado);
+    const IconoEstado = estadoInfo.icono;
     // Mismo criterio que las fases estancadas del Panel: solo tiene sentido
     // contar "días en curso" mientras la fase sigue en curso.
     const diasEnCurso = fase.estado === "en_curso" ? diasDesde(fase.fecha_actualizacion, new Date()) : null;
@@ -306,7 +338,7 @@ export function FaseDetalle() {
                             borderColor: `${estadoInfo.color}55`,
                         }}
                     >
-                        <span className="fase-detalle-estado-icono">{estadoInfo.icono}</span>
+                        {IconoEstado && <IconoEstado size={13} strokeWidth={2.25} className="fase-detalle-estado-icono" />}
                         {estadoInfo.label}
                     </span>
                 </div>
@@ -369,7 +401,7 @@ export function FaseDetalle() {
                                     icono={Wallet}
                                     color={ROJO}
                                     titulo={compra.proveedor}
-                                    detalle={`${compra.productos} · comprado el ${formatFecha(compra.fecha)}`}
+                                    detalle={`${compra.productos} · comprado el ${formatFecha(compra.fecha)} · ${getCondicionPagoLabel(compra.condicionPago)}`}
                                     monto={formatMoneda(compra.monto)}
                                     extra={diasTexto(compra.dias)}
                                 />
@@ -439,6 +471,8 @@ export function FaseDetalle() {
                                 productos={productos}
                                 onEditar={handleEditarCompra}
                                 onEliminar={handleEliminarCompra}
+                                onTogglePago={handleToggleEstadoPagoCompra}
+                                onToggleEnvio={handleToggleEstadoEnvioCompra}
                                 onVerComprobante={getComprobanteCompra}
                                 onAgregarComprobante={handleAgregarComprobantesCompra}
                                 onEliminarComprobante={handleEliminarComprobanteCompra}

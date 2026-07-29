@@ -7,6 +7,7 @@ import { getCategorias } from "../services/categoriaService";
 import { TIPOS_PRODUCTO, getTipoProducto } from "../constants/tipoProducto";
 import { formatMoneda } from "../utils/formato";
 import { agruparPorProducto, filtrarProductos } from "../utils/comparador";
+import { Cargando } from "../components/shared/Cargando";
 
 import "./Comparador.css";
 
@@ -56,7 +57,7 @@ export function Comparador() {
         [productos, proveedores, categoriaFiltro, tipoFiltro, busqueda]
     );
 
-    if (cargando || cargandoProveedores) return <p className="comparador-feedback">Cargando comparador...</p>;
+    if (cargando || cargandoProveedores) return <Cargando texto="Cargando comparador..." />;
     if (error) return <p className="comparador-feedback">No se pudo cargar el comparador.</p>;
 
     return (
@@ -91,7 +92,7 @@ export function Comparador() {
                                                     className="comparador-badge"
                                                     style={{ color: tipo.color, backgroundColor: `${tipo.color}1c` }}
                                                 >
-                                                    {tipo.icono} {tipo.label}
+                                                    {tipo.icono && <tipo.icono size={12} strokeWidth={2.25} />} {tipo.label}
                                                 </span>
                                                 {grupo.categorias.map((c) => (
                                                     <span key={c.id} className="comparador-chip">
@@ -163,7 +164,7 @@ export function Comparador() {
                         <option value="">Todos los tipos</option>
                         {Object.entries(TIPOS_PRODUCTO).map(([clave, t]) => (
                             <option key={clave} value={clave}>
-                                {t.icono} {t.label}
+                                {t.label}
                             </option>
                         ))}
                     </select>
@@ -195,7 +196,7 @@ export function Comparador() {
                                                     className="comparador-badge"
                                                     style={{ color: tipo.color, backgroundColor: `${tipo.color}1c` }}
                                                 >
-                                                    {tipo.icono} {tipo.label}
+                                                    {tipo.icono && <tipo.icono size={12} strokeWidth={2.25} />} {tipo.label}
                                                 </span>
                                             </td>
                                             <td>{producto.proveedorNombre}</td>

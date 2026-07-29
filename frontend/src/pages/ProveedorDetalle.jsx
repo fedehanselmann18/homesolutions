@@ -36,6 +36,8 @@ import CompraCard from "../components/proyectos/cards/CompraCard";
 import ModalProveedor from "../components/modals/ModalProveedor";
 import ModalProducto from "../components/modals/ModalProducto";
 import ModalCompra from "../components/modals/ModalCompra";
+import { Cargando } from "../components/shared/Cargando";
+import { useToast } from "../context/useToast";
 
 import "../components/proyectos/Acciones.css";
 import "./ProveedorDetalle.css";
@@ -45,6 +47,7 @@ export function ProveedorDetalle() {
     const navigate = useNavigate();
     const { usuario } = useAuth();
     const canManage = usuario?.rol === "admin";
+    const toast = useToast();
 
     const [proveedor, setProveedor] = useState(null);
     const [productos, setProductos] = useState([]);
@@ -135,6 +138,7 @@ export function ProveedorDetalle() {
             setModalProveedorAbierto(false);
         } catch (err) {
             console.error("Error guardando proveedor:", err);
+            toast.error("No se pudo guardar el proveedor.");
         }
     };
 
@@ -144,6 +148,7 @@ export function ProveedorDetalle() {
             navigate("/proveedores");
         } catch (err) {
             console.error("Error eliminando proveedor:", err);
+            toast.error("No se pudo eliminar el proveedor.");
         }
     };
 
@@ -170,6 +175,7 @@ export function ProveedorDetalle() {
             refetchProductos();
         } catch (err) {
             console.error("Error guardando producto:", err);
+            toast.error("No se pudo guardar el producto.");
         }
     };
 
@@ -179,6 +185,7 @@ export function ProveedorDetalle() {
             refetchProductos();
         } catch (err) {
             console.error("Error eliminando producto:", err);
+            toast.error("No se pudo eliminar el producto.");
         }
     };
 
@@ -209,6 +216,7 @@ export function ProveedorDetalle() {
             refetchCompras();
         } catch (err) {
             console.error("Error guardando compra:", err);
+            toast.error("No se pudo guardar la compra.");
         }
     };
 
@@ -218,6 +226,29 @@ export function ProveedorDetalle() {
             refetchCompras();
         } catch (err) {
             console.error("Error eliminando compra:", err);
+            toast.error("No se pudo eliminar la compra.");
+        }
+    };
+
+    const handleToggleEstadoPagoCompra = async (compra) => {
+        try {
+            const estado_pago = compra.estado_pago === "pagado" ? "pendiente" : "pagado";
+            await actualizarCompra(compra.id, { estado_pago });
+            refetchCompras();
+        } catch (err) {
+            console.error("Error actualizando el estado de pago de la compra:", err);
+            toast.error("No se pudo actualizar el estado de pago.");
+        }
+    };
+
+    const handleToggleEstadoEnvioCompra = async (compra) => {
+        try {
+            const estado_envio = compra.estado_envio === "entregado" ? "pedido" : "entregado";
+            await actualizarCompra(compra.id, { estado_envio });
+            refetchCompras();
+        } catch (err) {
+            console.error("Error actualizando el estado de envío de la compra:", err);
+            toast.error("No se pudo actualizar el estado de envío.");
         }
     };
 
@@ -231,7 +262,7 @@ export function ProveedorDetalle() {
         refetchCompras();
     };
 
-    if (cargando) return <div className="proveedor-detalle-vacio">Cargando...</div>;
+    if (cargando) return <Cargando texto="Cargando proveedor..." />;
     if (error || !proveedor) {
         return <div className="proveedor-detalle-vacio">No se pudo cargar el detalle del proveedor.</div>;
     }
@@ -288,7 +319,7 @@ export function ProveedorDetalle() {
                         <span className="proveedor-detalle-metrica-label">Deuda pendiente</span>
                         <span
                             className="proveedor-detalle-metrica-valor"
-                            style={{ color: resumen.deuda > 0 ? "#DC2626" : "#6F7F45" }}
+                            style={{ color: resumen.deuda > 0 ? "#dc2626" : "#16a34a" }}
                         >
                             {formatMoneda(resumen.deuda)}
                         </span>
@@ -327,7 +358,7 @@ export function ProveedorDetalle() {
                                                     className="proveedor-detalle-badge"
                                                     style={{ color: tipo.color, backgroundColor: `${tipo.color}1c` }}
                                                 >
-                                                    {tipo.icono} {tipo.label}
+                                                    {tipo.icono && <tipo.icono size={12} strokeWidth={2.25} />} {tipo.label}
                                                 </span>
                                             </td>
                                             <td>
@@ -382,6 +413,8 @@ export function ProveedorDetalle() {
                                 productos={productos}
                                 onEditar={handleEditarCompra}
                                 onEliminar={handleEliminarCompra}
+                                onTogglePago={handleToggleEstadoPagoCompra}
+                                onToggleEnvio={handleToggleEstadoEnvioCompra}
                                 onVerComprobante={getComprobanteCompra}
                                 onAgregarComprobante={handleAgregarComprobantesCompra}
                                 onEliminarComprobante={handleEliminarComprobanteCompra}

@@ -1,50 +1,50 @@
 .seccion-comprobantes {
     display: flex;
     flex-direction: column;
-    gap: 0.55rem;
-    font-family: "Public Sans", sans-serif;
+    gap: 8px;
+    font-family: var(--font-ui);
 }
 
 .seccion-comprobantes-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;
+    gap: 8px;
 }
 
 .seccion-comprobantes-titulo {
     display: flex;
     align-items: center;
-    gap: 0.4rem;
+    gap: 6px;
     font-size: 0.85rem;
     font-weight: 600;
-    color: #444;
+    color: var(--color-tinta);
 }
 
 .seccion-comprobantes-contador {
-    font-size: 0.68rem;
+    font-size: 0.66rem;
     font-weight: 700;
-    color: #6F7F45;
-    background-color: rgba(111, 127, 69, 0.15);
-    padding: 0.05rem 0.45rem;
-    border-radius: 999px;
+    color: var(--color-musgo-dark);
+    background-color: var(--color-musgo-tint);
+    padding: 1px 7px;
+    border-radius: var(--radius-pill);
 }
 
 .seccion-comprobantes-btn-agregar {
-    font-family: inherit;
+    font-family: var(--font-ui);
     font-size: 0.78rem;
     font-weight: 600;
-    padding: 0.3rem 0.65rem;
-    border-radius: 8px;
-    border: 1px solid #6F7F45;
-    background-color: #fff;
-    color: #6F7F45;
+    padding: 5px 11px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-musgo);
+    background-color: transparent;
+    color: var(--color-musgo-dark);
     cursor: pointer;
     transition: background-color 0.15s ease;
 }
 
 .seccion-comprobantes-btn-agregar:hover {
-    background-color: rgba(111, 127, 69, 0.1);
+    background-color: var(--color-musgo-tint);
 }
 
 .seccion-comprobantes-btn-agregar:disabled {
@@ -55,8 +55,7 @@
 .seccion-comprobantes-vacio {
     margin: 0;
     font-size: 0.8rem;
-    color: #999;
-    font-style: italic;
+    color: var(--color-tinta-muted);
 }
 
 .seccion-comprobantes-lista {
@@ -65,29 +64,28 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: 6px;
 }
 
 .seccion-comprobantes-item {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.4rem 0.6rem;
-    border: 1px solid #eee;
-    border-radius: 8px;
-    background-color: #fff;
+    gap: 8px;
+    padding: 7px 10px;
+    border: 1px solid var(--color-linea);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-superficie);
     transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .seccion-comprobantes-item:hover {
-    border-color: #d8dcc9;
-    background-color: #fafaf6;
+    border-color: var(--color-tinta);
+    background-color: var(--color-base-1);
 }
 
 .seccion-comprobantes-icono {
-    font-size: 1rem;
+    color: var(--color-tinta-muted);
     flex-shrink: 0;
-    line-height: 1;
 }
 
 .seccion-comprobantes-link {
@@ -99,10 +97,10 @@
     background: none;
     border: none;
     padding: 0;
-    font-family: inherit;
+    font-family: var(--font-ui);
     font-size: 0.82rem;
     text-align: left;
-    color: #2f6f45;
+    color: var(--color-musgo-dark);
     cursor: pointer;
 }
 
@@ -112,26 +110,26 @@
 
 .seccion-comprobantes-link:disabled {
     cursor: default;
-    color: #999;
+    color: var(--color-tinta-muted);
 }
 
 .seccion-comprobantes-btn-eliminar {
-    font-family: inherit;
-    font-size: 0.75rem;
-    font-weight: 600;
-    width: 1.5rem;
-    height: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
     flex-shrink: 0;
-    border-radius: 6px;
-    border: none;
-    background-color: rgba(192, 57, 43, 0.1);
-    color: #c0392b;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-oxido-tint);
+    background-color: transparent;
+    color: var(--color-oxido);
     cursor: pointer;
     transition: background-color 0.15s ease;
 }
 
 .seccion-comprobantes-btn-eliminar:hover {
-    background-color: rgba(192, 57, 43, 0.2);
+    background-color: var(--color-oxido-tint);
 }
 
 .seccion-comprobantes-btn-eliminar:disabled {
@@ -142,5 +140,5 @@
 .seccion-comprobantes-error {
     margin: 0;
     font-size: 0.78rem;
-    color: #c0392b;
+    color: var(--color-oxido);
 }

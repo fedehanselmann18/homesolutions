@@ -7,6 +7,7 @@ import { getEstado } from "../../constants/estados";
 
 function ProyectoDetalleHeader({ proyecto }) {
   const estado = getEstado(proyecto.estado);
+  const IconoEstado = estado.icono;
 
   return (
     <div className="proyecto-header" style={{ borderLeftColor: estado.color }}>
@@ -20,7 +21,7 @@ function ProyectoDetalleHeader({ proyecto }) {
             borderColor: `color-mix(in srgb, ${estado.color} 40%, white)`,
           }}
         >
-          <span className="proyecto-header__estado-icono">{estado.icono}</span>
+          {IconoEstado && <IconoEstado size={13} strokeWidth={2.25} className="proyecto-header__estado-icono" />}
           {estado.label}
         </span>
       </div>

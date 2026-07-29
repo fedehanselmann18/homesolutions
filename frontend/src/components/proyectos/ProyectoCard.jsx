@@ -10,6 +10,7 @@ export function ProyectoCard({ proyecto, onEditar, onEliminar }) {
   const { usuario } = useAuth();
 
   const estado = getEstado(proyecto.estado);
+  const IconoEstado = estado.icono;
   const esTerminado = proyecto.estado === "terminado";
   const canManage = usuario.rol === "admin";
 
@@ -33,6 +34,7 @@ export function ProyectoCard({ proyecto, onEditar, onEliminar }) {
   return (
     <article
       className={`proyecto-card ${esTerminado ? "proyecto-card--terminado" : ""}`}
+      style={{ borderLeftColor: estado.color }}
       onClick={() => navigate(`/proyectos/${proyecto.id}`)}
       role="button"
       tabIndex={0}
@@ -70,7 +72,7 @@ export function ProyectoCard({ proyecto, onEditar, onEliminar }) {
             borderColor: `color-mix(in srgb, ${estado.color} 40%, white)`,
           }}
         >
-          <span className="proyecto-card__estado-icono">{estado.icono}</span>
+          {IconoEstado && <IconoEstado size={12} strokeWidth={2.25} className="proyecto-card__estado-icono" />}
           {estado.label}
         </div>
       </div>

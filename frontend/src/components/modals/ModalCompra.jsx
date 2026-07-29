@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
+import { X } from "lucide-react";
 import { ComprobantesUploader } from "../shared/ComprobantesUploader";
 import { formatMoneda } from "../../utils/formato";
 import { TIPOS_FACTURA } from "../../constants/tipoFactura";
 import { getTipoProducto } from "../../constants/tipoProducto";
+import { getCondicionPagoLabel } from "../../constants/estadoCompra";
 import "./ModalCompra.css";
 
 const CONDICION_PAGO_OPCIONES = ["contado", "cuenta_corriente", "cheque", "transferencia"];
@@ -289,7 +291,7 @@ export function ModalCompra({
                                     <option value="">Seleccionar...</option>
                                     {CONDICION_PAGO_OPCIONES.map((op) => (
                                         <option key={op} value={op}>
-                                            {op.replace("_", " ")}
+                                            {getCondicionPagoLabel(op)}
                                         </option>
                                     ))}
                                 </select>
@@ -370,7 +372,7 @@ export function ModalCompra({
                                             className="modal-form-fila-dinamica-tipo"
                                             style={{ color: tipoProducto.color, backgroundColor: `${tipoProducto.color}1c` }}
                                         >
-                                            {tipoProducto.icono} {tipoProducto.label}
+                                            {tipoProducto.icono && <tipoProducto.icono size={12} strokeWidth={2.25} />} {tipoProducto.label}
                                         </span>
                                     )}
                                 </div>
@@ -396,7 +398,7 @@ export function ModalCompra({
                                     className="modal-btn-quitar-fila"
                                     onClick={() => eliminarFilaDetalle(fila._id)}
                                 >
-                                    ✕
+                                    <X size={14} strokeWidth={2.25} />
                                 </button>
                             </div>
                             );
@@ -443,7 +445,7 @@ export function ModalCompra({
                                     className="modal-btn-quitar-fila"
                                     onClick={() => eliminarFilaImpuesto(fila._id)}
                                 >
-                                    ✕
+                                    <X size={14} strokeWidth={2.25} />
                                 </button>
                             </div>
                         ))}

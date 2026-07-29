@@ -17,14 +17,15 @@ import { getCobros } from "../services/cobroService";
 import { getCompras } from "../services/compraService";
 
 import { TarjetaKpi, BarraProgreso } from "../components/shared/TarjetaKpi";
+import { Cargando } from "../components/shared/Cargando";
 import { calcularPanel } from "../utils/panel";
 import { formatMoneda, formatMonedaCorta, formatFecha } from "../utils/formato";
 import "./Dashboard.css";
 
-const VERDE = "#6F7F45";
-const ROJO = "#DC2626";
-const NARANJA = "#D97706";
-const AZUL = "#2563EB";
+const VERDE = "#16a34a";
+const ROJO = "#dc2626";
+const NARANJA = "#d97706";
+const AZUL = "#64748b";
 
 const TIPOS_MOVIMIENTO = {
     cobro: { label: "Cobro", color: VERDE, signo: "+" },
@@ -60,6 +61,7 @@ function TarjetaProyecto({ proyecto, onClick }) {
     return (
         <article
             className="panel-proyecto"
+            style={{ borderLeftColor: proyecto.disponible >= 0 ? VERDE : ROJO }}
             onClick={onClick}
             onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onClick()}
             role="button"
@@ -158,7 +160,7 @@ export function Dashboard() {
 
     const panel = useMemo(() => (datos ? calcularPanel(datos) : null), [datos]);
 
-    if (cargando) return <p className="panel-vacio">Cargando panel...</p>;
+    if (cargando) return <Cargando texto="Cargando panel..." />;
     if (error || !panel) return <p className="panel-vacio">No se pudieron cargar los datos del panel.</p>;
 
     const { kpis, proyectosActivos, actividad, evolucion } = panel;
@@ -235,7 +237,7 @@ export function Dashboard() {
                             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
                             <XAxis dataKey="label" tick={{ fontSize: 12 }} />
                             <YAxis tickFormatter={formatMonedaCorta} tick={{ fontSize: 12 }} width={80} />
-                            <Tooltip content={<TooltipEvolucion />} cursor={{ fill: "#f6f6f2" }} />
+                            <Tooltip content={<TooltipEvolucion />} cursor={{ fill: "#f4f4f5" }} />
                             <Legend wrapperStyle={{ fontSize: 12 }} />
                             <Bar dataKey="cobrado" name="Cobrado" fill={VERDE} isAnimationActive={false} radius={[4, 4, 0, 0]} />
                             <Bar dataKey="gastado" name="Gastado" fill={NARANJA} isAnimationActive={false} radius={[4, 4, 0, 0]} />

@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { X } from "lucide-react";
 import { iconoParaArchivo, nombreDeArchivo } from "../../utils/archivos";
 import "./SeccionComprobantes.css";
 
@@ -105,31 +106,34 @@ export function SeccionComprobantes({
                 <p className="seccion-comprobantes-vacio">Sin comprobantes cargados.</p>
             ) : (
                 <ul className="seccion-comprobantes-lista">
-                    {comprobantes.map((c) => (
-                        <li key={c.id} className="seccion-comprobantes-item">
-                            <span className="seccion-comprobantes-icono">{iconoParaArchivo(c.archivo_path)}</span>
-                            <button
-                                type="button"
-                                className="seccion-comprobantes-link"
-                                onClick={() => handleVer(c)}
-                                disabled={viendoId === c.id}
-                                title={nombreDeArchivo(c.archivo_path)}
-                            >
-                                {viendoId === c.id ? "Abriendo..." : nombreDeArchivo(c.archivo_path)}
-                            </button>
-                            {canManage && onEliminar && (
+                    {comprobantes.map((c) => {
+                        const IconoArchivo = iconoParaArchivo(c.archivo_path);
+                        return (
+                            <li key={c.id} className="seccion-comprobantes-item">
+                                <IconoArchivo size={14} strokeWidth={2} className="seccion-comprobantes-icono" />
                                 <button
                                     type="button"
-                                    className="seccion-comprobantes-btn-eliminar"
-                                    onClick={() => handleEliminar(c.id)}
-                                    disabled={eliminandoId === c.id}
-                                    title="Eliminar"
+                                    className="seccion-comprobantes-link"
+                                    onClick={() => handleVer(c)}
+                                    disabled={viendoId === c.id}
+                                    title={nombreDeArchivo(c.archivo_path)}
                                 >
-                                    {eliminandoId === c.id ? "..." : "✕"}
+                                    {viendoId === c.id ? "Abriendo..." : nombreDeArchivo(c.archivo_path)}
                                 </button>
-                            )}
-                        </li>
-                    ))}
+                                {canManage && onEliminar && (
+                                    <button
+                                        type="button"
+                                        className="seccion-comprobantes-btn-eliminar"
+                                        onClick={() => handleEliminar(c.id)}
+                                        disabled={eliminandoId === c.id}
+                                        title="Eliminar"
+                                    >
+                                        {eliminandoId === c.id ? "..." : <X size={13} strokeWidth={2.25} />}
+                                    </button>
+                                )}
+                            </li>
+                        );
+                    })}
                 </ul>
             )}
 
