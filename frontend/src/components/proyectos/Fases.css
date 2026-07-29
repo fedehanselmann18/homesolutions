@@ -1,0 +1,68 @@
+.fases-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+
+.fases-header button {
+    font-family: "Public Sans", sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.55rem 1.1rem;
+    border-radius: 8px;
+    border: none;
+    background-color: #6F7F45;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.fases-header button:hover {
+    background-color: #5c6a38;
+}
+
+.fases-header button:active {
+    transform: scale(0.97);
+}
+
+.fases-seccion {
+    margin-bottom: 1.75rem;
+}
+
+.fases-seccion:last-child {
+    margin-bottom: 0;
+}
+
+.fases-seccion-titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-family: "Public Sans", sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2f2f2f;
+    margin: 0 0 0.8rem;
+}
+
+.fases-seccion-punto {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.fases-seccion-contador {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #888;
+    background-color: #f0f0eb;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+}
+
+.fases-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 1rem;
+}

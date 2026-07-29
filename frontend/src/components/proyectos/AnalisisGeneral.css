@@ -1,0 +1,264 @@
+/* AnalisisGeneral.css */
+
+.analisis {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    font-family: "Public Sans", sans-serif;
+}
+
+/* Las tarjetas de KPI y la barra de progreso viven en
+   components/shared/TarjetaKpi.css (las comparte con el Panel). */
+
+.analisis-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+}
+
+/* --- Secciones --- */
+
+.analisis-seccion {
+    background-color: #fff;
+    border: 1px solid #e5e5e0;
+    border-radius: 12px;
+    padding: 1.25rem 1.4rem 1.4rem;
+}
+
+.analisis-fila {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.25rem;
+}
+
+.analisis-seccion-titulo {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2f2f2f;
+    margin: 0 0 0.25rem;
+}
+
+.analisis-subtitulo {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #2f2f2f;
+    margin: 1.5rem 0 0.6rem;
+}
+
+.analisis-seccion-descripcion {
+    font-size: 0.82rem;
+    color: #888;
+    margin: 0 0 1rem;
+}
+
+.analisis-vacio {
+    font-size: 0.88rem;
+    color: #888;
+    margin: 0.5rem 0;
+}
+
+/* --- Tooltip de los gráficos --- */
+
+.analisis-tooltip {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    background-color: #fff;
+    border: 1px solid #e5e5e0;
+    border-radius: 8px;
+    padding: 0.5rem 0.7rem;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.1);
+    font-size: 0.82rem;
+    color: #444;
+}
+
+.analisis-tooltip strong {
+    color: #2f2f2f;
+}
+
+/* --- Tortas y leyendas --- */
+
+.analisis-torta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.analisis-leyenda {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.analisis-leyenda--horizontal {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem 1.1rem;
+    margin-top: 0.6rem;
+}
+
+.analisis-leyenda-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.82rem;
+    color: #444;
+}
+
+.analisis-leyenda-punto {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.analisis-leyenda-nombre {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.analisis-leyenda-pct {
+    font-weight: 700;
+    color: #2f2f2f;
+}
+
+.analisis-leyenda-monto {
+    color: #888;
+    font-variant-numeric: tabular-nums;
+}
+
+.analisis-leyenda-tipos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.25rem;
+    margin-bottom: 0.75rem;
+}
+
+.analisis-leyenda-tipo {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    color: #444;
+}
+
+.analisis-leyenda-tipo strong {
+    color: #2f2f2f;
+    font-variant-numeric: tabular-nums;
+}
+
+/* --- Treemap --- */
+
+.analisis-treemap-nombre {
+    fill: #fff;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.analisis-treemap-monto {
+    fill: #fff;
+    font-size: 0.72rem;
+    opacity: 0.85;
+}
+
+/* --- Tabla --- */
+
+.analisis-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-size: 0.85rem;
+}
+
+.analisis-tabla th,
+.analisis-tabla td {
+    text-align: left;
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid #f0f0eb;
+}
+
+.analisis-tabla th {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.analisis-tabla td {
+    color: #444;
+    font-variant-numeric: tabular-nums;
+}
+
+.analisis-tabla td:last-child,
+.analisis-tabla th:last-child {
+    text-align: right;
+}
+
+/* --- Avance de obra --- */
+
+.analisis-avance-barra {
+    display: flex;
+    height: 14px;
+    border-radius: 999px;
+    overflow: hidden;
+    background-color: #f0f0eb;
+    gap: 2px;
+}
+
+.analisis-avance-segmento {
+    height: 100%;
+}
+
+/* --- Ranking de proveedores --- */
+
+.analisis-ranking {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.analisis-ranking-item {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-size: 0.85rem;
+    color: #444;
+}
+
+.analisis-ranking-puesto {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: #f0f0eb;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #6F7F45;
+}
+
+.analisis-ranking-nombre {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.analisis-ranking-monto {
+    font-weight: 600;
+    color: #2f2f2f;
+    font-variant-numeric: tabular-nums;
+}

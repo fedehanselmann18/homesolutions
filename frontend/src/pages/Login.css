@@ -1,0 +1,105 @@
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg, #faf9f5);
+  font-family: var(--font-ui, "Public Sans", sans-serif);
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e4e2d8);
+  border-radius: 12px;
+  padding: 36px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-logo {
+  width: 100px;
+  height: auto;
+  margin-bottom: 4px;
+}
+
+.login-card h1 {
+  font-size: 1.3rem;
+  color: var(--color-text, #2b2e22);
+  margin: 0 0 4px;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text, #2b2e22);
+}
+
+.login-field select,
+.login-field input {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 400;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border, #e4e2d8);
+  background: var(--color-bg, #faf9f5);
+  color: var(--color-text, #2b2e22);
+}
+
+.login-field select:focus,
+.login-field input:focus {
+  outline: 2px solid var(--color-olive, #6f7f45);
+  outline-offset: 1px;
+}
+
+.login-error {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #a8402f;
+  background: #fbeae6;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.login-card button {
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #fff;
+  background: var(--color-olive, #6f7f45);
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  margin-top: 4px;
+}
+
+.login-card button:hover:not(:disabled) {
+  background: var(--color-olive-dark, #55622f);
+}
+
+.login-card button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-link {
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-olive-dark, #55622f);
+  text-decoration: none;
+  margin-top: 2px;
+}
+
+.login-link:hover {
+  text-decoration: underline;
+}

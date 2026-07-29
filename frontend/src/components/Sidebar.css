@@ -1,0 +1,174 @@
+/* Tokens de marca: si ya los tenés definidos en index.css, movelos ahí
+   y borrá este bloque para no duplicar. Quedan acá por ahora para que
+   el sidebar funcione de forma independiente. */
+:root {
+  --color-olive: #6f7f45;
+  --color-olive-dark: #55622f;
+  --color-olive-tint: #eef1e6;
+  --color-bg: #faf9f5;
+  --color-surface: #ffffff;
+  --color-text: #2b2e22;
+  --color-text-muted: #767a68;
+  --color-border: #e4e2d8;
+  --font-ui: "Public Sans", -apple-system, sans-serif;
+}
+
+.sidebar {
+  width: 240px;
+  min-width: 240px;
+  height: 100vh;
+  background: var(--color-surface);
+  border-right: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-ui);
+
+  /* Queda fijo mientras scrolleás el contenido. Sin esto el sidebar mide
+     100vh pero se va con el scroll de la página, y en cuanto el contenido
+     es más alto que la ventana su borde inferior (usuario + cerrar sesión)
+     sube y deja un hueco vacío abajo.
+     `align-self: flex-start` es necesario: el flex del layout lo estiraría
+     a la altura completa del contenido y el sticky no tendría margen para
+     pegarse. */
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  z-index: 10;
+}
+
+.sidebar-header {
+  padding: 24px 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sidebar-brand {
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--color-olive-dark);
+  letter-spacing: -0.01em;
+}
+
+.sidebar-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px 12px;
+  gap: 2px;
+  overflow-y: auto;
+}
+
+.sidebar-link {
+  display: block;
+  padding: 10px 14px;
+  border-radius: 8px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border-left: 3px solid transparent;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-link:hover {
+  background: var(--color-olive-tint);
+  color: var(--color-text);
+}
+
+.sidebar-link-active {
+  background: var(--color-olive-tint);
+  color: var(--color-olive-dark);
+  border-left-color: var(--color-olive);
+  font-weight: 600;
+}
+
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sidebar-user {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+}
+
+.sidebar-user-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.sidebar-user-role {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: capitalize;
+}
+
+.sidebar-logout {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-olive-dark);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.sidebar-logout:hover {
+  background: var(--color-olive-tint);
+}
+
+/* Mobile: el sidebar pasa a ser una barra superior horizontal y compacta */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .sidebar-header {
+    border-bottom: none;
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    overflow-x: auto;
+    padding: 8px;
+  }
+
+  .sidebar-link {
+    white-space: nowrap;
+    border-left: none;
+    border-bottom: 3px solid transparent;
+  }
+
+  .sidebar-link-active {
+    border-left-color: transparent;
+    border-bottom-color: var(--color-olive);
+  }
+
+  .sidebar-footer {
+    border-top: none;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .sidebar-user {
+    display: none;
+  }
+}
+
+.sidebar-brand {
+  width : 100px;
+  height: auto;
+}

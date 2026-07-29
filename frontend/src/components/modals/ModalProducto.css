@@ -1,0 +1,231 @@
+/* ModalProducto.css */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+
+.modal-contenido {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 1.75rem 2rem;
+    width: 100%;
+    max-width: 460px;
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-gutter: stable;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    font-family: "Public Sans", sans-serif;
+    animation: modal-in 0.15s ease-out;
+    box-sizing: border-box;
+}
+
+.modal-contenido--ancho {
+    max-width: 620px;
+}
+
+@keyframes modal-in {
+    from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.modal-contenido h2 {
+    margin: 0 0 1.25rem;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #2f2f2f;
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.modal-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #444;
+    min-width: 0;
+}
+
+.modal-form-fila {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    min-width: 0;
+}
+
+.modal-form-fila > * {
+    min-width: 0;
+}
+
+.modal-form input,
+.modal-form select {
+    width: 100%;
+    font-family: inherit;
+    font-size: 0.95rem;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    color: #2f2f2f;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.modal-form input:focus,
+.modal-form select:focus {
+    outline: none;
+    border-color: #6F7F45;
+    box-shadow: 0 0 0 3px rgba(111, 127, 69, 0.18);
+}
+
+.modal-form select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    background-size: 1rem;
+    padding-right: 2rem;
+}
+
+/* Secciones: agrupan datos generales / comprobantes, igual que ModalCompra.css */
+
+.modal-form-seccion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    padding: 0.9rem;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    background-color: #fafafa;
+    min-width: 0;
+}
+
+.modal-form-seccion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #444;
+}
+
+.modal-form-seccion-vacio {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #999;
+    font-style: italic;
+}
+
+/* Checkboxes de categorías */
+
+.modal-form-checkboxes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.modal-form-checkboxes-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #444;
+}
+
+.modal-form-checkboxes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.4rem 0.6rem;
+    min-width: 0;
+}
+
+.modal-form-checkboxes-grid > * {
+    min-width: 0;
+}
+
+.modal-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: #444;
+}
+
+.modal-checkbox input {
+    width: auto;
+    padding: 0;
+    accent-color: #6F7F45;
+}
+
+/* Acciones */
+
+.modal-acciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 0.5rem;
+}
+
+.modal-btn-cancelar,
+.modal-btn-guardar {
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.55rem 1.1rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.modal-btn-cancelar {
+    background-color: #eee;
+    color: #444;
+}
+
+.modal-btn-cancelar:hover {
+    background-color: #ddd;
+}
+
+.modal-btn-guardar {
+    background-color: #6F7F45;
+    color: #fff;
+}
+
+.modal-btn-guardar:hover {
+    background-color: #5c6a38;
+}
+
+.modal-btn-cancelar:active,
+.modal-btn-guardar:active {
+    transform: scale(0.97);
+}
+
+@media (max-width: 480px) {
+    .modal-contenido {
+        padding: 1.25rem 1.25rem;
+    }
+
+    .modal-form-fila {
+        grid-template-columns: 1fr;
+    }
+}

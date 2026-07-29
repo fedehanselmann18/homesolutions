@@ -1,0 +1,168 @@
+.comprobantes-uploader {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.comprobantes-dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    text-align: center;
+    padding: 1.1rem 1rem;
+    border: 1.5px dashed #c7cdb8;
+    border-radius: 10px;
+    background-color: #fbfbf8;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.comprobantes-dropzone:hover {
+    border-color: #6F7F45;
+    background-color: rgba(111, 127, 69, 0.06);
+}
+
+.comprobantes-dropzone--activo {
+    border-color: #6F7F45;
+    background-color: rgba(111, 127, 69, 0.12);
+}
+
+.comprobantes-dropzone--disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.comprobantes-dropzone-icono {
+    font-size: 1.4rem;
+    line-height: 1;
+}
+
+.comprobantes-dropzone-texto {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #444;
+}
+
+.comprobantes-dropzone-subtexto {
+    font-size: 0.76rem;
+    color: #888;
+}
+
+.comprobantes-errores {
+    margin: 0;
+    padding-left: 1.1rem;
+    font-size: 0.78rem;
+    color: #c0392b;
+}
+
+.comprobantes-vacio {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #999;
+    font-style: italic;
+}
+
+.comprobantes-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.comprobantes-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: #fff;
+}
+
+.comprobantes-chip--pendiente {
+    border-color: rgba(111, 127, 69, 0.35);
+    background-color: rgba(111, 127, 69, 0.05);
+}
+
+.comprobantes-chip-icono {
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.comprobantes-chip-nombre {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.85rem;
+    color: #2f2f2f;
+    text-align: left;
+}
+
+.comprobantes-chip-nombre--link {
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+    cursor: pointer;
+    color: #2f6f45;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    transition: text-decoration-color 0.15s ease;
+}
+
+.comprobantes-chip-nombre--link:hover {
+    text-decoration-color: currentColor;
+}
+
+.comprobantes-chip-nombre--link:disabled {
+    cursor: default;
+    color: #999;
+}
+
+.comprobantes-chip-tamanio {
+    font-size: 0.75rem;
+    color: #888;
+    flex-shrink: 0;
+}
+
+.comprobantes-chip-badge {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #6F7F45;
+    background-color: rgba(111, 127, 69, 0.15);
+    padding: 0.12rem 0.4rem;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.comprobantes-chip-quitar {
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    width: 1.6rem;
+    height: 1.6rem;
+    flex-shrink: 0;
+    border-radius: 6px;
+    border: none;
+    background-color: rgba(192, 57, 43, 0.1);
+    color: #c0392b;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.comprobantes-chip-quitar:hover {
+    background-color: rgba(192, 57, 43, 0.2);
+}
+
+.comprobantes-chip-quitar:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}

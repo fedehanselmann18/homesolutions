@@ -1,0 +1,395 @@
+"""
+Modelos de SQLAlchemy para HomeSolutions.
+
+Convenciones:
+- Todos los PK son UUID.
+- Los campos "tipo select" (estado, tipo_factura, condicion_pago, etc.) son
+  String simple, sin Enum/CHECK — la validación de esos valores la maneja
+  el front (ya definido así en el modelado con Agus).
+- precio_total de Compra NO se guarda: es precio_neto + suma de sus impuestos.
+  precio_neto SÍ se carga a mano (puede haber descuentos/redondeos que no
+  coincidan exacto con la suma del detalle — eso se valida en el service,
+  no se fuerza en el modelo).
+- El rol de Usuario (admin/lectura) es un dato de la tabla; el chequeo de
+  permisos real se hace en el service layer contra el JWT, no acá.
+- Todas las tablas tienen fecha_creacion/fecha_actualizacion AUTOMÁTICAS
+  (auditoría de sistema) además de los campos de fecha "de negocio" que ya
+  cargás a mano (fecha, fecha_inicio) — son cosas distintas, no se pisan.
+- Reglas de borrado (ondelete): CASCADE en todo lo que no puede existir sin
+  su padre (detalle, impuestos aplicados, comprobantes, fases de un proyecto,
+  compras de una fase). RESTRICT en catálogos referenciados desde historial
+  financiero (proveedor, producto, usuario, impuesto) para no perder
+  trazabilidad. SET NULL en Gasto.fase_id, porque el Gasto sigue perteneciendo
+  al Proyecto aunque se borre la Fase.
+
+Ajustá el import de `Base` a como esté armado tu database.py.
+"""
+
+import uuid
+from datetime import date, datetime
+
+from sqlalchemy import ForeignKey, Numeric, String, Table, Column, DateTime, func, UniqueConstraint  # CORREGIDO: + UniqueConstraint
+
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from app.db.db import Base
+
+
+def uuid_pk() -> Mapped[uuid.UUID]:
+    return mapped_column(primary_key=True, default=uuid.uuid4)
+
+
+class TimestampMixin:
+    """fecha_creacion/fecha_actualizacion automáticas, las pone la DB sola."""
+
+    fecha_creacion: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    fecha_actualizacion: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
+    )
+
+
+# ---------------------------------------------------------------------------
+# Usuario
+# ---------------------------------------------------------------------------
+
+class Usuario(TimestampMixin, Base):
+    __tablename__ = "usuarios"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    nombre_usuario: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    rol: Mapped[str] = mapped_column(String(20), nullable=False, default="admin")  # "admin" | "lectura"
+
+
+# ---------------------------------------------------------------------------
+# Proyecto / Fase
+# ---------------------------------------------------------------------------
+
+class Proyecto(TimestampMixin, Base):
+    __tablename__ = "proyectos"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    nombre: Mapped[str] = mapped_column(String(150), nullable=False)
+    direccion: Mapped[str] = mapped_column(String(255), nullable=False)
+    fecha_inicio: Mapped[date] = mapped_column(nullable=False)  # fecha de negocio, se carga a mano
+    estado: Mapped[str] = mapped_column(String(20), nullable=False)  # a_iniciar/en_curso/terminado
+    precio_acordado: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+
+    fases: Mapped[list["Fase"]] = relationship(back_populates="proyecto", cascade="all, delete-orphan")
+    gastos: Mapped[list["Gasto"]] = relationship(back_populates="proyecto", cascade="all, delete-orphan")
+    cobros: Mapped[list["Cobro"]] = relationship(back_populates="proyecto", cascade="all, delete-orphan")
+
+
+class Fase(TimestampMixin, Base):
+    __tablename__ = "fases"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    proyecto_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("proyectos.id", ondelete="CASCADE"), nullable=False
+    )
+    nombre: Mapped[str] = mapped_column(String(150), nullable=False)
+    descripcion: Mapped[str | None] = mapped_column(String(500))
+    estado: Mapped[str] = mapped_column(String(20), nullable=False)  # por_empezar/en_curso/terminada/auditada
+
+    proyecto: Mapped["Proyecto"] = relationship(back_populates="fases")
+    # Compra NO puede existir sin Fase -> se borra en cascada junto con ella (ver Compra.fase_id).
+    compras: Mapped[list["Compra"]] = relationship(back_populates="fase", cascade="all, delete-orphan")
+    # Gasto SÍ puede existir sin Fase (sigue perteneciendo al Proyecto) -> no se borra, se desvincula.
+    gastos: Mapped[list["Gasto"]] = relationship(back_populates="fase")
+
+
+# ---------------------------------------------------------------------------
+# Proveedor / Producto / Categorias / Impuesto (catálogos)
+# ---------------------------------------------------------------------------
+
+class Proveedor(TimestampMixin, Base):
+    __tablename__ = "proveedores"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    nombre: Mapped[str] = mapped_column(String(150), nullable=False)
+    cuit: Mapped[str] = mapped_column(String(20), nullable=False)
+    direccion: Mapped[str | None] = mapped_column(String(255))
+    telefono: Mapped[str | None] = mapped_column(String(50))
+    email: Mapped[str | None] = mapped_column(String(150))
+
+    # Si el proveedor no tiene compras cargadas, borrarlo se lleva su catálogo.
+    # Si tiene compras, Compra.proveedor_id (RESTRICT) va a impedir el borrado antes de llegar acá.
+    productos: Mapped[list["Producto"]] = relationship(back_populates="proveedor", cascade="all, delete-orphan")
+
+
+class Categoria(TimestampMixin, Base):
+    """Categoría compartida entre Producto y Compra (Aires, Cafeteras, Cables...)."""
+    __tablename__ = "categorias"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    nombre: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    tipo: Mapped[str] = mapped_column(String(20), nullable=False)  # mano_obra/equipo/materiales
+
+
+class CategoriaGasto(TimestampMixin, Base):
+    """Categoría propia de Gasto (Flete, Almuerzo, Gastos bancarios...)."""
+    __tablename__ = "categorias_gasto"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    nombre: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+
+
+class Impuesto(TimestampMixin, Base):
+    __tablename__ = "impuestos"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    nombre: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+
+
+producto_categoria = Table(
+    "producto_categoria",
+    Base.metadata,
+    Column("producto_id", ForeignKey("productos.id", ondelete="CASCADE"), primary_key=True),
+    Column("categoria_id", ForeignKey("categorias.id", ondelete="RESTRICT"), primary_key=True),
+)
+
+
+class Producto(TimestampMixin, Base):
+    __tablename__ = "productos"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    proveedor_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("proveedores.id", ondelete="CASCADE"), nullable=False
+    )
+    marca: Mapped[str] = mapped_column(String(100), nullable=False)
+    modelo: Mapped[str] = mapped_column(String(100), nullable=False)
+    tipo: Mapped[str] = mapped_column(String(20), nullable=False)  # mano_obra/equipo/materiales
+    # Precio de catálogo del proveedor. Es el valor que se propone solo al
+    # elegir el producto en una Compra (DetalleCompra.precio_unitario) -- ese
+    # campo de la compra queda como fue en el momento, no se actualiza en
+    # cascada si el precio de catálogo cambia después.
+    precio: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+
+    proveedor: Mapped["Proveedor"] = relationship(back_populates="productos")
+    categorias: Mapped[list["Categoria"]] = relationship(secondary=producto_categoria)
+
+
+# ---------------------------------------------------------------------------
+# Compra (+ detalle, categorías, impuestos, comprobantes)
+# ---------------------------------------------------------------------------
+
+class Compra(TimestampMixin, Base):
+    __tablename__ = "compras"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    # CORREGIDO: la Compra siempre pertenece a una Fase (CompraCreate.fase_id es obligatorio,
+    # así lo definiste con Agus) -> CASCADE + not nullable, no SET NULL.
+    fase_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("fases.id", ondelete="CASCADE"), nullable=False
+    )
+    # RESTRICT: no se puede borrar un proveedor/usuario si tiene compras -> se pierde trazabilidad.
+    proveedor_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("proveedores.id", ondelete="RESTRICT"), nullable=False
+    )
+    usuario_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False
+    )
+
+    descripcion: Mapped[str] = mapped_column(String(500), nullable=False)
+    precio_neto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)  # sin impuestos, se carga a mano
+    tipo_factura: Mapped[str] = mapped_column(String(30), nullable=False)
+    fecha: Mapped[date] = mapped_column(nullable=False)  # fecha de negocio, se carga a mano
+    condicion_pago: Mapped[str] = mapped_column(String(30), nullable=False)
+    estado_pago: Mapped[str] = mapped_column(String(20), nullable=False)  # pendiente/pagado
+    estado_envio: Mapped[str] = mapped_column(String(20), nullable=False)  # pedido/entregado
+
+    fase: Mapped["Fase"] = relationship(back_populates="compras")
+    proveedor: Mapped["Proveedor"] = relationship()
+    usuario: Mapped["Usuario"] = relationship()
+    detalle: Mapped[list["DetalleCompra"]] = relationship(
+        back_populates="compra", cascade="all, delete-orphan",
+        # al leer, hacer selectinload(Compra.detalle).joinedload(DetalleCompra.producto).joinedload(Producto.categorias)
+        # para que las properties de abajo no disparen N+1 queries
+    )
+    impuestos_aplicados: Mapped[list["CompraImpuesto"]] = relationship(back_populates="compra", cascade="all, delete-orphan")
+    comprobantes: Mapped[list["ComprobanteCompra"]] = relationship(back_populates="compra", cascade="all, delete-orphan")
+
+    @property
+    def precio_total(self) -> float:
+        """precio_neto + suma de todos los impuestos aplicados. No se persiste."""
+        return float(self.precio_neto) + sum(float(ci.monto) for ci in self.impuestos_aplicados)
+
+    @property
+    def categorias(self) -> list["Categoria"]:
+        """
+        Categorías de la Compra, DERIVADAS de las categorías de sus productos
+        (Compra -> DetalleCompra -> Producto -> Categoria). No se cargan a mano:
+        si compraste aires y cafeteras en la misma Compra, esto devuelve ambas
+        categorías sin que nadie tenga que tildarlas por separado.
+        """
+        vistas: dict[uuid.UUID, "Categoria"] = {}
+        for linea in self.detalle:
+            for cat in linea.producto.categorias:
+                vistas[cat.id] = cat
+        return list(vistas.values())
+
+    @property
+    def tipos_compra(self) -> list[str]:
+        """
+        Tipos (mano_obra/equipo/materiales) presentes en esta Compra, DERIVADOS
+        del tipo de cada Producto en el detalle. Mismo principio que categorias:
+        si en una misma Compra hay un producto de "equipo" y otro de "materiales",
+        esto devuelve ambos en vez de forzarte a elegir uno solo para toda la Compra.
+        """
+        vistos: dict[str, None] = {}
+        for linea in self.detalle:
+            vistos[linea.producto.tipo] = None
+        return list(vistos.keys())
+
+
+class DetalleCompra(TimestampMixin, Base):
+    """Línea de detalle: qué productos (y cantidad/precio) componen una Compra."""
+    __tablename__ = "detalle_compra"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    compra_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("compras.id", ondelete="CASCADE"), nullable=False
+    )
+    # RESTRICT: no se puede borrar un producto que ya fue comprado -> se pierde el historial.
+    producto_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("productos.id", ondelete="RESTRICT"), nullable=False
+    )
+    cantidad: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    precio_unitario: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+
+    compra: Mapped["Compra"] = relationship(back_populates="detalle")
+    producto: Mapped["Producto"] = relationship()
+
+
+class CompraImpuesto(TimestampMixin, Base):
+    """
+    Entidad asociativa Compra<->Impuesto: guarda cuánto de CADA impuesto se pagó.
+
+    CORREGIDO:
+    - PK simple (`id`) en vez de PK compuesta (id + compra_id + impuesto_id). Con las
+      tres columnas como primary_key=True, `id` (UUID random) hacía que la restricción
+      de unicidad nunca se cumpliera de verdad: se podía cargar el mismo impuesto dos
+      veces en la misma Compra. Ahora la unicidad real se garantiza con el
+      UniqueConstraint de abajo.
+    - Se saca el campo `nombre`: es redundante con Impuesto.nombre (accedé vía la
+      relación `impuesto.nombre`) y además rompía el insert, porque CompraImpuestoCreate
+      nunca lo mandaba y la columna era NOT NULL sin default.
+    """
+    __tablename__ = "compra_impuesto"
+    __table_args__ = (
+        UniqueConstraint("compra_id", "impuesto_id", name="uq_compra_impuesto"),
+    )
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+
+    compra_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("compras.id", ondelete="CASCADE"), nullable=False
+    )
+    impuesto_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("impuestos.id", ondelete="RESTRICT"), nullable=False
+    )
+    monto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+
+    compra: Mapped["Compra"] = relationship(back_populates="impuestos_aplicados")
+    impuesto: Mapped["Impuesto"] = relationship()
+
+
+class ComprobanteCompra(TimestampMixin, Base):
+    __tablename__ = "comprobantes_compra"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    compra_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("compras.id", ondelete="CASCADE"), nullable=False
+    )
+    archivo_path: Mapped[str] = mapped_column(String(500), nullable=False)
+
+    compra: Mapped["Compra"] = relationship(back_populates="comprobantes")
+
+
+# ---------------------------------------------------------------------------
+# Gasto (+ categorías, comprobantes)
+# ---------------------------------------------------------------------------
+
+gasto_categoria = Table(
+    "gasto_categoria",
+    Base.metadata,
+    Column("gasto_id", ForeignKey("gastos.id", ondelete="CASCADE"), primary_key=True),
+    Column("categoria_gasto_id", ForeignKey("categorias_gasto.id", ondelete="RESTRICT"), primary_key=True),
+)
+
+
+class Gasto(TimestampMixin, Base):
+    __tablename__ = "gastos"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    proyecto_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("proyectos.id", ondelete="CASCADE"), nullable=False
+    )
+    # SET NULL: si se borra la Fase, el Gasto se desvincula pero sigue existiendo (es del Proyecto).
+    fase_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("fases.id", ondelete="SET NULL"), nullable=True
+    )
+    usuario_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False
+    )
+
+    monto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    descripcion: Mapped[str] = mapped_column(String(500), nullable=False)
+    fecha: Mapped[date] = mapped_column(nullable=False)  # fecha de negocio, se carga a mano
+    tipo_factura: Mapped[str] = mapped_column(String(30), nullable=False)
+
+    proyecto: Mapped["Proyecto"] = relationship(back_populates="gastos")
+    fase: Mapped["Fase | None"] = relationship(back_populates="gastos")
+    usuario: Mapped["Usuario"] = relationship()
+    categorias: Mapped[list["CategoriaGasto"]] = relationship(secondary=gasto_categoria)
+    comprobantes: Mapped[list["ComprobanteGasto"]] = relationship(back_populates="gasto", cascade="all, delete-orphan")
+
+
+class ComprobanteGasto(TimestampMixin, Base):
+    __tablename__ = "comprobantes_gasto"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    gasto_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("gastos.id", ondelete="CASCADE"), nullable=False
+    )
+    archivo_path: Mapped[str] = mapped_column(String(500), nullable=False)
+
+    gasto: Mapped["Gasto"] = relationship(back_populates="comprobantes")
+
+
+# ---------------------------------------------------------------------------
+# Cobro (+ comprobantes)
+# ---------------------------------------------------------------------------
+
+class Cobro(TimestampMixin, Base):
+    __tablename__ = "cobros"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    proyecto_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("proyectos.id", ondelete="CASCADE"), nullable=False
+    )
+    usuario_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False
+    )
+
+    monto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    descripcion: Mapped[str] = mapped_column(String(500), nullable=False)
+    fecha: Mapped[date] = mapped_column(nullable=False)  # fecha de negocio, se carga a mano
+    tipo_factura: Mapped[str] = mapped_column(String(30), nullable=False)
+
+    proyecto: Mapped["Proyecto"] = relationship(back_populates="cobros")
+    usuario: Mapped["Usuario"] = relationship()
+    comprobantes: Mapped[list["ComprobanteCobro"]] = relationship(back_populates="cobro", cascade="all, delete-orphan")
+
+
+class ComprobanteCobro(TimestampMixin, Base):
+    __tablename__ = "comprobantes_cobro"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    cobro_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("cobros.id", ondelete="CASCADE"), nullable=False
+    )
+    archivo_path: Mapped[str] = mapped_column(String(500), nullable=False)
+
+    cobro: Mapped["Cobro"] = relationship(back_populates="comprobantes")

@@ -1,0 +1,156 @@
+/* ProveedorCard.css */
+
+.proveedor-card {
+    position: relative;
+    background-color: #fff;
+    border: 0.5px solid #e0ded4;
+    border-radius: 10px;
+    padding: 0.9rem 1.1rem;
+    font-family: "Public Sans", sans-serif;
+    cursor: pointer;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.proveedor-card:hover {
+    border-color: #c9c6b8;
+}
+
+.proveedor-card:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(111, 127, 69, 0.3);
+}
+
+.proveedor-card__nombre {
+    font-weight: 600;
+    font-size: 1rem;
+    margin: 0;
+    color: #2f2f2f;
+    padding-right: 60px;
+}
+
+.proveedor-card__rubro {
+    width: fit-content;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #6F7F45;
+    background-color: rgba(111, 127, 69, 0.1);
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+}
+
+.proveedor-card__contacto {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.proveedor-card__contacto span {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.proveedor-card__contacto svg {
+    flex-shrink: 0;
+    color: #999;
+}
+
+.proveedor-card__productos {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.proveedor-card__productos svg {
+    color: #999;
+    flex-shrink: 0;
+}
+
+.proveedor-card__footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    border-top: 0.5px solid #eee;
+    padding-top: 0.65rem;
+    margin-top: 0.15rem;
+}
+
+.proveedor-card__metrica {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 0;
+}
+
+.proveedor-card__metrica-label {
+    font-size: 0.68rem;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.proveedor-card__metrica-valor {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #2f2f2f;
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.proveedor-card__acciones-flotantes {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transform: translateY(-2px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.proveedor-card:hover .proveedor-card__acciones-flotantes,
+.proveedor-card:focus-within .proveedor-card__acciones-flotantes {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.proveedor-card__acciones-flotantes button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: 6px;
+    background-color: #f7f7f2;
+    color: #888;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.proveedor-card__acciones-flotantes button:hover {
+    background-color: #ececE0;
+    color: #444;
+}
+
+.proveedor-card__btn-eliminar {
+    color: #c99 !important;
+}
+
+.proveedor-card__btn-eliminar:hover {
+    background-color: rgba(197, 68, 68, 0.1) !important;
+    color: #c54444 !important;
+}

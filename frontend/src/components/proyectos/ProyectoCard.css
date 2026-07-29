@@ -1,0 +1,126 @@
+/* ProyectoCard.css */
+
+.proyecto-card {
+  position: relative;
+  background-color: #fff;
+  border: 0.5px solid #e0ded4;
+  border-radius: 10px;
+  padding: 0.9rem 1.1rem;
+  font-family: "Public Sans", sans-serif;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.proyecto-card:hover {
+  border-color: #c9c6b8;
+}
+
+.proyecto-card:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(111, 127, 69, 0.3);
+}
+
+.proyecto-card--terminado {
+  background-color: #f9faf7;
+  border-color: rgba(59, 109, 17, 0.15);
+}
+
+.proyecto-card__nombre {
+  font-weight: 500;
+  font-size: 0.95rem;
+  margin: 0 0 2px;
+  color: #2f2f2f;
+  padding-right: 60px;
+}
+
+.proyecto-card__direccion {
+  font-size: 0.78rem;
+  color: #888;
+  margin: 0 0 10px;
+}
+
+.proyecto-card__datos {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 10px;
+  font-size: 0.78rem;
+  color: #888;
+}
+
+.proyecto-card__datos span:last-child {
+  color: #2f2f2f;
+  font-weight: 500;
+}
+
+.proyecto-card__footer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border-top: 0.5px solid #eee;
+  padding-top: 8px;
+  gap: 8px;
+}
+
+.proyecto-card__estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  width: fit-content;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.proyecto-card__estado-icono {
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+.proyecto-card__acciones-flotantes {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transform: translateY(-2px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.proyecto-card:hover .proyecto-card__acciones-flotantes,
+.proyecto-card:focus-within .proyecto-card__acciones-flotantes {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.proyecto-card__acciones-flotantes button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: 6px;
+  background-color: #f7f7f2;
+  color: #888;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.proyecto-card__acciones-flotantes button:hover {
+  background-color: #ececE0;
+  color: #444;
+}
+
+.proyecto-card__btn-eliminar {
+  color: #c99 !important;
+}
+
+.proyecto-card__btn-eliminar:hover {
+  background-color: rgba(197, 68, 68, 0.1) !important;
+  color: #c54444 !important;
+}

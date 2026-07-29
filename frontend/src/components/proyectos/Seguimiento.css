@@ -1,0 +1,127 @@
+/* Seguimiento.css -- pestaña Seguimiento del detalle de proyecto.
+   Las filas de alerta viven en components/shared/TarjetaAlerta.css */
+
+.seguimiento {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    font-family: "Public Sans", sans-serif;
+}
+
+.seguimiento-resumen {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    background-color: #fff;
+    border: 1px solid #e5e5e0;
+    border-radius: 12px;
+    padding: 1.1rem 1.25rem;
+}
+
+.seguimiento-resumen-valor {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2f2f2f;
+    line-height: 1;
+}
+
+.seguimiento-resumen-texto {
+    font-size: 0.9rem;
+    color: #777;
+}
+
+.seguimiento-seccion {
+    background-color: #fff;
+    border: 1px solid #e5e5e0;
+    border-radius: 12px;
+    padding: 1.25rem 1.4rem 1.4rem;
+}
+
+.seguimiento-seccion-header {
+    margin-bottom: 1rem;
+}
+
+.seguimiento-seccion-titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #2f2f2f;
+    margin: 0 0 0.25rem;
+}
+
+.seguimiento-contador {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #888;
+    background-color: #f0f0eb;
+    padding: 0.1rem 0.55rem;
+    border-radius: 999px;
+}
+
+.seguimiento-seccion-descripcion {
+    font-size: 0.82rem;
+    color: #888;
+    margin: 0;
+}
+
+.seguimiento-cobranza {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
+
+.seguimiento-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.seguimiento-vacio {
+    font-size: 0.85rem;
+    color: #999;
+    margin: 0;
+}
+
+/* --- Tabla de deuda por proveedor --- */
+
+.seguimiento-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.seguimiento-tabla th {
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eeeee8;
+}
+
+.seguimiento-tabla td {
+    padding: 0.55rem 0;
+    border-bottom: 1px solid #f4f4ef;
+    color: #444;
+}
+
+.seguimiento-tabla th:last-child,
+.seguimiento-tabla td:last-child {
+    text-align: right;
+}
+
+.seguimiento-tabla-monto {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    color: #2f2f2f;
+}
+
+.seguimiento-tabla tfoot td {
+    border-bottom: none;
+    font-weight: 700;
+    color: #2f2f2f;
+}

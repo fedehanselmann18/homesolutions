@@ -1,0 +1,146 @@
+.seccion-comprobantes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    font-family: "Public Sans", sans-serif;
+}
+
+.seccion-comprobantes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.seccion-comprobantes-titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #444;
+}
+
+.seccion-comprobantes-contador {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #6F7F45;
+    background-color: rgba(111, 127, 69, 0.15);
+    padding: 0.05rem 0.45rem;
+    border-radius: 999px;
+}
+
+.seccion-comprobantes-btn-agregar {
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.3rem 0.65rem;
+    border-radius: 8px;
+    border: 1px solid #6F7F45;
+    background-color: #fff;
+    color: #6F7F45;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.seccion-comprobantes-btn-agregar:hover {
+    background-color: rgba(111, 127, 69, 0.1);
+}
+
+.seccion-comprobantes-btn-agregar:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.seccion-comprobantes-vacio {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #999;
+    font-style: italic;
+}
+
+.seccion-comprobantes-lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.seccion-comprobantes-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.6rem;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    background-color: #fff;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.seccion-comprobantes-item:hover {
+    border-color: #d8dcc9;
+    background-color: #fafaf6;
+}
+
+.seccion-comprobantes-icono {
+    font-size: 1rem;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+.seccion-comprobantes-link {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+    font-size: 0.82rem;
+    text-align: left;
+    color: #2f6f45;
+    cursor: pointer;
+}
+
+.seccion-comprobantes-link:hover {
+    text-decoration: underline;
+}
+
+.seccion-comprobantes-link:disabled {
+    cursor: default;
+    color: #999;
+}
+
+.seccion-comprobantes-btn-eliminar {
+    font-family: inherit;
+    font-size: 0.75rem;
+    font-weight: 600;
+    width: 1.5rem;
+    height: 1.5rem;
+    flex-shrink: 0;
+    border-radius: 6px;
+    border: none;
+    background-color: rgba(192, 57, 43, 0.1);
+    color: #c0392b;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.seccion-comprobantes-btn-eliminar:hover {
+    background-color: rgba(192, 57, 43, 0.2);
+}
+
+.seccion-comprobantes-btn-eliminar:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.seccion-comprobantes-error {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #c0392b;
+}

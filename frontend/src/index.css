@@ -1,0 +1,10 @@
+/* Reset mínimo global.
+
+   El margin de 8px que traen los navegadores por defecto en <body> dejaba a
+   toda la app corrida 8px: se veía un marco claro alrededor y, sobre todo,
+   el sidebar sticky no podía pegarse al borde de la ventana (quedaba un
+   hueco de 8px arriba y abajo al scrollear). */
+
+body {
+  margin: 0;
+}

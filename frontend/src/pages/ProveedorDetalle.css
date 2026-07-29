@@ -1,0 +1,274 @@
+.proveedor-detalle {
+    font-family: "Public Sans", sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.proveedor-detalle-vacio {
+    font-family: "Public Sans", sans-serif;
+    color: #888;
+    padding: 2rem;
+}
+
+.proveedor-detalle-volver {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    align-self: flex-start;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #6b6b68;
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+}
+
+.proveedor-detalle-volver:hover {
+    color: #6F7F45;
+}
+
+.proveedor-detalle-header {
+    background-color: #fff;
+    border: 1px solid #ececE0;
+    border-radius: 12px;
+    padding: 1.35rem 1.6rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.proveedor-detalle-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.6rem;
+}
+
+.proveedor-detalle-nombre {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #222220;
+    margin: 0;
+    letter-spacing: -0.01em;
+}
+
+.proveedor-detalle-header-acciones {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.proveedor-detalle-header-acciones button {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.4rem 0.8rem;
+    border-radius: 8px;
+    border: none;
+    background-color: #eee;
+    color: #444;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.proveedor-detalle-header-acciones button:hover {
+    background-color: #ddd;
+}
+
+.proveedor-detalle-btn-eliminar {
+    background-color: rgba(192, 57, 43, 0.1) !important;
+    color: #c0392b !important;
+}
+
+.proveedor-detalle-btn-eliminar:hover {
+    background-color: rgba(192, 57, 43, 0.18) !important;
+}
+
+.proveedor-detalle-datos {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem 1.5rem;
+    font-size: 0.875rem;
+    color: #444441;
+}
+
+.proveedor-detalle-dato {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.proveedor-detalle-dato svg {
+    color: #6F7F45;
+    flex-shrink: 0;
+}
+
+.proveedor-detalle-metricas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.6rem 1.5rem;
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid #f2f2ec;
+}
+
+.proveedor-detalle-metrica {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.proveedor-detalle-metrica-label {
+    font-size: 0.72rem;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.proveedor-detalle-metrica-valor {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #2f2f2f;
+    font-variant-numeric: tabular-nums;
+}
+
+.proveedor-detalle-seccion {
+    background-color: #fff;
+    border: 1px solid #e5e5e0;
+    border-radius: 12px;
+    padding: 1.25rem 1.4rem 1.4rem;
+}
+
+.proveedor-detalle-seccion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.proveedor-detalle-seccion-header h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #2f2f2f;
+}
+
+.proveedor-detalle-seccion-header button {
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: none;
+    background-color: #6F7F45;
+    color: #fff;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.proveedor-detalle-seccion-header button:hover {
+    background-color: #5c6a38;
+}
+
+.proveedor-detalle-tabla-wrap {
+    overflow-x: auto;
+}
+
+.proveedor-detalle-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.proveedor-detalle-tabla th {
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #eeeee8;
+    white-space: nowrap;
+}
+
+.proveedor-detalle-tabla td {
+    padding: 0.65rem 0.5rem 0.65rem 0;
+    border-bottom: 1px solid #f4f4ef;
+    color: #444;
+}
+
+.proveedor-detalle-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.proveedor-detalle-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.proveedor-detalle-chip {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #555;
+    background-color: #f0f0eb;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.proveedor-detalle-tabla-acciones {
+    display: flex;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.proveedor-detalle-tabla-acciones button {
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    border: none;
+    background-color: #eee;
+    color: #444;
+    cursor: pointer;
+}
+
+.proveedor-detalle-tabla-acciones button:hover {
+    background-color: #ddd;
+}
+
+.proveedor-detalle-btn-eliminar-texto {
+    background-color: rgba(192, 57, 43, 0.1) !important;
+    color: #c0392b !important;
+}
+
+.proveedor-detalle-btn-eliminar-texto:hover {
+    background-color: rgba(192, 57, 43, 0.18) !important;
+}
+
+@media (max-width: 480px) {
+    .proveedor-detalle-header {
+        padding: 1.1rem 1.25rem;
+    }
+
+    .proveedor-detalle-header-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.6rem;
+    }
+}

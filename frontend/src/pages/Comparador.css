@@ -1,0 +1,220 @@
+.comparador-container {
+    font-family: "Public Sans", sans-serif;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.comparador-header {
+    margin-bottom: 0.25rem;
+}
+
+.comparador-header__titulo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2f2f2f;
+    margin: 0;
+}
+
+.comparador-header__subtitulo {
+    font-size: 0.85rem;
+    color: #888;
+    margin: 0.2rem 0 0;
+}
+
+.comparador-seccion {
+    background-color: #fff;
+    border: 1px solid #e5e5e0;
+    border-radius: 12px;
+    padding: 1.25rem 1.4rem 1.4rem;
+}
+
+.comparador-seccion-titulo {
+    margin: 0 0 1rem;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #2f2f2f;
+}
+
+.comparador-feedback {
+    color: #888;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* --- Grupos "mismo producto" --- */
+
+.comparador-grupos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.comparador-grupo {
+    border: 1px solid #ececE0;
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+}
+
+.comparador-grupo-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.comparador-grupo-nombre {
+    margin: 0 0 0.4rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #222220;
+}
+
+.comparador-grupo-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.comparador-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.comparador-chip {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #555;
+    background-color: #f0f0eb;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+
+.comparador-ahorro {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #6F7F45;
+    background-color: rgba(111, 127, 69, 0.1);
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.comparador-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+}
+
+.comparador-tabla th {
+    text-align: left;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid #eeeee8;
+}
+
+.comparador-tabla td {
+    padding: 0.5rem 0.5rem 0.5rem 0;
+    border-bottom: 1px solid #f4f4ef;
+    color: #444;
+}
+
+.comparador-tabla tr:last-child td {
+    border-bottom: none;
+}
+
+.comparador-fila-mejor td {
+    color: #2f2f2f;
+    font-weight: 700;
+}
+
+.comparador-tag-mejor {
+    margin-left: 0.5rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #6F7F45;
+    background-color: rgba(111, 127, 69, 0.12);
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    vertical-align: middle;
+}
+
+/* --- Explorar por categoría --- */
+
+.comparador-filtros {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.comparador-buscador {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 0.5rem 0.85rem;
+    color: #888;
+}
+
+.comparador-buscador input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: #2f2f2f;
+    background: transparent;
+}
+
+.comparador-filtros select {
+    font-family: inherit;
+    font-size: 0.9rem;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    color: #2f2f2f;
+    min-width: 180px;
+}
+
+.comparador-tabla-wrap {
+    overflow-x: auto;
+}
+
+.comparador-tabla--ancha th,
+.comparador-tabla--ancha td {
+    white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+    .comparador-filtros {
+        flex-direction: column;
+    }
+
+    .comparador-filtros select {
+        min-width: 0;
+    }
+
+    .comparador-grupos {
+        grid-template-columns: 1fr;
+    }
+}

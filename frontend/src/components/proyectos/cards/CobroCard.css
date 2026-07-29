@@ -1,0 +1,118 @@
+.cobro-card {
+    background-color: #fff;
+    border: 1px solid #e6e6e6;
+    border-radius: 12px;
+    padding: 1.1rem 1.25rem;
+    font-family: "Public Sans", sans-serif;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    box-sizing: border-box;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.cobro-card:hover {
+    border-color: #6F7F45;
+    box-shadow: 0 4px 14px rgba(111, 127, 69, 0.14);
+}
+
+.cobro-card-contenido {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.9rem;
+}
+
+.cobro-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.cobro-card-descripcion {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #2f2f2f;
+}
+
+.cobro-card-monto {
+    flex-shrink: 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1e8e5a;
+    white-space: nowrap;
+}
+
+.cobro-card-meta {
+    font-size: 0.85rem;
+    color: #777;
+}
+
+.cobro-card-separador {
+    margin: 0 0.4rem;
+    color: #ccc;
+}
+
+.cobro-card-detalle-info {
+    margin: 0;
+    font-size: 0.8rem;
+    color: #666;
+}
+
+.cobro-card-expandido {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px dashed #eee;
+}
+
+.cobro-card-acciones {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: auto;
+}
+
+.cobro-card-btn {
+    flex: 1;
+    text-align: center;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.4rem 0.75rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.1s ease;
+}
+
+.cobro-card-btn--editar {
+    background-color: #eee;
+    color: #444;
+}
+
+.cobro-card-btn--editar:hover {
+    background-color: #ddd;
+}
+
+.cobro-card-btn--eliminar {
+    background-color: rgba(192, 57, 43, 0.1);
+    color: #c0392b;
+}
+
+.cobro-card-btn--eliminar:hover {
+    background-color: rgba(192, 57, 43, 0.18);
+}
+
+.cobro-card-btn:active {
+    transform: scale(0.96);
+}
+
+@media (max-width: 480px) {
+    .cobro-card {
+        padding: 1rem;
+    }
+}

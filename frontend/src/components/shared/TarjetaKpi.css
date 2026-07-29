@@ -1,0 +1,58 @@
+/* TarjetaKpi.css -- tarjeta de número grande + barra de progreso, compartida
+   entre el Panel y el Análisis General. */
+
+.kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    background-color: #fff;
+    border: 1px solid #e5e5e0;
+    border-radius: 12px;
+    padding: 1.1rem 1.25rem;
+    font-family: "Public Sans", sans-serif;
+}
+
+/* Variante sin caja, para usarla adentro de otra tarjeta */
+.kpi--plano {
+    border: none;
+    background-color: transparent;
+    padding: 0 0 0.75rem;
+    gap: 0.15rem;
+}
+
+.kpi-titulo {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.kpi-valor {
+    font-size: 1.65rem;
+    font-weight: 700;
+    color: #2f2f2f;
+    line-height: 1.15;
+}
+
+.kpi-valor--destacado {
+    font-size: 2rem;
+}
+
+.kpi-detalle {
+    font-size: 0.8rem;
+    color: #777;
+}
+
+.kpi-progreso {
+    height: 8px;
+    border-radius: 999px;
+    background-color: #f0f0eb;
+    overflow: hidden;
+}
+
+.kpi-progreso-relleno {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.25s ease;
+}

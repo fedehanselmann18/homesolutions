@@ -1,0 +1,104 @@
+.proveedores-container {
+    font-family: "Public Sans", sans-serif;
+}
+
+.proveedores-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+}
+
+.proveedores-header__titulo {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2f2f2f;
+    margin: 0;
+}
+
+.proveedores-header__subtitulo {
+    font-size: 0.85rem;
+    color: #888;
+    margin: 0.2rem 0 0;
+}
+
+.proveedores-button {
+    background-color: #6F7F45;
+    color: #fff;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.proveedores-button:hover {
+    background-color: #5c6a38;
+}
+
+.proveedores-button:active {
+    transform: scale(0.97);
+}
+
+.proveedores-filtros {
+    display: flex;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+}
+
+.proveedores-buscador {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 0.5rem 0.85rem;
+    color: #888;
+}
+
+.proveedores-buscador input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: #2f2f2f;
+    background: transparent;
+}
+
+.proveedores-filtros select {
+    font-family: inherit;
+    font-size: 0.9rem;
+    padding: 0.55rem 0.7rem;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    color: #2f2f2f;
+    min-width: 200px;
+}
+
+.proveedores-feedback {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+.proveedores-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1rem;
+}
+
+@media (max-width: 600px) {
+    .proveedores-filtros {
+        flex-direction: column;
+    }
+
+    .proveedores-filtros select {
+        min-width: 0;
+    }
+}

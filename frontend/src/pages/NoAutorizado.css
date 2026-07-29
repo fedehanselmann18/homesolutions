@@ -1,0 +1,57 @@
+.no-autorizado {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg, #faf9f5);
+  font-family: var(--font-ui, "Public Sans", sans-serif);
+  padding: 20px;
+}
+
+.no-autorizado-card {
+  max-width: 420px;
+  text-align: center;
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-border, #e4e2d8);
+  border-radius: 12px;
+  padding: 40px 32px;
+}
+
+.no-autorizado-eyebrow {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-olive-dark, #55622f);
+  margin-bottom: 12px;
+}
+
+.no-autorizado-card h1 {
+  font-size: 1.3rem;
+  color: var(--color-text, #2b2e22);
+  margin: 0 0 8px;
+}
+
+.no-autorizado-card p {
+  color: var(--color-text-muted, #767a68);
+  font-size: 0.9rem;
+  margin: 0 0 24px;
+}
+
+.no-autorizado-card button {
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #fff;
+  background: var(--color-olive, #6f7f45);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.no-autorizado-card button:hover {
+  background: var(--color-olive-dark, #55622f);
+}
