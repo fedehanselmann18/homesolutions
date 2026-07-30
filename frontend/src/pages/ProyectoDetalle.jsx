@@ -64,7 +64,7 @@ function ProyectoDetalle() {
             </div>
 
             {tabActiva === 'fases' && <Fases proyectoId={proyecto.id} />}
-            {tabActiva === 'acciones' && <Acciones proyectoId={proyecto.id} />}
+            {tabActiva === 'acciones' && <Acciones proyectoId={proyecto.id} proyectoNombre={proyecto.nombre} />}
             {tabActiva === 'analisis' && <AnalisisGeneral proyectoId={proyecto.id} />}
             {tabActiva === 'seguimiento' && (
                 <Seguimiento proyectoId={proyecto.id} onIrATab={setTabActiva} />

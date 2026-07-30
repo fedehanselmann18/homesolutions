@@ -285,6 +285,47 @@ class ComprobanteCompraOut(TimestampOut):
     archivo_path: str
 
 
+class NotaCompraDetalleOut(TimestampOut):
+    """Línea de producto devuelto dentro de una NotaCompra (origen="devolucion_producto")."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    detalle_compra_id: uuid.UUID | None = None
+    cantidad: float
+    precio_unitario: float  # frozen al momento de crear la nota
+
+
+class NotaCompraImpuestoOut(TimestampOut):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    impuesto_id: uuid.UUID
+    monto: float
+    impuesto: ImpuestoOut
+
+
+class NotaCompraOut(TimestampOut):
+    """Movimiento de cuenta corriente (nota de crédito/débito) de una Compra.
+    El archivo (comprobante que te dan) se sube junto con el resto en el mismo
+    endpoint multipart -- no hay NotaCompraCreate porque los campos no-archivo
+    viajan como Form fields, no como JSON (ver routes/compras.py)."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    compra_id: uuid.UUID
+    proveedor_id: uuid.UUID
+    usuario_id: uuid.UUID
+    tipo: str  # "nota_credito" | "nota_debito"
+    origen: str | None = None  # "devolucion_producto" | "acuerdo_comercial" | "otro"
+    tipo_factura: str  # SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro)
+    monto: float
+    descripcion: str
+    fecha: date
+    archivo_path: str
+    detalles: list[NotaCompraDetalleOut] = []  # solo si origen="devolucion_producto"
+    impuestos_aplicados: list[NotaCompraImpuestoOut] = []
+
+
 class CompraBase(BaseModel):
     descripcion: str
     precio_neto: float
@@ -325,12 +366,13 @@ class CompraOut(CompraBase, TimestampOut):
     fase_id: uuid.UUID
     proveedor_id: uuid.UUID
     usuario_id: uuid.UUID  # se mantiene en el Out: es dato legítimo de lectura (autoría)
-    precio_total: float  # calculado (precio_neto + suma de impuestos), no se carga a mano
+    precio_total: float  # calculado (precio_neto + impuestos - NC + ND), no se carga a mano
     categorias: list[CategoriaOut] = []  # derivadas del detalle de productos, no se cargan a mano
     tipos_compra: list[str] = []  # derivados del tipo de cada producto en el detalle, no se cargan a mano
     detalle: list[DetalleCompraOut] = []
     impuestos_aplicados: list[CompraImpuestoOut] = []
     comprobantes: list[ComprobanteCompraOut] = []
+    notas: list[NotaCompraOut] = []  # cuenta corriente: notas de crédito/débito
 
 
 # ---------------------------------------------------------------------------
@@ -390,6 +432,25 @@ class ComprobanteCobroOut(TimestampOut):
     archivo_path: str
 
 
+class NotaCobroOut(TimestampOut):
+    """Movimiento de cuenta corriente (nota de crédito/débito) de un Cobro.
+    Mismo criterio que NotaCompraOut, sin detalle_compra_id (Cobro no tiene
+    líneas de producto)."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    cobro_id: uuid.UUID
+    proyecto_id: uuid.UUID
+    usuario_id: uuid.UUID
+    tipo: str  # "nota_credito" | "nota_debito"
+    origen: str | None = None  # "ajuste_precio" | "acuerdo_comercial" | "otro"
+    tipo_factura: str  # SIEMPRE obligatorio, ver NotaCompraOut
+    monto: float
+    descripcion: str
+    fecha: date
+    archivo_path: str
+
+
 class CobroBase(BaseModel):
     monto: float
     descripcion: str
@@ -416,4 +477,6 @@ class CobroOut(CobroBase, TimestampOut):
     id: uuid.UUID
     proyecto_id: uuid.UUID
     usuario_id: uuid.UUID
+    monto_neto: float  # calculado (monto - NC + ND), no se carga a mano
     comprobantes: list[ComprobanteCobroOut] = []
+    notas: list[NotaCobroOut] = []  # cuenta corriente: notas de crédito/débito

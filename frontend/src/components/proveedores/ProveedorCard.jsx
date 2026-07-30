@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Pencil, Trash2, Phone, Mail, Package } from "lucide-react";
+import { Pencil, Trash2, Phone, Mail, Package, FileMinus, FilePlus } from "lucide-react";
 import useAuth from "../../context/useAuth";
 import { formatMoneda } from "../../utils/formato";
 import "./ProveedorCard.css";
@@ -7,7 +7,17 @@ import "./ProveedorCard.css";
 const VERDE = "#16a34a";
 const ROJO = "#dc2626";
 
-export function ProveedorCard({ proveedor, rubro, cantidadProductos, totalComprado, deuda, onEditar, onEliminar }) {
+export function ProveedorCard({
+    proveedor,
+    rubro,
+    cantidadProductos,
+    totalComprado,
+    deuda,
+    totalNotasCredito = 0,
+    totalNotasDebito = 0,
+    onEditar,
+    onEliminar,
+}) {
     const navigate = useNavigate();
     const { usuario } = useAuth();
     const canManage = usuario?.rol === "admin";
@@ -46,7 +56,21 @@ export function ProveedorCard({ proveedor, rubro, cantidadProductos, totalCompra
             )}
 
             <h3 className="proveedor-card__nombre">{proveedor.nombre}</h3>
-            {rubro && <span className="proveedor-card__rubro">{rubro}</span>}
+            <div className="proveedor-card__chips">
+                {rubro && <span className="proveedor-card__rubro">{rubro}</span>}
+                {totalNotasCredito > 0 && (
+                    <span className="proveedor-card__badge-nc" title={`${formatMoneda(totalNotasCredito)} en notas de crédito`}>
+                        <FileMinus size={12} strokeWidth={2.25} />
+                        -{formatMoneda(totalNotasCredito)}
+                    </span>
+                )}
+                {totalNotasDebito > 0 && (
+                    <span className="proveedor-card__badge-nd" title={`${formatMoneda(totalNotasDebito)} en notas de débito`}>
+                        <FilePlus size={12} strokeWidth={2.25} />
+                        +{formatMoneda(totalNotasDebito)}
+                    </span>
+                )}
+            </div>
 
             <div className="proveedor-card__contacto">
                 {proveedor.telefono && (

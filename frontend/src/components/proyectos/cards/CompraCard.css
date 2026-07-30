@@ -127,6 +127,16 @@
     margin-top: 1px;
 }
 
+.compra-card-resumen-fila--nota-credito {
+    color: var(--color-oxido);
+    font-weight: 600;
+}
+
+.compra-card-resumen-fila--nota-debito {
+    color: #d97706;
+    font-weight: 600;
+}
+
 .compra-card-productos {
     list-style: none;
     margin: 0;

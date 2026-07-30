@@ -69,7 +69,7 @@ export const eliminarImpuestoCompra = async (compraId, impuestoAplicadoId) => {
   return data;
 };
 
-// --- Comprobantes (archivos) ---
+// --- Comprobantes (archivos: factura, remito...) ---
 
 export const subirComprobanteCompra = async (compraId, archivo) => {
   const formData = new FormData();
@@ -91,5 +91,51 @@ export const getComprobanteCompra = async (compraId, comprobanteId) => {
 
 export const eliminarComprobanteCompra = async (compraId, comprobanteId) => {
   const { data } = await axiosClient.delete(`/compras/${compraId}/comprobantes/${comprobanteId}`);
+  return data;
+};
+
+// --- Notas (cuenta corriente: nota de crédito / nota de débito) ---
+
+export const crearNotaCompra = async (
+  compraId,
+  { archivo, tipo, tipo_factura, monto, descripcion, fecha, origen, detalles, impuestos }
+) => {
+  // Para origen="devolucion_producto" el monto NO se manda: se calcula solo
+  // en el backend a partir de `detalles` (+ `impuestos` opcionales). Para
+  // cualquier otro origen (acuerdo_comercial/otro) o nota_debito, `monto` es
+  // el que tipeó el usuario a mano y `detalles`/`impuestos` van vacíos.
+  const formData = new FormData();
+  formData.append("archivo", archivo);
+  formData.append("tipo", tipo);
+  formData.append("tipo_factura", tipo_factura);
+  formData.append("descripcion", descripcion);
+  formData.append("fecha", fecha);
+  if (origen) formData.append("origen", origen);
+
+  if (detalles && detalles.length > 0) {
+    formData.append("detalles_json", JSON.stringify(detalles));
+  } else {
+    formData.append("monto", monto);
+  }
+  if (impuestos && impuestos.length > 0) {
+    formData.append("impuestos_json", JSON.stringify(impuestos));
+  }
+
+  const { data } = await axiosClient.post(`/compras/${compraId}/notas`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+};
+
+export const getNotaCompra = async (compraId, notaId) => {
+  const { data } = await axiosClient.get(
+    `/compras/${compraId}/notas/${notaId}`,
+    { responseType: "blob" }
+  );
+  return data;
+};
+
+export const eliminarNotaCompra = async (compraId, notaId) => {
+  const { data } = await axiosClient.delete(`/compras/${compraId}/notas/${notaId}`);
   return data;
 };

@@ -10,11 +10,20 @@
 
 .no-autorizado-card {
   max-width: 420px;
+  width: 100%;
   text-align: center;
   background: var(--color-superficie);
   border: 1px solid var(--color-linea);
-  border-top: 4px solid var(--color-oxido);
   border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.no-autorizado-header {
+  background: var(--color-oscuro);
+  padding: var(--space-4) var(--space-8);
+}
+
+.no-autorizado-body {
   padding: var(--space-8);
 }
 
@@ -25,7 +34,6 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--color-oxido);
-  margin-bottom: var(--space-3);
 }
 
 .no-autorizado-card h1 {

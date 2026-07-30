@@ -23,6 +23,9 @@ const formatearTamanio = (bytes) => {
  * onCambio. El padre recién lo aplica (subir/eliminar) cuando se confirma el
  * submit del formulario -- así "Cancelar" descarta todo, y funciona igual al
  * crear (sin id todavía) que al editar.
+ *
+ * Solo maneja comprobantes "normales" (factura, remito...). Las notas de
+ * crédito/débito son otra cosa -- tienen su propio modal (ver ModalNota).
  */
 export function ComprobantesUploader({ existentes = [], onVerExistente, onCambio, disabled = false }) {
     const inputRef = useRef(null);

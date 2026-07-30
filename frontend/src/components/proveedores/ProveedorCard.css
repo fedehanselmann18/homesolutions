@@ -34,6 +34,12 @@
     padding-right: 60px;
 }
 
+.proveedor-card__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
 .proveedor-card__rubro {
     width: fit-content;
     font-size: 0.72rem;
@@ -42,6 +48,34 @@
     background-color: var(--color-musgo-tint);
     padding: 3px 10px;
     border-radius: var(--radius-pill);
+}
+
+.proveedor-card__badge-nc {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-oxido);
+    background-color: var(--color-oxido-tint);
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+}
+
+.proveedor-card__badge-nd {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    width: fit-content;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-terracota);
+    background-color: var(--color-terracota-tint);
+    padding: 3px 10px;
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
 }
 
 .proveedor-card__contacto {

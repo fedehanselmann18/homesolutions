@@ -48,6 +48,30 @@ def _impuesto_aplicado(monto, nombre="IVA"):
     return models.CompraImpuesto(id=uuid.uuid4(), monto=monto, impuesto=impuesto)
 
 
+def _nota_compra(tipo, monto, origen=None, tipo_factura="factura_a", detalles=None, impuestos_aplicados=None):
+    nota = models.NotaCompra(
+        id=uuid.uuid4(), archivo_path="x.pdf", tipo=tipo, monto=monto, origen=origen,
+        tipo_factura=tipo_factura, descripcion="test", fecha=None,
+    )
+    nota.detalles = detalles or []
+    nota.impuestos_aplicados = impuestos_aplicados or []
+    return nota
+
+
+def _nota_cobro(tipo, monto, origen=None, tipo_factura="factura_a"):
+    return models.NotaCobro(
+        id=uuid.uuid4(), archivo_path="x.pdf", tipo=tipo, monto=monto, origen=origen,
+        tipo_factura=tipo_factura, descripcion="test", fecha=None,
+    )
+
+
+def _nota_compra_detalle(detalle_compra_id, cantidad, precio_unitario):
+    return models.NotaCompraDetalle(
+        id=uuid.uuid4(), detalle_compra_id=detalle_compra_id,
+        cantidad=cantidad, precio_unitario=precio_unitario,
+    )
+
+
 def test_precio_total_sin_impuestos_es_igual_al_neto():
     compra = models.Compra(precio_neto=Decimal("50000"))
     compra.detalle = []
@@ -111,3 +135,97 @@ def test_tipos_compra_no_duplica_si_dos_lineas_son_del_mismo_tipo():
     compra.detalle = [_linea(producto_1), _linea(producto_2)]
 
     assert compra.tipos_compra == ["equipo"]
+
+
+def test_precio_total_resta_notas_de_credito():
+    compra = models.Compra(precio_neto=Decimal("100000"))
+    compra.detalle = []
+    compra.impuestos_aplicados = [_impuesto_aplicado(Decimal("21000"), "IVA")]
+    compra.notas = [_nota_compra("nota_credito", Decimal("10000"), origen="devolucion_producto")]
+
+    assert compra.precio_total == 111000.0  # 100000 + 21000 - 10000
+
+
+def test_precio_total_suma_notas_de_debito():
+    compra = models.Compra(precio_neto=Decimal("100000"))
+    compra.detalle = []
+    compra.impuestos_aplicados = []
+    compra.notas = [_nota_compra("nota_debito", Decimal("8000"), origen="acuerdo_comercial")]
+
+    assert compra.precio_total == 108000.0
+
+
+def test_precio_total_combina_credito_y_debito():
+    compra = models.Compra(precio_neto=Decimal("100000"))
+    compra.detalle = []
+    compra.impuestos_aplicados = [_impuesto_aplicado(Decimal("21000"), "IVA")]
+    compra.notas = [
+        _nota_compra("nota_credito", Decimal("10000")),
+        _nota_compra("nota_credito", Decimal("5000")),
+        _nota_compra("nota_debito", Decimal("3000")),
+    ]
+
+    assert compra.precio_total == 109000.0  # 100000 + 21000 - 15000 + 3000
+
+
+def test_monto_neto_cobro_sin_notas_es_igual_al_monto():
+    cobro = models.Cobro(monto=Decimal("80000"))
+    cobro.notas = []
+
+    assert cobro.monto_neto == 80000.0
+
+
+def test_monto_neto_cobro_resta_notas_de_credito():
+    cobro = models.Cobro(monto=Decimal("80000"))
+    cobro.notas = [_nota_cobro("nota_credito", Decimal("15000"), origen="ajuste_precio")]
+
+    assert cobro.monto_neto == 65000.0
+
+
+def test_monto_neto_cobro_combina_credito_y_debito():
+    cobro = models.Cobro(monto=Decimal("80000"))
+    cobro.notas = [
+        _nota_cobro("nota_credito", Decimal("15000")),
+        _nota_cobro("nota_debito", Decimal("4000")),
+    ]
+
+    assert cobro.monto_neto == 69000.0  # 80000 - 15000 + 4000
+
+
+def test_nota_credito_devolucion_producto_admite_varias_lineas():
+    """Una nota de devolución puede traer más de un producto (ver
+    NotaCompraDetalle) -- el monto en sí sigue siendo lo que calculó/congeló
+    la route al crearla (ver routes/compras.py: crear_nota_compra), acá solo
+    se verifica que el modelo sostiene la relación uno-a-muchos sin problema."""
+    detalle_id_a = uuid.uuid4()
+    detalle_id_b = uuid.uuid4()
+    nota = _nota_compra(
+        "nota_credito",
+        Decimal("9000"),  # 2*3000 (A) + 1*3000 (B)
+        origen="devolucion_producto",
+        detalles=[
+            _nota_compra_detalle(detalle_id_a, cantidad=2, precio_unitario=Decimal("3000")),
+            _nota_compra_detalle(detalle_id_b, cantidad=1, precio_unitario=Decimal("3000")),
+        ],
+    )
+
+    assert len(nota.detalles) == 2
+    assert {d.detalle_compra_id for d in nota.detalles} == {detalle_id_a, detalle_id_b}
+    assert sum(float(d.cantidad) * float(d.precio_unitario) for d in nota.detalles) == float(nota.monto)
+
+
+def test_precio_total_de_compra_usa_el_monto_frozen_de_la_nota_no_recalcula_detalles():
+    """precio_total resta/suma nota.monto directamente -- el monto queda
+    frozen en el momento de creación (route), Compra.precio_total no vuelve a
+    sumar cantidad*precio_unitario de las líneas devueltas."""
+    compra = models.Compra(precio_neto=Decimal("100000"))
+    compra.detalle = []
+    compra.impuestos_aplicados = []
+    compra.notas = [
+        _nota_compra(
+            "nota_credito", Decimal("6000"), origen="devolucion_producto",
+            detalles=[_nota_compra_detalle(uuid.uuid4(), cantidad=2, precio_unitario=Decimal("3000"))],
+        )
+    ]
+
+    assert compra.precio_total == 94000.0  # 100000 - 6000, sin importar el detalle interno

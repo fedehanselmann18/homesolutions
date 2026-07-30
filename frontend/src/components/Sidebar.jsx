@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import logo from "../assets/HS_logo_blanco.png";
 import "./Sidebar.css";
@@ -12,6 +12,12 @@ const ITEMS_NAV = [
 
 export function Sidebar() {
   const { usuario, isAdmin, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
 
   return (
     <aside className="sidebar">
@@ -37,9 +43,8 @@ export function Sidebar() {
       <div className="sidebar-footer">
         <div className="sidebar-user">
           <span className="sidebar-user-name">{usuario?.nombre_usuario}</span>
-          <span className="sidebar-user-role">{usuario?.rol}</span>
         </div>
-        <button className="sidebar-logout" onClick={logout}>
+        <button className="sidebar-logout" onClick={handleLogout}>
           Cerrar sesión
         </button>
       </div>

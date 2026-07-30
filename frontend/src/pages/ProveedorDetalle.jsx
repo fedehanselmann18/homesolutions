@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mail, MapPin, Phone, Pencil, Trash2 } from "lucide-react";
+import { ArrowLeft, Mail, MapPin, Phone, Pencil, Trash2, FileMinus, FilePlus } from "lucide-react";
 
 import {
     getProveedorPorId,
@@ -21,6 +21,9 @@ import {
     subirComprobanteCompra,
     getComprobanteCompra,
     eliminarComprobanteCompra,
+    crearNotaCompra,
+    getNotaCompra,
+    eliminarNotaCompra,
 } from "../services/compraService";
 import { getFases } from "../services/faseService";
 import { getProyectos } from "../services/proyectoService";
@@ -29,17 +32,20 @@ import { getImpuestos } from "../services/impuestosService";
 
 import useAuth from "../context/useAuth";
 import { getTipoProducto } from "../constants/tipoProducto";
-import { formatMoneda } from "../utils/formato";
+import { formatMoneda, formatFecha } from "../utils/formato";
 import { calcularResumenProveedor } from "../utils/proveedores";
 
 import CompraCard from "../components/proyectos/cards/CompraCard";
 import ModalProveedor from "../components/modals/ModalProveedor";
 import ModalProducto from "../components/modals/ModalProducto";
 import ModalCompra from "../components/modals/ModalCompra";
+import ModalNota from "../components/modals/ModalNota";
 import { Cargando } from "../components/shared/Cargando";
+import { TarjetaAlerta } from "../components/shared/TarjetaAlerta";
 import { useToast } from "../context/useToast";
 
 import "../components/proyectos/Acciones.css";
+import "../components/proyectos/Seguimiento.css";
 import "./ProveedorDetalle.css";
 
 export function ProveedorDetalle() {
@@ -64,6 +70,9 @@ export function ProveedorDetalle() {
     const [productoEditando, setProductoEditando] = useState(null);
     const [modalCompraAbierto, setModalCompraAbierto] = useState(false);
     const [compraEditando, setCompraEditando] = useState(null);
+
+    const [modalNotaAbierto, setModalNotaAbierto] = useState(false);
+    const [notaCompra, setNotaCompra] = useState(null); // la Compra sobre la que se carga la nota
 
     useEffect(() => {
         fetchTodo();
@@ -121,6 +130,12 @@ export function ProveedorDetalle() {
 
     const nombreProyecto = (proyectoId) => proyectos.find((p) => p.id === proyectoId)?.nombre;
     const nombreFase = (faseId) => fases.find((f) => f.id === faseId)?.nombre;
+
+    // Lleva la vista a la compra de origen de una nota de crédito -- las
+    // compras ya tienen id={`compra-${compra.id}`} en su card (ver CompraCard.jsx).
+    const irACompra = (compraId) => {
+        document.getElementById(`compra-${compraId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+    };
 
     // Fases etiquetadas con el proyecto al que pertenecen: desde acá no hay un
     // proyecto/fase "actual" como en FaseDetalle, así que hay que poder elegir
@@ -262,6 +277,24 @@ export function ProveedorDetalle() {
         refetchCompras();
     };
 
+    // --- Notas (cuenta corriente: nota de crédito / débito) ---
+    const handleAgregarNotaCompra = (compra) => {
+        setNotaCompra(compra);
+        setModalNotaAbierto(true);
+    };
+
+    const handleGuardarNota = async (payload) => {
+        await crearNotaCompra(notaCompra.id, payload);
+        setModalNotaAbierto(false);
+        setNotaCompra(null);
+        refetchCompras();
+    };
+
+    const handleEliminarNotaCompra = async (compraId, notaId) => {
+        await eliminarNotaCompra(compraId, notaId);
+        refetchCompras();
+    };
+
     if (cargando) return <Cargando texto="Cargando proveedor..." />;
     if (error || !proveedor) {
         return <div className="proveedor-detalle-vacio">No se pudo cargar el detalle del proveedor.</div>;
@@ -324,8 +357,48 @@ export function ProveedorDetalle() {
                             {formatMoneda(resumen.deuda)}
                         </span>
                     </div>
+                    {resumen.totalNotasCredito > 0 && (
+                        <div className="proveedor-detalle-metrica">
+                            <span className="proveedor-detalle-metrica-label">Notas de crédito</span>
+                            <span className="proveedor-detalle-metrica-valor" style={{ color: "#dc2626" }}>
+                                -{formatMoneda(resumen.totalNotasCredito)}
+                            </span>
+                        </div>
+                    )}
+                    {resumen.totalNotasDebito > 0 && (
+                        <div className="proveedor-detalle-metrica">
+                            <span className="proveedor-detalle-metrica-label">Notas de débito</span>
+                            <span className="proveedor-detalle-metrica-valor" style={{ color: "#c2662d" }}>
+                                +{formatMoneda(resumen.totalNotasDebito)}
+                            </span>
+                        </div>
+                    )}
                 </div>
             </div>
+
+            {resumen.notas.length > 0 && (
+                <div className="proveedor-detalle-seccion">
+                    <div className="proveedor-detalle-seccion-header">
+                        <h2>Notas de crédito / débito</h2>
+                    </div>
+                    <div className="seguimiento-lista">
+                        {resumen.notas.map((nota) => {
+                            const esCredito = nota.tipo === "nota_credito";
+                            return (
+                                <TarjetaAlerta
+                                    key={nota.id}
+                                    icono={esCredito ? FileMinus : FilePlus}
+                                    color={esCredito ? "#dc2626" : "#c2662d"}
+                                    titulo={nota.origenDescripcion}
+                                    detalle={`Compra del ${formatFecha(nota.origenFecha)}`}
+                                    monto={`${esCredito ? "-" : "+"}${formatMoneda(nota.monto)}`}
+                                    onClick={() => irACompra(nota.origenId)}
+                                />
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
 
             <div className="proveedor-detalle-seccion">
                 <div className="proveedor-detalle-seccion-header">
@@ -418,6 +491,9 @@ export function ProveedorDetalle() {
                                 onVerComprobante={getComprobanteCompra}
                                 onAgregarComprobante={handleAgregarComprobantesCompra}
                                 onEliminarComprobante={handleEliminarComprobanteCompra}
+                                onAgregarNota={handleAgregarNotaCompra}
+                                onVerNota={getNotaCompra}
+                                onEliminarNota={handleEliminarNotaCompra}
                             />
                         ))}
                     </div>
@@ -452,6 +528,17 @@ export function ProveedorDetalle() {
                     onGuardar={handleGuardarCompra}
                     onCerrar={() => setModalCompraAbierto(false)}
                     onVerComprobante={compraEditando ? (c) => getComprobanteCompra(compraEditando.id, c.id) : undefined}
+                />
+            )}
+
+            {modalNotaAbierto && (
+                <ModalNota
+                    contexto="compra"
+                    entidad={notaCompra}
+                    productos={productos}
+                    impuestosDisponibles={impuestos}
+                    onGuardar={handleGuardarNota}
+                    onCerrar={() => setModalNotaAbierto(false)}
                 />
             )}
         </div>

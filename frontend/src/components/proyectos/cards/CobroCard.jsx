@@ -1,7 +1,9 @@
 import useAuth from "../../../context/useAuth";
 import { formatMoneda, formatFecha } from "../../../utils/formato";
 import { getTipoFacturaLabel } from "../../../constants/tipoFactura";
+import { totalNotasCredito, totalNotasDebito } from "../../../utils/notas";
 import { SeccionComprobantes } from "../../shared/SeccionComprobantes";
+import { SeccionNotas } from "../../shared/SeccionNotas";
 import "./CobroCard.css";
 
 export function CobroCard({
@@ -12,6 +14,9 @@ export function CobroCard({
     onVerComprobante,
     onAgregarComprobante,
     onEliminarComprobante,
+    onAgregarNota,
+    onVerNota,
+    onEliminarNota,
 }) {
     const { usuario } = useAuth();
     const canManage = usuario?.rol === "admin";
@@ -19,12 +24,19 @@ export function CobroCard({
     const handleEditar = () => onEditar(cobro);
     const handleEliminar = () => onEliminar(cobro.id);
 
+    const notas = cobro.notas ?? [];
+    const notasCredito = totalNotasCredito(notas);
+    const notasDebito = totalNotasDebito(notas);
+    // monto_neto lo calcula el backend (Cobro.monto_neto); si por lo que sea
+    // no vino en la respuesta, se calcula acá con el mismo criterio.
+    const montoNeto = cobro.monto_neto ?? (Number(cobro.monto) - notasCredito + notasDebito);
+
     return (
         <div className="cobro-card">
             <div className="cobro-card-contenido">
                 <div className="cobro-card-header">
                     <h3 className="cobro-card-descripcion">{cobro.descripcion}</h3>
-                    <span className="cobro-card-monto">{formatMoneda(cobro.monto)}</span>
+                    <span className="cobro-card-monto">{formatMoneda(montoNeto)}</span>
                 </div>
 
                 <div className="cobro-card-meta">
@@ -32,6 +44,31 @@ export function CobroCard({
                     <span className="cobro-card-separador">•</span>
                     <span>{getTipoFacturaLabel(cobro.tipo_factura)}</span>
                 </div>
+
+                {(notasCredito > 0 || notasDebito > 0) && (
+                    <div className="cobro-card-resumen">
+                        <div className="cobro-card-resumen-fila">
+                            <span>Bruto</span>
+                            <span>{formatMoneda(cobro.monto)}</span>
+                        </div>
+                        {notasCredito > 0 && (
+                            <div className="cobro-card-resumen-fila cobro-card-resumen-fila--nota-credito">
+                                <span>Notas de crédito</span>
+                                <span>-{formatMoneda(notasCredito)}</span>
+                            </div>
+                        )}
+                        {notasDebito > 0 && (
+                            <div className="cobro-card-resumen-fila cobro-card-resumen-fila--nota-debito">
+                                <span>Notas de débito</span>
+                                <span>+{formatMoneda(notasDebito)}</span>
+                            </div>
+                        )}
+                        <div className="cobro-card-resumen-fila cobro-card-resumen-fila--total">
+                            <span>Neto</span>
+                            <span>{formatMoneda(montoNeto)}</span>
+                        </div>
+                    </div>
+                )}
 
                 <div className="cobro-card-expandido">
                     {usuarioNombre && (
@@ -43,6 +80,15 @@ export function CobroCard({
                         onVer={onVerComprobante ? (c) => onVerComprobante(cobro.id, c.id) : undefined}
                         onAgregar={onAgregarComprobante ? (files) => onAgregarComprobante(cobro.id, files) : undefined}
                         onEliminar={onEliminarComprobante ? (id) => onEliminarComprobante(cobro.id, id) : undefined}
+                        canManage={canManage}
+                    />
+
+                    <SeccionNotas
+                        notas={notas}
+                        contexto="cobro"
+                        onVer={onVerNota ? (n) => onVerNota(cobro.id, n.id) : undefined}
+                        onAgregar={onAgregarNota ? () => onAgregarNota(cobro) : undefined}
+                        onEliminar={onEliminarNota ? (id) => onEliminarNota(cobro.id, id) : undefined}
                         canManage={canManage}
                     />
                 </div>

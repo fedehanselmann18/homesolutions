@@ -1,6 +1,7 @@
 // Cálculos derivados de Proveedor para el listado y el detalle. Se separa acá
 // para que el listado (tarjetas) y el detalle usen siempre el mismo criterio.
 import { esCompraImpaga } from "./seguimiento";
+import { notasDeCompras, totalNotasCredito as sumarNotasCredito, totalNotasDebito as sumarNotasDebito } from "./notas";
 
 const sumar = (items, obtenerMonto) => items.reduce((acc, item) => acc + (obtenerMonto(item) || 0), 0);
 
@@ -37,6 +38,9 @@ export function rubroPrincipal(productosDelProveedor, getTipoProducto) {
 export function calcularResumenProveedor(proveedor, { productos = [], compras = [] } = {}) {
   const productosDelProveedor = productos.filter((p) => p.proveedor_id === proveedor.id);
   const comprasDelProveedor = compras.filter((c) => c.proveedor_id === proveedor.id);
+  // Notas de crédito/débito de todas las compras de este proveedor, cada una
+  // con la referencia a la compra de la que vino (ver utils/notas.js).
+  const notas = notasDeCompras(comprasDelProveedor);
 
   return {
     productosDelProveedor,
@@ -44,5 +48,8 @@ export function calcularResumenProveedor(proveedor, { productos = [], compras = 
     cantidadProductos: productosDelProveedor.length,
     totalComprado: sumar(comprasDelProveedor, (c) => c.precio_total),
     deuda: sumar(comprasDelProveedor.filter(esCompraImpaga), (c) => c.precio_total),
+    notas,
+    totalNotasCredito: sumarNotasCredito(notas),
+    totalNotasDebito: sumarNotasDebito(notas),
   };
 }

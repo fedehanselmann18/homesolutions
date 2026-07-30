@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { useUsuarios } from "../hooks/useUsuarios";
-import logoHS from "../assets/HS_logo_negro.png";
+import logoHS from "../assets/HS_logo_blanco.png";
 import "./Login.css";
 
 export function Login() {
@@ -41,46 +41,51 @@ export function Login() {
   return (
     <div className="login-page">
       <form className="login-card" onSubmit={handleSubmit}>
-        <img src={logoHS} alt="HomeSolutions" className="login-logo" />
-        <h1>Iniciar sesión</h1>
+        <div className="login-card-header">
+          <img src={logoHS} alt="HomeSolutions" className="login-logo" />
+        </div>
 
-        <label className="login-field">
-          <span>Usuario</span>
-          <select
-            value={nombreUsuario}
-            onChange={(e) => setNombreUsuario(e.target.value)}
-            disabled={cargandoUsuarios}
-          >
-            <option value="" disabled>
-              {cargandoUsuarios ? "Cargando..." : "Seleccioná tu usuario"}
-            </option>
-            {usuarios.map((u) => (
-              <option key={u.id} value={u.nombre_usuario}>
-                {u.nombre_usuario}
+        <div className="login-card-body">
+          <h1>Iniciar sesión</h1>
+
+          <label className="login-field">
+            <span>Usuario</span>
+            <select
+              value={nombreUsuario}
+              onChange={(e) => setNombreUsuario(e.target.value)}
+              disabled={cargandoUsuarios}
+            >
+              <option value="" disabled>
+                {cargandoUsuarios ? "Cargando..." : "Seleccioná tu usuario"}
               </option>
-            ))}
-          </select>
-        </label>
+              {usuarios.map((u) => (
+                <option key={u.id} value={u.nombre_usuario}>
+                  {u.nombre_usuario}
+                </option>
+              ))}
+            </select>
+          </label>
 
-        <label className="login-field">
-          <span>Contraseña</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-          />
-        </label>
+          <label className="login-field">
+            <span>Contraseña</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+            />
+          </label>
 
-        {error && <p className="login-error">{error}</p>}
+          {error && <p className="login-error">{error}</p>}
 
-        <button type="submit" disabled={enviando}>
-          {enviando ? "Ingresando..." : "Ingresar"}
-        </button>
+          <button type="submit" disabled={enviando}>
+            {enviando ? "Ingresando..." : "Ingresar"}
+          </button>
 
-        <Link to="/registro" className="login-link">
-          ¿Todavía no tenés cuenta? Registrate
-        </Link>
+          <Link to="/registro" className="login-link">
+            ¿Todavía no tenés cuenta? Registrate
+          </Link>
+        </div>
       </form>
     </div>
   );

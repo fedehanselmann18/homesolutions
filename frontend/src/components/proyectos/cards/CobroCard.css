@@ -64,6 +64,43 @@
     color: var(--color-tinta-muted);
 }
 
+.cobro-card-resumen {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-base-1);
+    border: 1px solid var(--color-linea);
+}
+
+.cobro-card-resumen-fila {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--color-tinta-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.cobro-card-resumen-fila--nota-credito {
+    color: var(--color-oxido);
+    font-weight: 600;
+}
+
+.cobro-card-resumen-fila--nota-debito {
+    color: #d97706;
+    font-weight: 600;
+}
+
+.cobro-card-resumen-fila--total {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-tinta);
+    border-top: 1px solid var(--color-linea);
+    padding-top: 4px;
+    margin-top: 1px;
+}
+
 .cobro-card-expandido {
     display: flex;
     flex-direction: column;

@@ -163,7 +163,7 @@ export function Proveedores() {
                 </p>
             ) : (
                 <div className="proveedores-grid">
-                    {proveedoresFiltrados.map(({ proveedor, cantidadProductos, totalComprado, deuda, rubro }) => (
+                    {proveedoresFiltrados.map(({ proveedor, cantidadProductos, totalComprado, deuda, rubro, totalNotasCredito, totalNotasDebito }) => (
                         <ProveedorCard
                             key={proveedor.id}
                             proveedor={proveedor}
@@ -171,6 +171,8 @@ export function Proveedores() {
                             cantidadProductos={cantidadProductos}
                             totalComprado={totalComprado}
                             deuda={deuda}
+                            totalNotasCredito={totalNotasCredito}
+                            totalNotasDebito={totalNotasDebito}
                             onEditar={abrirModalEditar}
                             onEliminar={handleEliminar}
                         />

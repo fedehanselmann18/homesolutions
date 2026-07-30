@@ -32,7 +32,7 @@ const ROJO = "#dc2626";
 const AZUL = "#64748b";
 const NARANJA = "#d97706";
 
-const COLORES_TORTA = ["#647d3b", "#16a34a", "#d97706", "#64748b", "#7c3aed", "#0891b2", "#dc2626", "#52525b"];
+const COLORES_TORTA = ["#6f7f45", "#16a34a", "#d97706", "#64748b", "#7c3aed", "#0891b2", "#dc2626", "#52525b"];
 
 const COLOR_CASCADA = {
     entrada: VERDE,

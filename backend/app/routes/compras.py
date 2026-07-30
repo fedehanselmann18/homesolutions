@@ -1,15 +1,19 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+import json
+
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 from app.db import models
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db.db import get_db
 from app.files.storage import subir_comprobante, eliminar_comprobante, ver_comprobante
+from datetime import date
 from app.schemas import (
     CompraCreate, CompraUpdate, CompraOut,
     DetalleCompraCreate, DetalleCompraOut,
     CompraImpuestoCreate, CompraImpuestoOut,
-    ComprobanteCompraOut
+    ComprobanteCompraOut, NotaCompraOut
 )
 
 router = APIRouter(
@@ -22,12 +26,18 @@ router = APIRouter(
 # ---------------------------------------------------------------------------
 
 @router.get("/", response_model=list[CompraOut], status_code=status.HTTP_200_OK)
-def get_all_compras(db: Session = Depends(get_db),
+def get_all_compras(proveedor_id: str | None = None,
+                     db: Session = Depends(get_db),
                      current_user: models.Usuario = Depends(get_current_user)):
-    return db.query(models.Compra).options(
+    query = db.query(models.Compra).options(
         joinedload(models.Compra.detalle).joinedload(models.DetalleCompra.producto).joinedload(models.Producto.categorias),
-        joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto)
-    ).all()
+        joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
+        joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
+        joinedload(models.Compra.notas).joinedload(models.NotaCompra.impuestos_aplicados).joinedload(models.NotaCompraImpuesto.impuesto),
+    )
+    if proveedor_id:
+        query = query.filter(models.Compra.proveedor_id == proveedor_id)
+    return query.all()
 
 
 @router.get("/{compra_id}", response_model=CompraOut, status_code=status.HTTP_200_OK)
@@ -36,7 +46,9 @@ def get_compra_by_id(compra_id: str,
                       current_user: models.Usuario = Depends(get_current_user)):
     compra = db.query(models.Compra).options(
         joinedload(models.Compra.detalle).joinedload(models.DetalleCompra.producto).joinedload(models.Producto.categorias),
-        joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto)
+        joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
+        joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
+        joinedload(models.Compra.notas).joinedload(models.NotaCompra.impuestos_aplicados).joinedload(models.NotaCompraImpuesto.impuesto),
     ).filter(models.Compra.id == compra_id).first()
     if not compra:
         raise HTTPException(status_code=404, detail="Compra no encontrada")
@@ -53,7 +65,9 @@ def get_compras_by_fase(fase_id: str,
 
     return db.query(models.Compra).options(
         joinedload(models.Compra.detalle).joinedload(models.DetalleCompra.producto).joinedload(models.Producto.categorias),
-        joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto)
+        joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
+        joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
+        joinedload(models.Compra.notas).joinedload(models.NotaCompra.impuestos_aplicados).joinedload(models.NotaCompraImpuesto.impuesto),
     ).filter(models.Compra.fase_id == fase_id).all()
 
 
@@ -68,7 +82,9 @@ def get_compras_by_proyecto(proyecto_id: str,
     # Compra no tiene FK directa a Proyecto, se llega vía Fase -> join necesario
     return db.query(models.Compra).join(models.Fase).options(
         joinedload(models.Compra.detalle).joinedload(models.DetalleCompra.producto).joinedload(models.Producto.categorias),
-        joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto)
+        joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
+        joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
+        joinedload(models.Compra.notas).joinedload(models.NotaCompra.impuestos_aplicados).joinedload(models.NotaCompraImpuesto.impuesto),
     ).filter(models.Fase.proyecto_id == proyecto_id).all()
 
 
@@ -183,9 +199,11 @@ def delete_compra(compra_id: str,
 
     compra_data = CompraOut.model_validate(compra)
 
-    # Borrar archivos físicos de los comprobantes antes de que el CASCADE se lleve las filas
+    # Borrar archivos físicos de los comprobantes y las notas antes de que el CASCADE se lleve las filas
     for comprobante in compra.comprobantes:
         eliminar_comprobante(comprobante.archivo_path)
+    for nota in compra.notas:
+        eliminar_comprobante(nota.archivo_path)
 
     db.delete(compra)
     db.commit()
@@ -351,3 +369,162 @@ def delete_comprobante_compra(compra_id: str,
     db.commit()
 
     return {"detail": "Comprobante eliminado"}
+
+
+# ---------------------------------------------------------------------------
+# Notas (cuenta corriente: nota de crédito / nota de débito)
+# ---------------------------------------------------------------------------
+
+def _restante_detalle_compra(db: Session, detalle_compra_id: str, cantidad_comprada: float) -> float:
+    """Cuánto de una línea de compra queda disponible para devolver: lo
+    comprado menos lo ya acreditado en TODAS las notas de devolución previas
+    que referencian esa misma línea (no solo las de la nota que se está
+    creando ahora)."""
+    ya_devuelto = db.query(func.coalesce(func.sum(models.NotaCompraDetalle.cantidad), 0)).filter(
+        models.NotaCompraDetalle.detalle_compra_id == detalle_compra_id
+    ).scalar()
+    return float(cantidad_comprada) - float(ya_devuelto or 0)
+
+
+@router.post("/{compra_id}/notas", response_model=NotaCompraOut, status_code=status.HTTP_201_CREATED)
+def crear_nota_compra(compra_id: str,
+                       archivo: UploadFile = File(...),
+                       tipo: str = Form(...),  # "nota_credito" | "nota_debito"
+                       tipo_factura: str = Form(...),  # SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro)
+                       descripcion: str = Form(...),
+                       fecha: date = Form(...),
+                       origen: str | None = Form(None),  # "devolucion_producto" | "acuerdo_comercial" | "otro"
+                       monto: float | None = Form(None),  # obligatorio salvo devolucion_producto (se calcula solo)
+                       detalles_json: str | None = Form(None),  # JSON [{detalle_compra_id, cantidad}], solo devolucion_producto
+                       impuestos_json: str | None = Form(None),  # JSON [{impuesto_id, monto}], opcional junto a detalles_json
+                       db: Session = Depends(get_db),
+                       current_user: models.Usuario = Depends(requiere_admin)):
+    compra = db.query(models.Compra).filter(models.Compra.id == compra_id).first()
+    if not compra:
+        raise HTTPException(status_code=404, detail="Compra no encontrada")
+
+    if tipo not in ("nota_credito", "nota_debito"):
+        raise HTTPException(status_code=400, detail="tipo debe ser 'nota_credito' o 'nota_debito'")
+
+    if origen == "devolucion_producto" and tipo != "nota_credito":
+        raise HTTPException(status_code=400, detail="'devolucion_producto' solo aplica a nota_credito")
+
+    path = subir_comprobante(archivo, "notas_compra", compra_id)
+
+    nueva_nota = models.NotaCompra(
+        compra_id=compra_id,
+        proveedor_id=compra.proveedor_id,  # denormalizado desde la compra
+        usuario_id=current_user.id,
+        tipo=tipo,
+        origen=origen,
+        tipo_factura=tipo_factura,
+        monto=0,  # se pisa más abajo (calculado o manual)
+        descripcion=descripcion,
+        fecha=fecha,
+        archivo_path=path
+    )
+
+    if origen == "devolucion_producto":
+        # Devolución de producto: el monto NO se tipea a mano, se calcula acá
+        # a partir de las líneas devueltas (cantidad * precio_unitario frozen
+        # de la compra original) + impuestos opcionales.
+        try:
+            lineas = json.loads(detalles_json) if detalles_json else []
+        except (json.JSONDecodeError, TypeError):
+            raise HTTPException(status_code=400, detail="detalles_json inválido")
+        if not lineas:
+            raise HTTPException(status_code=400, detail="Tenés que elegir al menos un producto para devolver")
+
+        total_lineas = 0.0
+        for linea in lineas:
+            detalle_compra_id = linea.get("detalle_compra_id")
+            cantidad = linea.get("cantidad")
+            if not detalle_compra_id or cantidad is None or float(cantidad) <= 0:
+                raise HTTPException(status_code=400, detail="Cada línea necesita producto y cantidad mayor a 0")
+
+            detalle = db.query(models.DetalleCompra).filter(
+                models.DetalleCompra.id == detalle_compra_id,
+                models.DetalleCompra.compra_id == compra_id
+            ).first()
+            if not detalle:
+                raise HTTPException(status_code=404, detail="Esa línea de producto no pertenece a esta compra")
+
+            restante = _restante_detalle_compra(db, detalle_compra_id, detalle.cantidad)
+            if float(cantidad) > restante:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Solo podés devolver hasta {restante:g} unidades de esa línea (ya devuelto en notas anteriores)"
+                )
+
+            nueva_nota.detalles.append(models.NotaCompraDetalle(
+                detalle_compra_id=detalle_compra_id,
+                cantidad=cantidad,
+                precio_unitario=detalle.precio_unitario
+            ))
+            total_lineas += float(cantidad) * float(detalle.precio_unitario)
+
+        total_impuestos = 0.0
+        try:
+            impuestos = json.loads(impuestos_json) if impuestos_json else []
+        except (json.JSONDecodeError, TypeError):
+            raise HTTPException(status_code=400, detail="impuestos_json inválido")
+        for imp in impuestos:
+            impuesto_id = imp.get("impuesto_id")
+            monto_imp = imp.get("monto")
+            if not impuesto_id or monto_imp is None:
+                raise HTTPException(status_code=400, detail="Cada impuesto necesita impuesto_id y monto")
+            impuesto = db.query(models.Impuesto).filter(models.Impuesto.id == impuesto_id).first()
+            if not impuesto:
+                raise HTTPException(status_code=404, detail=f"Impuesto {impuesto_id} no encontrado")
+            nueva_nota.impuestos_aplicados.append(models.NotaCompraImpuesto(
+                impuesto_id=impuesto_id,
+                monto=monto_imp
+            ))
+            total_impuestos += float(monto_imp)
+
+        nueva_nota.monto = total_lineas + total_impuestos
+    else:
+        # acuerdo_comercial / otro / nota_debito: monto tipeado a mano.
+        if monto is None:
+            raise HTTPException(status_code=400, detail="monto es obligatorio para este origen")
+        nueva_nota.monto = monto
+
+    db.add(nueva_nota)
+    db.commit()
+    db.refresh(nueva_nota)
+
+    return nueva_nota
+
+
+@router.get("/{compra_id}/notas/{nota_id}")
+def ver_nota_compra(compra_id: str,
+                     nota_id: str,
+                     db: Session = Depends(get_db),
+                     current_user: models.Usuario = Depends(get_current_user)):
+    nota = db.query(models.NotaCompra).filter(
+        models.NotaCompra.id == nota_id,
+        models.NotaCompra.compra_id == compra_id
+    ).first()
+    if not nota:
+        raise HTTPException(status_code=404, detail="Nota no encontrada")
+
+    return ver_comprobante(nota.archivo_path)
+
+
+@router.delete("/{compra_id}/notas/{nota_id}", status_code=status.HTTP_200_OK)
+def eliminar_nota_compra(compra_id: str,
+                          nota_id: str,
+                          db: Session = Depends(get_db),
+                          current_user: models.Usuario = Depends(requiere_admin)):
+    nota = db.query(models.NotaCompra).filter(
+        models.NotaCompra.id == nota_id,
+        models.NotaCompra.compra_id == compra_id
+    ).first()
+    if not nota:
+        raise HTTPException(status_code=404, detail="Nota no encontrada")
+
+    eliminar_comprobante(nota.archivo_path)
+    db.delete(nota)
+    db.commit()
+
+    return {"detail": "Nota eliminada"}

@@ -3,7 +3,9 @@ import { formatMoneda, formatFecha } from "../../../utils/formato";
 import { getTipoFacturaLabel } from "../../../constants/tipoFactura";
 import { getTipoProducto } from "../../../constants/tipoProducto";
 import { getEstadoPago, getEstadoEnvio, getCondicionPagoLabel } from "../../../constants/estadoCompra";
+import { totalNotasCredito, totalNotasDebito } from "../../../utils/notas";
 import { SeccionComprobantes } from "../../shared/SeccionComprobantes";
+import { SeccionNotas } from "../../shared/SeccionNotas";
 import "./CompraCard.css";
 
 export function CompraCard({
@@ -17,6 +19,9 @@ export function CompraCard({
     onVerComprobante,
     onAgregarComprobante,
     onEliminarComprobante,
+    onAgregarNota,
+    onVerNota,
+    onEliminarNota,
     onTogglePago,
     onToggleEnvio,
 }) {
@@ -28,13 +33,30 @@ export function CompraCard({
     const IconoPago = estadoPago.icono;
     const IconoEnvio = estadoEnvio.icono;
 
+    // Impuestos/notas se calculan de las listas propias -- no de
+    // "precio_total - precio_neto", porque precio_total ya viene con las
+    // notas de crédito/débito aplicadas y esa resta pisaría el impuesto.
+    const totalImpuestos = (compra.impuestos_aplicados ?? []).reduce(
+        (acc, i) => acc + (Number(i.monto) || 0), 0
+    );
+    const notas = compra.notas ?? [];
+    const notasCredito = totalNotasCredito(notas);
+    const notasDebito = totalNotasDebito(notas);
+
+    const resolverProducto = (detalleCompraId) => {
+        const linea = compra.detalle?.find((d) => d.id === detalleCompraId);
+        if (!linea) return null;
+        const producto = productos.find((p) => p.id === linea.producto_id);
+        return producto ? `${producto.marca} ${producto.modelo}` : null;
+    };
+
     const handleEditar = () => onEditar(compra);
     const handleEliminar = () => onEliminar(compra.id);
     const handleTogglePago = () => onTogglePago(compra);
     const handleToggleEnvio = () => onToggleEnvio(compra);
 
     return (
-        <div className="compra-card">
+        <div className="compra-card" id={`compra-${compra.id}`}>
             <div className="compra-card-contenido">
                 <div className="compra-card-header">
                     <h3 className="compra-card-descripcion">{compra.descripcion}</h3>
@@ -117,8 +139,20 @@ export function CompraCard({
                         </div>
                         <div className="compra-card-resumen-fila">
                             <span>Impuestos</span>
-                            <span>{formatMoneda(compra.precio_total - compra.precio_neto)}</span>
+                            <span>{formatMoneda(totalImpuestos)}</span>
                         </div>
+                        {notasCredito > 0 && (
+                            <div className="compra-card-resumen-fila compra-card-resumen-fila--nota-credito">
+                                <span>Notas de crédito</span>
+                                <span>-{formatMoneda(notasCredito)}</span>
+                            </div>
+                        )}
+                        {notasDebito > 0 && (
+                            <div className="compra-card-resumen-fila compra-card-resumen-fila--nota-debito">
+                                <span>Notas de débito</span>
+                                <span>+{formatMoneda(notasDebito)}</span>
+                            </div>
+                        )}
                         <div className="compra-card-resumen-fila compra-card-resumen-fila--total">
                             <span>Total</span>
                             <span>{formatMoneda(compra.precio_total)}</span>
@@ -134,6 +168,16 @@ export function CompraCard({
                         onVer={onVerComprobante ? (c) => onVerComprobante(compra.id, c.id) : undefined}
                         onAgregar={onAgregarComprobante ? (files) => onAgregarComprobante(compra.id, files) : undefined}
                         onEliminar={onEliminarComprobante ? (id) => onEliminarComprobante(compra.id, id) : undefined}
+                        canManage={canManage}
+                    />
+
+                    <SeccionNotas
+                        notas={notas}
+                        contexto="compra"
+                        resolverProducto={resolverProducto}
+                        onVer={onVerNota ? (n) => onVerNota(compra.id, n.id) : undefined}
+                        onAgregar={onAgregarNota ? () => onAgregarNota(compra) : undefined}
+                        onEliminar={onEliminarNota ? (id) => onEliminarNota(compra.id, id) : undefined}
                         canManage={canManage}
                     />
                 </div>

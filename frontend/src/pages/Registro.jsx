@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { crearUsuario } from "../services/usuarioService";
-import logoHS from "../assets/HS_logo_negro.png";
+import logoHS from "../assets/HS_logo_blanco.png";
 import "./Login.css"; // reusa los mismos estilos de tarjeta/inputs del login
 
 // Mapeo fijo: quién es admin y quién es lectura. Si en algún momento cambia
@@ -59,55 +59,60 @@ export function Registro() {
   return (
     <div className="login-page">
       <form className="login-card" onSubmit={handleSubmit}>
-        <img src={logoHS} alt="HomeSolutions" className="login-logo" />
-        <h1>Crear cuenta</h1>
+        <div className="login-card-header">
+          <img src={logoHS} alt="HomeSolutions" className="login-logo" />
+        </div>
 
-        <label className="login-field">
-          <span>Nombre</span>
-          <select
-            value={nombreUsuario}
-            onChange={(e) => setNombreUsuario(e.target.value)}
-          >
-            <option value="" disabled>
-              Seleccioná tu nombre
-            </option>
-            {NOMBRES.map((n) => (
-              <option key={n.nombre_usuario} value={n.nombre_usuario}>
-                {n.nombre_usuario}
+        <div className="login-card-body">
+          <h1>Crear cuenta</h1>
+
+          <label className="login-field">
+            <span>Nombre</span>
+            <select
+              value={nombreUsuario}
+              onChange={(e) => setNombreUsuario(e.target.value)}
+            >
+              <option value="" disabled>
+                Seleccioná tu nombre
               </option>
-            ))}
-          </select>
-        </label>
+              {NOMBRES.map((n) => (
+                <option key={n.nombre_usuario} value={n.nombre_usuario}>
+                  {n.nombre_usuario}
+                </option>
+              ))}
+            </select>
+          </label>
 
-        <label className="login-field">
-          <span>Contraseña</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-          />
-        </label>
+          <label className="login-field">
+            <span>Contraseña</span>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+            />
+          </label>
 
-        <label className="login-field">
-          <span>Confirmar contraseña</span>
-          <input
-            type="password"
-            value={confirmarPassword}
-            onChange={(e) => setConfirmarPassword(e.target.value)}
-            placeholder="••••••••"
-          />
-        </label>
+          <label className="login-field">
+            <span>Confirmar contraseña</span>
+            <input
+              type="password"
+              value={confirmarPassword}
+              onChange={(e) => setConfirmarPassword(e.target.value)}
+              placeholder="••••••••"
+            />
+          </label>
 
-        {error && <p className="login-error">{error}</p>}
+          {error && <p className="login-error">{error}</p>}
 
-        <button type="submit" disabled={enviando}>
-          {enviando ? "Creando cuenta..." : "Crear cuenta"}
-        </button>
+          <button type="submit" disabled={enviando}>
+            {enviando ? "Creando cuenta..." : "Crear cuenta"}
+          </button>
 
-        <Link to="/login" className="login-link">
-          ¿Ya tenés cuenta? Iniciá sesión
-        </Link>
+          <Link to="/login" className="login-link">
+            ¿Ya tenés cuenta? Iniciá sesión
+          </Link>
+        </div>
       </form>
     </div>
   );

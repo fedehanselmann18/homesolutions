@@ -53,3 +53,34 @@ export const eliminarComprobanteCobro = async (cobroId, comprobanteId) => {
   const { data } = await axiosClient.delete(`/cobros/${cobroId}/comprobantes/${comprobanteId}`);
   return data;
 };
+
+// --- Notas (cuenta corriente: nota de crédito / nota de débito) ---
+
+export const crearNotaCobro = async (cobroId, { archivo, tipo, tipo_factura, monto, descripcion, fecha, origen }) => {
+  const formData = new FormData();
+  formData.append("archivo", archivo);
+  formData.append("tipo", tipo);
+  formData.append("tipo_factura", tipo_factura);
+  formData.append("monto", monto);
+  formData.append("descripcion", descripcion);
+  formData.append("fecha", fecha);
+  if (origen) formData.append("origen", origen);
+
+  const { data } = await axiosClient.post(`/cobros/${cobroId}/notas`, formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+};
+
+export const getNotaCobro = async (cobroId, notaId) => {
+  const { data } = await axiosClient.get(
+    `/cobros/${cobroId}/notas/${notaId}`,
+    { responseType: "blob" }
+  );
+  return data;
+};
+
+export const eliminarNotaCobro = async (cobroId, notaId) => {
+  const { data } = await axiosClient.delete(`/cobros/${cobroId}/notas/${notaId}`);
+  return data;
+};

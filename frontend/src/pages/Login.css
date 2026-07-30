@@ -13,8 +13,21 @@
   max-width: 380px;
   background: var(--color-superficie);
   border: 1px solid var(--color-linea);
-  border-left: 4px solid var(--color-terracota);
   border-radius: var(--radius-sm);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.login-card-header {
+  background: var(--color-oscuro);
+  padding: var(--space-6) var(--space-8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card-body {
   padding: var(--space-8) var(--space-8) var(--space-6);
   display: flex;
   flex-direction: column;
@@ -24,7 +37,6 @@
 .login-logo {
   width: 84px;
   height: auto;
-  margin-bottom: 2px;
 }
 
 .login-card h1 {

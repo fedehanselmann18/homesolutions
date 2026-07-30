@@ -7,6 +7,9 @@ import {
     subirComprobanteCompra,
     getComprobanteCompra,
     eliminarComprobanteCompra,
+    crearNotaCompra,
+    getNotaCompra,
+    eliminarNotaCompra,
 } from "../../services/compraService";
 import {
     getGastosPorProyecto,
@@ -25,6 +28,9 @@ import {
     subirComprobanteCobro,
     getComprobanteCobro,
     eliminarComprobanteCobro,
+    crearNotaCobro,
+    getNotaCobro,
+    eliminarNotaCobro,
 } from "../../services/cobroService";
 import { getFasesPorProyecto } from "../../services/faseService";
 import { getCategoriasGasto } from "../../services/categoriaGastoService";
@@ -40,10 +46,11 @@ import CompraCard from "./cards/CompraCard";
 import ModalGasto from "../modals/ModalGasto";
 import ModalCobro from "../modals/ModalCobro";
 import ModalCompra from "../modals/ModalCompra";
+import ModalNota from "../modals/ModalNota";
 
 import "./Acciones.css";
 
-export function Acciones({ proyectoId }) {
+export function Acciones({ proyectoId, proyectoNombre }) {
     const { usuario } = useAuth();
     const canManage = usuario?.rol === "admin";
     const toast = useToast();
@@ -69,6 +76,10 @@ export function Acciones({ proyectoId }) {
 
     const [modalCompraAbierto, setModalCompraAbierto] = useState(false);
     const [compraEditando, setCompraEditando] = useState(null);
+
+    const [modalNotaAbierto, setModalNotaAbierto] = useState(false);
+    const [notaContexto, setNotaContexto] = useState(null); // "compra" | "cobro"
+    const [notaEntidad, setNotaEntidad] = useState(null); // la Compra o el Cobro sobre el que se carga la nota
 
     useEffect(() => {
         fetchAcciones();
@@ -288,6 +299,40 @@ export function Acciones({ proyectoId }) {
         fetchAcciones();
     };
 
+    // --- Notas (cuenta corriente: nota de crédito / débito) ---
+    const handleAgregarNotaCompra = (compra) => {
+        setNotaContexto("compra");
+        setNotaEntidad(compra);
+        setModalNotaAbierto(true);
+    };
+
+    const handleAgregarNotaCobro = (cobro) => {
+        setNotaContexto("cobro");
+        setNotaEntidad(cobro);
+        setModalNotaAbierto(true);
+    };
+
+    const handleGuardarNota = async (payload) => {
+        if (notaContexto === "compra") {
+            await crearNotaCompra(notaEntidad.id, payload);
+        } else {
+            await crearNotaCobro(notaEntidad.id, payload);
+        }
+        setModalNotaAbierto(false);
+        setNotaEntidad(null);
+        fetchAcciones();
+    };
+
+    const handleEliminarNotaCompra = async (compraId, notaId) => {
+        await eliminarNotaCompra(compraId, notaId);
+        fetchAcciones();
+    };
+
+    const handleEliminarNotaCobro = async (cobroId, notaId) => {
+        await eliminarNotaCobro(cobroId, notaId);
+        fetchAcciones();
+    };
+
     return (
         <div>
             <div className="acciones-subtabs">
@@ -359,6 +404,9 @@ export function Acciones({ proyectoId }) {
                                     onVerComprobante={getComprobanteCobro}
                                     onAgregarComprobante={handleAgregarComprobantesCobro}
                                     onEliminarComprobante={handleEliminarComprobanteCobro}
+                                    onAgregarNota={handleAgregarNotaCobro}
+                                    onVerNota={getNotaCobro}
+                                    onEliminarNota={handleEliminarNotaCobro}
                                 />
                             ))}
                         </div>
@@ -391,6 +439,9 @@ export function Acciones({ proyectoId }) {
                                     onVerComprobante={getComprobanteCompra}
                                     onAgregarComprobante={handleAgregarComprobantesCompra}
                                     onEliminarComprobante={handleEliminarComprobanteCompra}
+                                    onAgregarNota={handleAgregarNotaCompra}
+                                    onVerNota={getNotaCompra}
+                                    onEliminarNota={handleEliminarNotaCompra}
                                 />
                             ))}
                         </div>
@@ -412,7 +463,7 @@ export function Acciones({ proyectoId }) {
             {modalCobroAbierto && (
                 <ModalCobro
                     cobro={cobroEditando}
-                    proyectoActual={{ id: proyectoId , nombre: "Proyecto Actual" }} // You can replace this with the actual project name if available
+                    proyectoActual={{ id: proyectoId, nombre: proyectoNombre }}
                     onGuardar={handleGuardarCobro}
                     onCerrar={() => setModalCobroAbierto(false)}
                     onVerComprobante={cobroEditando ? (c) => getComprobanteCobro(cobroEditando.id, c.id) : undefined}
@@ -429,6 +480,17 @@ export function Acciones({ proyectoId }) {
                     onGuardar={handleGuardarCompra}
                     onCerrar={() => setModalCompraAbierto(false)}
                     onVerComprobante={compraEditando ? (c) => getComprobanteCompra(compraEditando.id, c.id) : undefined}
+                />
+            )}
+
+            {modalNotaAbierto && (
+                <ModalNota
+                    contexto={notaContexto}
+                    entidad={notaEntidad}
+                    productos={productos}
+                    impuestosDisponibles={impuestos}
+                    onGuardar={handleGuardarNota}
+                    onCerrar={() => setModalNotaAbierto(false)}
                 />
             )}
         </div>

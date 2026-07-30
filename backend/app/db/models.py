@@ -209,11 +209,26 @@ class Compra(TimestampMixin, Base):
     )
     impuestos_aplicados: Mapped[list["CompraImpuesto"]] = relationship(back_populates="compra", cascade="all, delete-orphan")
     comprobantes: Mapped[list["ComprobanteCompra"]] = relationship(back_populates="compra", cascade="all, delete-orphan")
+    # Cuenta corriente de esta compra con el proveedor: notas de crédito/débito,
+    # cada una opcionalmente atada a una línea puntual de producto devuelto
+    # (ver NotaCompra más abajo). Comprobante* es SOLO el archivo (factura,
+    # remito...); Nota* es un movimiento de plata con su propio motivo/origen.
+    notas: Mapped[list["NotaCompra"]] = relationship(back_populates="compra", cascade="all, delete-orphan")
 
     @property
     def precio_total(self) -> float:
-        """precio_neto + suma de todos los impuestos aplicados. No se persiste."""
-        return float(self.precio_neto) + sum(float(ci.monto) for ci in self.impuestos_aplicados)
+        """
+        precio_neto + suma de todos los impuestos aplicados - notas de crédito
+        + notas de débito (ver NotaCompra). No se persiste.
+        """
+        notas_credito = sum(float(n.monto) for n in self.notas if n.tipo == "nota_credito")
+        notas_debito = sum(float(n.monto) for n in self.notas if n.tipo == "nota_debito")
+        return (
+            float(self.precio_neto)
+            + sum(float(ci.monto) for ci in self.impuestos_aplicados)
+            - notas_credito
+            + notas_debito
+        )
 
     @property
     def categorias(self) -> list["Categoria"]:
@@ -296,6 +311,8 @@ class CompraImpuesto(TimestampMixin, Base):
 
 
 class ComprobanteCompra(TimestampMixin, Base):
+    """Archivo adjunto a una Compra (factura, remito...). Sin plata propia:
+    para movimientos de cuenta corriente (nota de crédito/débito) ver NotaCompra."""
     __tablename__ = "comprobantes_compra"
 
     id: Mapped[uuid.UUID] = uuid_pk()
@@ -305,6 +322,110 @@ class ComprobanteCompra(TimestampMixin, Base):
     archivo_path: Mapped[str] = mapped_column(String(500), nullable=False)
 
     compra: Mapped["Compra"] = relationship(back_populates="comprobantes")
+
+
+class NotaCompra(TimestampMixin, Base):
+    """
+    Movimiento de cuenta corriente con un Proveedor: nota de crédito o de
+    débito. Por ahora siempre nace de adentro de una Compra puntual (CASCADE +
+    not nullable), aunque proveedor_id queda denormalizado acá mismo (copiado
+    de compra.proveedor_id al crearla) para el día que haya notas "sueltas"
+    (acuerdo comercial sin compra de origen) -- ese día compra_id pasa a
+    nullable/SET NULL y esta columna ya está lista.
+
+    - tipo: "nota_credito" (a favor nuestro, resta de precio_total) |
+      "nota_debito" (en contra nuestro, suma a precio_total).
+    - origen: "devolucion_producto" | "acuerdo_comercial" | "otro" -- string
+      libre, se valida en el front (mismo criterio que tipo_factura). Solo
+      nota_credito admite "devolucion_producto".
+    - tipo_factura: SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro),
+      sin importar tipo/origen -- el usuario pidió que toda nota, sea crédito
+      o débito, quede etiquetada con el tipo de comprobante que la respalda.
+    - detalles: líneas de producto devuelto, SOLO si origen="devolucion_producto"
+      (ver NotaCompraDetalle). Una nota puede devolver varios productos de la
+      misma compra a la vez.
+    - impuestos_aplicados: impuestos que se suman a la devolución (ver
+      NotaCompraImpuesto), mismo criterio que CompraImpuesto.
+    - monto: totalizador FROZEN calculado en el momento de creación (suma de
+      detalles + impuestos, o tipeado a mano si es acuerdo_comercial/otro/débito).
+      No se recalcula después: si se borra un detalle o cambia el precio del
+      producto, esta nota sigue reflejando lo que efectivamente se acreditó.
+    """
+    __tablename__ = "notas_compra"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    compra_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("compras.id", ondelete="CASCADE"), nullable=False
+    )
+    proveedor_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("proveedores.id", ondelete="RESTRICT"), nullable=False
+    )
+    usuario_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False
+    )
+
+    tipo: Mapped[str] = mapped_column(String(20), nullable=False)  # nota_credito | nota_debito
+    origen: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    tipo_factura: Mapped[str] = mapped_column(String(30), nullable=False)
+    monto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    descripcion: Mapped[str] = mapped_column(String(500), nullable=False)  # motivo
+    fecha: Mapped[date] = mapped_column(nullable=False)
+    archivo_path: Mapped[str] = mapped_column(String(500), nullable=False)  # el comprobante que te dan
+
+    compra: Mapped["Compra"] = relationship(back_populates="notas")
+    proveedor: Mapped["Proveedor"] = relationship()
+    usuario: Mapped["Usuario"] = relationship()
+    detalles: Mapped[list["NotaCompraDetalle"]] = relationship(back_populates="nota", cascade="all, delete-orphan")
+    impuestos_aplicados: Mapped[list["NotaCompraImpuesto"]] = relationship(back_populates="nota", cascade="all, delete-orphan")
+
+
+class NotaCompraDetalle(TimestampMixin, Base):
+    """
+    Línea de producto devuelto dentro de una NotaCompra (origen="devolucion_producto").
+    Varias líneas por nota = varios productos devueltos en un mismo movimiento.
+
+    SET NULL en detalle_compra_id: si se borra la línea de compra original, la
+    nota y su monto ya frozen siguen existiendo, solo se pierde la referencia
+    exacta al producto (igual criterio que el detalle_compra_id anterior en NotaCompra).
+    """
+    __tablename__ = "notas_compra_detalle"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    nota_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("notas_compra.id", ondelete="CASCADE"), nullable=False
+    )
+    detalle_compra_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("detalle_compra.id", ondelete="SET NULL"), nullable=True
+    )
+    cantidad: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    # precio_unitario frozen al momento de crear la nota (copiado de
+    # DetalleCompra.precio_unitario): si el producto cambia de precio de
+    # catálogo después, esta línea sigue reflejando lo que se acreditó.
+    precio_unitario: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+
+    nota: Mapped["NotaCompra"] = relationship(back_populates="detalles")
+    detalle: Mapped["DetalleCompra | None"] = relationship()
+
+
+class NotaCompraImpuesto(TimestampMixin, Base):
+    """Entidad asociativa NotaCompra<->Impuesto, mismo criterio que CompraImpuesto:
+    impuestos que se suman al monto de una devolución de productos."""
+    __tablename__ = "nota_compra_impuesto"
+    __table_args__ = (
+        UniqueConstraint("nota_id", "impuesto_id", name="uq_nota_compra_impuesto"),
+    )
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    nota_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("notas_compra.id", ondelete="CASCADE"), nullable=False
+    )
+    impuesto_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("impuestos.id", ondelete="RESTRICT"), nullable=False
+    )
+    monto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+
+    nota: Mapped["NotaCompra"] = relationship(back_populates="impuestos_aplicados")
+    impuesto: Mapped["Impuesto"] = relationship()
 
 
 # ---------------------------------------------------------------------------
@@ -381,9 +502,24 @@ class Cobro(TimestampMixin, Base):
     proyecto: Mapped["Proyecto"] = relationship(back_populates="cobros")
     usuario: Mapped["Usuario"] = relationship()
     comprobantes: Mapped[list["ComprobanteCobro"]] = relationship(back_populates="cobro", cascade="all, delete-orphan")
+    # Cuenta corriente de este cobro con el "cliente" (Proyecto): notas de
+    # crédito/débito. Mismo criterio que Compra.notas, ver NotaCobro.
+    notas: Mapped[list["NotaCobro"]] = relationship(back_populates="cobro", cascade="all, delete-orphan")
+
+    @property
+    def monto_neto(self) -> float:
+        """
+        monto - notas de crédito + notas de débito (ver NotaCobro). `monto`
+        sigue siendo el bruto cargado a mano; esto es lo calculado, no se persiste.
+        """
+        notas_credito = sum(float(n.monto) for n in self.notas if n.tipo == "nota_credito")
+        notas_debito = sum(float(n.monto) for n in self.notas if n.tipo == "nota_debito")
+        return float(self.monto) - notas_credito + notas_debito
 
 
 class ComprobanteCobro(TimestampMixin, Base):
+    """Archivo adjunto a un Cobro (factura, recibo...). Para movimientos de
+    cuenta corriente (nota de crédito/débito) ver NotaCobro."""
     __tablename__ = "comprobantes_cobro"
 
     id: Mapped[uuid.UUID] = uuid_pk()
@@ -393,3 +529,35 @@ class ComprobanteCobro(TimestampMixin, Base):
     archivo_path: Mapped[str] = mapped_column(String(500), nullable=False)
 
     cobro: Mapped["Cobro"] = relationship(back_populates="comprobantes")
+
+
+class NotaCobro(TimestampMixin, Base):
+    """
+    Movimiento de cuenta corriente con un "cliente" (Proyecto): nota de
+    crédito o de débito. Mismo criterio que NotaCompra pero del lado Cobro --
+    sin detalle_compra_id porque Cobro no tiene líneas de producto.
+    """
+    __tablename__ = "notas_cobro"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    cobro_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("cobros.id", ondelete="CASCADE"), nullable=False
+    )
+    proyecto_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("proyectos.id", ondelete="RESTRICT"), nullable=False
+    )
+    usuario_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False
+    )
+
+    tipo: Mapped[str] = mapped_column(String(20), nullable=False)  # nota_credito | nota_debito
+    origen: Mapped[str | None] = mapped_column(String(30), nullable=True)  # ajuste_precio | acuerdo_comercial | otro
+    tipo_factura: Mapped[str] = mapped_column(String(30), nullable=False)  # SIEMPRE obligatorio, ver NotaCompra
+    monto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    descripcion: Mapped[str] = mapped_column(String(500), nullable=False)
+    fecha: Mapped[date] = mapped_column(nullable=False)
+    archivo_path: Mapped[str] = mapped_column(String(500), nullable=False)
+
+    cobro: Mapped["Cobro"] = relationship(back_populates="notas")
+    proyecto: Mapped["Proyecto"] = relationship()
+    usuario: Mapped["Usuario"] = relationship()

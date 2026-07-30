@@ -14,6 +14,8 @@ const MS_POR_DIA = 1000 * 60 * 60 * 24;
 // contadores por proyecto sin volver a escribir el criterio.
 export const esCompraImpaga = (compra) => compra.estado_pago === "pendiente";
 export const esCompraSinEntregar = (compra) => compra.estado_envio === "pedido";
+export const esCompraSinComprobante = (compra) => (compra.comprobantes ?? []).length === 0;
+export const esCobroSinComprobante = (cobro) => (cobro.comprobantes ?? []).length === 0;
 
 // Exportada: la usa también la página de detalle de fase para "hace cuántos
 // días está en curso" con el mismo criterio que las fases estancadas de acá.
@@ -81,6 +83,11 @@ export function calcularSeguimiento({
     .map((c) => describirCompra(c, productos, proveedores, hoy))
     .sort((a, b) => b.dias - a.dias);
 
+  const comprasSinComprobante = compras
+    .filter(esCompraSinComprobante)
+    .map((c) => describirCompra(c, productos, proveedores, hoy))
+    .sort((a, b) => b.dias - a.dias);
+
   const gastosSinComprobante = gastos
     .filter((g) => (g.comprobantes ?? []).length === 0)
     .map((g) => ({
@@ -89,6 +96,17 @@ export function calcularSeguimiento({
       monto: g.monto,
       fecha: g.fecha,
       dias: diasDesde(g.fecha, hoy),
+    }))
+    .sort((a, b) => b.monto - a.monto);
+
+  const cobrosSinComprobante = cobros
+    .filter(esCobroSinComprobante)
+    .map((c) => ({
+      id: c.id,
+      descripcion: c.descripcion,
+      monto: c.monto,
+      fecha: c.fecha,
+      dias: diasDesde(c.fecha, hoy),
     }))
     .sort((a, b) => b.monto - a.monto);
 
@@ -135,18 +153,24 @@ export function calcularSeguimiento({
     cobranza,
     comprasImpagas,
     comprasSinEntregar,
+    comprasSinComprobante,
     gastosSinComprobante,
+    cobrosSinComprobante,
     fasesEstancadas,
     deudaPorProveedor,
     totales: {
       deudaTotal: sumar(comprasImpagas),
       montoSinComprobante: sumar(gastosSinComprobante),
+      montoComprasSinComprobante: sumar(comprasSinComprobante),
+      montoCobrosSinComprobante: sumar(cobrosSinComprobante),
     },
     // Cuántas cosas hay para revisar en total (para el contador de la pestaña).
     pendientes:
       comprasImpagas.length +
       comprasSinEntregar.length +
+      comprasSinComprobante.length +
       gastosSinComprobante.length +
+      cobrosSinComprobante.length +
       fasesEstancadas.length,
   };
 }

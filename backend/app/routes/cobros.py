@@ -1,11 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.db import models
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db.db import get_db
 from app.files.storage import subir_comprobante, eliminar_comprobante, ver_comprobante
-from app.schemas import CobroCreate, CobroUpdate, CobroOut, ComprobanteCobroOut
+from datetime import date
+from app.schemas import CobroCreate, CobroUpdate, CobroOut, ComprobanteCobroOut, NotaCobroOut
 
 router = APIRouter(
     prefix="/cobros",
@@ -14,9 +15,13 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[CobroOut], status_code=status.HTTP_200_OK)
-def get_all_cobros(db: Session = Depends(get_db),
+def get_all_cobros(proyecto_id: str | None = None,  # "cliente": Cobro cuelga de Proyecto, no hay entidad Cliente propia
+                    db: Session = Depends(get_db),
                     current_user: models.Usuario = Depends(get_current_user)):
-    return db.query(models.Cobro).all()
+    query = db.query(models.Cobro)
+    if proyecto_id:
+        query = query.filter(models.Cobro.proyecto_id == proyecto_id)
+    return query.all()
 
 
 @router.get("/{cobro_id}", response_model=CobroOut, status_code=status.HTTP_200_OK)
@@ -102,6 +107,8 @@ def delete_cobro(cobro_id: str,
 
     for comprobante in cobro.comprobantes:
         eliminar_comprobante(comprobante.archivo_path)
+    for nota in cobro.notas:
+        eliminar_comprobante(nota.archivo_path)
 
     db.delete(cobro)
     db.commit()
@@ -163,3 +170,80 @@ def delete_comprobante_cobro(cobro_id: str,
     db.commit()
 
     return {"detail": "Comprobante eliminado"}
+
+
+# ---------------------------------------------------------------------------
+# Notas (cuenta corriente: nota de crédito / nota de débito)
+# ---------------------------------------------------------------------------
+
+@router.post("/{cobro_id}/notas", response_model=NotaCobroOut, status_code=status.HTTP_201_CREATED)
+def crear_nota_cobro(cobro_id: str,
+                      archivo: UploadFile = File(...),
+                      tipo: str = Form(...),  # "nota_credito" | "nota_debito"
+                      tipo_factura: str = Form(...),  # SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro)
+                      monto: float = Form(...),
+                      descripcion: str = Form(...),
+                      fecha: date = Form(...),
+                      origen: str | None = Form(None),  # "ajuste_precio" | "acuerdo_comercial" | "otro"
+                      db: Session = Depends(get_db),
+                      current_user: models.Usuario = Depends(requiere_admin)):
+    cobro = db.query(models.Cobro).filter(models.Cobro.id == cobro_id).first()
+    if not cobro:
+        raise HTTPException(status_code=404, detail="Cobro no encontrado")
+
+    if tipo not in ("nota_credito", "nota_debito"):
+        raise HTTPException(status_code=400, detail="tipo debe ser 'nota_credito' o 'nota_debito'")
+
+    path = subir_comprobante(archivo, "notas_cobro", cobro_id)
+
+    nueva_nota = models.NotaCobro(
+        cobro_id=cobro_id,
+        proyecto_id=cobro.proyecto_id,  # denormalizado desde el cobro
+        usuario_id=current_user.id,
+        tipo=tipo,
+        origen=origen,
+        tipo_factura=tipo_factura,
+        monto=monto,
+        descripcion=descripcion,
+        fecha=fecha,
+        archivo_path=path
+    )
+    db.add(nueva_nota)
+    db.commit()
+    db.refresh(nueva_nota)
+
+    return nueva_nota
+
+
+@router.get("/{cobro_id}/notas/{nota_id}")
+def ver_nota_cobro(cobro_id: str,
+                    nota_id: str,
+                    db: Session = Depends(get_db),
+                    current_user: models.Usuario = Depends(get_current_user)):
+    nota = db.query(models.NotaCobro).filter(
+        models.NotaCobro.id == nota_id,
+        models.NotaCobro.cobro_id == cobro_id
+    ).first()
+    if not nota:
+        raise HTTPException(status_code=404, detail="Nota no encontrada")
+
+    return ver_comprobante(nota.archivo_path)
+
+
+@router.delete("/{cobro_id}/notas/{nota_id}", status_code=status.HTTP_200_OK)
+def eliminar_nota_cobro(cobro_id: str,
+                         nota_id: str,
+                         db: Session = Depends(get_db),
+                         current_user: models.Usuario = Depends(requiere_admin)):
+    nota = db.query(models.NotaCobro).filter(
+        models.NotaCobro.id == nota_id,
+        models.NotaCobro.cobro_id == cobro_id
+    ).first()
+    if not nota:
+        raise HTTPException(status_code=404, detail="Nota no encontrada")
+
+    eliminar_comprobante(nota.archivo_path)
+    db.delete(nota)
+    db.commit()
+
+    return {"detail": "Nota eliminada"}

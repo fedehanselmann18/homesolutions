@@ -85,7 +85,9 @@ export function Seguimiento({ proyectoId, onIrATab }) {
         cobranza,
         comprasImpagas,
         comprasSinEntregar,
+        comprasSinComprobante,
         gastosSinComprobante,
+        cobrosSinComprobante,
         fasesEstancadas,
         deudaPorProveedor,
         totales,
@@ -186,6 +188,34 @@ export function Seguimiento({ proyectoId, onIrATab }) {
             </Seccion>
 
             <Seccion
+                titulo="Compras sin comprobante"
+                descripcion={
+                    comprasSinComprobante.length > 0
+                        ? `${formatMoneda(totales.montoComprasSinComprobante)} sin respaldo cargado`
+                        : undefined
+                }
+                cantidad={comprasSinComprobante.length}
+            >
+                {comprasSinComprobante.length === 0 ? (
+                    <ListaVacia mensaje="Todas las compras tienen comprobante." />
+                ) : (
+                    <div className="seguimiento-lista">
+                        {comprasSinComprobante.map((compra) => (
+                            <TarjetaAlerta
+                                key={compra.id}
+                                icono={FileWarning}
+                                color={GRIS}
+                                titulo={compra.proveedor}
+                                detalle={`${compra.productos} · comprado el ${formatFecha(compra.fecha)}`}
+                                monto={formatMoneda(compra.monto)}
+                                onClick={irAAcciones}
+                            />
+                        ))}
+                    </div>
+                )}
+            </Seccion>
+
+            <Seccion
                 titulo="Gastos sin comprobante"
                 descripcion={
                     gastosSinComprobante.length > 0
@@ -206,6 +236,34 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                                 titulo={gasto.descripcion}
                                 detalle={`Cargado el ${formatFecha(gasto.fecha)}`}
                                 monto={formatMoneda(gasto.monto)}
+                                onClick={irAAcciones}
+                            />
+                        ))}
+                    </div>
+                )}
+            </Seccion>
+
+            <Seccion
+                titulo="Cobros sin comprobante"
+                descripcion={
+                    cobrosSinComprobante.length > 0
+                        ? `${formatMoneda(totales.montoCobrosSinComprobante)} sin respaldo cargado`
+                        : undefined
+                }
+                cantidad={cobrosSinComprobante.length}
+            >
+                {cobrosSinComprobante.length === 0 ? (
+                    <ListaVacia mensaje="Todos los cobros tienen comprobante." />
+                ) : (
+                    <div className="seguimiento-lista">
+                        {cobrosSinComprobante.map((cobro) => (
+                            <TarjetaAlerta
+                                key={cobro.id}
+                                icono={FileWarning}
+                                color={GRIS}
+                                titulo={cobro.descripcion}
+                                detalle={`Cargado el ${formatFecha(cobro.fecha)}`}
+                                monto={formatMoneda(cobro.monto)}
                                 onClick={irAAcciones}
                             />
                         ))}

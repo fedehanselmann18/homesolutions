@@ -8,6 +8,9 @@ import "./SeccionComprobantes.css";
  * (se usa en las cards de compra/gasto/cobro, fuera de los modales -- para
  * el flujo de alta/edición con drag & drop ver ComprobantesUploader).
  *
+ * Solo maneja comprobantes "normales" (factura, remito...). Las notas de
+ * crédito/débito tienen su propia sección aparte (ver SeccionNotas).
+ *
  * Props:
  * - comprobantes: [{ id, archivo_path }]
  * - onVer(comprobante) => Promise<Blob>    (trae el archivo autenticado; se abre con URL.createObjectURL)

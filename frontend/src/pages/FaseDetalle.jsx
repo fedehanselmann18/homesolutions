@@ -23,6 +23,9 @@ import {
     subirComprobanteCompra,
     getComprobanteCompra,
     eliminarComprobanteCompra,
+    crearNotaCompra,
+    getNotaCompra,
+    eliminarNotaCompra,
 } from "../services/compraService";
 import { getCategoriasGasto } from "../services/categoriaGastoService";
 import { getProveedores } from "../services/proveedorService";
@@ -41,6 +44,7 @@ import GastoCard from "../components/proyectos/cards/GastoCard";
 import CompraCard from "../components/proyectos/cards/CompraCard";
 import ModalGasto from "../components/modals/ModalGasto";
 import ModalCompra from "../components/modals/ModalCompra";
+import ModalNota from "../components/modals/ModalNota";
 import { Cargando } from "../components/shared/Cargando";
 import { useToast } from "../context/useToast";
 
@@ -79,6 +83,9 @@ export function FaseDetalle() {
     const [gastoEditando, setGastoEditando] = useState(null);
     const [modalCompraAbierto, setModalCompraAbierto] = useState(false);
     const [compraEditando, setCompraEditando] = useState(null);
+
+    const [modalNotaAbierto, setModalNotaAbierto] = useState(false);
+    const [notaCompra, setNotaCompra] = useState(null); // la Compra sobre la que se carga la nota
 
     useEffect(() => {
         fetchTodo();
@@ -307,6 +314,24 @@ export function FaseDetalle() {
         refetchAcciones();
     };
 
+    // --- Notas (cuenta corriente: nota de crédito / débito) ---
+    const handleAgregarNotaCompra = (compra) => {
+        setNotaCompra(compra);
+        setModalNotaAbierto(true);
+    };
+
+    const handleGuardarNota = async (payload) => {
+        await crearNotaCompra(notaCompra.id, payload);
+        setModalNotaAbierto(false);
+        setNotaCompra(null);
+        refetchAcciones();
+    };
+
+    const handleEliminarNotaCompra = async (compraId, notaId) => {
+        await eliminarNotaCompra(compraId, notaId);
+        refetchAcciones();
+    };
+
     if (cargando) return <Cargando texto="Cargando fase..." />;
     if (error || !fase || !proyecto) {
         return <div className="fase-detalle-vacio">No se pudo cargar el detalle de la fase.</div>;
@@ -476,6 +501,9 @@ export function FaseDetalle() {
                                 onVerComprobante={getComprobanteCompra}
                                 onAgregarComprobante={handleAgregarComprobantesCompra}
                                 onEliminarComprobante={handleEliminarComprobanteCompra}
+                                onAgregarNota={handleAgregarNotaCompra}
+                                onVerNota={getNotaCompra}
+                                onEliminarNota={handleEliminarNotaCompra}
                             />
                         ))}
                     </div>
@@ -503,6 +531,17 @@ export function FaseDetalle() {
                     onGuardar={handleGuardarCompra}
                     onCerrar={() => setModalCompraAbierto(false)}
                     onVerComprobante={compraEditando ? (c) => getComprobanteCompra(compraEditando.id, c.id) : undefined}
+                />
+            )}
+
+            {modalNotaAbierto && (
+                <ModalNota
+                    contexto="compra"
+                    entidad={notaCompra}
+                    productos={productos}
+                    impuestosDisponibles={impuestos}
+                    onGuardar={handleGuardarNota}
+                    onCerrar={() => setModalNotaAbierto(false)}
                 />
             )}
         </div>

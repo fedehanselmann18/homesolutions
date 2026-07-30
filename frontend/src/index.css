@@ -1,17 +1,19 @@
-/* Tokens de marca — ver DESIGN.md. Única fuente de verdad para color/tipografía/
-   espaciado de toda la app; el resto de los .css consume estas variables.
+/* Tokens de marca — ver DESIGN.md y el Manual de uso (HS_IID_Manual, v1_06/26).
+   Única fuente de verdad para color/tipografía/espaciado de toda la app; el
+   resto de los .css consume estas variables.
 
-   Paleta v3: identidad HomeSolutions — acento oliva de marca (#647D3B) en vez
-   del índigo genérico de v2, más un juego de superficies oscuras (negro de
-   marca #231F20) reservado para sidebar/header, estilo Spotify: navegación
-   oscura, contenido claro. Los nombres de variable quedan de paletas
-   anteriores (terracota/musgo/arcilla/acero) para no tocar cada .css que las
-   consume — lo que cambia es el valor, no el rol semántico de cada token. */
+   Paleta v4: hex oficiales del manual de marca — oliva #6F7F45 (antes se
+   usaba #647D3B, sacado a ojo de una tapa impresa) y negro puro #000000 para
+   las superficies oscuras de sidebar/header (antes #231F20, que tampoco es
+   un color de la paleta oficial). Estilo Spotify: navegación oscura,
+   contenido claro. Los nombres de variable quedan de paletas anteriores
+   (terracota/musgo/arcilla/acero) para no tocar cada .css que las consume —
+   lo que cambia es el valor, no el rol semántico de cada token. */
 :root {
-  /* color — acento de marca (oliva) */
-  --color-terracota: #647d3b;
-  --color-terracota-dark: #4b5e2c;
-  --color-terracota-tint: #ecefe7;
+  /* color — acento de marca (oliva, hex oficial del manual) */
+  --color-terracota: #6f7f45;
+  --color-terracota-dark: #535f34;
+  --color-terracota-tint: #eef0e9;
   --color-musgo: #16a34a;
   --color-musgo-dark: #128a3e;
   --color-musgo-tint: #dcf3e3;
@@ -29,16 +31,24 @@
   --color-acero: #64748b;
   --color-acero-tint: #e7eaee;
 
-  /* color — superficies oscuras de marca (sidebar/header únicamente) */
-  --color-oscuro: #231f20;
-  --color-oscuro-hover: #353132;
-  --color-oscuro-borde: #423e3f;
-  --color-oscuro-texto: #f8f8f8;
-  --color-oscuro-texto-muted: #a7a5a6;
+  /* color — resto de la paleta oficial del manual, disponible para usos
+     puntuales (chips, ilustraciones, fondos de marca) aunque la escala de
+     grises de UI de arriba (base-1/2/línea) siga siendo la que se usa por
+     defecto en el contenido claro. */
+  --color-oliva-claro: #a8b36a;
+  --color-gris-claro-marca: #d9d7d2;
+  --color-gris-oscuro-marca: #5a5a58;
 
-  /* tipografía */
-  --font-display: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-ui: "Manrope", -apple-system, BlinkMacSystemFont, sans-serif;
+  /* color — superficies oscuras de marca (sidebar/header/login, negro puro) */
+  --color-oscuro: #000000;
+  --color-oscuro-hover: #141414;
+  --color-oscuro-borde: #242424;
+  --color-oscuro-texto: #f7f7f7;
+  --color-oscuro-texto-muted: #999999;
+
+  /* tipografía — Public Sans es la fuente oficial de marca (ver manual §4) */
+  --font-display: "Public Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-ui: "Public Sans", -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* espaciado — escala de 4px */
   --space-1: 4px;
@@ -73,6 +83,32 @@ body {
   color: var(--color-tinta);
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar fino con el thumb en oliva de marca, en vez del gris de sistema. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-terracota-tint) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-terracota-tint);
+  border-radius: var(--radius-pill);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-terracota);
 }
 
 h1,

@@ -17,7 +17,7 @@ export function ModalCobro({
         monto: "",
         fecha: "",
         tipo_factura: "",
-        proyecto_id: "",
+        proyecto_id: proyectoActual?.id ?? "",
     });
     const [comprobantesCambios, setComprobantesCambios] = useState({ archivos: [], eliminarIds: [] });
     const [guardando, setGuardando] = useState(false);
@@ -74,23 +74,15 @@ export function ModalCobro({
                             <span>Datos generales</span>
                         </div>
 
-                        {!esEdicion && (
+                        {!esEdicion && proyectoActual && (
                             <label>
                                 Proyecto
-                                <select
-                                    name="proyecto_id"
-                                    value={form.proyecto_id}
-                                    onChange={handleChange}
-                                    required
-                                >
-                                    <option value="">Seleccionar proyecto...</option>
-
-                                    {proyectoActual && (
-                                        <option key={proyectoActual.id} value={proyectoActual.id}>
-                                            {proyectoActual.nombre}
-                                        </option>
-                                    )}
-                                </select>
+                                <input
+                                    type="text"
+                                    value={`${proyectoActual.nombre} (proyecto actual)`}
+                                    disabled
+                                    readOnly
+                                />
                             </label>
                         )}
 

@@ -1,0 +1,381 @@
+/* ModalNota.css */
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(42, 36, 30, 0.55);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: var(--space-4);
+}
+
+.modal-contenido {
+    background-color: var(--color-superficie);
+    border-top: 4px solid var(--color-oxido);
+    border-radius: var(--radius-sm);
+    padding: var(--space-8);
+    width: 100%;
+    max-width: 460px;
+    max-height: 90vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-gutter: stable;
+    box-shadow: var(--shadow-overlay);
+    font-family: var(--font-ui);
+    animation: modal-in 0.15s ease-out;
+    box-sizing: border-box;
+}
+
+@keyframes modal-in {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-contenido h2 {
+    margin: 0 0 4px;
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--color-tinta);
+}
+
+.modal-nota-referencia {
+    margin: 0 0 var(--space-6);
+    font-size: 0.85rem;
+    color: var(--color-tinta-muted);
+}
+
+.modal-nota-referencia strong {
+    color: var(--color-tinta);
+}
+
+.modal-nota-error {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--color-oxido);
+}
+
+.modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 0;
+}
+
+.modal-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--color-tinta-muted);
+    min-width: 0;
+}
+
+.modal-form-fila {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+    min-width: 0;
+}
+
+.modal-form-fila > * {
+    min-width: 0;
+}
+
+.modal-form input,
+.modal-form select {
+    width: 100%;
+    font-family: var(--font-ui);
+    font-size: 0.95rem;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: normal;
+    padding: 9px 12px;
+    border: 1px solid var(--color-linea);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-base-1);
+    color: var(--color-tinta);
+    box-sizing: border-box;
+    transition: border-color 0.15s ease;
+}
+
+.modal-form input:focus,
+.modal-form select:focus {
+    outline: none;
+    border-color: var(--color-oxido);
+    background-color: var(--color-superficie);
+}
+
+.modal-form select {
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 0.7rem center;
+    background-size: 1rem;
+    padding-right: 2rem;
+}
+
+.modal-form input[type="file"] {
+    padding: 7px 10px;
+    text-transform: none;
+    font-size: 0.85rem;
+}
+
+.modal-acciones {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+}
+
+.modal-btn-cancelar,
+.modal-btn-guardar {
+    font-family: var(--font-ui);
+    font-size: 0.88rem;
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-linea);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.modal-btn-cancelar {
+    background-color: transparent;
+    color: var(--color-tinta);
+}
+
+.modal-btn-cancelar:hover {
+    background-color: var(--color-base-2);
+}
+
+.modal-btn-guardar {
+    background-color: var(--color-oxido);
+    border-color: var(--color-oxido);
+    color: var(--color-superficie);
+}
+
+.modal-btn-guardar:hover {
+    opacity: 0.9;
+}
+
+.modal-btn-guardar:disabled,
+.modal-btn-cancelar:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.modal-contenido--ancho {
+    max-width: 640px;
+}
+
+/* Secciones dinámicas: productos devueltos e impuestos (mismo patrón que ModalCompra) */
+
+.modal-form-seccion {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: var(--space-4);
+    border: 1px solid var(--color-linea);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-base-1);
+    min-width: 0;
+}
+
+.modal-form-seccion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--color-tinta-muted);
+}
+
+.modal-btn-agregar-fila {
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: normal;
+    padding: 5px 11px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-musgo);
+    background-color: var(--color-superficie);
+    color: var(--color-musgo-dark);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.modal-btn-agregar-fila:hover {
+    background-color: var(--color-musgo-tint);
+}
+
+.modal-form-fila-dinamica {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+}
+
+.modal-form-fila-dinamica--2col {
+    grid-template-columns: 2fr 1fr auto;
+}
+
+.modal-form-fila-dinamica--detalle {
+    grid-template-columns: 2fr 0.8fr 1fr 1fr auto;
+    align-items: start;
+}
+
+.modal-form-fila-dinamica-producto {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    min-width: 0;
+}
+
+.modal-form-fila-dinamica-tipo {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.66rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+}
+
+.modal-form-fila-dinamica > * {
+    min-width: 0;
+}
+
+.modal-form-fila-dinamica input,
+.modal-form-fila-dinamica select {
+    margin: 0;
+}
+
+.modal-form-fila-dinamica--headers {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--color-tinta-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 0 2px;
+}
+
+.modal-form-fila-dinamica-precio,
+.modal-form-fila-dinamica-subtotal {
+    font-size: 0.88rem;
+    padding: 9px 10px;
+    border-radius: var(--radius-sm);
+    text-align: right;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-variant-numeric: tabular-nums;
+}
+
+.modal-form-fila-dinamica-precio {
+    color: var(--color-tinta-muted);
+    background-color: var(--color-base-2);
+    border: 1px solid var(--color-linea);
+}
+
+.modal-form-fila-dinamica-subtotal {
+    color: var(--color-musgo-dark);
+    font-weight: 700;
+    background-color: var(--color-musgo-tint);
+    border: 1px solid var(--color-musgo);
+}
+
+.modal-btn-quitar-fila {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-oxido-tint);
+    background-color: transparent;
+    color: var(--color-oxido);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.modal-btn-quitar-fila:hover {
+    background-color: var(--color-oxido-tint);
+}
+
+.modal-form-seccion-vacio {
+    margin: 0;
+    font-size: 0.82rem;
+    color: var(--color-tinta-muted);
+}
+
+/* Resumen: productos + impuestos = total de la nota, se recalcula solo */
+
+.modal-form-resumen {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: var(--space-4);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-base-1);
+    border: 1px solid var(--color-linea);
+}
+
+.modal-form-resumen-fila {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    color: var(--color-tinta-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.modal-form-resumen-fila--total {
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: var(--color-tinta);
+    border-top: 1px solid var(--color-linea);
+    padding-top: 6px;
+    margin-top: 2px;
+}
+
+@media (max-width: 480px) {
+    .modal-contenido {
+        padding: var(--space-6);
+    }
+
+    .modal-form-fila {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-form-fila-dinamica,
+    .modal-form-fila-dinamica--2col,
+    .modal-form-fila-dinamica--detalle {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-form-fila-dinamica--headers {
+        display: none;
+    }
+
+    .modal-form-fila-dinamica-precio,
+    .modal-form-fila-dinamica-subtotal {
+        text-align: left;
+    }
+}
