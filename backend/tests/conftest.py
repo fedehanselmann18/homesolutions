@@ -139,3 +139,18 @@ def headers_admin(usuario_admin):
 @pytest.fixture()
 def headers_lectura(usuario_lectura):
     return _headers_para(usuario_lectura)
+
+
+@pytest.fixture(autouse=True)
+def _resetear_rate_limiter():
+    """
+    El Limiter de slowapi guarda sus contadores en memoria, compartidos por
+    todo el proceso de pytest (no por test individual). Sin este reset, un
+    test que agote el límite de /auth/login (ver test_seguridad.py) dejaría
+    contadores "sucios" para el siguiente test que también pegue contra
+    login, haciendo que la suite sea flaky según el orden en que corran.
+    """
+    from app.limiter import limiter
+    limiter.reset()
+    yield
+    limiter.reset()

@@ -8,18 +8,14 @@ export function useAuthProvider() {
   const [error, setError] = useState(null);
 
   const cargarUsuarioActual = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      setUsuario(null);
-      setLoading(false);
-      return;
-    }
+    // La sesión vive en una cookie httpOnly: JS no puede leerla para saber
+    // de antemano si existe, así que directamente probamos /usuarios/me y
+    // dejamos que un 401 (sin cookie o vencida) resuelva "no hay sesión".
     try {
       setLoading(true);
       const data = await getUsuarioActual();
       setUsuario(data);
     } catch (err) {
-      // token vencido o inválido -> el interceptor de axiosClient ya limpia localStorage
       setUsuario(null);
       setError(err);
     } finally {
@@ -37,8 +33,8 @@ export function useAuthProvider() {
     await cargarUsuarioActual();
   };
 
-  const logout = () => {
-    logoutService();
+  const logout = async () => {
+    await logoutService();
     setUsuario(null);
   };
 

@@ -5,3 +5,9 @@ __pycache__/
 backups/
 .pytest_cache/
 .claude
+
+# Comprobantes subidos por usuarios (facturas, notas, etc.). Son datos
+# reales de clientes/proveedores, no código -- no van al repo. Cuando se
+# migre a Cloudflare R2 esta carpeta deja de usarse en producción, pero
+# local sigue guardando acá.
+uploads/

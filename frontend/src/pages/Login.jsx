@@ -1,14 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
-import { useUsuarios } from "../hooks/useUsuarios";
+import { getOpcionesLogin } from "../services/usuarioService";
 import logoHS from "../assets/HS_logo_blanco.png";
 import "./Login.css";
 
 export function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { usuarios, loading: cargandoUsuarios } = useUsuarios();
+
+  // Sin sesión todavía, así que se usa el endpoint público que solo
+  // devuelve nombres de usuario (no id ni rol -- ver /usuarios/login-options).
+  const [nombresUsuario, setNombresUsuario] = useState([]);
+  const [cargandoUsuarios, setCargandoUsuarios] = useState(true);
+
+  useEffect(() => {
+    getOpcionesLogin()
+      .then(setNombresUsuario)
+      .catch(() => setNombresUsuario([]))
+      .finally(() => setCargandoUsuarios(false));
+  }, []);
 
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [password, setPassword] = useState("");
@@ -58,9 +69,9 @@ export function Login() {
               <option value="" disabled>
                 {cargandoUsuarios ? "Cargando..." : "Seleccioná tu usuario"}
               </option>
-              {usuarios.map((u) => (
-                <option key={u.id} value={u.nombre_usuario}>
-                  {u.nombre_usuario}
+              {nombresUsuario.map((nombre) => (
+                <option key={nombre} value={nombre}>
+                  {nombre}
                 </option>
               ))}
             </select>

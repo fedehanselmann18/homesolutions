@@ -1,5 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi.errors import RateLimitExceeded
+from slowapi.middleware import SlowAPIMiddleware
+from slowapi import _rate_limit_exceeded_handler
+
+from app.config import settings
+from app.limiter import limiter
+from app.security_middleware import CSRFMiddleware, SecurityHeadersMiddleware
 from app.routes import (login,
                         usuarios,
                         proyectos,
@@ -14,16 +21,22 @@ from app.routes import (login,
                         gastos)
 app = FastAPI()
 
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# Orden de middlewares (Starlette los ejecuta en orden inverso al que se
+# agregan): CORS tiene que quedar como la capa más externa para que
+# responda bien los preflight OPTIONS antes de que CSRF/rate limit los vean.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=settings.frontend_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(CSRFMiddleware)
+app.add_middleware(SlowAPIMiddleware)
 
 app.include_router(login.router)
 app.include_router(usuarios.router)

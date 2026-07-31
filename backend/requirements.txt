@@ -16,3 +16,7 @@ python-multipart==0.0.20
 
 pillow==11.3.0
 python-dotenv==1.2.1
+
+reportlab==4.4.4
+
+slowapi==0.1.9

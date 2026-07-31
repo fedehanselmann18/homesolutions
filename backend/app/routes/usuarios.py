@@ -5,19 +5,45 @@ from app.db import models
 from app.auth.oAuth2 import get_current_user
 from app.auth.verification import hash_password
 from app.db.db import get_db
+from app.limiter import limiter
 from app.schemas import UsuarioCreate, UsuarioOut
+from fastapi import Request
 
 router = APIRouter(
     prefix="/usuarios",
     tags=["usuarios"]
 )
 
+# Equipo cerrado y conocido de antemano: solo estas 3 personas pueden crear
+# cuenta, y el rol de cada una es fijo (no lo elige el usuario). Antes el
+# rol venía tal cual del body del request, así que cualquiera que llegara al
+# endpoint podía autoasignarse "admin" -- ver ROLES_PERMITIDOS más abajo.
+# Si en algún momento se suma alguien nuevo al equipo, se agrega acá.
+ROLES_PERMITIDOS = {
+    "Agustin": "admin",
+    "Aldana": "admin",
+    "Alejandro": "lectura",
+}
+
 # GET : all users, get user by id, get current user info (user logged in)
 
 @router.get("/", response_model=list[UsuarioOut], status_code=status.HTTP_200_OK)
-def get_users(db: Session = Depends(get_db)):
-    # sin auth a propósito: alimenta el select del login antes de que exista sesión
+def get_users(db: Session = Depends(get_db),
+              current_user: models.Usuario = Depends(get_current_user)):
     return db.query(models.Usuario).all()
+
+
+@router.get("/login-options", status_code=status.HTTP_200_OK)
+def get_login_options(db: Session = Depends(get_db)):
+    """
+    Endpoint público (sin login, a propósito: alimenta el combo de usuario
+    de la pantalla de login, antes de que exista sesión). Devuelve
+    ÚNICAMENTE los nombres de usuario -- nada de id, rol ni timestamps --
+    para no exponer quién es admin ni ids reales a cualquiera que llegue acá
+    sin autenticarse.
+    """
+    nombres = db.query(models.Usuario.nombre_usuario).all()
+    return [nombre for (nombre,) in nombres]
 
 
 @router.get("/me", response_model=UsuarioOut,status_code=status.HTTP_200_OK)
@@ -37,10 +63,29 @@ def get_user(
     return usuario
 
 
-# POST : Create user (registro único mientras dure el onboarding)
+# POST : Create user (autoregistro único, restringido al equipo conocido)
 
 @router.post("/crear", response_model=UsuarioOut, status_code=status.HTTP_201_CREATED)
-def create_user(usuario: UsuarioCreate, db: Session = Depends(get_db)):
+@limiter.limit("10/hour")
+def create_user(request: Request, usuario: UsuarioCreate, db: Session = Depends(get_db)):
+    rol_esperado = ROLES_PERMITIDOS.get(usuario.nombre_usuario)
+
+    if rol_esperado is None:
+        raise HTTPException(
+            status_code=403,
+            detail="Ese nombre de usuario no está autorizado para registrarse",
+        )
+
+    # Validación explícita: si el cliente mandó un rol que no coincide con
+    # el que le corresponde, se rechaza en vez de simplemente ignorarlo --
+    # así queda claro que el front está mal armado (o alguien manipuló el
+    # request) en vez de fallar en silencio con un rol distinto al pedido.
+    if usuario.rol != rol_esperado:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Rol inválido para {usuario.nombre_usuario}: debe ser '{rol_esperado}'",
+        )
+
     existente = db.query(models.Usuario).filter(
         models.Usuario.nombre_usuario == usuario.nombre_usuario
     ).first()
@@ -49,7 +94,7 @@ def create_user(usuario: UsuarioCreate, db: Session = Depends(get_db)):
 
     nuevo_usuario = models.Usuario(
         nombre_usuario=usuario.nombre_usuario,
-        rol=usuario.rol,
+        rol=rol_esperado,  # nunca el que mandó el cliente, aunque ya haya pasado la validación de arriba
         hashed_password=hash_password(usuario.password),
     )
     try:

@@ -5,6 +5,12 @@ export const getUsuarios = async () => {
   return data;
 };
 
+// Público (sin sesión): solo nombres de usuario, para el combo de login.
+export const getOpcionesLogin = async () => {
+  const { data } = await axiosClient.get("/usuarios/login-options");
+  return data;
+};
+
 export const getUsuarioActual = async () => {
   const { data } = await axiosClient.get("/usuarios/me");
   return data;
