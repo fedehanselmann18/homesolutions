@@ -30,14 +30,25 @@ axiosClient.interceptors.request.use((config) => {
   return config;
 });
 
-// Si el backend responde 401 (token vencido o inválido, o directamente no
-// hay sesión), mandamos al login. Ya no hay nada que limpiar en
-// localStorage: la cookie la borra el propio backend en /auth/logout, o
-// expira sola.
+// Rutas que no requieren sesión. Si ya estamos en una de estas, un 401 es
+// esperado (ej. useAuthProvider preguntando "¿hay sesión?" al arrancar la
+// app en /login) y NO hay que redirigir -- si no, window.location.href a la
+// misma URL en la que ya estás fuerza una recarga completa de la página,
+// que vuelve a montar todo, vuelve a pegarle a /usuarios/me, vuelve a dar
+// 401, vuelve a recargar... loop infinito (visto en los logs del backend).
+const RUTAS_PUBLICAS = ["/login", "/registro", "/no-autorizado"];
+
+export function esRutaPublica(pathname) {
+  return RUTAS_PUBLICAS.includes(pathname);
+}
+
+// Si el backend responde 401 en una ruta protegida (token vencido o
+// inválido), mandamos al login. Ya no hay nada que limpiar en localStorage:
+// la cookie la borra el propio backend en /auth/logout, o expira sola.
 axiosClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && !esRutaPublica(window.location.pathname)) {
       window.location.href = "/login";
     }
     return Promise.reject(error);
