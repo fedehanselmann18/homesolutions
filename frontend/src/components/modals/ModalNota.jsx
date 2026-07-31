@@ -16,13 +16,19 @@ const nuevaFilaId = () => `tmp-${++contadorFilaTemp}`;
  * corriente) sobre una Compra o un Cobro puntual -- separado del modal de
  * Compra/Cobro y del uploader de comprobantes normales (factura, remito...).
  *
- * Para nota_credito + origen="devolucion_producto" (solo contexto="compra"),
- * el monto NO se tipea a mano: se arma una tabla de líneas (mismo patrón que
- * el detalle de productos en ModalCompra) donde se elige el producto YA
- * COMPRADO en esta compra puntual, la cantidad devuelta (topeada a lo que
- * todavía no se devolvió en notas anteriores) y opcionalmente impuestos --
- * el total se calcula solo. Para cualquier otro caso (acuerdo_comercial,
- * otro, o nota_debito) el monto se sigue tipeando a mano.
+ * Para nota_credito + origen="devolucion_producto", o nota_debito +
+ * origen="reposicion_producto" (ambos solo contexto="compra"), el monto NO
+ * se tipea a mano: se arma una tabla de líneas (mismo patrón que el detalle
+ * de productos en ModalCompra) donde se elige el producto YA COMPRADO en
+ * esta compra puntual y una cantidad, y opcionalmente impuestos -- el total
+ * se calcula solo. Caso típico: te cambian 3 aires fallados por 3 nuevos ->
+ * nota_credito devolucion_producto por los 3 fallados + nota_debito
+ * reposicion_producto por los 3 nuevos que te facturan.
+ *
+ * La cantidad SOLO se topea (a lo que todavía no se devolvió en notas
+ * anteriores) para devolucion_producto -- reposicion_producto queda libre,
+ * no se valida contra nada. Para cualquier otro caso (acuerdo_comercial,
+ * otro) el monto se sigue tipeando a mano.
  *
  * tipo_factura es SIEMPRE obligatorio, sin importar tipo/origen.
  *
@@ -53,35 +59,47 @@ export function ModalNota({ contexto, entidad, productos = [], impuestosDisponib
     const [error, setError] = useState("");
     const [guardando, setGuardando] = useState(false);
 
-    const esDevolucionProducto =
-        contexto === "compra" && form.tipo === "nota_credito" && form.origen === "devolucion_producto";
+    const esDevolucion = form.origen === "devolucion_producto";
+    const esReposicion = form.origen === "reposicion_producto";
+    const usaSelectorProducto =
+        contexto === "compra" &&
+        ((form.tipo === "nota_credito" && esDevolucion) || (form.tipo === "nota_debito" && esReposicion));
 
-    // "devolucion_producto" solo tiene sentido si es nota_credito y la compra
-    // tiene productos cargados -- si no, ni se ofrece como opción.
+    // "devolucion_producto" solo tiene sentido con nota_credito, y
+    // "reposicion_producto" solo con nota_debito -- ambos además requieren
+    // que la compra tenga productos cargados. El resto de los orígenes
+    // (acuerdo_comercial, otro, ajuste_precio) sirven para cualquier tipo.
     const origenes = origenesBase.filter((o) => {
-        if (o.value !== "devolucion_producto") return true;
-        return form.tipo === "nota_credito" && (entidad?.detalle?.length ?? 0) > 0;
+        const tieneProductos = (entidad?.detalle?.length ?? 0) > 0;
+        if (o.value === "devolucion_producto") return form.tipo === "nota_credito" && tieneProductos;
+        if (o.value === "reposicion_producto") return form.tipo === "nota_debito" && tieneProductos;
+        return true;
     });
 
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm((prev) => {
             const next = { ...prev, [name]: value };
-            // Nota de débito no admite devolución de producto (eso siempre
-            // resta a favor nuestro); si cambiás a débito con eso elegido, se
-            // resetea el origen y las líneas cargadas.
-            if (name === "tipo" && value === "nota_debito" && prev.origen === "devolucion_producto") {
+            // Cada origen-con-selector-de-producto solo es válido para un
+            // tipo puntual (devolucion_producto -> crédito, reposicion_producto
+            // -> débito); si cambiás el tipo y el origen elegido dejó de tener
+            // sentido, se resetea.
+            if (
+                name === "tipo" &&
+                ((value === "nota_debito" && prev.origen === "devolucion_producto") ||
+                    (value === "nota_credito" && prev.origen === "reposicion_producto"))
+            ) {
                 next.origen = "";
             }
             return next;
         });
-        if (name === "tipo" && value === "nota_debito") {
+        // Si cambiás tipo u origen y deja de usarse el selector de producto,
+        // las líneas/impuestos cargados de antes ya no tienen sentido.
+        if (name === "tipo") {
             setDetalles([]);
             setImpuestos([]);
         }
-        // Si cambiás el origen y deja de ser "devolución de producto", las
-        // líneas/impuestos cargados de antes ya no tienen sentido.
-        if (name === "origen" && value !== "devolucion_producto") {
+        if (name === "origen" && value !== "devolucion_producto" && value !== "reposicion_producto") {
             setDetalles([]);
             setImpuestos([]);
         }
@@ -103,8 +121,10 @@ export function ModalNota({ contexto, entidad, productos = [], impuestosDisponib
     // Cuánto queda disponible para esa línea, descontando lo que ya se pidió
     // devolver en OTRAS filas de este mismo formulario (no solo lo de notas
     // anteriores) -- así no se puede cargar la misma línea dos veces por más
-    // de lo que hay.
+    // de lo que hay. SOLO aplica a devolucion_producto: reposicion_producto
+    // no tiene tope (Infinity), no se valida contra lo devuelto.
     const restanteParaFila = (fila) => {
+        if (!esDevolucion) return Infinity;
         if (!fila.detalle_compra_id) return 0;
         const restanteHistorico = restanteDetalleCompra(entidad, fila.detalle_compra_id);
         const usadoEnOtrasFilas = detalles
@@ -144,22 +164,24 @@ export function ModalNota({ contexto, entidad, productos = [], impuestosDisponib
         }
 
         let payloadExtra = {};
-        if (esDevolucionProducto) {
+        if (usaSelectorProducto) {
             const lineasValidas = detalles.filter((f) => f.detalle_compra_id && Number(f.cantidad) > 0);
             if (lineasValidas.length === 0) {
-                setError("Agregá al menos un producto devuelto.");
+                setError("Agregá al menos un producto.");
                 return;
             }
-            const excedida = lineasValidas.find((fila) => {
-                const restante = restanteDetalleCompra(entidad, fila.detalle_compra_id);
-                const usadoEnOtrasFilas = lineasValidas
-                    .filter((f) => f._id !== fila._id && f.detalle_compra_id === fila.detalle_compra_id)
-                    .reduce((acc, f) => acc + (Number(f.cantidad) || 0), 0);
-                return Number(fila.cantidad) + usadoEnOtrasFilas > restante;
-            });
-            if (excedida) {
-                setError("Hay una línea que supera la cantidad disponible para devolver.");
-                return;
+            if (esDevolucion) {
+                const excedida = lineasValidas.find((fila) => {
+                    const restante = restanteDetalleCompra(entidad, fila.detalle_compra_id);
+                    const usadoEnOtrasFilas = lineasValidas
+                        .filter((f) => f._id !== fila._id && f.detalle_compra_id === fila.detalle_compra_id)
+                        .reduce((acc, f) => acc + (Number(f.cantidad) || 0), 0);
+                    return Number(fila.cantidad) + usadoEnOtrasFilas > restante;
+                });
+                if (excedida) {
+                    setError("Hay una línea que supera la cantidad disponible para devolver.");
+                    return;
+                }
             }
             payloadExtra = {
                 detalles: lineasValidas.map((f) => ({
@@ -194,7 +216,7 @@ export function ModalNota({ contexto, entidad, productos = [], impuestosDisponib
     return (
         <div className="modal-overlay" onClick={onCerrar}>
             <div
-                className={`modal-contenido ${esDevolucionProducto ? "modal-contenido--ancho" : ""}`}
+                className={`modal-contenido ${usaSelectorProducto ? "modal-contenido--ancho" : ""}`}
                 onClick={(e) => e.stopPropagation()}
             >
                 <h2>{form.tipo === "nota_debito" ? "Nueva nota de débito" : "Nueva nota de crédito"}</h2>
@@ -252,11 +274,11 @@ export function ModalNota({ contexto, entidad, productos = [], impuestosDisponib
                         </label>
                     </div>
 
-                    {esDevolucionProducto ? (
+                    {usaSelectorProducto ? (
                         <>
                             <div className="modal-form-seccion">
                                 <div className="modal-form-seccion-header">
-                                    <span>Productos devueltos</span>
+                                    <span>{esDevolucion ? "Productos devueltos" : "Productos de reposición"}</span>
                                     <button type="button" className="modal-btn-agregar-fila" onClick={agregarFilaDetalle}>
                                         + Agregar producto
                                     </button>
@@ -286,16 +308,17 @@ export function ModalNota({ contexto, entidad, productos = [], impuestosDisponib
                                                     <option value="">Producto...</option>
                                                     {(entidad?.detalle ?? []).map((d) => {
                                                         const p = productos.find((pr) => pr.id === d.producto_id);
-                                                        const restanteLinea = restanteDetalleCompra(entidad, d.id);
+                                                        const restanteLinea = esDevolucion ? restanteDetalleCompra(entidad, d.id) : Infinity;
+                                                        const sinSaldo = esDevolucion && restanteLinea <= 0 && d.id !== fila.detalle_compra_id;
                                                         return (
-                                                            <option key={d.id} value={d.id} disabled={restanteLinea <= 0 && d.id !== fila.detalle_compra_id}>
+                                                            <option key={d.id} value={d.id} disabled={sinSaldo}>
                                                                 {p ? `${p.marca} ${p.modelo}` : "Producto"} · comprado x{d.cantidad}
-                                                                {restanteLinea <= 0 && d.id !== fila.detalle_compra_id ? " (sin saldo)" : ""}
+                                                                {sinSaldo ? " (sin saldo)" : ""}
                                                             </option>
                                                         );
                                                     })}
                                                 </select>
-                                                {fila.detalle_compra_id && (
+                                                {fila.detalle_compra_id && esDevolucion && (
                                                     <span className="modal-form-fila-dinamica-tipo" style={{ color: "#6f7f45", backgroundColor: "#eef0e9" }}>
                                                         Disponible: {restante}
                                                     </span>
@@ -307,7 +330,7 @@ export function ModalNota({ contexto, entidad, productos = [], impuestosDisponib
                                                 value={fila.cantidad}
                                                 onChange={(e) => actualizarFilaDetalle(fila._id, "cantidad", e.target.value)}
                                                 min="0"
-                                                max={fila.detalle_compra_id ? restante : undefined}
+                                                max={fila.detalle_compra_id && esDevolucion ? restante : undefined}
                                                 step="0.01"
                                                 required
                                                 disabled={!fila.detalle_compra_id}

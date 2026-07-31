@@ -393,9 +393,9 @@ def crear_nota_compra(compra_id: str,
                        tipo_factura: str = Form(...),  # SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro)
                        descripcion: str = Form(...),
                        fecha: date = Form(...),
-                       origen: str | None = Form(None),  # "devolucion_producto" | "acuerdo_comercial" | "otro"
-                       monto: float | None = Form(None),  # obligatorio salvo devolucion_producto (se calcula solo)
-                       detalles_json: str | None = Form(None),  # JSON [{detalle_compra_id, cantidad}], solo devolucion_producto
+                       origen: str | None = Form(None),  # "devolucion_producto" | "reposicion_producto" | "acuerdo_comercial" | "otro"
+                       monto: float | None = Form(None),  # obligatorio salvo devolucion_producto/reposicion_producto (se calcula solo)
+                       detalles_json: str | None = Form(None),  # JSON [{detalle_compra_id, cantidad}], solo devolucion_producto/reposicion_producto
                        impuestos_json: str | None = Form(None),  # JSON [{impuesto_id, monto}], opcional junto a detalles_json
                        db: Session = Depends(get_db),
                        current_user: models.Usuario = Depends(requiere_admin)):
@@ -408,6 +408,10 @@ def crear_nota_compra(compra_id: str,
 
     if origen == "devolucion_producto" and tipo != "nota_credito":
         raise HTTPException(status_code=400, detail="'devolucion_producto' solo aplica a nota_credito")
+    if origen == "reposicion_producto" and tipo != "nota_debito":
+        raise HTTPException(status_code=400, detail="'reposicion_producto' solo aplica a nota_debito")
+
+    usa_lineas_producto = origen in ("devolucion_producto", "reposicion_producto")
 
     path = subir_comprobante(archivo, "notas_compra", compra_id)
 
@@ -424,16 +428,18 @@ def crear_nota_compra(compra_id: str,
         archivo_path=path
     )
 
-    if origen == "devolucion_producto":
-        # Devolución de producto: el monto NO se tipea a mano, se calcula acá
-        # a partir de las líneas devueltas (cantidad * precio_unitario frozen
-        # de la compra original) + impuestos opcionales.
+    if usa_lineas_producto:
+        # Devolución de producto (nota_credito) o reposición de producto
+        # (nota_debito, ej: te cambian 3 aires fallados por 3 nuevos y esos 3
+        # nuevos se facturan acá) -- en ambos casos el monto NO se tipea a
+        # mano, se calcula a partir de las líneas elegidas (cantidad *
+        # precio_unitario frozen de la compra original) + impuestos opcionales.
         try:
             lineas = json.loads(detalles_json) if detalles_json else []
         except (json.JSONDecodeError, TypeError):
             raise HTTPException(status_code=400, detail="detalles_json inválido")
         if not lineas:
-            raise HTTPException(status_code=400, detail="Tenés que elegir al menos un producto para devolver")
+            raise HTTPException(status_code=400, detail="Tenés que elegir al menos un producto")
 
         total_lineas = 0.0
         for linea in lineas:
@@ -449,12 +455,17 @@ def crear_nota_compra(compra_id: str,
             if not detalle:
                 raise HTTPException(status_code=404, detail="Esa línea de producto no pertenece a esta compra")
 
-            restante = _restante_detalle_compra(db, detalle_compra_id, detalle.cantidad)
-            if float(cantidad) > restante:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"Solo podés devolver hasta {restante:g} unidades de esa línea (ya devuelto en notas anteriores)"
-                )
+            # El tope de "cuánto queda disponible" SOLO aplica a la devolución
+            # (no podés acreditar más de lo que compraste). La reposición
+            # (nota_debito) queda libre: no se valida contra lo devuelto,
+            # puede llegar en otro momento/otra nota.
+            if origen == "devolucion_producto":
+                restante = _restante_detalle_compra(db, detalle_compra_id, detalle.cantidad)
+                if float(cantidad) > restante:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"Solo podés devolver hasta {restante:g} unidades de esa línea (ya devuelto en notas anteriores)"
+                    )
 
             nueva_nota.detalles.append(models.NotaCompraDetalle(
                 detalle_compra_id=detalle_compra_id,
@@ -484,7 +495,7 @@ def crear_nota_compra(compra_id: str,
 
         nueva_nota.monto = total_lineas + total_impuestos
     else:
-        # acuerdo_comercial / otro / nota_debito: monto tipeado a mano.
+        # acuerdo_comercial / otro (crédito o débito, sin producto puntual): monto tipeado a mano.
         if monto is None:
             raise HTTPException(status_code=400, detail="monto es obligatorio para este origen")
         nueva_nota.monto = monto

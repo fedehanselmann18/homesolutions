@@ -214,6 +214,28 @@ def test_nota_credito_devolucion_producto_admite_varias_lineas():
     assert sum(float(d.cantidad) * float(d.precio_unitario) for d in nota.detalles) == float(nota.monto)
 
 
+def test_nota_debito_reposicion_producto_suma_al_total_como_cualquier_debito():
+    """reposicion_producto (solo nota_debito) usa el mismo selector de
+    producto+cantidad que devolucion_producto (ver ModalNota.jsx y
+    routes/compras.py: crear_nota_compra), pero sin tope de restante -- caso
+    típico: te cambian 3 aires fallados (nota_credito devolucion_producto) y
+    te facturan los 3 nuevos con esta nota_debito reposicion_producto. Acá
+    solo se verifica que, sea cual sea el origen, una nota_debito sigue
+    SUMANDO a precio_total (el signo lo define tipo, no origen)."""
+    detalle_id = uuid.uuid4()
+    compra = models.Compra(precio_neto=Decimal("100000"))
+    compra.detalle = []
+    compra.impuestos_aplicados = []
+    compra.notas = [
+        _nota_compra(
+            "nota_debito", Decimal("9000"), origen="reposicion_producto",
+            detalles=[_nota_compra_detalle(detalle_id, cantidad=3, precio_unitario=Decimal("3000"))],
+        )
+    ]
+
+    assert compra.precio_total == 109000.0  # 100000 + 9000
+
+
 def test_precio_total_de_compra_usa_el_monto_frozen_de_la_nota_no_recalcula_detalles():
     """precio_total resta/suma nota.monto directamente -- el monto queda
     frozen en el momento de creación (route), Compra.precio_total no vuelve a

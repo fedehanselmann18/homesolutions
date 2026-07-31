@@ -36,10 +36,13 @@ import useAuth from "../context/useAuth";
 import { getEstadoLabel } from "../constants/estados";
 import { getCondicionPagoLabel } from "../constants/estadoCompra";
 import { esCompraImpaga, esCompraSinEntregar, diasDesde, describirCompra } from "../utils/seguimiento";
+import { notasDeCompras, totalNotasCredito, totalNotasDebito } from "../utils/notas";
+import { FILTROS_VACIOS, filtrarCompras, filtrarGastos } from "../utils/filtros";
 import { formatMoneda, formatFecha } from "../utils/formato";
 
 import { TarjetaKpi } from "../components/shared/TarjetaKpi";
 import { TarjetaAlerta } from "../components/shared/TarjetaAlerta";
+import FiltrosLista from "../components/shared/FiltrosLista";
 import GastoCard from "../components/proyectos/cards/GastoCard";
 import CompraCard from "../components/proyectos/cards/CompraCard";
 import ModalGasto from "../components/modals/ModalGasto";
@@ -86,6 +89,12 @@ export function FaseDetalle() {
 
     const [modalNotaAbierto, setModalNotaAbierto] = useState(false);
     const [notaCompra, setNotaCompra] = useState(null); // la Compra sobre la que se carga la nota
+
+    const [filtrosGastos, setFiltrosGastos] = useState(FILTROS_VACIOS);
+    const [filtrosCompras, setFiltrosCompras] = useState(FILTROS_VACIOS);
+
+    const gastosFaseFiltrados = useMemo(() => filtrarGastos(gastosFase, filtrosGastos), [gastosFase, filtrosGastos]);
+    const comprasFaseFiltradas = useMemo(() => filtrarCompras(comprasFase, filtrosCompras), [comprasFase, filtrosCompras]);
 
     useEffect(() => {
         fetchTodo();
@@ -153,14 +162,22 @@ export function FaseDetalle() {
 
     const kpis = useMemo(() => {
         if (!proyecto) return null;
+        // precio_total ya incluye impuestos + notas de crédito/débito (ver
+        // Compra.precio_total en el backend) -- "gastado en esta fase" ya
+        // sale bien sin tocar nada acá.
         const gastadoFase = sumar(gastosFase, (g) => g.monto) + sumar(comprasFase, (c) => c.precio_total);
         const totalGastoProyecto = sumar(gastosProyecto, (g) => g.monto) + sumar(comprasProyecto, (c) => c.precio_total);
         const precioAcordado = Number(proyecto.precio_acordado ?? 0);
+
+        const notasFase = notasDeCompras(comprasFase);
 
         return {
             gastadoFase,
             pctPresupuesto: precioAcordado > 0 ? (gastadoFase / precioAcordado) * 100 : 0,
             pctGastoTotal: totalGastoProyecto > 0 ? (gastadoFase / totalGastoProyecto) * 100 : 0,
+            notasCreditoFase: totalNotasCredito(notasFase),
+            notasDebitoFase: totalNotasDebito(notasFase),
+            cantidadNotasFase: notasFase.length,
         };
     }, [proyecto, gastosFase, comprasFase, gastosProyecto, comprasProyecto]);
 
@@ -457,11 +474,17 @@ export function FaseDetalle() {
                     {canManage && <button onClick={handleNuevoGasto}>Nuevo gasto</button>}
                 </div>
 
+                {gastosFase.length > 0 && (
+                    <FiltrosLista filtros={filtrosGastos} onCambiar={setFiltrosGastos} mostrarComprobante />
+                )}
+
                 {gastosFase.length === 0 ? (
                     <p>No hay gastos registrados para esta fase.</p>
+                ) : gastosFaseFiltrados.length === 0 ? (
+                    <p>Ningún gasto coincide con los filtros.</p>
                 ) : (
                     <div className="acciones-grid">
-                        {gastosFase.map((gasto) => (
+                        {gastosFaseFiltrados.map((gasto) => (
                             <GastoCard
                                 key={gasto.id}
                                 gasto={gasto}
@@ -483,11 +506,23 @@ export function FaseDetalle() {
                     {canManage && <button onClick={handleNuevaCompra}>Nueva compra</button>}
                 </div>
 
+                {comprasFase.length > 0 && (
+                    <FiltrosLista
+                        filtros={filtrosCompras}
+                        onCambiar={setFiltrosCompras}
+                        mostrarNotas
+                        mostrarEstadoPago
+                        mostrarEstadoEnvio
+                    />
+                )}
+
                 {comprasFase.length === 0 ? (
                     <p>No hay compras registradas para esta fase.</p>
+                ) : comprasFaseFiltradas.length === 0 ? (
+                    <p>Ninguna compra coincide con los filtros.</p>
                 ) : (
                     <div className="acciones-grid">
-                        {comprasFase.map((compra) => (
+                        {comprasFaseFiltradas.map((compra) => (
                             <CompraCard
                                 key={compra.id}
                                 compra={compra}
@@ -509,6 +544,27 @@ export function FaseDetalle() {
                     </div>
                 )}
             </div>
+
+            {kpis.cantidadNotasFase > 0 && (
+                <div className="analisis-kpis--notas">
+                    <TarjetaKpi
+                        titulo="Notas de crédito (fase)"
+                        valor={formatMoneda(kpis.notasCreditoFase)}
+                        detalle="A favor nuestro, ya restado del gastado en esta fase"
+                        color={ROJO}
+                        destacado
+                        plano
+                    />
+                    <TarjetaKpi
+                        titulo="Notas de débito (fase)"
+                        valor={formatMoneda(kpis.notasDebitoFase)}
+                        detalle="En contra nuestro, ya sumado al gastado en esta fase"
+                        color={NARANJA}
+                        destacado
+                        plano
+                    />
+                </div>
+            )}
 
             {modalGastoAbierto && (
                 <ModalGasto

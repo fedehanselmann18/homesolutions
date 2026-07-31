@@ -1,5 +1,6 @@
 import { calcularAnalisis } from "./analisis";
 import { esCompraImpaga, esCompraSinEntregar } from "./seguimiento";
+import { notasDeCompras, notasDeCobros } from "./notas";
 
 // Cuántos movimientos y cuántos meses se muestran en los bloques de abajo.
 const MOVIMIENTOS_RECIENTES = 8;
@@ -32,23 +33,29 @@ function claveMesDeDate(fecha) {
   return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function impuestosDeCompra(compra) {
-  return sumar(compra.impuestos_aplicados ?? [], (i) => i.monto);
-}
-
 function armarActividad(resumenes) {
   const movimientos = [];
 
   resumenes.forEach(({ proyecto, gastosDelProyecto, cobrosDelProyecto, comprasDelProyecto }) => {
     const comun = { proyectoId: proyecto.id, proyectoNombre: proyecto.nombre };
     cobrosDelProyecto.forEach((c) =>
-      movimientos.push({ ...comun, id: c.id, tipo: "cobro", descripcion: c.descripcion, monto: c.monto, fecha: c.fecha })
+      // monto_neto (no el bruto): ya descuenta/suma las notas de crédito/débito del cobro.
+      movimientos.push({ ...comun, id: c.id, tipo: "cobro", descripcion: c.descripcion, monto: c.monto_neto ?? c.monto, fecha: c.fecha })
     );
     gastosDelProyecto.forEach((g) =>
       movimientos.push({ ...comun, id: g.id, tipo: "gasto", descripcion: g.descripcion, monto: g.monto, fecha: g.fecha })
     );
     comprasDelProyecto.forEach((c) =>
       movimientos.push({ ...comun, id: c.id, tipo: "compra", descripcion: c.descripcion, monto: c.precio_total, fecha: c.fecha })
+    );
+    // Las notas de crédito/débito son movimientos de plata por sí mismas
+    // (antes no aparecían acá aunque ya afectaban precio_total/monto_neto) --
+    // tipo queda como "nota_credito"/"nota_debito" (ver Dashboard.jsx TIPOS_MOVIMIENTO).
+    notasDeCompras(comprasDelProyecto).forEach((n) =>
+      movimientos.push({ ...comun, id: n.id, tipo: n.tipo, descripcion: n.descripcion, monto: n.monto, fecha: n.fecha })
+    );
+    notasDeCobros(cobrosDelProyecto).forEach((n) =>
+      movimientos.push({ ...comun, id: n.id, tipo: n.tipo, descripcion: n.descripcion, monto: n.monto, fecha: n.fecha })
     );
   });
 
@@ -71,7 +78,9 @@ function armarEvolucion(gastos, cobros, compras, hoy) {
   const porMes = new Map(meses.map((m) => [m.mes, m]));
   cobros.forEach((c) => {
     const mes = porMes.get(claveMes(c.fecha));
-    if (mes) mes.cobrado += c.monto;
+    // monto_neto: si no viene (no debería pasar, el backend siempre lo manda),
+    // cae al bruto en vez de romper el gráfico.
+    if (mes) mes.cobrado += c.monto_neto ?? c.monto;
   });
   gastos.forEach((g) => {
     const mes = porMes.get(claveMes(g.fecha));
@@ -79,6 +88,7 @@ function armarEvolucion(gastos, cobros, compras, hoy) {
   });
   compras.forEach((c) => {
     const mes = porMes.get(claveMes(c.fecha));
+    // precio_total ya incluye impuestos + notas de crédito/débito.
     if (mes) mes.gastado += c.precio_total;
   });
 
@@ -133,11 +143,11 @@ export function calcularPanel({
   const mesActual = claveMesDeDate(hoy);
   const delMes = (items) => items.filter((i) => claveMes(i.fecha) === mesActual);
 
-  const cobradoMes = sumar(delMes(cobros), (c) => c.monto);
+  // monto_neto / precio_total: ambos ya incluyen el efecto de las notas de
+  // crédito/débito (ver Cobro.monto_neto y Compra.precio_total en el backend).
+  const cobradoMes = sumar(delMes(cobros), (c) => c.monto_neto ?? c.monto);
   const gastosMes = sumar(delMes(gastos), (g) => g.monto);
-  const comprasDelMes = delMes(compras);
-  const comprasNetoMes = sumar(comprasDelMes, (c) => c.precio_neto);
-  const impuestosMes = sumar(comprasDelMes, impuestosDeCompra);
+  const comprasTotalMes = sumar(delMes(compras), (c) => c.precio_total);
 
   // Lo que falta cobrar de los proyectos vivos: nunca negativo, si un proyecto
   // cobró de más no compensa lo que falta cobrar en otro.
@@ -154,8 +164,15 @@ export function calcularPanel({
       disponibleTotal: sumar(enCurso, (r) => r.analisis.totales.disponible),
       cobradoMes,
       pendienteDeCobrar,
-      gananciaNetaMes: cobradoMes - gastosMes - comprasNetoMes - impuestosMes,
+      gananciaNetaMes: cobradoMes - gastosMes - comprasTotalMes,
       contratadoEnCurso: sumar(enCurso, (r) => r.analisis.totales.precioAcordado),
+      // Notas de crédito/débito de los proyectos en curso (todo lo cargado
+      // hasta ahora, mismo alcance que disponibleTotal) -- ver "Notas de
+      // crédito / débito" en Dashboard.jsx.
+      notasCreditoCompras: sumar(enCurso, (r) => r.analisis.totales.notasCreditoCompras),
+      notasDebitoCompras: sumar(enCurso, (r) => r.analisis.totales.notasDebitoCompras),
+      notasCreditoCobros: sumar(enCurso, (r) => r.analisis.totales.notasCreditoCobros),
+      notasDebitoCobros: sumar(enCurso, (r) => r.analisis.totales.notasDebitoCobros),
     },
     proyectosActivos: enCurso
       .map(({ proyecto, analisis, fasesDelProyecto, comprasDelProyecto }) => {

@@ -34,6 +34,7 @@ import useAuth from "../context/useAuth";
 import { getTipoProducto } from "../constants/tipoProducto";
 import { formatMoneda, formatFecha } from "../utils/formato";
 import { calcularResumenProveedor } from "../utils/proveedores";
+import { FILTROS_VACIOS, filtrarCompras } from "../utils/filtros";
 
 import CompraCard from "../components/proyectos/cards/CompraCard";
 import ModalProveedor from "../components/modals/ModalProveedor";
@@ -42,6 +43,7 @@ import ModalCompra from "../components/modals/ModalCompra";
 import ModalNota from "../components/modals/ModalNota";
 import { Cargando } from "../components/shared/Cargando";
 import { TarjetaAlerta } from "../components/shared/TarjetaAlerta";
+import FiltrosLista from "../components/shared/FiltrosLista";
 import { useToast } from "../context/useToast";
 
 import "../components/proyectos/Acciones.css";
@@ -73,6 +75,8 @@ export function ProveedorDetalle() {
 
     const [modalNotaAbierto, setModalNotaAbierto] = useState(false);
     const [notaCompra, setNotaCompra] = useState(null); // la Compra sobre la que se carga la nota
+
+    const [filtrosCompras, setFiltrosCompras] = useState(FILTROS_VACIOS);
 
     useEffect(() => {
         fetchTodo();
@@ -126,6 +130,11 @@ export function ProveedorDetalle() {
     const resumen = useMemo(
         () => calcularResumenProveedor(proveedor ?? { id }, { productos, compras }),
         [proveedor, id, productos, compras]
+    );
+
+    const comprasDelProveedorFiltradas = useMemo(
+        () => filtrarCompras(resumen.comprasDelProveedor, filtrosCompras),
+        [resumen.comprasDelProveedor, filtrosCompras]
     );
 
     const nombreProyecto = (proyectoId) => proyectos.find((p) => p.id === proyectoId)?.nombre;
@@ -473,11 +482,23 @@ export function ProveedorDetalle() {
                     {canManage && <button onClick={handleNuevaCompra}>Nueva compra</button>}
                 </div>
 
+                {resumen.comprasDelProveedor.length > 0 && (
+                    <FiltrosLista
+                        filtros={filtrosCompras}
+                        onCambiar={setFiltrosCompras}
+                        mostrarNotas
+                        mostrarEstadoPago
+                        mostrarEstadoEnvio
+                    />
+                )}
+
                 {resumen.comprasDelProveedor.length === 0 ? (
                     <p>Todavía no hay compras registradas a este proveedor.</p>
+                ) : comprasDelProveedorFiltradas.length === 0 ? (
+                    <p>Ninguna compra coincide con los filtros.</p>
                 ) : (
                     <div className="acciones-grid">
-                        {resumen.comprasDelProveedor.map((compra) => (
+                        {comprasDelProveedorFiltradas.map((compra) => (
                             <CompraCard
                                 key={compra.id}
                                 compra={compra}

@@ -1,11 +1,13 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Depends, HTTPException, status, Response
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import IntegrityError
 from app.db.db import get_db
 from app.db import models
 from app.schemas import ProyectoCreate, ProyectoUpdate, ProyectoOut
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.files.storage import eliminar_comprobante
+from app.reportes.calculos import calcular_analisis_proyecto
+from app.reportes.pdf_proyecto import generar_pdf_proyecto
 
 
 router = APIRouter (
@@ -108,3 +110,42 @@ def update_project(proyecto_id: str,
         raise HTTPException(status_code=400, detail="Error al actualizar el proyecto: datos inválidos")
 
     return proyecto_existente
+
+
+# GET : Reporte PDF del proyecto (resumen financiero, cascada de rentabilidad,
+# notas de crédito/débito, estado de fases, deuda a proveedores). Uso interno,
+# on-demand -- ver app/reportes/.
+
+@router.get("/{proyecto_id}/reporte-pdf", status_code=status.HTTP_200_OK)
+def get_reporte_pdf_proyecto(proyecto_id: str,
+                              db: Session = Depends(get_db),
+                              current_user: models.Usuario = Depends(get_current_user)):
+    proyecto = db.query(models.Proyecto).filter(models.Proyecto.id == proyecto_id).first()
+    if not proyecto:
+        raise HTTPException(status_code=404, detail="Proyecto no encontrado")
+
+    fases = db.query(models.Fase).filter(models.Fase.proyecto_id == proyecto_id).all()
+
+    gastos = db.query(models.Gasto).options(
+        joinedload(models.Gasto.categorias)
+    ).filter(models.Gasto.proyecto_id == proyecto_id).all()
+
+    cobros = db.query(models.Cobro).options(
+        joinedload(models.Cobro.notas)
+    ).filter(models.Cobro.proyecto_id == proyecto_id).all()
+
+    compras = db.query(models.Compra).join(models.Fase).options(
+        joinedload(models.Compra.impuestos_aplicados),
+        joinedload(models.Compra.notas),
+        joinedload(models.Compra.proveedor),
+    ).filter(models.Fase.proyecto_id == proyecto_id).all()
+
+    analisis = calcular_analisis_proyecto(proyecto, fases, gastos, cobros, compras)
+    pdf_bytes = generar_pdf_proyecto(proyecto, fases, gastos, cobros, compras, analisis)
+
+    nombre_archivo = f"reporte-{proyecto.nombre}.pdf".replace(" ", "-").replace("/", "-")
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{nombre_archivo}"'},
+    )

@@ -16,8 +16,16 @@ export function getTipoNotaLabel(value) {
 // (proveedor) o Cobro (cliente/proyecto) -- Compra puede ser por devolución
 // de un producto puntual; Cobro no tiene líneas de producto, así que su
 // equivalente es un ajuste de precio.
+//
+// "devolucion_producto" es SOLO nota_credito (te devuelven la plata de un
+// producto puntual). "reposicion_producto" es SOLO nota_debito -- caso
+// típico: te cambian 3 aires fallados (nota_credito devolucion_producto por
+// esos 3) y te facturan los 3 aires nuevos que te mandan de reposición (esta
+// nota_debito). Ambos usan el mismo selector de producto+cantidad de la
+// compra, ver ModalNota.jsx.
 export const ORIGENES_NOTA_COMPRA = [
   { value: "devolucion_producto", label: "Devolución de producto" },
+  { value: "reposicion_producto", label: "Reposición de producto" },
   { value: "acuerdo_comercial", label: "Acuerdo comercial" },
   { value: "otro", label: "Otro" },
 ];

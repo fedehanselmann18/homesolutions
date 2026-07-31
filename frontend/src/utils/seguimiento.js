@@ -129,10 +129,11 @@ export function calcularSeguimiento({
   const sumar = (items) => items.reduce((acc, i) => acc + i.monto, 0);
 
   // Cuánto falta cobrar de lo que se acordó con el cliente. Mismo criterio
-  // que el Análisis General: cobrado es la suma de los cobros cargados y el
+  // que el Análisis General: cobrado es la suma de los cobros NETA de notas
+  // de crédito/débito (monto_neto, ver Cobro.monto_neto en el backend) y el
   // pendiente nunca es negativo (si se cobró de más, queda en 0).
   const precioAcordado = Number(proyecto?.precio_acordado ?? 0);
-  const cobrado = sumar(cobros);
+  const cobrado = cobros.reduce((acc, c) => acc + (c.monto_neto ?? c.monto), 0);
   const ultimoCobro = cobros.reduce(
     (masReciente, cobro) => (!masReciente || cobro.fecha > masReciente.fecha ? cobro : masReciente),
     null
@@ -145,7 +146,7 @@ export function calcularSeguimiento({
     pctCobrado: precioAcordado > 0 ? (cobrado / precioAcordado) * 100 : 0,
     cantidadCobros: cobros.length,
     ultimoCobro: ultimoCobro
-      ? { fecha: ultimoCobro.fecha, monto: ultimoCobro.monto, dias: diasDesde(ultimoCobro.fecha, hoy) }
+      ? { fecha: ultimoCobro.fecha, monto: ultimoCobro.monto_neto ?? ultimoCobro.monto, dias: diasDesde(ultimoCobro.fecha, hoy) }
       : null,
   };
 

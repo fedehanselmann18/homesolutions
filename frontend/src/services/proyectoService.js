@@ -26,3 +26,12 @@ export const eliminarProyecto = async (proyectoId) => {
   const { data } = await axiosClient.delete(`/proyectos/${proyectoId}`);
   return data;
 };
+
+// Reporte PDF (resumen financiero, cascada, notas, fases, deuda a
+// proveedores). Devuelve el blob para que quien llama arme la descarga.
+export const descargarReportePdfProyecto = async (proyectoId) => {
+  const { data } = await axiosClient.get(`/proyectos/${proyectoId}/reporte-pdf`, {
+    responseType: "blob",
+  });
+  return data;
+};

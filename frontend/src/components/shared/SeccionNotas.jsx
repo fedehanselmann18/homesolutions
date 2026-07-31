@@ -109,7 +109,7 @@ export function SeccionNotas({
                                 </div>
                                 {productos.length > 0 && (
                                     <p className="seccion-notas-item-productos">
-                                        Productos devueltos: {productos.join(", ")}
+                                        {n.origen === "reposicion_producto" ? "Productos de reposición" : "Productos devueltos"}: {productos.join(", ")}
                                     </p>
                                 )}
                                 <div className="seccion-notas-item-acciones">

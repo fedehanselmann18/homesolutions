@@ -1,6 +1,7 @@
 import { ESTADO_LABELS } from "../constants/estados";
 import { getTipoFacturaLabel } from "../constants/tipoFactura";
 import { getTipoProducto } from "../constants/tipoProducto";
+import { notasDeCompras, notasDeCobros, totalNotasCredito, totalNotasDebito } from "./notas";
 
 const SIN_CATEGORIA = "Sin categoría";
 const SIN_FASE = "Sin fase";
@@ -176,14 +177,34 @@ export function calcularAnalisis({
   productos = [],
   proveedores = [],
 }) {
-  const totalCobrado = sumar(cobros, (c) => c.monto);
+  // Cobrado NETO: monto_neto ya viene calculado por el backend (Cobro.monto_neto
+  // = monto - notas de crédito + notas de débito, ver app/db/models.py). Usar
+  // el bruto acá sería ignorar los ajustes de precio hechos al cliente.
+  const totalCobrado = sumar(cobros, (c) => c.monto_neto ?? c.monto);
   const totalGastos = sumar(gastos, (g) => g.monto);
   const totalComprasNeto = sumar(compras, (c) => c.precio_neto);
   const totalImpuestos = sumar(compras, impuestosDeCompra);
-  const totalCompras = totalComprasNeto + totalImpuestos;
+
+  // Notas de crédito/débito de las compras de este proyecto (cuenta corriente
+  // con los proveedores) -- devolución de producto, reposición, acuerdo
+  // comercial, etc. Ver utils/notas.js.
+  const notasCompra = notasDeCompras(compras);
+  const notasCreditoCompras = totalNotasCredito(notasCompra);
+  const notasDebitoCompras = totalNotasDebito(notasCompra);
+  const ajusteNotasCompras = notasDebitoCompras - notasCreditoCompras; // + si suma a lo que se debe, - si resta
+
+  // Mismo criterio del lado de los cobros (ajustes de precio al cliente).
+  const notasCobro = notasDeCobros(cobros);
+  const notasCreditoCobros = totalNotasCredito(notasCobro);
+  const notasDebitoCobros = totalNotasDebito(notasCobro);
+
+  // totalCompras tiene que coincidir con sum(compra.precio_total) -- antes
+  // de este fix sumaba precio_neto + impuestos y SE OLVIDABA de las notas,
+  // así que una devolución de producto no bajaba nada acá.
+  const totalCompras = totalComprasNeto + totalImpuestos + ajusteNotasCompras;
   const totalEgresos = totalGastos + totalCompras;
   const disponible = totalCobrado - totalEgresos;
-  const margenBruto = totalCobrado - totalGastos - totalComprasNeto;
+  const margenBruto = totalCobrado - totalGastos - totalComprasNeto - ajusteNotasCompras;
 
   const precioAcordado = proyecto?.precio_acordado ?? 0;
 
@@ -203,11 +224,16 @@ export function calcularAnalisis({
       precioAcordado,
       pctCobrado: porcentaje(totalCobrado, precioAcordado),
       pctGastado: porcentaje(totalEgresos, precioAcordado),
+      notasCreditoCompras,
+      notasDebitoCompras,
+      notasCreditoCobros,
+      notasDebitoCobros,
     },
     cascada: armarCascada([
       { nombre: "Cobrado", valor: totalCobrado, tipo: "entrada" },
       { nombre: "Gastos", valor: -totalGastos, tipo: "salida" },
       { nombre: "Compras", valor: -totalComprasNeto, tipo: "salida" },
+      { nombre: "Notas (compras)", valor: -ajusteNotasCompras, tipo: "ajuste" },
       { nombre: "Margen bruto", valor: margenBruto, tipo: "subtotal" },
       { nombre: "Impuestos", valor: -totalImpuestos, tipo: "salida" },
       { nombre: "Ganancia neta", valor: disponible, tipo: "total" },
@@ -223,5 +249,9 @@ export function calcularAnalisis({
       monto: sumar(gastos.filter((g) => !g.comprobantes?.length), (g) => g.monto),
     },
     topProveedores: topProveedores(compras, proveedores),
+    notas: {
+      compras: { credito: notasCreditoCompras, debito: notasDebitoCompras, cantidad: notasCompra.length },
+      cobros: { credito: notasCreditoCobros, debito: notasDebitoCobros, cantidad: notasCobro.length },
+    },
   };
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
     getComprasPorProyecto,
     crearCompra,
@@ -47,6 +47,8 @@ import ModalGasto from "../modals/ModalGasto";
 import ModalCobro from "../modals/ModalCobro";
 import ModalCompra from "../modals/ModalCompra";
 import ModalNota from "../modals/ModalNota";
+import FiltrosLista from "../shared/FiltrosLista";
+import { FILTROS_VACIOS, filtrarCompras, filtrarCobros, filtrarGastos } from "../../utils/filtros";
 
 import "./Acciones.css";
 
@@ -60,6 +62,14 @@ export function Acciones({ proyectoId, proyectoNombre }) {
     const [compras, setCompras] = useState([]);
     const [gastos, setGastos] = useState([]);
     const [cobros, setCobros] = useState([]);
+
+    const [filtrosGastos, setFiltrosGastos] = useState(FILTROS_VACIOS);
+    const [filtrosCobros, setFiltrosCobros] = useState(FILTROS_VACIOS);
+    const [filtrosCompras, setFiltrosCompras] = useState(FILTROS_VACIOS);
+
+    const gastosFiltrados = useMemo(() => filtrarGastos(gastos, filtrosGastos), [gastos, filtrosGastos]);
+    const cobrosFiltrados = useMemo(() => filtrarCobros(cobros, filtrosCobros), [cobros, filtrosCobros]);
+    const comprasFiltradas = useMemo(() => filtrarCompras(compras, filtrosCompras), [compras, filtrosCompras]);
 
     // Listas de apoyo para los selects de los modales
     const [fases, setFases] = useState([]);
@@ -363,11 +373,21 @@ export function Acciones({ proyectoId, proyectoNombre }) {
                         {canManage && <button onClick={handleNuevoGasto}>Nuevo gasto</button>}
                     </div>
 
+                    {gastos.length > 0 && (
+                        <FiltrosLista
+                            filtros={filtrosGastos}
+                            onCambiar={setFiltrosGastos}
+                            mostrarComprobante
+                        />
+                    )}
+
                     {gastos.length === 0 ? (
                         <p>No hay gastos registrados para este proyecto.</p>
+                    ) : gastosFiltrados.length === 0 ? (
+                        <p>Ningún gasto coincide con los filtros.</p>
                     ) : (
                         <div className="acciones-grid">
-                            {gastos.map((gasto) => (
+                            {gastosFiltrados.map((gasto) => (
                                 <GastoCard
                                     key={gasto.id}
                                     gasto={gasto}
@@ -391,11 +411,22 @@ export function Acciones({ proyectoId, proyectoNombre }) {
                         {canManage && <button onClick={handleNuevoCobro}>Nuevo cobro</button>}
                     </div>
 
+                    {cobros.length > 0 && (
+                        <FiltrosLista
+                            filtros={filtrosCobros}
+                            onCambiar={setFiltrosCobros}
+                            mostrarNotas
+                            mostrarComprobante
+                        />
+                    )}
+
                     {cobros.length === 0 ? (
                         <p>No hay cobros registrados para este proyecto.</p>
+                    ) : cobrosFiltrados.length === 0 ? (
+                        <p>Ningún cobro coincide con los filtros.</p>
                     ) : (
                         <div className="acciones-grid">
-                            {cobros.map((cobro) => (
+                            {cobrosFiltrados.map((cobro) => (
                                 <CobroCard
                                     key={cobro.id}
                                     cobro={cobro}
@@ -421,11 +452,23 @@ export function Acciones({ proyectoId, proyectoNombre }) {
                         {canManage && <button onClick={handleNuevaCompra}>Nueva compra</button>}
                     </div>
 
+                    {compras.length > 0 && (
+                        <FiltrosLista
+                            filtros={filtrosCompras}
+                            onCambiar={setFiltrosCompras}
+                            mostrarNotas
+                            mostrarEstadoPago
+                            mostrarEstadoEnvio
+                        />
+                    )}
+
                     {compras.length === 0 ? (
                         <p>No hay compras registradas para este proyecto.</p>
+                    ) : comprasFiltradas.length === 0 ? (
+                        <p>Ninguna compra coincide con los filtros.</p>
                     ) : (
                         <div className="acciones-grid">
-                            {compras.map((compra) => (
+                            {comprasFiltradas.map((compra) => (
                                 <CompraCard
                                     key={compra.id}
                                     compra={compra}

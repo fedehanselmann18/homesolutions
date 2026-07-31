@@ -13,7 +13,7 @@ import {
     YAxis,
 } from "recharts";
 
-import { getProyectoPorId } from "../../services/proyectoService";
+import { getProyectoPorId, descargarReportePdfProyecto } from "../../services/proyectoService";
 import { getFasesPorProyecto } from "../../services/faseService";
 import { getGastosPorProyecto } from "../../services/gastoService";
 import { getCobrosPorProyecto } from "../../services/cobroService";
@@ -25,6 +25,7 @@ import { TarjetaKpi } from "../shared/TarjetaKpi";
 import { Cargando } from "../shared/Cargando";
 import { calcularAnalisis } from "../../utils/analisis";
 import { formatMoneda, formatMonedaCorta } from "../../utils/formato";
+import { useToast } from "../../context/useToast";
 import "./AnalisisGeneral.css";
 
 const VERDE = "#16a34a";
@@ -39,7 +40,18 @@ const COLOR_CASCADA = {
     salida: NARANJA,
     subtotal: AZUL,
     total: VERDE,
+    ajuste: NARANJA,
 };
+
+// El paso "Notas (compras)" y el paso "total" pueden ir para cualquier lado
+// según el signo (una devolución de producto sube el margen, una reposición
+// lo baja) -- a diferencia de "salida"/"entrada" que siempre son fijos.
+function colorPasoCascada(paso) {
+    if (paso.tipo === "total" || paso.tipo === "ajuste") {
+        return paso.valor < 0 ? ROJO : VERDE;
+    }
+    return COLOR_CASCADA[paso.tipo];
+}
 
 /**
  * Escala y ticks del eje de la cascada. Hace falta calcularlos a mano: las
@@ -168,8 +180,10 @@ function Torta({ datos, colores }) {
 }
 
 export function AnalisisGeneral({ proyectoId }) {
+    const toast = useToast();
     const [datos, setDatos] = useState(null);
     const [cargando, setCargando] = useState(true);
+    const [descargandoReporte, setDescargandoReporte] = useState(false);
 
     useEffect(() => {
         const fetchDatos = async () => {
@@ -197,6 +211,20 @@ export function AnalisisGeneral({ proyectoId }) {
 
     const analisis = useMemo(() => (datos ? calcularAnalisis(datos) : null), [datos]);
 
+    const handleDescargarReporte = async () => {
+        try {
+            setDescargandoReporte(true);
+            const blob = await descargarReportePdfProyecto(proyectoId);
+            const url = URL.createObjectURL(blob);
+            window.open(url, "_blank", "noopener,noreferrer");
+        } catch (error) {
+            console.error("Error descargando el reporte PDF:", error);
+            toast.error("No se pudo generar el reporte PDF.");
+        } finally {
+            setDescargandoReporte(false);
+        }
+    };
+
     if (cargando) return <Cargando texto="Cargando análisis..." />;
     if (!analisis) return <p className="analisis-vacio">No se pudo cargar el análisis del proyecto.</p>;
 
@@ -211,6 +239,7 @@ export function AnalisisGeneral({ proyectoId }) {
         egresosPorFase,
         gastosSinComprobante,
         topProveedores,
+        notas,
     } = analisis;
 
     const totalFases = avanceFases.reduce((acc, f) => acc + f.cantidad, 0);
@@ -219,6 +248,17 @@ export function AnalisisGeneral({ proyectoId }) {
 
     return (
         <div className="analisis">
+            <div className="analisis-header">
+                <button
+                    type="button"
+                    className="analisis-btn-reporte"
+                    onClick={handleDescargarReporte}
+                    disabled={descargandoReporte}
+                >
+                    {descargandoReporte ? "Generando..." : "Generar reporte PDF"}
+                </button>
+            </div>
+
             <div className="analisis-kpis">
                 <TarjetaKpi
                     titulo="Cobrado"
@@ -244,7 +284,7 @@ export function AnalisisGeneral({ proyectoId }) {
 
             <Seccion
                 titulo="Rentabilidad"
-                descripcion="De lo cobrado a la ganancia neta, restando gastos, compras e impuestos."
+                descripcion="De lo cobrado a la ganancia neta, restando gastos, compras, notas de crédito/débito e impuestos."
                 vacio={totales.cobrado === 0 && totales.egresos === 0}
                 mensajeVacio="Todavía no hay cobros ni egresos cargados."
             >
@@ -262,10 +302,7 @@ export function AnalisisGeneral({ proyectoId }) {
                         <Tooltip content={<TooltipMoneda obtenerValor={(d) => d.valor} />} />
                         <Bar dataKey="rango" isAnimationActive={false} radius={3}>
                             {cascada.map((paso) => (
-                                <Cell
-                                    key={paso.nombre}
-                                    fill={paso.valor < 0 && paso.tipo === "total" ? ROJO : COLOR_CASCADA[paso.tipo]}
-                                />
+                                <Cell key={paso.nombre} fill={colorPasoCascada(paso)} />
                             ))}
                         </Bar>
                     </BarChart>
@@ -430,6 +467,53 @@ export function AnalisisGeneral({ proyectoId }) {
                     </ul>
                 </Seccion>
             </div>
+
+            <Seccion
+                titulo="Notas de crédito / débito"
+                descripcion="Ajustes de cuenta corriente con proveedores (compras) y con el proyecto (cobros). Crédito resta, débito suma."
+                vacio={
+                    notas.compras.credito === 0 &&
+                    notas.compras.debito === 0 &&
+                    notas.cobros.credito === 0 &&
+                    notas.cobros.debito === 0
+                }
+                mensajeVacio="Todavía no hay notas de crédito ni débito cargadas."
+            >
+                <div className="analisis-kpis--notas">
+                    <TarjetaKpi
+                        titulo="Notas de crédito (compras)"
+                        valor={formatMoneda(notas.compras.credito)}
+                        detalle="A favor nuestro, resta a lo que le debemos al proveedor"
+                        color={ROJO}
+                        destacado
+                        plano
+                    />
+                    <TarjetaKpi
+                        titulo="Notas de débito (compras)"
+                        valor={formatMoneda(notas.compras.debito)}
+                        detalle="En contra nuestro, suma a lo que le debemos al proveedor"
+                        color={NARANJA}
+                        destacado
+                        plano
+                    />
+                    <TarjetaKpi
+                        titulo="Notas de crédito (cobros)"
+                        valor={formatMoneda(notas.cobros.credito)}
+                        detalle="Ajuste a favor del cliente, resta a lo cobrado"
+                        color={ROJO}
+                        destacado
+                        plano
+                    />
+                    <TarjetaKpi
+                        titulo="Notas de débito (cobros)"
+                        valor={formatMoneda(notas.cobros.debito)}
+                        detalle="Ajuste en contra del cliente, suma a lo cobrado"
+                        color={NARANJA}
+                        destacado
+                        plano
+                    />
+                </div>
+            </Seccion>
         </div>
     );
 }

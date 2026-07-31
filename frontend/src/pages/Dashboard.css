@@ -68,6 +68,19 @@
     }
 }
 
+.panel-kpis--notas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-6);
+}
+
+.panel-kpis--notas > * {
+    padding: var(--space-4);
+    border: 1px solid var(--color-linea);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-superficie);
+}
+
 /* --- Secciones: separadas por línea, no por caja --- */
 
 .panel-seccion {
