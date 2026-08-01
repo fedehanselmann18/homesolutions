@@ -153,8 +153,50 @@
     transition: background-color 0.15s ease;
 }
 
-.modal-btn-agregar-fila:hover {
+.modal-btn-agregar-fila:hover:not(:disabled) {
     background-color: var(--color-musgo-tint);
+}
+
+.modal-btn-agregar-fila:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.modal-form-seccion--ia {
+    background-color: var(--color-terracota-tint);
+    border-color: var(--color-terracota);
+}
+
+.modal-btn-ia {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    align-self: flex-start;
+    font-family: var(--font-ui);
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 9px 18px;
+    margin-top: 4px;
+    border-radius: var(--radius-pill);
+    border: none;
+    background: linear-gradient(135deg, var(--color-terracota), var(--color-musgo));
+    color: var(--color-superficie);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(111, 127, 69, 0.35);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.modal-btn-ia:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(111, 127, 69, 0.45);
+}
+
+.modal-btn-ia:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
 }
 
 .modal-form-fila-dinamica {

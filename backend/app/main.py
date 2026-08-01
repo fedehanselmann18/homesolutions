@@ -18,7 +18,8 @@ from app.routes import (login,
                         productos,
                         compras,
                         cobros,
-                        gastos)
+                        gastos,
+                        ia)
 app = FastAPI()
 
 app.state.limiter = limiter
@@ -50,6 +51,7 @@ app.include_router(productos.router)
 app.include_router(compras.router)
 app.include_router(cobros.router)
 app.include_router(gastos.router)
+app.include_router(ia.router)
 
 @app.get("/")
 async def root():

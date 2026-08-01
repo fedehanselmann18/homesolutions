@@ -7,6 +7,23 @@ BASE_UPLOAD_DIR = Path("uploads")
 ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
 MAX_SIZE_BYTES = 10 * 1024 * 1024  # 10MB
 
+# Firma binaria real de cada tipo permitido, para no confiar solo en la
+# extensión del filename (que el cliente puede poner lo que quiera): un
+# .pdf que en realidad es un .html con un XSS adentro pasaría el chequeo de
+# extensión, y X-Content-Type-Options: nosniff no ayuda si el contenido
+# reportado (por extensión) ya es mentira.
+FIRMAS_POR_EXTENSION = {
+    ".pdf": (b"%PDF-",),
+    ".jpg": (b"\xff\xd8\xff",),
+    ".jpeg": (b"\xff\xd8\xff",),
+    ".png": (b"\x89PNG\r\n\x1a\n",),
+}
+
+
+def contenido_coincide_con_extension(contenido: bytes, ext: str) -> bool:
+    firmas = FIRMAS_POR_EXTENSION.get(ext, ())
+    return any(contenido.startswith(firma) for firma in firmas)
+
 # Raíz del backend (.../backend), calculada desde este archivo. Los paths se
 # guardan relativos en la DB (para no romperlos si se mueve el proyecto de
 # carpeta), pero se resuelven SIEMPRE contra esta raíz y no contra el cwd:
@@ -38,6 +55,11 @@ def subir_comprobante(archivo: UploadFile, carpeta: str, entidad_id: str) -> str
         raise HTTPException(status_code=400, detail="El archivo supera los 10MB")
 
     contenido = archivo.file.read()
+    if not contenido_coincide_con_extension(contenido, ext):
+        raise HTTPException(
+            status_code=400,
+            detail="El contenido del archivo no coincide con su extensión",
+        )
 
     ruta_relativa = BASE_UPLOAD_DIR / carpeta / entidad_id / f"{uuid.uuid4()}{ext}"
     ruta_completa = ruta_absoluta(ruta_relativa)

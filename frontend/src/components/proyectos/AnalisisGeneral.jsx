@@ -26,6 +26,7 @@ import { Cargando } from "../shared/Cargando";
 import { calcularAnalisis } from "../../utils/analisis";
 import { formatMoneda, formatMonedaCorta } from "../../utils/formato";
 import { useToast } from "../../context/useToast";
+import useAuth from "../../context/useAuth";
 import "./AnalisisGeneral.css";
 
 const VERDE = "#16a34a";
@@ -181,6 +182,8 @@ function Torta({ datos, colores }) {
 
 export function AnalisisGeneral({ proyectoId }) {
     const toast = useToast();
+    const { usuario } = useAuth();
+    const esAdmin = usuario?.rol === "admin";
     const [datos, setDatos] = useState(null);
     const [cargando, setCargando] = useState(true);
     const [descargandoReporte, setDescargandoReporte] = useState(false);
@@ -248,16 +251,18 @@ export function AnalisisGeneral({ proyectoId }) {
 
     return (
         <div className="analisis">
-            <div className="analisis-header">
-                <button
-                    type="button"
-                    className="analisis-btn-reporte"
-                    onClick={handleDescargarReporte}
-                    disabled={descargandoReporte}
-                >
-                    {descargandoReporte ? "Generando..." : "Generar reporte PDF"}
-                </button>
-            </div>
+            {esAdmin && (
+                <div className="analisis-header">
+                    <button
+                        type="button"
+                        className="analisis-btn-reporte"
+                        onClick={handleDescargarReporte}
+                        disabled={descargandoReporte}
+                    >
+                        {descargandoReporte ? "Generando..." : "Generar reporte PDF"}
+                    </button>
+                </div>
+            )}
 
             <div className="analisis-kpis">
                 <TarjetaKpi

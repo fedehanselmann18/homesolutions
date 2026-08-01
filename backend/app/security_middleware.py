@@ -19,6 +19,8 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from app.config import settings
+
 MUTATING_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 
 # Rutas donde todavía no existe sesión (o se está creando/cerrando), así que
@@ -37,6 +39,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
+        # API pura (JSON + PDFs/comprobantes servidos como attachment): no
+        # sirve HTML propio, así que el CSP puede ser todo lo estricto
+        # posible sin romper nada.
+        response.headers["Content-Security-Policy"] = "default-src 'none'; frame-ancestors 'none'"
+        # Solo con HTTPS real (producción) -- en dev http:// el browser
+        # ignora este header igual, pero no tiene sentido mandarlo.
+        if settings.ENVIRONMENT == "production":
+            response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains"
         return response
 
 

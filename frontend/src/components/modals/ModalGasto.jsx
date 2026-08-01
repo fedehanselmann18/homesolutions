@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
+import { Sparkles } from "lucide-react";
 import { ComprobantesUploader } from "../shared/ComprobantesUploader";
 import { TIPOS_FACTURA } from "../../constants/tipoFactura";
+import { useExtraccionIA } from "../../hooks/useExtraccionIA";
+import { useToast } from "../../context/useToast";
 import "./ModalGasto.css";
 
 export function ModalGasto({
@@ -24,6 +27,8 @@ export function ModalGasto({
     });
     const [comprobantesCambios, setComprobantesCambios] = useState({ archivos: [], eliminarIds: [] });
     const [guardando, setGuardando] = useState(false);
+    const { extraer, extrayendo } = useExtraccionIA();
+    const toast = useToast();
 
     useEffect(() => {
         if (gasto) {
@@ -45,6 +50,40 @@ export function ModalGasto({
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
+    };
+
+    // Toma el primer comprobante recién arrastrado/seleccionado (todavía sin
+    // subir) y le pide a la IA que lo lea. Nunca pisa un campo que la IA no
+    // pudo leer (queda en null) -- si el campo ya lo había tipeado el
+    // usuario, se mantiene tal cual.
+    const handleAutocompletarIA = async () => {
+        const archivo = comprobantesCambios.archivos[0];
+        if (!archivo) return;
+
+        try {
+            const resultado = await extraer(archivo, "gasto", {
+                fases: fasesDisponibles.map((f) => ({ id: f.id, nombre: f.nombre })),
+                categoriasGasto: categoriasDisponibles.map((c) => ({ id: c.id, nombre: c.nombre })),
+            });
+
+            setForm((prev) => ({
+                ...prev,
+                descripcion: resultado.descripcion ?? prev.descripcion,
+                monto: resultado.monto ?? prev.monto,
+                fecha: resultado.fecha ?? prev.fecha,
+                tipo_factura: resultado.tipo_factura ?? prev.tipo_factura,
+                fase_id: faseFija ? prev.fase_id : resultado.fase_id ?? prev.fase_id,
+                categoria_gasto_ids: resultado.categoria_gasto_id ?? prev.categoria_gasto_ids,
+            }));
+
+            if (resultado.advertencias?.length) {
+                resultado.advertencias.forEach((a) => toast.error(a));
+            } else {
+                toast.success("Comprobante leído. Revisá los datos antes de guardar.");
+            }
+        } catch (err) {
+            toast.error(err?.response?.data?.detail ?? "No se pudo leer el comprobante con IA");
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -79,6 +118,32 @@ export function ModalGasto({
                 <h2>{esEdicion ? "Editar gasto" : "Nuevo gasto"}</h2>
 
                 <form onSubmit={handleSubmit} className="modal-form">
+                    <div className="modal-form-seccion modal-form-seccion--ia">
+                        <div className="modal-form-seccion-header">
+                            <span>Comprobantes</span>
+                        </div>
+                        <ComprobantesUploader
+                            existentes={gasto?.comprobantes ?? []}
+                            onVerExistente={onVerComprobante}
+                            onCambio={setComprobantesCambios}
+                            disabled={guardando}
+                        />
+                        <button
+                            type="button"
+                            className="modal-btn-ia"
+                            onClick={handleAutocompletarIA}
+                            disabled={guardando || extrayendo || comprobantesCambios.archivos.length === 0}
+                            title={
+                                comprobantesCambios.archivos.length === 0
+                                    ? "Primero arrastrá o elegí un comprobante"
+                                    : "Leer el comprobante y prellenar el formulario"
+                            }
+                        >
+                            <Sparkles size={16} strokeWidth={2.25} />
+                            {extrayendo ? "Leyendo comprobante..." : "Autocompletar con IA"}
+                        </button>
+                    </div>
+
                     <div className="modal-form-seccion">
                         <div className="modal-form-seccion-header">
                             <span>Datos generales</span>
@@ -180,18 +245,6 @@ export function ModalGasto({
                                 </select>
                             </label>
                         )}
-                    </div>
-
-                    <div className="modal-form-seccion">
-                        <div className="modal-form-seccion-header">
-                            <span>Comprobantes</span>
-                        </div>
-                        <ComprobantesUploader
-                            existentes={gasto?.comprobantes ?? []}
-                            onVerExistente={onVerComprobante}
-                            onCambio={setComprobantesCambios}
-                            disabled={guardando}
-                        />
                     </div>
 
                     <div className="modal-acciones">

@@ -1,4 +1,5 @@
-from jose import JWTError, jwt
+import jwt
+from jwt import PyJWTError
 from datetime import datetime, timedelta, timezone
 from app.schemas import DatosToken
 from fastapi import Depends, HTTPException, Request
@@ -52,7 +53,7 @@ def verify_access_token(token: str, credentials_exception):
 
         token_data = DatosToken(user_id=id)
 
-    except JWTError:
+    except PyJWTError:
         raise credentials_exception
 
     return token_data

@@ -33,7 +33,7 @@ CORREGIDO (respecto a la versión anterior):
 import uuid
 from datetime import date, datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 from typing import Optional
 
 
@@ -63,6 +63,13 @@ class UsuarioBase(BaseModel):
 
 class UsuarioCreate(UsuarioBase):
     password: str  # se hashea en el service, nunca se guarda en texto plano
+
+    @field_validator("password")
+    @classmethod
+    def password_minima(cls, valor: str) -> str:
+        if len(valor) < 8:
+            raise ValueError("La contraseña tiene que tener al menos 8 caracteres")
+        return valor
 
 
 class UsuarioUpdate(BaseModel):
@@ -480,3 +487,64 @@ class CobroOut(CobroBase, TimestampOut):
     monto_neto: float  # calculado (monto - NC + ND), no se carga a mano
     comprobantes: list[ComprobanteCobroOut] = []
     notas: list[NotaCobroOut] = []  # cuenta corriente: notas de crédito/débito
+
+
+# ---------------------------------------------------------------------------
+# IA (lectura automática de comprobantes)
+# ---------------------------------------------------------------------------
+
+class IADetalleSugerido(BaseModel):
+    """
+    Una línea de producto que la IA propone para el detalle de una Compra.
+    Solo se sugiere si el producto pertenece al proveedor ya resuelto en la
+    misma extracción (ver _validar_y_limpiar) -- precio_unitario NUNCA sale
+    de acá: sigue siendo el precio de catálogo (Producto.precio), congelado
+    al elegir el producto, igual que si lo cargaras a mano en ModalCompra.
+    """
+    producto_id: uuid.UUID
+    cantidad: float
+
+
+class IAImpuestoSugerido(BaseModel):
+    """
+    Una línea de impuesto (IVA, percepciones, retenciones...) que la IA leyó
+    del comprobante. A diferencia de precio_unitario en IADetalleSugerido,
+    acá `monto` SÍ sale directo de la factura -- es un importe de plata ya
+    impreso ahí (no un id que haya que inventar), así que no hay el mismo
+    riesgo que con matchear productos. impuesto_id solo se acepta si
+    coincide con uno del catálogo que mandó el front (ver _validar_y_limpiar).
+    """
+    impuesto_id: uuid.UUID
+    monto: float
+
+
+class IAExtraccionComprobante(BaseModel):
+    """
+    Resultado de leer un comprobante (factura/remito/recibo) con Gemini, para
+    prellenar ModalGasto/ModalCompra/ModalCobro (ver routes/ia.py).
+
+    No se persiste nada acá -- es 100% para prellenar el formulario, el
+    usuario siempre revisa y confirma con el submit normal antes de guardar.
+    Los campos que no aplican al tipo de entidad pedido quedan en None (ej.
+    Cobro no tiene fase/categoría/proveedor; Compra no tiene "monto" porque
+    precio_neto se calcula solo a partir del detalle de productos, nunca se
+    tipea a mano, ver ModalCompra.jsx).
+
+    proveedor_id/fase_id/categoria_gasto_id solo se completan si coinciden
+    EXACTO con un id de la lista que el front mandó en `contexto` -- si
+    Gemini sugiere algo que no está en esa lista, se descarta a None y se
+    agrega un aviso en `advertencias` en vez de guardar una referencia
+    inventada (ver _validar_y_limpiar en app/ia/extractor.py). Mismo
+    criterio para `detalle`: cada línea se descarta si el producto no existe
+    en el catálogo que mandó el front o no pertenece al proveedor resuelto.
+    """
+    monto: float | None = None
+    fecha: date | None = None
+    tipo_factura: str | None = None
+    descripcion: str | None = None
+    proveedor_id: uuid.UUID | None = None
+    fase_id: uuid.UUID | None = None
+    categoria_gasto_id: uuid.UUID | None = None
+    detalle: list[IADetalleSugerido] = []
+    impuestos: list[IAImpuestoSugerido] = []
+    advertencias: list[str] = []

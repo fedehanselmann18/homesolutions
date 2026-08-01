@@ -119,7 +119,7 @@ def update_project(proyecto_id: str,
 @router.get("/{proyecto_id}/reporte-pdf", status_code=status.HTTP_200_OK)
 def get_reporte_pdf_proyecto(proyecto_id: str,
                               db: Session = Depends(get_db),
-                              current_user: models.Usuario = Depends(get_current_user)):
+                              current_user: models.Usuario = Depends(requiere_admin)):
     proyecto = db.query(models.Proyecto).filter(models.Proyecto.id == proyecto_id).first()
     if not proyecto:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")

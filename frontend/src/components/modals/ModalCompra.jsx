@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import { X, Sparkles } from "lucide-react";
 import { ComprobantesUploader } from "../shared/ComprobantesUploader";
 import { formatMoneda } from "../../utils/formato";
 import { TIPOS_FACTURA } from "../../constants/tipoFactura";
 import { getTipoProducto } from "../../constants/tipoProducto";
 import { getCondicionPagoLabel } from "../../constants/estadoCompra";
+import { useExtraccionIA } from "../../hooks/useExtraccionIA";
+import { useToast } from "../../context/useToast";
 import "./ModalCompra.css";
 
 const CONDICION_PAGO_OPCIONES = ["contado", "cuenta_corriente", "cheque", "transferencia"];
@@ -48,6 +50,8 @@ export function ModalCompra({
     const [impuestos, setImpuestos] = useState([]);
     const [comprobantesCambios, setComprobantesCambios] = useState({ archivos: [], eliminarIds: [] });
     const [guardando, setGuardando] = useState(false);
+    const { extraer, extrayendo } = useExtraccionIA();
+    const toast = useToast();
 
     useEffect(() => {
         if (compra) {
@@ -104,6 +108,80 @@ export function ModalCompra({
         // los productos ya elegidos dejan de tener sentido.
         if (name === "proveedor_id") {
             setDetalle([]);
+        }
+    };
+
+    // Toma el primer comprobante recién arrastrado/seleccionado (todavía sin
+    // subir) y le pide a la IA que lo lea. precio_neto sigue sin tocarse a
+    // mano (se calcula solo de las líneas de detalle) pero, si la IA logra
+    // identificar el proveedor Y reconoce productos de SU catálogo en la
+    // factura, agrega esas líneas -- con la cantidad que leyó y el precio
+    // de catálogo del producto (nunca un precio leído de la factura).
+    const handleAutocompletarIA = async () => {
+        const archivo = comprobantesCambios.archivos[0];
+        if (!archivo) return;
+
+        try {
+            const resultado = await extraer(archivo, "compra", {
+                fases: fasesDisponibles.map((f) => ({ id: f.id, nombre: f.nombre })),
+                proveedores: proveedores.map((p) => ({ id: p.id, nombre: p.nombre, cuit: p.cuit })),
+                productos: productosDisponibles.map((p) => ({
+                    id: p.id,
+                    marca: p.marca,
+                    modelo: p.modelo,
+                    proveedor_id: p.proveedor_id,
+                })),
+                impuestos: impuestosDisponibles.map((i) => ({ id: i.id, nombre: i.nombre })),
+            });
+
+            const proveedorResuelto = proveedorFijo?.id ?? resultado.proveedor_id ?? form.proveedor_id;
+
+            setForm((prev) => ({
+                ...prev,
+                descripcion: resultado.descripcion ?? prev.descripcion,
+                fecha: resultado.fecha ?? prev.fecha,
+                tipo_factura: resultado.tipo_factura ?? prev.tipo_factura,
+                fase_id: faseFija ? prev.fase_id : resultado.fase_id ?? prev.fase_id,
+                proveedor_id: proveedorFijo ? prev.proveedor_id : resultado.proveedor_id ?? prev.proveedor_id,
+            }));
+
+            if (resultado.detalle?.length) {
+                const productosDeEseProveedor = productosDisponibles.filter(
+                    (p) => p.proveedor_id === proveedorResuelto
+                );
+                const filasNuevas = resultado.detalle
+                    .map((linea) => {
+                        const producto = productosDeEseProveedor.find((p) => p.id === linea.producto_id);
+                        if (!producto) return null;
+                        return {
+                            _id: nuevaFilaId(),
+                            producto_id: producto.id,
+                            cantidad: linea.cantidad,
+                            precio_unitario: producto.precio,
+                        };
+                    })
+                    .filter(Boolean);
+                if (filasNuevas.length) {
+                    setDetalle((prev) => [...prev, ...filasNuevas]);
+                }
+            }
+
+            if (resultado.impuestos?.length) {
+                const filasImpuestos = resultado.impuestos.map((linea) => ({
+                    _id: nuevaFilaId(),
+                    impuesto_id: linea.impuesto_id,
+                    monto: linea.monto,
+                }));
+                setImpuestos((prev) => [...prev, ...filasImpuestos]);
+            }
+
+            if (resultado.advertencias?.length) {
+                resultado.advertencias.forEach((a) => toast.error(a));
+            } else {
+                toast.success("Comprobante leído. Revisá los datos antes de guardar.");
+            }
+        } catch (err) {
+            toast.error(err?.response?.data?.detail ?? "No se pudo leer el comprobante con IA");
         }
     };
 
@@ -191,6 +269,32 @@ export function ModalCompra({
                 <h2>{esEdicion ? "Editar compra" : "Nueva compra"}</h2>
 
                 <form onSubmit={handleSubmit} className="modal-form">
+                    <div className="modal-form-seccion modal-form-seccion--ia">
+                        <div className="modal-form-seccion-header">
+                            <span>Comprobantes</span>
+                        </div>
+                        <ComprobantesUploader
+                            existentes={compra?.comprobantes ?? []}
+                            onVerExistente={onVerComprobante}
+                            onCambio={setComprobantesCambios}
+                            disabled={guardando}
+                        />
+                        <button
+                            type="button"
+                            className="modal-btn-ia"
+                            onClick={handleAutocompletarIA}
+                            disabled={guardando || extrayendo || comprobantesCambios.archivos.length === 0}
+                            title={
+                                comprobantesCambios.archivos.length === 0
+                                    ? "Primero arrastrá o elegí un comprobante"
+                                    : "Leer el comprobante y prellenar proveedor/fase/fecha/tipo de factura/productos"
+                            }
+                        >
+                            <Sparkles size={16} strokeWidth={2.25} />
+                            {extrayendo ? "Leyendo comprobante..." : "Autocompletar con IA"}
+                        </button>
+                    </div>
+
                     <div className="modal-form-seccion">
                         <div className="modal-form-seccion-header">
                             <span>Datos generales</span>
@@ -467,18 +571,6 @@ export function ModalCompra({
                             <span>Total</span>
                             <span>{formatMoneda(precioTotal)}</span>
                         </div>
-                    </div>
-
-                    <div className="modal-form-seccion">
-                        <div className="modal-form-seccion-header">
-                            <span>Comprobantes</span>
-                        </div>
-                        <ComprobantesUploader
-                            existentes={compra?.comprobantes ?? []}
-                            onVerExistente={onVerComprobante}
-                            onCambio={setComprobantesCambios}
-                            disabled={guardando}
-                        />
                     </div>
 
                     <div className="modal-acciones">

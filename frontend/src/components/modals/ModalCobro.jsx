@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
+import { Sparkles } from "lucide-react";
 import { ComprobantesUploader } from "../shared/ComprobantesUploader";
 import { TIPOS_FACTURA } from "../../constants/tipoFactura";
+import { useExtraccionIA } from "../../hooks/useExtraccionIA";
+import { useToast } from "../../context/useToast";
 import "./ModalCobro.css";
 
 export function ModalCobro({
@@ -21,6 +24,8 @@ export function ModalCobro({
     });
     const [comprobantesCambios, setComprobantesCambios] = useState({ archivos: [], eliminarIds: [] });
     const [guardando, setGuardando] = useState(false);
+    const { extraer, extrayendo } = useExtraccionIA();
+    const toast = useToast();
 
     useEffect(() => {
         if (cobro) {
@@ -38,6 +43,33 @@ export function ModalCobro({
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
+    };
+
+    // Cobro no tiene fase/categoría/proveedor (ver modelo), así que acá la
+    // IA solo aporta monto/fecha/tipo de factura/descripción.
+    const handleAutocompletarIA = async () => {
+        const archivo = comprobantesCambios.archivos[0];
+        if (!archivo) return;
+
+        try {
+            const resultado = await extraer(archivo, "cobro", {});
+
+            setForm((prev) => ({
+                ...prev,
+                descripcion: resultado.descripcion ?? prev.descripcion,
+                monto: resultado.monto ?? prev.monto,
+                fecha: resultado.fecha ?? prev.fecha,
+                tipo_factura: resultado.tipo_factura ?? prev.tipo_factura,
+            }));
+
+            if (resultado.advertencias?.length) {
+                resultado.advertencias.forEach((a) => toast.error(a));
+            } else {
+                toast.success("Comprobante leído. Revisá los datos antes de guardar.");
+            }
+        } catch (err) {
+            toast.error(err?.response?.data?.detail ?? "No se pudo leer el comprobante con IA");
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -69,6 +101,32 @@ export function ModalCobro({
                 <h2>{esEdicion ? "Editar cobro" : "Nuevo cobro"}</h2>
 
                 <form onSubmit={handleSubmit} className="modal-form">
+                    <div className="modal-form-seccion modal-form-seccion--ia">
+                        <div className="modal-form-seccion-header">
+                            <span>Comprobantes</span>
+                        </div>
+                        <ComprobantesUploader
+                            existentes={cobro?.comprobantes ?? []}
+                            onVerExistente={onVerComprobante}
+                            onCambio={setComprobantesCambios}
+                            disabled={guardando}
+                        />
+                        <button
+                            type="button"
+                            className="modal-btn-ia"
+                            onClick={handleAutocompletarIA}
+                            disabled={guardando || extrayendo || comprobantesCambios.archivos.length === 0}
+                            title={
+                                comprobantesCambios.archivos.length === 0
+                                    ? "Primero arrastrá o elegí un comprobante"
+                                    : "Leer el comprobante y prellenar el formulario"
+                            }
+                        >
+                            <Sparkles size={16} strokeWidth={2.25} />
+                            {extrayendo ? "Leyendo comprobante..." : "Autocompletar con IA"}
+                        </button>
+                    </div>
+
                     <div className="modal-form-seccion">
                         <div className="modal-form-seccion-header">
                             <span>Datos generales</span>
@@ -141,18 +199,6 @@ export function ModalCobro({
                                 ))}
                             </select>
                         </label>
-                    </div>
-
-                    <div className="modal-form-seccion">
-                        <div className="modal-form-seccion-header">
-                            <span>Comprobantes</span>
-                        </div>
-                        <ComprobantesUploader
-                            existentes={cobro?.comprobantes ?? []}
-                            onVerExistente={onVerComprobante}
-                            onCambio={setComprobantesCambios}
-                            disabled={guardando}
-                        />
                     </div>
 
                     <div className="modal-acciones">

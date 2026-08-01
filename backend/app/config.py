@@ -1,5 +1,6 @@
 from typing import Optional
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,7 +15,25 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    OPENAI_API_KEY: Optional[str] = None
+
+    @field_validator("SECRET_KEY")
+    @classmethod
+    def secret_key_fuerte(cls, valor: str) -> str:
+        # Falla rápido al arrancar en vez de firmar JWTs con una clave débil
+        # o vacía -- mejor un crash claro en el deploy que un token
+        # falsificable en producción. Generar una con:
+        # python -c "import secrets; print(secrets.token_hex(32))"
+        if len(valor) < 32:
+            raise ValueError("SECRET_KEY tiene que tener al menos 32 caracteres")
+        return valor
+
+    # Lectura automática de comprobantes con IA (ver app/ia/extractor.py).
+    # Sacar la key en https://aistudio.google.com/apikey. Sin esto configurado,
+    # el botón "Autocompletar con IA" de los modales devuelve error 502.
+    GEMINI_API_KEY: Optional[str] = None
+    # Configurable por si Google renombra/discontinúa el modelo (pasa seguido)
+    # sin tener que tocar código, solo el .env.
+    GEMINI_MODEL: str = "gemini-3.6-flash"
 
     # "development" (default, local) | "production" (deploy real).
     # Controla flags sensibles a HTTPS: la cookie del JWT solo se manda

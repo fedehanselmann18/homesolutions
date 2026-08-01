@@ -4,6 +4,8 @@ doble cookie, rate limiting en login/alta de usuario, roles fijos server-side
 para el autoregistro, y el endpoint público reducido para el combo de login.
 """
 
+import uuid
+
 from app.auth.oAuth2 import create_access_token
 
 
@@ -124,6 +126,22 @@ def test_rate_limit_de_login_bloquea_despues_de_5_intentos_por_minuto(client, us
         data={"username": usuario_admin.nombre_usuario, "password": "no-es-esta"},
     )
     assert respuesta.status_code == 429
+
+
+# ---------------------------------------------------------------------------
+# Reporte PDF: solo admin, "lectura" no puede generarlo
+# ---------------------------------------------------------------------------
+
+def test_reporte_pdf_rechaza_a_usuario_de_lectura(client, headers_lectura):
+    respuesta = client.get(f"/proyectos/{uuid.uuid4()}/reporte-pdf", headers=headers_lectura)
+    assert respuesta.status_code == 403
+
+
+def test_reporte_pdf_permite_admin_aunque_el_proyecto_no_exista(client, headers_admin):
+    # Con permisos de admin la request pasa el chequeo de rol; el 404 es
+    # porque el proyecto no existe, no un 403 por falta de permisos.
+    respuesta = client.get(f"/proyectos/{uuid.uuid4()}/reporte-pdf", headers=headers_admin)
+    assert respuesta.status_code == 404
 
 
 def test_login_setea_cookies_httponly_y_csrf(client, usuario_admin):
