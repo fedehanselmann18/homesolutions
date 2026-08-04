@@ -85,6 +85,39 @@
     margin: 0;
 }
 
+/* --- Tablero de compras: una columna por estado --- */
+
+.seguimiento-tablero {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+}
+
+@media (max-width: 720px) {
+    .seguimiento-tablero {
+        grid-template-columns: 1fr;
+    }
+}
+
+.seguimiento-columna-titulo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-ui);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--color-tinta-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin: 0 0 var(--space-3);
+}
+
+.seguimiento-columna-lista {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
 /* --- Tabla de deuda por proveedor --- */
 
 .seguimiento-tabla {
