@@ -23,6 +23,15 @@ router = APIRouter(
 COOKIE_SECURE = settings.ENVIRONMENT == "production"
 ACCESS_TOKEN_MAX_AGE = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
 
+# Frontend (Vercel) y backend (Railway) viven en dominios distintos en
+# producción -> son "cross-site". Con SameSite=Lax el browser guarda la
+# cookie en el login pero no la reenvía en pedidos posteriores desde otro
+# sitio (ej. GET /usuarios/me), así que la sesión se pierde al toque.
+# SameSite=None sí viaja cross-site, pero los browsers exigen que además sea
+# Secure (HTTPS) -- por eso en local (sin HTTPS, mismo "sitio" localhost en
+# distintos puertos) se mantiene "lax", que ahí sí alcanza.
+COOKIE_SAMESITE = "none" if settings.ENVIRONMENT == "production" else "lax"
+
 
 @router.post("/login", response_model=RespuestaToken, status_code=status.HTTP_200_OK)
 @limiter.limit("5/minute")
