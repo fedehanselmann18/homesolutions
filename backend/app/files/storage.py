@@ -1,3 +1,4 @@
+import mimetypes
 import uuid
 from functools import lru_cache
 from pathlib import Path
@@ -6,18 +7,13 @@ import boto3
 from botocore.client import Config
 from botocore.exceptions import BotoCoreError, ClientError
 from fastapi import UploadFile, HTTPException
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, Response
 
 from app.config import settings
 
 BASE_UPLOAD_DIR = Path("uploads")
 ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
 MAX_SIZE_BYTES = 10 * 1024 * 1024  # 10MB
-
-# URL firmada temporal para /ver_comprobante cuando el backend es R2 (el
-# comprobante puede tener datos sensibles, por eso no es pública ni de
-# duración larga).
-R2_URL_EXPIRACION_SEGUNDOS = 300
 
 # Firma binaria real de cada tipo permitido, para no confiar solo en la
 # extensión del filename (que el cliente puede poner lo que quiera): un
@@ -29,6 +25,13 @@ FIRMAS_POR_EXTENSION = {
     ".jpg": (b"\xff\xd8\xff",),
     ".jpeg": (b"\xff\xd8\xff",),
     ".png": (b"\x89PNG\r\n\x1a\n",),
+}
+
+CONTENT_TYPE_POR_EXTENSION = {
+    ".pdf": "application/pdf",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
 }
 
 
@@ -112,6 +115,7 @@ def subir_comprobante(archivo: UploadFile, carpeta: str, entidad_id: str) -> str
                 Bucket=settings.R2_BUCKET_NAME,
                 Key=key,
                 Body=contenido,
+                ContentType=CONTENT_TYPE_POR_EXTENSION.get(ext, "application/octet-stream"),
             )
         except (BotoCoreError, ClientError) as exc:
             raise HTTPException(status_code=502, detail="No se pudo subir el comprobante a R2") from exc
@@ -169,21 +173,42 @@ def ver_comprobante(path: str):
     Devuelve el archivo para visualizar/descargar.
 
     Con disco local: FileResponse (streamea el archivo directo).
-    Con R2: RedirectResponse a una URL firmada temporal (expira a los
-    R2_URL_EXPIRACION_SEGUNDOS) -- así el navegador descarga el archivo
-    directo de R2 y no gasta ancho de banda del backend, sin exponer el
-    bucket como público.
+
+    Con R2: ANTES esto devolvía un RedirectResponse a una URL firmada
+    temporal, para que el navegador bajara el archivo directo de R2 sin
+    gastar ancho de banda del backend. Se rompía en producción: el frontend
+    pide este endpoint con axios + withCredentials=true (para mandar la
+    cookie de sesión), y el browser trata el redirect como parte de la
+    MISMA request con credenciales -- al llegar a r2.cloudflarestorage.com
+    (un origen distinto, sin política CORS que permita el dominio de Vercel
+    con credentials), lo bloquea. Eso es justo el "Network Error" que tira
+    axios sin ningún status code.
+
+    Por eso ahora el backend baja el objeto de R2 con boto3 y lo devuelve
+    él mismo: el navegador solo habla con nuestra propia API (que ya tiene
+    CORS bien configurado), sin un segundo salto a un origen distinto.
+    Los comprobantes están limitados a 10MB (MAX_SIZE_BYTES), así que
+    traerlo entero a memoria en vez de streamearlo es una simplificación
+    aceptable.
     """
     if settings.r2_configurado:
         try:
-            url = _r2_client().generate_presigned_url(
-                "get_object",
-                Params={"Bucket": settings.R2_BUCKET_NAME, "Key": path},
-                ExpiresIn=R2_URL_EXPIRACION_SEGUNDOS,
-            )
+            objeto = _r2_client().get_object(Bucket=settings.R2_BUCKET_NAME, Key=path)
         except (BotoCoreError, ClientError) as exc:
-            raise HTTPException(status_code=502, detail="No se pudo generar el link del comprobante") from exc
-        return RedirectResponse(url)
+            raise HTTPException(status_code=404, detail="Comprobante no encontrado en R2") from exc
+
+        contenido = objeto["Body"].read()
+        media_type = (
+            objeto.get("ContentType")
+            or mimetypes.guess_type(path)[0]
+            or "application/octet-stream"
+        )
+        nombre = Path(path).name
+        return Response(
+            content=contenido,
+            media_type=media_type,
+            headers={"Content-Disposition": f'inline; filename="{nombre}"'},
+        )
 
     ruta = ruta_absoluta(path)
     if not ruta.exists():
