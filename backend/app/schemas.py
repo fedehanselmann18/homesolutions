@@ -82,6 +82,13 @@ class UsuarioOut(UsuarioBase, TimestampOut):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
+    # Solo se completa en GET /usuarios/me (ver routes/usuarios.py). En el
+    # resto de los endpoints que devuelven UsuarioOut queda None. Existe
+    # porque en producción front (Vercel) y back (Railway) son dominios
+    # distintos: el JS del front no puede leer la cookie csrf_token de otro
+    # dominio, así que viaja acá una vez por sesión y el front la guarda en
+    # memoria para reenviarla como header X-CSRF-Token.
+    csrf_token: Optional[str] = None
 
 
 # ---------------------------------------------------------------------------

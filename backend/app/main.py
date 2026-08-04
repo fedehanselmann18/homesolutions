@@ -25,9 +25,20 @@ app = FastAPI()
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# Orden de middlewares (Starlette los ejecuta en orden inverso al que se
-# agregan): CORS tiene que quedar como la capa más externa para que
-# responda bien los preflight OPTIONS antes de que CSRF/rate limit los vean.
+# Orden de middlewares: Starlette hace user_middleware.insert(0, ...) en cada
+# add_middleware (ver build_middleware_stack), o sea que el ÚLTIMO agregado
+# termina como capa más externa -- lo contrario de "se ejecutan en el orden
+# en que se agregan". CORS tiene que ser la más externa de todas: si un
+# middleware interno (CSRF) corta la respuesta antes de tiempo (ej. 403 por
+# token CSRF inválido) sin llamar a call_next, esa respuesta nunca pasa por
+# los middlewares que quedaron "adentro" de él -- si CORS fuera uno de esos,
+# el browser ve "bloqueado por CORS" en vez del 403 real (bug encontrado en
+# producción: front y back en dominios distintos, un 403 de CSRF llegaba sin
+# headers de CORS y el browser lo mostraba como error de CORS). Por eso CORS
+# se agrega al final.
+app.add_middleware(SlowAPIMiddleware)
+app.add_middleware(CSRFMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.frontend_origins_list,
@@ -35,9 +46,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-app.add_middleware(SecurityHeadersMiddleware)
-app.add_middleware(CSRFMiddleware)
-app.add_middleware(SlowAPIMiddleware)
 
 app.include_router(login.router)
 app.include_router(usuarios.router)

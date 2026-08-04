@@ -11,21 +11,24 @@ const axiosClient = axios.create({
 
 const MUTATING_METHODS = new Set(["post", "put", "patch", "delete"]);
 
-// La cookie csrf_token NO es httpOnly a propósito (ver login.py): la
-// leemos acá para reenviarla como header en cada request que modifica
-// datos, como exige security_middleware.py del backend.
-function leerCookie(nombre) {
-  const match = document.cookie.match(new RegExp(`(?:^|; )${nombre}=([^;]*)`));
-  return match ? decodeURIComponent(match[1]) : null;
+// La cookie csrf_token NO es httpOnly a propósito (ver login.py) -- pero en
+// producción front (Vercel) y back (Railway) son dominios DISTINTOS, y
+// document.cookie solo puede leer cookies del propio dominio del front. La
+// cookie del backend es invisible para este JS aunque no sea httpOnly.
+// Por eso el valor viaja en el body de GET /usuarios/me (ver
+// UsuarioOut.csrf_token) y se guarda acá en memoria, no se lee de
+// document.cookie. Se pierde al recargar la página a propósito -- por eso
+// useAuthProvider vuelve a pedirlo pegándole a /usuarios/me en cada mount.
+let csrfTokenEnMemoria = null;
+
+export function setCsrfToken(token) {
+  csrfTokenEnMemoria = token || null;
 }
 
 axiosClient.interceptors.request.use((config) => {
   const metodo = config.method?.toLowerCase();
-  if (metodo && MUTATING_METHODS.has(metodo)) {
-    const csrfToken = leerCookie("csrf_token");
-    if (csrfToken) {
-      config.headers["X-CSRF-Token"] = csrfToken;
-    }
+  if (metodo && MUTATING_METHODS.has(metodo) && csrfTokenEnMemoria) {
+    config.headers["X-CSRF-Token"] = csrfTokenEnMemoria;
   }
   return config;
 });

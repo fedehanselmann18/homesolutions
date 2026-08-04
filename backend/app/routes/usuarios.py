@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.db import models
@@ -7,7 +7,6 @@ from app.auth.verification import hash_password
 from app.db.db import get_db
 from app.limiter import limiter
 from app.schemas import UsuarioCreate, UsuarioOut
-from fastapi import Request
 
 router = APIRouter(
     prefix="/usuarios",
@@ -46,9 +45,19 @@ def get_login_options(db: Session = Depends(get_db)):
     return [nombre for (nombre,) in nombres]
 
 
-@router.get("/me", response_model=UsuarioOut,status_code=status.HTTP_200_OK)
-def get_current_user_info(current_user: models.Usuario = Depends(get_current_user)):
-    return current_user
+@router.get("/me", response_model=UsuarioOut, status_code=status.HTTP_200_OK)
+def get_current_user_info(request: Request, current_user: models.Usuario = Depends(get_current_user)):
+    """
+    Además de los datos del usuario, devuelve el csrf_token vigente (leído
+    de la cookie, que el servidor SÍ puede leer aunque JS del front no
+    pueda si front y back están en dominios distintos -- ver comentario en
+    schemas.UsuarioOut.csrf_token). El front llama a este endpoint al
+    arrancar y después de loguear, así que es el punto natural para
+    entregarlo sin agregar un endpoint aparte.
+    """
+    datos = UsuarioOut.model_validate(current_user)
+    datos.csrf_token = request.cookies.get("csrf_token")
+    return datos
 
 
 @router.get("/{user_id}", response_model=UsuarioOut, status_code=status.HTTP_200_OK)

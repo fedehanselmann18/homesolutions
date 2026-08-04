@@ -1,0 +1,5 @@
+# Configuración local de herramientas de desarrollo (Claude Code / Cowork).
+# No tiene nada que ver con la app, no debería viajar al repo.
+.claude/
+
+.DS_Store
