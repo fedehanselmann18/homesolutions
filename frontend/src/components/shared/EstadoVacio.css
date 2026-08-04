@@ -1,0 +1,37 @@
+.estado-vacio {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+}
+
+.estado-vacio-icono {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    opacity: 0.32;
+}
+
+.estado-vacio-mensaje {
+    font-size: 0.85rem;
+    color: var(--color-tinta-muted);
+    margin: 0;
+}
+
+.estado-vacio--grande {
+    flex-direction: column;
+    text-align: center;
+    gap: var(--space-3);
+    padding: var(--space-12) var(--space-4);
+}
+
+.estado-vacio--grande .estado-vacio-icono {
+    width: 40px;
+    height: 40px;
+    opacity: 0.22;
+}
+
+.estado-vacio--grande .estado-vacio-mensaje {
+    font-size: 0.95rem;
+    max-width: 42ch;
+}
