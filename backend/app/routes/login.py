@@ -57,7 +57,7 @@ def login(request: Request, response: Response,
         value=access_token,
         httponly=True,
         secure=COOKIE_SECURE,
-        samesite="lax",
+        samesite=COOKIE_SAMESITE,
         max_age=ACCESS_TOKEN_MAX_AGE,
         path="/",
     )
@@ -71,7 +71,7 @@ def login(request: Request, response: Response,
         value=csrf_token,
         httponly=False,
         secure=COOKIE_SECURE,
-        samesite="lax",
+        samesite=COOKIE_SAMESITE,
         max_age=ACCESS_TOKEN_MAX_AGE,
         path="/",
     )
@@ -85,6 +85,9 @@ def login(request: Request, response: Response,
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
 def logout(response: Response):
-    response.delete_cookie("access_token", path="/")
-    response.delete_cookie("csrf_token", path="/")
+    # secure/samesite tienen que coincidir con los que se usaron al crearlas
+    # -- si no, en algunos browsers el Set-Cookie de borrado no pisa la
+    # cookie original y queda viva hasta que expire sola.
+    response.delete_cookie("access_token", path="/", secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE)
+    response.delete_cookie("csrf_token", path="/", secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE)
     return {"message": "Sesión cerrada"}
