@@ -50,5 +50,25 @@ class Settings(BaseSettings):
     def frontend_origins_list(self) -> list[str]:
         return [origen.strip() for origen in self.FRONTEND_ORIGINS.split(",") if origen.strip()]
 
+    # Almacenamiento de comprobantes en Cloudflare R2 (S3-compatible). Si
+    # estas 4 variables no están seteadas, app/files/storage.py guarda los
+    # archivos en disco local (comportamiento de siempre, para dev). En
+    # producción (Railway) el disco no persiste entre deploys/reinicios, así
+    # que ahí sí hay que completarlas antes de subir comprobantes reales.
+    # Ver panel de Cloudflare > R2 > "Manage API tokens" para generar las
+    # credenciales y el nombre del bucket creado ahí.
+    R2_ACCOUNT_ID: Optional[str] = None
+    R2_ACCESS_KEY_ID: Optional[str] = None
+    R2_SECRET_ACCESS_KEY: Optional[str] = None
+    R2_BUCKET_NAME: Optional[str] = None
+
+    @property
+    def r2_configurado(self) -> bool:
+        return all([self.R2_ACCOUNT_ID, self.R2_ACCESS_KEY_ID, self.R2_SECRET_ACCESS_KEY, self.R2_BUCKET_NAME])
+
+    @property
+    def r2_endpoint_url(self) -> str:
+        return f"https://{self.R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
+
 
 settings = Settings()

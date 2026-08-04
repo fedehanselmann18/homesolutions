@@ -1,11 +1,23 @@
 import uuid
+from functools import lru_cache
 from pathlib import Path
+
+import boto3
+from botocore.client import Config
+from botocore.exceptions import BotoCoreError, ClientError
 from fastapi import UploadFile, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
+
+from app.config import settings
 
 BASE_UPLOAD_DIR = Path("uploads")
 ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
 MAX_SIZE_BYTES = 10 * 1024 * 1024  # 10MB
+
+# URL firmada temporal para /ver_comprobante cuando el backend es R2 (el
+# comprobante puede tener datos sensibles, por eso no es pública ni de
+# duración larga).
+R2_URL_EXPIRACION_SEGUNDOS = 300
 
 # Firma binaria real de cada tipo permitido, para no confiar solo en la
 # extensión del filename (que el cliente puede poner lo que quiera): un
@@ -29,6 +41,7 @@ def contenido_coincide_con_extension(contenido: bytes, ext: str) -> bool:
 # carpeta), pero se resuelven SIEMPRE contra esta raíz y no contra el cwd:
 # si no, arrancar uvicorn desde otro directorio hacía que eliminar_comprobante
 # no encontrara el archivo y lo dejara huérfano en disco sin avisar.
+# Solo aplica al backend de disco local (dev); R2 no usa paths de filesystem.
 RAIZ_BACKEND = Path(__file__).resolve().parents[2]
 
 
@@ -38,12 +51,26 @@ def ruta_absoluta(path) -> Path:
     return ruta if ruta.is_absolute() else RAIZ_BACKEND / ruta
 
 
-def subir_comprobante(archivo: UploadFile, carpeta: str, entidad_id: str) -> str:
+@lru_cache
+def _r2_client():
     """
-    Guarda el archivo en disco y devuelve el path relativo a guardar en la DB.
-    carpeta: "comprobantes_compra" | "comprobantes_gasto" | "comprobantes_cobro"
-    entidad_id: compra_id / gasto_id / cobro_id
+    Cliente boto3 apuntando al endpoint S3-compatible de Cloudflare R2.
+    Cacheado (lru_cache) para no reabrir conexión en cada request.
+    Solo se llama cuando settings.r2_configurado es True.
     """
+    return boto3.client(
+        "s3",
+        endpoint_url=settings.r2_endpoint_url,
+        aws_access_key_id=settings.R2_ACCESS_KEY_ID,
+        aws_secret_access_key=settings.R2_SECRET_ACCESS_KEY,
+        region_name="auto",
+        config=Config(signature_version="s3v4"),
+    )
+
+
+def _validar_y_leer(archivo: UploadFile) -> tuple[str, bytes]:
+    """Chequeos comunes a ambos backends: extensión, tamaño y contenido real.
+    Devuelve (extensión, contenido) o levanta HTTPException 400."""
     ext = Path(archivo.filename).suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail=f"Extensión no permitida: {ext}")
@@ -60,6 +87,35 @@ def subir_comprobante(archivo: UploadFile, carpeta: str, entidad_id: str) -> str
             status_code=400,
             detail="El contenido del archivo no coincide con su extensión",
         )
+    return ext, contenido
+
+
+def subir_comprobante(archivo: UploadFile, carpeta: str, entidad_id: str) -> str:
+    """
+    Guarda el archivo (en R2 si está configurado, si no en disco local) y
+    devuelve la "key"/path relativo a guardar en la DB (columna
+    archivo_path). El formato del string difiere entre backends (R2 no
+    lleva el prefijo "uploads/"), pero es un detalle interno: ambos se
+    resuelven de nuevo con el mismo backend al leerlos o borrarlos, porque
+    cuál backend está activo se decide una sola vez por deploy (según haya
+    o no credenciales R2 en el .env), no por archivo.
+
+    carpeta: "comprobantes_compra" | "comprobantes_gasto" | "comprobantes_cobro"
+    entidad_id: compra_id / gasto_id / cobro_id
+    """
+    ext, contenido = _validar_y_leer(archivo)
+
+    if settings.r2_configurado:
+        key = f"{carpeta}/{entidad_id}/{uuid.uuid4()}{ext}"
+        try:
+            _r2_client().put_object(
+                Bucket=settings.R2_BUCKET_NAME,
+                Key=key,
+                Body=contenido,
+            )
+        except (BotoCoreError, ClientError) as exc:
+            raise HTTPException(status_code=502, detail="No se pudo subir el comprobante a R2") from exc
+        return key
 
     ruta_relativa = BASE_UPLOAD_DIR / carpeta / entidad_id / f"{uuid.uuid4()}{ext}"
     ruta_completa = ruta_absoluta(ruta_relativa)
@@ -74,26 +130,33 @@ def subir_comprobante(archivo: UploadFile, carpeta: str, entidad_id: str) -> str
 
 def eliminar_comprobante(path: str) -> None:
     """
-    Borra el archivo físico si existe. No falla si ya no está en disco
-    (por ejemplo si se borró a mano o el path quedó huérfano).
-
-    Además borra la carpeta de la entidad (uploads/<tipo>/<entidad_id>/) si
-    quedó vacía: al borrar una compra/gasto/cobro — o todo un proyecto o fase
-    con sus movimientos — antes quedaban directorios vacíos acumulándose.
+    Borra el archivo (de R2 o de disco local, según backend activo). No
+    falla si ya no existe (por ejemplo si se borró a mano o el path quedó
+    huérfano).
 
     IMPORTANTE: esta función solo borra el archivo. El router que la llama
     tiene que borrar también la fila de la tabla Comprobante* en la misma
     operación (ver comprobantes_router.py) — si solo se borra una de las dos
-    cosas quedan huérfanos: o un archivo fantasma en disco, o una fila que
-    apunta a un archivo que ya no existe.
+    cosas quedan huérfanos: o un archivo fantasma, o una fila que apunta a
+    un archivo que ya no existe.
     """
+    if settings.r2_configurado:
+        try:
+            _r2_client().delete_object(Bucket=settings.R2_BUCKET_NAME, Key=path)
+        except (BotoCoreError, ClientError) as exc:
+            raise HTTPException(status_code=502, detail="No se pudo borrar el comprobante en R2") from exc
+        return
+
     ruta = ruta_absoluta(path)
     if ruta.exists():
         ruta.unlink()
 
+    # Borra la carpeta de la entidad (uploads/<tipo>/<entidad_id>/) si quedó
+    # vacía: al borrar una compra/gasto/cobro (o todo un proyecto/fase con
+    # sus movimientos) antes quedaban directorios vacíos acumulándose. El
+    # try cubre la carrera de que otro request suba un comprobante justo
+    # entre el chequeo y el rmdir.
     carpeta = ruta.parent
-    # el `not any(...)` es el chequeo de "carpeta vacía"; el try cubre la carrera
-    # de que otro request suba un comprobante justo entre el chequeo y el rmdir
     if carpeta.is_dir() and carpeta.parent.name.startswith("comprobantes_") and not any(carpeta.iterdir()):
         try:
             carpeta.rmdir()
@@ -101,15 +164,27 @@ def eliminar_comprobante(path: str) -> None:
             pass
 
 
-def ver_comprobante(path: str) -> FileResponse:
+def ver_comprobante(path: str):
     """
     Devuelve el archivo para visualizar/descargar.
 
-    CORREGIDO: la versión anterior tipaba `-> bytes` pero devolvía un
-    FileResponse (inconsistente), y encima abría el archivo con `open()`
-    para nada — FileResponse ya se encarga de leer y streamear el archivo
-    él solo, pasándole únicamente el path.
+    Con disco local: FileResponse (streamea el archivo directo).
+    Con R2: RedirectResponse a una URL firmada temporal (expira a los
+    R2_URL_EXPIRACION_SEGUNDOS) -- así el navegador descarga el archivo
+    directo de R2 y no gasta ancho de banda del backend, sin exponer el
+    bucket como público.
     """
+    if settings.r2_configurado:
+        try:
+            url = _r2_client().generate_presigned_url(
+                "get_object",
+                Params={"Bucket": settings.R2_BUCKET_NAME, "Key": path},
+                ExpiresIn=R2_URL_EXPIRACION_SEGUNDOS,
+            )
+        except (BotoCoreError, ClientError) as exc:
+            raise HTTPException(status_code=502, detail="No se pudo generar el link del comprobante") from exc
+        return RedirectResponse(url)
+
     ruta = ruta_absoluta(path)
     if not ruta.exists():
         raise HTTPException(status_code=404, detail="Archivo no encontrado")

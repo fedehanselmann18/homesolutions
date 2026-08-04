@@ -22,3 +22,8 @@ reportlab==4.4.4
 slowapi==0.1.9
 
 google-genai==2.16.0
+
+# Cliente S3-compatible para subir/leer/borrar comprobantes en Cloudflare R2
+# (ver app/files/storage.py). Si R2_* no está en el .env, no se usa: los
+# comprobantes se guardan en disco local (dev).
+boto3==1.43.64
