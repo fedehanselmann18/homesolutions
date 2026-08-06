@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Clock } from "lucide-react";
+import { Clock, AlertTriangle } from "lucide-react";
 
 import { getProyectoPorId } from "../../services/proyectoService";
 import { getFasesPorProyecto } from "../../services/faseService";
@@ -17,6 +17,7 @@ import { Cargando } from "../shared/Cargando";
 import { calcularSeguimiento, DIAS_FASE_ESTANCADA } from "../../utils/seguimiento";
 import { formatMoneda, formatFecha } from "../../utils/formato";
 import { getCondicionPagoLabel } from "../../constants/estadoCompra";
+import { getTipoFacturaLabel } from "../../constants/tipoFactura";
 import "./Seguimiento.css";
 
 const VERDE = "#16a34a";
@@ -31,6 +32,7 @@ function Seccion({ titulo, descripcion, cantidad, children }) {
         <section className="seguimiento-seccion">
             <div className="seguimiento-seccion-header">
                 <h3 className="seguimiento-seccion-titulo">
+                    <AlertTriangle className="seguimiento-seccion-icono" size={20} strokeWidth={2.25} />
                     {titulo}
                     {cantidad > 0 && <span className="seguimiento-contador">{cantidad}</span>}
                 </h3>
@@ -43,6 +45,14 @@ function Seccion({ titulo, descripcion, cantidad, children }) {
 
 function ListaVacia({ mensaje }) {
     return <p className="seguimiento-vacio">{mensaje}</p>;
+}
+
+function AlertaColumna({ children }) {
+    return <p className="seguimiento-alerta-columna">{children}</p>;
+}
+
+function badgesCompra(compra) {
+    return [getCondicionPagoLabel(compra.condicionPago), getTipoFacturaLabel(compra.tipoFactura)].filter(Boolean);
 }
 
 export function Seguimiento({ proyectoId, onIrATab }) {
@@ -136,19 +146,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                 </span>
             </div>
 
-            <Seccion
-                titulo="Compras"
-                descripcion={
-                    [
-                        comprasImpagas.length > 0 ? `${formatMoneda(totales.deudaTotal)} sin pagar` : null,
-                        comprasSinComprobante.length > 0
-                            ? `${formatMoneda(totales.montoComprasSinComprobante)} sin comprobante`
-                            : null,
-                    ]
-                        .filter(Boolean)
-                        .join(" · ") || undefined
-                }
-            >
+            <Seccion titulo="Compras">
                 <div className="seguimiento-tablero">
                     <div className="seguimiento-columna">
                         <h4 className="seguimiento-columna-titulo">
@@ -164,8 +162,10 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                                 {comprasImpagas.map((compra) => (
                                     <TarjetaMiniSeguimiento
                                         key={compra.id}
-                                        titulo={compra.proveedor}
-                                        subtitulo={`${compra.productos} · ${formatFecha(compra.fecha)} · ${getCondicionPagoLabel(compra.condicionPago)}`}
+                                        titulo={compra.descripcion}
+                                        productos={compra.productos}
+                                        fecha={formatFecha(compra.fecha)}
+                                        badges={badgesCompra(compra)}
                                         etiqueta={diasTexto(compra.dias)}
                                         monto={formatMoneda(compra.monto)}
                                         color={ROJO}
@@ -173,6 +173,9 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                                     />
                                 ))}
                             </div>
+                        )}
+                        {comprasImpagas.length > 0 && (
+                            <AlertaColumna>{formatMoneda(totales.deudaTotal)} sin pagar</AlertaColumna>
                         )}
                     </div>
 
@@ -190,14 +193,19 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                                 {comprasSinEntregar.map((compra) => (
                                     <TarjetaMiniSeguimiento
                                         key={compra.id}
-                                        titulo={compra.proveedor}
-                                        subtitulo={`${compra.productos} · pedido el ${formatFecha(compra.fecha)}`}
+                                        titulo={compra.descripcion}
+                                        productos={compra.productos}
+                                        fecha={formatFecha(compra.fecha)}
+                                        badges={badgesCompra(compra)}
                                         etiqueta={diasTexto(compra.dias)}
                                         color={NARANJA}
                                         onClick={irAAcciones}
                                     />
                                 ))}
                             </div>
+                        )}
+                        {comprasSinEntregar.length > 0 && (
+                            <AlertaColumna>{comprasSinEntregar.length} pedidos que no te entregaron</AlertaColumna>
                         )}
                     </div>
 
@@ -215,14 +223,21 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                                 {comprasSinComprobante.map((compra) => (
                                     <TarjetaMiniSeguimiento
                                         key={compra.id}
-                                        titulo={compra.proveedor}
-                                        subtitulo={`${compra.productos} · comprado el ${formatFecha(compra.fecha)}`}
+                                        titulo={compra.descripcion}
+                                        productos={compra.productos}
+                                        fecha={formatFecha(compra.fecha)}
+                                        badges={badgesCompra(compra)}
                                         monto={formatMoneda(compra.monto)}
                                         color={GRIS}
                                         onClick={irAAcciones}
                                     />
                                 ))}
                             </div>
+                        )}
+                        {comprasSinComprobante.length > 0 && (
+                            <AlertaColumna>
+                                {comprasSinComprobante.length} compras que no tienen comprobante adjunto
+                            </AlertaColumna>
                         )}
                     </div>
                 </div>

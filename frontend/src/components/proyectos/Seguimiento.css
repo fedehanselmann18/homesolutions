@@ -45,10 +45,15 @@
     align-items: center;
     gap: var(--space-2);
     font-family: var(--font-display);
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--color-tinta);
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--color-oxido);
     margin: 0 0 2px;
+}
+
+.seguimiento-seccion-icono {
+    flex-shrink: 0;
+    color: var(--color-oxido);
 }
 
 .seguimiento-contador {
@@ -116,6 +121,13 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
+}
+
+.seguimiento-alerta-columna {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-oxido);
+    margin: var(--space-3) 0 0;
 }
 
 /* --- Tabla de deuda por proveedor --- */
