@@ -24,6 +24,7 @@ export function CompraCard({
     onEliminarNota,
     onTogglePago,
     onToggleEnvio,
+    onAbrirDetalle,
 }) {
     const { usuario } = useAuth();
     const canManage = usuario?.rol === "admin";
@@ -56,7 +57,12 @@ export function CompraCard({
     const handleToggleEnvio = () => onToggleEnvio(compra);
 
     return (
-        <div className="compra-card" id={`compra-${compra.id}`}>
+        <div
+            className="compra-card"
+            id={`compra-${compra.id}`}
+            onClick={onAbrirDetalle ? () => onAbrirDetalle(compra) : undefined}
+            style={onAbrirDetalle ? { cursor: "pointer" } : undefined}
+        >
             <div className="compra-card-contenido">
                 <div className="compra-card-header">
                     <h3 className="compra-card-descripcion">{compra.descripcion}</h3>
@@ -163,28 +169,32 @@ export function CompraCard({
                         <p className="compra-card-detalle-info">Cargado por {usuarioNombre}</p>
                     )}
 
-                    <SeccionComprobantes
-                        comprobantes={compra.comprobantes ?? []}
-                        onVer={onVerComprobante ? (c) => onVerComprobante(compra.id, c.id) : undefined}
-                        onAgregar={onAgregarComprobante ? (files) => onAgregarComprobante(compra.id, files) : undefined}
-                        onEliminar={onEliminarComprobante ? (id) => onEliminarComprobante(compra.id, id) : undefined}
-                        canManage={canManage}
-                    />
+                    <div onClick={(e) => e.stopPropagation()}>
+                        <SeccionComprobantes
+                            comprobantes={compra.comprobantes ?? []}
+                            onVer={onVerComprobante ? (c) => onVerComprobante(compra.id, c.id) : undefined}
+                            onAgregar={onAgregarComprobante ? (files) => onAgregarComprobante(compra.id, files) : undefined}
+                            onEliminar={onEliminarComprobante ? (id) => onEliminarComprobante(compra.id, id) : undefined}
+                            canManage={canManage}
+                        />
+                    </div>
 
-                    <SeccionNotas
-                        notas={notas}
-                        contexto="compra"
-                        resolverProducto={resolverProducto}
-                        onVer={onVerNota ? (n) => onVerNota(compra.id, n.id) : undefined}
-                        onAgregar={onAgregarNota ? () => onAgregarNota(compra) : undefined}
-                        onEliminar={onEliminarNota ? (id) => onEliminarNota(compra.id, id) : undefined}
-                        canManage={canManage}
-                    />
+                    <div onClick={(e) => e.stopPropagation()}>
+                        <SeccionNotas
+                            notas={notas}
+                            contexto="compra"
+                            resolverProducto={resolverProducto}
+                            onVer={onVerNota ? (n) => onVerNota(compra.id, n.id) : undefined}
+                            onAgregar={onAgregarNota ? () => onAgregarNota(compra) : undefined}
+                            onEliminar={onEliminarNota ? (id) => onEliminarNota(compra.id, id) : undefined}
+                            canManage={canManage}
+                        />
+                    </div>
                 </div>
             </div>
 
             {canManage && (
-                <div className="compra-card-acciones">
+                <div className="compra-card-acciones" onClick={(e) => e.stopPropagation()}>
                     <button
                         type="button"
                         className="compra-card-btn compra-card-btn--toggle"

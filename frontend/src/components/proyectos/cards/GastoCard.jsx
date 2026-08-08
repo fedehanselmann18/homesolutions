@@ -13,6 +13,7 @@ export function GastoCard({
     onVerComprobante,
     onAgregarComprobante,
     onEliminarComprobante,
+    onAbrirDetalle,
 }) {
     const { usuario } = useAuth();
     const canManage = usuario?.rol === "admin";
@@ -21,7 +22,11 @@ export function GastoCard({
     const handleEliminar = () => onEliminar(gasto.id);
 
     return (
-        <div className="gasto-card">
+        <div
+            className="gasto-card"
+            onClick={onAbrirDetalle ? () => onAbrirDetalle(gasto) : undefined}
+            style={onAbrirDetalle ? { cursor: "pointer" } : undefined}
+        >
             <div className="gasto-card-contenido">
                 <div className="gasto-card-header">
                     <h3 className="gasto-card-descripcion">{gasto.descripcion}</h3>
@@ -51,18 +56,20 @@ export function GastoCard({
                         <p className="gasto-card-detalle-info">Cargado por {usuarioNombre}</p>
                     )}
 
-                    <SeccionComprobantes
-                        comprobantes={gasto.comprobantes ?? []}
-                        onVer={onVerComprobante ? (c) => onVerComprobante(gasto.id, c.id) : undefined}
-                        onAgregar={onAgregarComprobante ? (files) => onAgregarComprobante(gasto.id, files) : undefined}
-                        onEliminar={onEliminarComprobante ? (id) => onEliminarComprobante(gasto.id, id) : undefined}
-                        canManage={canManage}
-                    />
+                    <div onClick={(e) => e.stopPropagation()}>
+                        <SeccionComprobantes
+                            comprobantes={gasto.comprobantes ?? []}
+                            onVer={onVerComprobante ? (c) => onVerComprobante(gasto.id, c.id) : undefined}
+                            onAgregar={onAgregarComprobante ? (files) => onAgregarComprobante(gasto.id, files) : undefined}
+                            onEliminar={onEliminarComprobante ? (id) => onEliminarComprobante(gasto.id, id) : undefined}
+                            canManage={canManage}
+                        />
+                    </div>
                 </div>
             </div>
 
             {canManage && (
-                <div className="gasto-card-acciones">
+                <div className="gasto-card-acciones" onClick={(e) => e.stopPropagation()}>
                     <button
                         type="button"
                         className="gasto-card-btn gasto-card-btn--editar"

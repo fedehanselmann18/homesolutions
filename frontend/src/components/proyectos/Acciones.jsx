@@ -47,6 +47,9 @@ import ModalGasto from "../modals/ModalGasto";
 import ModalCobro from "../modals/ModalCobro";
 import ModalCompra from "../modals/ModalCompra";
 import ModalNota from "../modals/ModalNota";
+import ModalDetalleGasto from "../modals/ModalDetalleGasto";
+import ModalDetalleCobro from "../modals/ModalDetalleCobro";
+import ModalDetalleCompra from "../modals/ModalDetalleCompra";
 import FiltrosLista from "../shared/FiltrosLista";
 import { FILTROS_VACIOS, filtrarCompras, filtrarCobros, filtrarGastos } from "../../utils/filtros";
 
@@ -90,6 +93,9 @@ export function Acciones({ proyectoId, proyectoNombre }) {
     const [modalNotaAbierto, setModalNotaAbierto] = useState(false);
     const [notaContexto, setNotaContexto] = useState(null); // "compra" | "cobro"
     const [notaEntidad, setNotaEntidad] = useState(null); // la Compra o el Cobro sobre el que se carga la nota
+
+    const [detalle, setDetalle] = useState(null); // { tipo: "gasto" | "cobro" | "compra", entidad }
+    const cerrarDetalle = () => setDetalle(null);
 
     useEffect(() => {
         fetchAcciones();
@@ -397,6 +403,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
                                     onVerComprobante={getComprobanteGasto}
                                     onAgregarComprobante={handleAgregarComprobantesGasto}
                                     onEliminarComprobante={handleEliminarComprobanteGasto}
+                                    onAbrirDetalle={(g) => setDetalle({ tipo: "gasto", entidad: g })}
                                 />
                             ))}
                         </div>
@@ -438,6 +445,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
                                     onAgregarNota={handleAgregarNotaCobro}
                                     onVerNota={getNotaCobro}
                                     onEliminarNota={handleEliminarNotaCobro}
+                                    onAbrirDetalle={(c) => setDetalle({ tipo: "cobro", entidad: c })}
                                 />
                             ))}
                         </div>
@@ -485,6 +493,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
                                     onAgregarNota={handleAgregarNotaCompra}
                                     onVerNota={getNotaCompra}
                                     onEliminarNota={handleEliminarNotaCompra}
+                                    onAbrirDetalle={(c) => setDetalle({ tipo: "compra", entidad: c })}
                                 />
                             ))}
                         </div>
@@ -534,6 +543,36 @@ export function Acciones({ proyectoId, proyectoNombre }) {
                     impuestosDisponibles={impuestos}
                     onGuardar={handleGuardarNota}
                     onCerrar={() => setModalNotaAbierto(false)}
+                />
+            )}
+
+            {detalle?.tipo === "gasto" && (
+                <ModalDetalleGasto
+                    gasto={detalle.entidad}
+                    faseNombre={detalle.entidad.fase_id ? nombreFase(detalle.entidad.fase_id) : null}
+                    onCerrar={cerrarDetalle}
+                    onVerComprobante={(c) => getComprobanteGasto(detalle.entidad.id, c.id)}
+                />
+            )}
+
+            {detalle?.tipo === "cobro" && (
+                <ModalDetalleCobro
+                    cobro={detalle.entidad}
+                    onCerrar={cerrarDetalle}
+                    onVerComprobante={(c) => getComprobanteCobro(detalle.entidad.id, c.id)}
+                    onVerNota={(n) => getNotaCobro(detalle.entidad.id, n.id)}
+                />
+            )}
+
+            {detalle?.tipo === "compra" && (
+                <ModalDetalleCompra
+                    compra={detalle.entidad}
+                    faseNombre={nombreFase(detalle.entidad.fase_id)}
+                    proveedorNombre={nombreProveedor(detalle.entidad.proveedor_id)}
+                    productos={productos}
+                    onCerrar={cerrarDetalle}
+                    onVerComprobante={(c) => getComprobanteCompra(detalle.entidad.id, c.id)}
+                    onVerNota={(n) => getNotaCompra(detalle.entidad.id, n.id)}
                 />
             )}
         </div>

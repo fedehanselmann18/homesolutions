@@ -17,6 +17,7 @@ export function CobroCard({
     onAgregarNota,
     onVerNota,
     onEliminarNota,
+    onAbrirDetalle,
 }) {
     const { usuario } = useAuth();
     const canManage = usuario?.rol === "admin";
@@ -32,7 +33,11 @@ export function CobroCard({
     const montoNeto = cobro.monto_neto ?? (Number(cobro.monto) - notasCredito + notasDebito);
 
     return (
-        <div className="cobro-card">
+        <div
+            className="cobro-card"
+            onClick={onAbrirDetalle ? () => onAbrirDetalle(cobro) : undefined}
+            style={onAbrirDetalle ? { cursor: "pointer" } : undefined}
+        >
             <div className="cobro-card-contenido">
                 <div className="cobro-card-header">
                     <h3 className="cobro-card-descripcion">{cobro.descripcion}</h3>
@@ -75,27 +80,31 @@ export function CobroCard({
                         <p className="cobro-card-detalle-info">Cargado por {usuarioNombre}</p>
                     )}
 
-                    <SeccionComprobantes
-                        comprobantes={cobro.comprobantes ?? []}
-                        onVer={onVerComprobante ? (c) => onVerComprobante(cobro.id, c.id) : undefined}
-                        onAgregar={onAgregarComprobante ? (files) => onAgregarComprobante(cobro.id, files) : undefined}
-                        onEliminar={onEliminarComprobante ? (id) => onEliminarComprobante(cobro.id, id) : undefined}
-                        canManage={canManage}
-                    />
+                    <div onClick={(e) => e.stopPropagation()}>
+                        <SeccionComprobantes
+                            comprobantes={cobro.comprobantes ?? []}
+                            onVer={onVerComprobante ? (c) => onVerComprobante(cobro.id, c.id) : undefined}
+                            onAgregar={onAgregarComprobante ? (files) => onAgregarComprobante(cobro.id, files) : undefined}
+                            onEliminar={onEliminarComprobante ? (id) => onEliminarComprobante(cobro.id, id) : undefined}
+                            canManage={canManage}
+                        />
+                    </div>
 
-                    <SeccionNotas
-                        notas={notas}
-                        contexto="cobro"
-                        onVer={onVerNota ? (n) => onVerNota(cobro.id, n.id) : undefined}
-                        onAgregar={onAgregarNota ? () => onAgregarNota(cobro) : undefined}
-                        onEliminar={onEliminarNota ? (id) => onEliminarNota(cobro.id, id) : undefined}
-                        canManage={canManage}
-                    />
+                    <div onClick={(e) => e.stopPropagation()}>
+                        <SeccionNotas
+                            notas={notas}
+                            contexto="cobro"
+                            onVer={onVerNota ? (n) => onVerNota(cobro.id, n.id) : undefined}
+                            onAgregar={onAgregarNota ? () => onAgregarNota(cobro) : undefined}
+                            onEliminar={onEliminarNota ? (id) => onEliminarNota(cobro.id, id) : undefined}
+                            canManage={canManage}
+                        />
+                    </div>
                 </div>
             </div>
 
             {canManage && (
-                <div className="cobro-card-acciones">
+                <div className="cobro-card-acciones" onClick={(e) => e.stopPropagation()}>
                     <button
                         type="button"
                         className="cobro-card-btn cobro-card-btn--editar"

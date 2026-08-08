@@ -41,6 +41,7 @@ import ModalProveedor from "../components/modals/ModalProveedor";
 import ModalProducto from "../components/modals/ModalProducto";
 import ModalCompra from "../components/modals/ModalCompra";
 import ModalNota from "../components/modals/ModalNota";
+import ModalDetalleCompra from "../components/modals/ModalDetalleCompra";
 import { Cargando } from "../components/shared/Cargando";
 import { TarjetaAlerta } from "../components/shared/TarjetaAlerta";
 import FiltrosLista from "../components/shared/FiltrosLista";
@@ -75,6 +76,8 @@ export function ProveedorDetalle() {
 
     const [modalNotaAbierto, setModalNotaAbierto] = useState(false);
     const [notaCompra, setNotaCompra] = useState(null); // la Compra sobre la que se carga la nota
+
+    const [compraDetalle, setCompraDetalle] = useState(null);
 
     const [filtrosCompras, setFiltrosCompras] = useState(FILTROS_VACIOS);
 
@@ -515,6 +518,7 @@ export function ProveedorDetalle() {
                                 onAgregarNota={handleAgregarNotaCompra}
                                 onVerNota={getNotaCompra}
                                 onEliminarNota={handleEliminarNotaCompra}
+                                onAbrirDetalle={setCompraDetalle}
                             />
                         ))}
                     </div>
@@ -560,6 +564,18 @@ export function ProveedorDetalle() {
                     impuestosDisponibles={impuestos}
                     onGuardar={handleGuardarNota}
                     onCerrar={() => setModalNotaAbierto(false)}
+                />
+            )}
+
+            {compraDetalle && (
+                <ModalDetalleCompra
+                    compra={compraDetalle}
+                    faseNombre={nombreFase(compraDetalle.fase_id)}
+                    proveedorNombre={proveedor.nombre}
+                    productos={productos}
+                    onCerrar={() => setCompraDetalle(null)}
+                    onVerComprobante={(c) => getComprobanteCompra(compraDetalle.id, c.id)}
+                    onVerNota={(n) => getNotaCompra(compraDetalle.id, n.id)}
                 />
             )}
         </div>

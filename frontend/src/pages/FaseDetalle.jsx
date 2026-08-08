@@ -48,6 +48,8 @@ import CompraCard from "../components/proyectos/cards/CompraCard";
 import ModalGasto from "../components/modals/ModalGasto";
 import ModalCompra from "../components/modals/ModalCompra";
 import ModalNota from "../components/modals/ModalNota";
+import ModalDetalleGasto from "../components/modals/ModalDetalleGasto";
+import ModalDetalleCompra from "../components/modals/ModalDetalleCompra";
 import { Cargando } from "../components/shared/Cargando";
 import { useToast } from "../context/useToast";
 
@@ -89,6 +91,9 @@ export function FaseDetalle() {
 
     const [modalNotaAbierto, setModalNotaAbierto] = useState(false);
     const [notaCompra, setNotaCompra] = useState(null); // la Compra sobre la que se carga la nota
+
+    const [detalle, setDetalle] = useState(null); // { tipo: "gasto" | "compra", entidad }
+    const cerrarDetalle = () => setDetalle(null);
 
     const [filtrosGastos, setFiltrosGastos] = useState(FILTROS_VACIOS);
     const [filtrosCompras, setFiltrosCompras] = useState(FILTROS_VACIOS);
@@ -494,6 +499,7 @@ export function FaseDetalle() {
                                 onVerComprobante={getComprobanteGasto}
                                 onAgregarComprobante={handleAgregarComprobantesGasto}
                                 onEliminarComprobante={handleEliminarComprobanteGasto}
+                                onAbrirDetalle={(g) => setDetalle({ tipo: "gasto", entidad: g })}
                             />
                         ))}
                     </div>
@@ -539,6 +545,7 @@ export function FaseDetalle() {
                                 onAgregarNota={handleAgregarNotaCompra}
                                 onVerNota={getNotaCompra}
                                 onEliminarNota={handleEliminarNotaCompra}
+                                onAbrirDetalle={(c) => setDetalle({ tipo: "compra", entidad: c })}
                             />
                         ))}
                     </div>
@@ -598,6 +605,27 @@ export function FaseDetalle() {
                     impuestosDisponibles={impuestos}
                     onGuardar={handleGuardarNota}
                     onCerrar={() => setModalNotaAbierto(false)}
+                />
+            )}
+
+            {detalle?.tipo === "gasto" && (
+                <ModalDetalleGasto
+                    gasto={detalle.entidad}
+                    faseNombre={fase.nombre}
+                    onCerrar={cerrarDetalle}
+                    onVerComprobante={(c) => getComprobanteGasto(detalle.entidad.id, c.id)}
+                />
+            )}
+
+            {detalle?.tipo === "compra" && (
+                <ModalDetalleCompra
+                    compra={detalle.entidad}
+                    faseNombre={fase.nombre}
+                    proveedorNombre={nombreProveedor(detalle.entidad.proveedor_id)}
+                    productos={productos}
+                    onCerrar={cerrarDetalle}
+                    onVerComprobante={(c) => getComprobanteCompra(detalle.entidad.id, c.id)}
+                    onVerNota={(n) => getNotaCompra(detalle.entidad.id, n.id)}
                 />
             )}
         </div>

@@ -5,7 +5,9 @@ import { getProyectoPorId } from "../../services/proyectoService";
 import { getFasesPorProyecto } from "../../services/faseService";
 import { getGastosPorProyecto } from "../../services/gastoService";
 import { getCobrosPorProyecto } from "../../services/cobroService";
-import { getComprasPorProyecto } from "../../services/compraService";
+import { getComprasPorProyecto, getComprobanteCompra, getNotaCompra } from "../../services/compraService";
+import { getComprobanteGasto } from "../../services/gastoService";
+import { getComprobanteCobro, getNotaCobro } from "../../services/cobroService";
 import { getProductos } from "../../services/productoService";
 import { getProveedores } from "../../services/proveedorService";
 
@@ -14,6 +16,9 @@ import { TarjetaKpi } from "../shared/TarjetaKpi";
 import { TarjetaMiniSeguimiento } from "../shared/TarjetaMiniSeguimiento";
 import { EstadoVacio } from "../shared/EstadoVacio";
 import { Cargando } from "../shared/Cargando";
+import { ModalDetalleCompra } from "../modals/ModalDetalleCompra";
+import { ModalDetalleGasto } from "../modals/ModalDetalleGasto";
+import { ModalDetalleCobro } from "../modals/ModalDetalleCobro";
 import { calcularSeguimiento, DIAS_FASE_ESTANCADA } from "../../utils/seguimiento";
 import { formatMoneda, formatFecha } from "../../utils/formato";
 import { getCondicionPagoLabel } from "../../constants/estadoCompra";
@@ -59,6 +64,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
     const [datos, setDatos] = useState(null);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState(null);
+    const [detalle, setDetalle] = useState(null); // { tipo: "compra" | "gasto" | "cobro", entidad }
 
     useEffect(() => {
         const fetchDatos = async () => {
@@ -106,8 +112,27 @@ export function Seguimiento({ proyectoId, onIrATab }) {
         pendientes,
     } = seguimiento;
 
-    const irAAcciones = onIrATab ? () => onIrATab("acciones") : undefined;
     const irAFases = onIrATab ? () => onIrATab("fases") : undefined;
+
+    const nombreFase = (faseId) => datos.fases.find((f) => f.id === faseId)?.nombre;
+    const nombreProveedor = (proveedorId) => datos.proveedores.find((p) => p.id === proveedorId)?.nombre;
+
+    const abrirDetalleCompra = (compraId) => {
+        const compra = datos.compras.find((c) => c.id === compraId);
+        if (compra) setDetalle({ tipo: "compra", entidad: compra });
+    };
+
+    const abrirDetalleGasto = (gastoId) => {
+        const gasto = datos.gastos.find((g) => g.id === gastoId);
+        if (gasto) setDetalle({ tipo: "gasto", entidad: gasto });
+    };
+
+    const abrirDetalleCobro = (cobroId) => {
+        const cobro = datos.cobros.find((c) => c.id === cobroId);
+        if (cobro) setDetalle({ tipo: "cobro", entidad: cobro });
+    };
+
+    const cerrarDetalle = () => setDetalle(null);
 
     return (
         <div className="seguimiento">
@@ -169,7 +194,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                                         etiqueta={diasTexto(compra.dias)}
                                         monto={formatMoneda(compra.monto)}
                                         color={ROJO}
-                                        onClick={irAAcciones}
+                                        onClick={() => abrirDetalleCompra(compra.id)}
                                     />
                                 ))}
                             </div>
@@ -199,7 +224,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                                         badges={badgesCompra(compra)}
                                         etiqueta={diasTexto(compra.dias)}
                                         color={NARANJA}
-                                        onClick={irAAcciones}
+                                        onClick={() => abrirDetalleCompra(compra.id)}
                                     />
                                 ))}
                             </div>
@@ -229,7 +254,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                                         badges={badgesCompra(compra)}
                                         monto={formatMoneda(compra.monto)}
                                         color={GRIS}
-                                        onClick={irAAcciones}
+                                        onClick={() => abrirDetalleCompra(compra.id)}
                                     />
                                 ))}
                             </div>
@@ -263,7 +288,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                                 subtitulo={`Cargado el ${formatFecha(gasto.fecha)}`}
                                 monto={formatMoneda(gasto.monto)}
                                 color={GRIS}
-                                onClick={irAAcciones}
+                                onClick={() => abrirDetalleGasto(gasto.id)}
                             />
                         ))}
                     </div>
@@ -290,7 +315,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                                 subtitulo={`Cargado el ${formatFecha(cobro.fecha)}`}
                                 monto={formatMoneda(cobro.monto)}
                                 color={GRIS}
-                                onClick={irAAcciones}
+                                onClick={() => abrirDetalleCobro(cobro.id)}
                             />
                         ))}
                     </div>
@@ -348,6 +373,36 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                         </tfoot>
                     </table>
                 </Seccion>
+            )}
+
+            {detalle?.tipo === "compra" && (
+                <ModalDetalleCompra
+                    compra={detalle.entidad}
+                    faseNombre={nombreFase(detalle.entidad.fase_id)}
+                    proveedorNombre={nombreProveedor(detalle.entidad.proveedor_id)}
+                    productos={datos.productos}
+                    onCerrar={cerrarDetalle}
+                    onVerComprobante={(c) => getComprobanteCompra(detalle.entidad.id, c.id)}
+                    onVerNota={(n) => getNotaCompra(detalle.entidad.id, n.id)}
+                />
+            )}
+
+            {detalle?.tipo === "gasto" && (
+                <ModalDetalleGasto
+                    gasto={detalle.entidad}
+                    faseNombre={detalle.entidad.fase_id ? nombreFase(detalle.entidad.fase_id) : null}
+                    onCerrar={cerrarDetalle}
+                    onVerComprobante={(c) => getComprobanteGasto(detalle.entidad.id, c.id)}
+                />
+            )}
+
+            {detalle?.tipo === "cobro" && (
+                <ModalDetalleCobro
+                    cobro={detalle.entidad}
+                    onCerrar={cerrarDetalle}
+                    onVerComprobante={(c) => getComprobanteCobro(detalle.entidad.id, c.id)}
+                    onVerNota={(n) => getNotaCobro(detalle.entidad.id, n.id)}
+                />
             )}
         </div>
     );
