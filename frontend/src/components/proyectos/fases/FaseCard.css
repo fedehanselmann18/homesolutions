@@ -1,118 +1,114 @@
-/* FaseCard.css — ficha de fase: plana, sin sombra, regla izquierda de
-   color de estado (mismo device que ProyectoCard/ProyectoDetalleHeader). */
+/* FaseCard.css — fila hairline (no card cuadrada): punto/check de estado a
+   la izquierda, nombre, acciones que aparecen recién al hover/foco. */
 
 .fase-card {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
     background-color: var(--color-superficie);
     border: 1px solid var(--color-linea);
-    border-left: 3px solid transparent;
     border-radius: var(--radius-sm);
     padding: var(--space-4);
     font-family: var(--font-ui);
     cursor: pointer;
     transition: background-color 0.15s ease, border-color 0.15s ease;
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    box-sizing: border-box;
 }
 
 .fase-card:hover {
     background-color: var(--color-base-1);
     border-color: var(--color-tinta);
-    border-left-color: inherit;
 }
 
-.fase-card:active {
-    background-color: var(--color-base-1);
+.fase-card:hover .fase-card-acciones,
+.fase-card:focus-within .fase-card-acciones {
+    opacity: 1;
+    pointer-events: auto;
 }
 
-/* Contenido: crece para ocupar el espacio disponible, así las acciones
-   quedan siempre pegadas abajo sin importar cuánto texto tenga la fase */
+.fase-card-indicador {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+}
+
+.fase-card-punto {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+}
+
 .fase-card-contenido {
     flex: 1;
+    min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    margin-bottom: var(--space-3);
-}
-
-.fase-card-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
+    gap: 2px;
 }
 
 .fase-card-nombre {
     margin: 0;
     font-family: var(--font-display);
-    font-size: 1.05rem;
+    font-size: 1.02rem;
     font-weight: 600;
     color: var(--color-tinta);
+}
+
+.fase-card-nombre--terminada {
+    color: var(--color-tinta-muted);
+    font-weight: 500;
+    text-decoration: line-through;
 }
 
 .fase-card-descripcion {
     margin: 0;
-    font-size: 0.88rem;
+    font-size: 0.85rem;
     color: var(--color-tinta-muted);
     line-height: 1.4;
 }
 
-/* Badge de estado */
-
-.fase-card-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    flex-shrink: 0;
-    font-size: 0.72rem;
-    font-weight: 600;
-    padding: 3px 10px;
-    border-radius: var(--radius-pill);
-    border: 1px solid transparent;
-    white-space: nowrap;
-}
-
-/* Acciones: siempre pegadas abajo (margin-top: auto) y del mismo
-   ancho entre sí, sin importar si el texto es "Editar" o "Eliminar" */
+/* Acciones: solo texto, mayúsculas chicas, visibles recién al hover/foco
+   de la fila (en mobile, sin hover real, quedan siempre visibles). */
 
 .fase-card-acciones {
+    flex-shrink: 0;
     display: flex;
-    gap: 8px;
-    margin-top: auto;
+    gap: var(--space-4);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease;
 }
 
 .fase-card-btn {
-    flex: 1;
-    text-align: center;
     font-family: var(--font-ui);
-    font-size: 0.8rem;
+    font-size: 0.72rem;
     font-weight: 600;
-    padding: 7px 12px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--color-linea);
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding: 2px 0;
+    border: none;
+    background: none;
     cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
+    transition: color 0.15s ease;
 }
 
 .fase-card-btn--editar {
-    background-color: transparent;
-    color: var(--color-tinta);
+    color: var(--color-terracota-dark);
 }
 
 .fase-card-btn--editar:hover {
-    background-color: var(--color-base-2);
+    color: var(--color-terracota);
 }
 
 .fase-card-btn--eliminar {
-    background-color: transparent;
-    color: var(--color-oxido);
-    border-color: var(--color-oxido-tint);
+    color: var(--color-tinta-muted);
 }
 
 .fase-card-btn--eliminar:hover {
-    background-color: var(--color-oxido-tint);
-    border-color: var(--color-oxido);
+    color: var(--color-oxido);
 }
 
 /* Responsive */
@@ -120,5 +116,10 @@
 @media (max-width: 480px) {
     .fase-card {
         padding: var(--space-3);
+    }
+
+    .fase-card-acciones {
+        opacity: 1;
+        pointer-events: auto;
     }
 }

@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { CheckCircle2 } from "lucide-react";
 import "./FaseCard.css";
 import useAuth from "../../../context/useAuth";
 import { getEstadoLabel } from "../../../constants/estados";
@@ -8,7 +9,8 @@ export function FaseCard({ fase, proyectoId, onEditar, onEliminar }) {
     const canManage = usuario?.rol === "admin";
     const navigate = useNavigate();
     const estadoInfo = getEstadoLabel(fase.estado);
-    const IconoEstado = estadoInfo.icono;
+    const terminada = fase.estado === "terminada" || fase.estado === "auditada";
+    const enCurso = fase.estado === "en_curso";
 
     const handleClickCard = () => {
         navigate(`/proyectos/${proyectoId}/fases/${fase.id}`);
@@ -25,26 +27,27 @@ export function FaseCard({ fase, proyectoId, onEditar, onEliminar }) {
     };
 
     return (
-        <div className="fase-card" style={{ borderLeftColor: estadoInfo.color }} onClick={handleClickCard}>
-            <div className="fase-card-contenido">
-                <div className="fase-card-header">
-                    <h3 className="fase-card-nombre">{fase.nombre}</h3>
+        <div className="fase-card" onClick={handleClickCard}>
+            <div className="fase-card-indicador">
+                {terminada ? (
+                    <CheckCircle2 size={16} strokeWidth={2.25} style={{ color: estadoInfo.color }} />
+                ) : (
                     <span
-                        className="fase-card-badge"
-                        style={{
-                            backgroundColor: `${estadoInfo.color}1c`,
-                            color: estadoInfo.color,
-                            borderColor: `${estadoInfo.color}55`,
-                        }}
-                    >
-                        {IconoEstado && <IconoEstado size={12} strokeWidth={2.25} className="fase-card-badge-icono" />}
-                        {estadoInfo.label}
-                    </span>
-                </div>
-
-                {fase.descripcion && (
-                    <p className="fase-card-descripcion">{fase.descripcion}</p>
+                        className="fase-card-punto"
+                        style={
+                            enCurso
+                                ? { backgroundColor: estadoInfo.color, borderColor: estadoInfo.color }
+                                : { borderColor: estadoInfo.color }
+                        }
+                    />
                 )}
+            </div>
+
+            <div className="fase-card-contenido">
+                <h3 className={`fase-card-nombre ${terminada ? "fase-card-nombre--terminada" : ""}`}>
+                    {fase.nombre}
+                </h3>
+                {fase.descripcion && <p className="fase-card-descripcion">{fase.descripcion}</p>}
             </div>
 
             {canManage && (
