@@ -149,6 +149,10 @@
     font-family: var(--font-display);
 }
 
+.analisis-tooltip-pct {
+    color: var(--color-tinta-muted);
+}
+
 /* --- Tortas y leyendas --- */
 
 .analisis-torta {

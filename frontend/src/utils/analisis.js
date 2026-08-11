@@ -141,6 +141,38 @@ function egresosPorFase(fases, gastos, compras) {
     .sort((a, b) => b.total - a.total);
 }
 
+/**
+ * Dona "cobrado vs. gastado por fase": el total es lo cobrado, repartido en
+ * disponible + lo comprado en cada fase + los gastos (los gastos van en una
+ * sola porción, no por fase, porque a diferencia de las compras no siempre
+ * están atados a una fase -- ver SIN_FASE en egresosPorFase). Si el proyecto
+ * está en rojo (se gastó más de lo cobrado) no hay "disponible" que mostrar
+ * -- ahí la base pasa a ser el total gastado, para no dibujar una porción
+ * negativa.
+ */
+function cobradoPorFase(fases, compras, totalGastos, totalCobrado, totalEgresos) {
+  const disponible = totalCobrado - totalEgresos;
+  const hayDisponible = disponible > 0;
+  const base = hayDisponible ? totalCobrado : totalEgresos;
+
+  const filas = hayDisponible ? [{ nombre: "Disponible", monto: disponible }] : [];
+
+  fases
+    .map((fase) => ({
+      nombre: `Comprado en ${fase.nombre}`,
+      monto: sumar(compras.filter((c) => c.fase_id === fase.id), (c) => c.precio_total),
+    }))
+    .filter((fila) => fila.monto > 0)
+    .sort((a, b) => b.monto - a.monto)
+    .forEach((fila) => filas.push(fila));
+
+  if (totalGastos > 0) {
+    filas.push({ nombre: "Gastos", monto: totalGastos });
+  }
+
+  return filas.map((f) => ({ ...f, pct: porcentaje(f.monto, base) }));
+}
+
 function topProveedores(compras, proveedores, limite = 5) {
   const acumulado = {};
   compras.forEach((compra) => {
@@ -210,6 +242,7 @@ export function calcularAnalisis({
 
   const categorias = gastosPorCategoria(gastos);
   const impuestos = impuestosPorTipo(compras);
+  const filasEgresosPorFase = egresosPorFase(fases, gastos, compras);
 
   return {
     totales: {
@@ -243,7 +276,8 @@ export function calcularAnalisis({
     comprasPorTipoYProducto: comprasPorTipoYProducto(compras, productos),
     pagosPorTipoFactura: pagosPorTipoFactura(gastos, compras),
     avanceFases: avancePorEstadoDeFase(fases),
-    egresosPorFase: egresosPorFase(fases, gastos, compras),
+    egresosPorFase: filasEgresosPorFase,
+    cobradoPorFase: cobradoPorFase(fases, compras, totalGastos, totalCobrado, totalEgresos),
     gastosSinComprobante: {
       cantidad: gastos.filter((g) => !g.comprobantes?.length).length,
       monto: sumar(gastos.filter((g) => !g.comprobantes?.length), (g) => g.monto),

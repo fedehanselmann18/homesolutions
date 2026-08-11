@@ -94,8 +94,12 @@
 
 .seguimiento-tablero {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: var(--space-6);
+}
+
+.seguimiento-columna {
+    min-width: 0;
 }
 
 @media (max-width: 720px) {

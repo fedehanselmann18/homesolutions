@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, CalendarDays, Clock, Truck, Wallet } from "lucide-react";
+import { ArrowLeft, CalendarDays, Clock } from "lucide-react";
 
 import { getFasePorId, actualizarFase } from "../services/faseService";
 import { getProyectoPorId } from "../services/proyectoService";
@@ -27,6 +27,7 @@ import {
     getNotaCompra,
     eliminarNotaCompra,
 } from "../services/compraService";
+import { getCobrosPorProyecto } from "../services/cobroService";
 import { getCategoriasGasto } from "../services/categoriaGastoService";
 import { getProveedores } from "../services/proveedorService";
 import { getProductos } from "../services/productoService";
@@ -34,17 +35,12 @@ import { getImpuestos } from "../services/impuestosService";
 
 import useAuth from "../context/useAuth";
 import { getEstadoLabel } from "../constants/estados";
-import { getCondicionPagoLabel } from "../constants/estadoCompra";
-import { esCompraImpaga, esCompraSinEntregar, diasDesde, describirCompra } from "../utils/seguimiento";
+import { diasDesde } from "../utils/seguimiento";
 import { notasDeCompras, totalNotasCredito, totalNotasDebito } from "../utils/notas";
 import { FILTROS_VACIOS, filtrarCompras, filtrarGastos } from "../utils/filtros";
 import { formatMoneda, formatFecha } from "../utils/formato";
 
 import { TarjetaKpi } from "../components/shared/TarjetaKpi";
-import { TarjetaAlerta } from "../components/shared/TarjetaAlerta";
-import FiltrosLista from "../components/shared/FiltrosLista";
-import GastoCard from "../components/proyectos/cards/GastoCard";
-import CompraCard from "../components/proyectos/cards/CompraCard";
 import ModalGasto from "../components/modals/ModalGasto";
 import ModalCompra from "../components/modals/ModalCompra";
 import ModalNota from "../components/modals/ModalNota";
@@ -52,6 +48,9 @@ import ModalDetalleGasto from "../components/modals/ModalDetalleGasto";
 import ModalDetalleCompra from "../components/modals/ModalDetalleCompra";
 import { Cargando } from "../components/shared/Cargando";
 import { useToast } from "../context/useToast";
+import AccionesFase from "../components/fases/AccionesFase";
+import SeguimientoFase from "../components/fases/SeguimientoFase";
+import AnalisisFase from "../components/fases/AnalisisFase";
 
 import "../components/proyectos/Acciones.css";
 import "../components/proyectos/Seguimiento.css";
@@ -59,7 +58,6 @@ import "../components/proyectos/AnalisisGeneral.css";
 import "./FaseDetalle.css";
 
 const ROJO = "#dc2626";
-const NARANJA = "#d97706";
 
 const diasTexto = (dias) => `hace ${dias} ${dias === 1 ? "día" : "días"}`;
 const sumar = (items, obtenerMonto) => items.reduce((acc, item) => acc + (obtenerMonto(item) || 0), 0);
@@ -71,12 +69,15 @@ export function FaseDetalle() {
     const canManage = usuario?.rol === "admin";
     const toast = useToast();
 
+    const [tabActiva, setTabActiva] = useState("acciones");
+
     const [fase, setFase] = useState(null);
     const [proyecto, setProyecto] = useState(null);
     const [gastosFase, setGastosFase] = useState([]);
     const [comprasFase, setComprasFase] = useState([]);
     const [gastosProyecto, setGastosProyecto] = useState([]);
     const [comprasProyecto, setComprasProyecto] = useState([]);
+    const [cobrosProyecto, setCobrosProyecto] = useState([]);
     const [proveedores, setProveedores] = useState([]);
     const [productos, setProductos] = useState([]);
     const [categoriasGasto, setCategoriasGasto] = useState([]);
@@ -118,6 +119,7 @@ export function FaseDetalle() {
                 comprasFaseData,
                 gastosProyectoData,
                 comprasProyectoData,
+                cobrosProyectoData,
                 proveedoresData,
                 productosData,
                 categoriasData,
@@ -128,6 +130,7 @@ export function FaseDetalle() {
                 getComprasPorFase(faseId),
                 getGastosPorProyecto(faseData.proyecto_id),
                 getComprasPorProyecto(faseData.proyecto_id),
+                getCobrosPorProyecto(faseData.proyecto_id),
                 getProveedores(),
                 getProductos(),
                 getCategoriasGasto(),
@@ -140,6 +143,7 @@ export function FaseDetalle() {
             setComprasFase(comprasFaseData);
             setGastosProyecto(gastosProyectoData);
             setComprasProyecto(comprasProyectoData);
+            setCobrosProyecto(cobrosProyectoData);
             setProveedores(proveedoresData);
             setProductos(productosData);
             setCategoriasGasto(categoriasData);
@@ -185,19 +189,6 @@ export function FaseDetalle() {
             cantidadNotasFase: notasFase.length,
         };
     }, [proyecto, gastosFase, comprasFase, gastosProyecto, comprasProyecto]);
-
-    const seguimientoFase = useMemo(() => {
-        const hoy = new Date();
-        const impagas = comprasFase
-            .filter(esCompraImpaga)
-            .map((c) => describirCompra(c, productos, proveedores, hoy))
-            .sort((a, b) => b.dias - a.dias);
-        const sinEntregar = comprasFase
-            .filter(esCompraSinEntregar)
-            .map((c) => describirCompra(c, productos, proveedores, hoy))
-            .sort((a, b) => b.dias - a.dias);
-        return { impagas, sinEntregar };
-    }, [comprasFase, productos, proveedores]);
 
     const nombreProveedor = (proveedorId) => proveedores.find((p) => p.id === proveedorId)?.nombre;
 
@@ -365,7 +356,6 @@ export function FaseDetalle() {
     // contar "días en curso" mientras la fase sigue en curso.
     const diasEnCurso = fase.estado === "en_curso" ? diasDesde(fase.fecha_actualizacion, new Date()) : null;
     const puedeMarcarTerminada = canManage && fase.estado !== "terminada" && fase.estado !== "auditada";
-    const hayAlgoEnSeguimiento = seguimientoFase.impagas.length > 0 || seguimientoFase.sinEntregar.length > 0;
 
     return (
         <div className="fase-detalle">
@@ -431,146 +421,89 @@ export function FaseDetalle() {
                 />
             </div>
 
-            {hayAlgoEnSeguimiento && (
-                <section className="seguimiento-seccion">
-                    <div className="seguimiento-seccion-header">
-                        <h3 className="seguimiento-seccion-titulo">Seguimiento de la fase</h3>
-                        <p className="seguimiento-seccion-descripcion">
-                            Compras de esta fase pendientes de pago o de entrega.
-                        </p>
-                    </div>
+            <div className="fase-detalle-tabs">
+                <button
+                    type="button"
+                    className={tabActiva === "acciones" ? "active" : ""}
+                    onClick={() => setTabActiva("acciones")}
+                >
+                    Acciones de la fase
+                </button>
+                <button
+                    type="button"
+                    className={tabActiva === "seguimiento" ? "active" : ""}
+                    onClick={() => setTabActiva("seguimiento")}
+                >
+                    Seguimiento de la fase
+                </button>
+                <button
+                    type="button"
+                    className={tabActiva === "analisis" ? "active" : ""}
+                    onClick={() => setTabActiva("analisis")}
+                >
+                    Análisis de la fase
+                </button>
+            </div>
 
-                    {seguimientoFase.impagas.length > 0 && (
-                        <div className="seguimiento-lista">
-                            {seguimientoFase.impagas.map((compra) => (
-                                <TarjetaAlerta
-                                    key={`impaga-${compra.id}`}
-                                    icono={Wallet}
-                                    color={ROJO}
-                                    titulo={compra.proveedor}
-                                    detalle={`${compra.productos} · comprado el ${formatFecha(compra.fecha)} · ${getCondicionPagoLabel(compra.condicionPago)}`}
-                                    monto={formatMoneda(compra.monto)}
-                                    extra={diasTexto(compra.dias)}
-                                />
-                            ))}
-                        </div>
-                    )}
-
-                    {seguimientoFase.sinEntregar.length > 0 && (
-                        <div className="seguimiento-lista">
-                            {seguimientoFase.sinEntregar.map((compra) => (
-                                <TarjetaAlerta
-                                    key={`sinentregar-${compra.id}`}
-                                    icono={Truck}
-                                    color={NARANJA}
-                                    titulo={compra.proveedor}
-                                    detalle={`${compra.productos} · pedido el ${formatFecha(compra.fecha)}`}
-                                    extra={diasTexto(compra.dias)}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </section>
+            {tabActiva === "acciones" && (
+                <AccionesFase
+                    canManage={canManage}
+                    faseNombre={fase.nombre}
+                    nombreProveedor={nombreProveedor}
+                    productos={productos}
+                    compras={comprasFase}
+                    comprasFiltradas={comprasFaseFiltradas}
+                    filtrosCompras={filtrosCompras}
+                    onCambiarFiltrosCompras={setFiltrosCompras}
+                    onNuevaCompra={handleNuevaCompra}
+                    onEditarCompra={handleEditarCompra}
+                    onEliminarCompra={handleEliminarCompra}
+                    onTogglePagoCompra={handleToggleEstadoPagoCompra}
+                    onToggleEnvioCompra={handleToggleEstadoEnvioCompra}
+                    onVerComprobanteCompra={getComprobanteCompra}
+                    onAgregarComprobanteCompra={handleAgregarComprobantesCompra}
+                    onEliminarComprobanteCompra={handleEliminarComprobanteCompra}
+                    onAgregarNotaCompra={handleAgregarNotaCompra}
+                    onVerNotaCompra={getNotaCompra}
+                    onEliminarNotaCompra={handleEliminarNotaCompra}
+                    onAbrirDetalleCompra={(c) => setDetalle({ tipo: "compra", entidad: c })}
+                    gastos={gastosFase}
+                    gastosFiltrados={gastosFaseFiltrados}
+                    filtrosGastos={filtrosGastos}
+                    onCambiarFiltrosGastos={setFiltrosGastos}
+                    onNuevoGasto={handleNuevoGasto}
+                    onEditarGasto={handleEditarGasto}
+                    onEliminarGasto={handleEliminarGasto}
+                    onVerComprobanteGasto={getComprobanteGasto}
+                    onAgregarComprobanteGasto={handleAgregarComprobantesGasto}
+                    onEliminarComprobanteGasto={handleEliminarComprobanteGasto}
+                    onAbrirDetalleGasto={(g) => setDetalle({ tipo: "gasto", entidad: g })}
+                />
             )}
 
-            <div className="acciones-seccion">
-                <div className="acciones-header">
-                    <h2>Gastos de la fase</h2>
-                    {canManage && <button onClick={handleNuevoGasto}>Nuevo gasto</button>}
-                </div>
+            {tabActiva === "seguimiento" && (
+                <SeguimientoFase
+                    faseNombre={fase.nombre}
+                    comprasFase={comprasFase}
+                    gastosFase={gastosFase}
+                    productos={productos}
+                    proveedores={proveedores}
+                    onVerComprobanteCompra={getComprobanteCompra}
+                    onVerNotaCompra={getNotaCompra}
+                    onVerComprobanteGasto={getComprobanteGasto}
+                />
+            )}
 
-                {gastosFase.length > 0 && (
-                    <FiltrosLista filtros={filtrosGastos} onCambiar={setFiltrosGastos} mostrarComprobante />
-                )}
-
-                {gastosFase.length === 0 ? (
-                    <p>No hay gastos registrados para esta fase.</p>
-                ) : gastosFaseFiltrados.length === 0 ? (
-                    <p>Ningún gasto coincide con los filtros.</p>
-                ) : (
-                    <div className="acciones-grid">
-                        {gastosFaseFiltrados.map((gasto) => (
-                            <GastoCard
-                                key={gasto.id}
-                                gasto={gasto}
-                                faseNombre={fase.nombre}
-                                onEditar={handleEditarGasto}
-                                onEliminar={handleEliminarGasto}
-                                onVerComprobante={getComprobanteGasto}
-                                onAgregarComprobante={handleAgregarComprobantesGasto}
-                                onEliminarComprobante={handleEliminarComprobanteGasto}
-                                onAbrirDetalle={(g) => setDetalle({ tipo: "gasto", entidad: g })}
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            <div className="acciones-seccion">
-                <div className="acciones-header">
-                    <h2>Compras de la fase</h2>
-                    {canManage && <button onClick={handleNuevaCompra}>Nueva compra</button>}
-                </div>
-
-                {comprasFase.length > 0 && (
-                    <FiltrosLista
-                        filtros={filtrosCompras}
-                        onCambiar={setFiltrosCompras}
-                        mostrarNotas
-                        mostrarEstadoPago
-                        mostrarEstadoEnvio
-                    />
-                )}
-
-                {comprasFase.length === 0 ? (
-                    <p>No hay compras registradas para esta fase.</p>
-                ) : comprasFaseFiltradas.length === 0 ? (
-                    <p>Ninguna compra coincide con los filtros.</p>
-                ) : (
-                    <div className="acciones-grid">
-                        {comprasFaseFiltradas.map((compra) => (
-                            <CompraCard
-                                key={compra.id}
-                                compra={compra}
-                                faseNombre={fase.nombre}
-                                proveedorNombre={nombreProveedor(compra.proveedor_id)}
-                                productos={productos}
-                                onEditar={handleEditarCompra}
-                                onEliminar={handleEliminarCompra}
-                                onTogglePago={handleToggleEstadoPagoCompra}
-                                onToggleEnvio={handleToggleEstadoEnvioCompra}
-                                onVerComprobante={getComprobanteCompra}
-                                onAgregarComprobante={handleAgregarComprobantesCompra}
-                                onEliminarComprobante={handleEliminarComprobanteCompra}
-                                onAgregarNota={handleAgregarNotaCompra}
-                                onVerNota={getNotaCompra}
-                                onEliminarNota={handleEliminarNotaCompra}
-                                onAbrirDetalle={(c) => setDetalle({ tipo: "compra", entidad: c })}
-                            />
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            {kpis.cantidadNotasFase > 0 && (
-                <div className="analisis-kpis--notas">
-                    <TarjetaKpi
-                        titulo="Notas de crédito (fase)"
-                        valor={formatMoneda(kpis.notasCreditoFase)}
-                        detalle="A favor nuestro, ya restado del gastado en esta fase"
-                        color={ROJO}
-                        destacado
-                        plano
-                    />
-                    <TarjetaKpi
-                        titulo="Notas de débito (fase)"
-                        valor={formatMoneda(kpis.notasDebitoFase)}
-                        detalle="En contra nuestro, ya sumado al gastado en esta fase"
-                        color={NARANJA}
-                        destacado
-                        plano
-                    />
-                </div>
+            {tabActiva === "analisis" && (
+                <AnalisisFase
+                    proyecto={proyecto}
+                    gastosFase={gastosFase}
+                    comprasFase={comprasFase}
+                    productos={productos}
+                    proveedores={proveedores}
+                    cobrosProyecto={cobrosProyecto}
+                    kpisFase={kpis}
+                />
             )}
 
             {modalGastoAbierto && (

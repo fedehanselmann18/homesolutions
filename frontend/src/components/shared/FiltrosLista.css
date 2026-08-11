@@ -1,37 +1,52 @@
+/* Barra de filtros: cada filtro es un campo independiente con label
+   flotando sobre un border-bottom (el fondo detrás del texto tapa el
+   segmento de línea justo debajo, "cortándola"), separados entre sí -- sin
+   caja contenedora pesada por fuera. Los <select> viven en SelectFlotante,
+   que resuelve el mismo tratamiento visual con su propio desplegable. */
+
 .filtros-lista {
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;
-    gap: var(--space-3);
+    gap: var(--space-6);
     margin-bottom: var(--space-4);
-    padding: var(--space-3);
-    background-color: var(--color-superficie);
-    border: 1px solid var(--color-linea);
-    border-radius: var(--radius-sm);
 }
 
 .filtros-lista-campo {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    min-width: 140px;
 }
 
-.filtros-lista-campo label {
-    font-family: var(--font-ui);
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--color-tinta-muted);
+.filtros-lista-campo .label-ficha {
+    position: absolute;
+    top: -6px;
+    left: 2px;
+    padding: 0 4px;
+    background-color: var(--color-superficie);
+    z-index: 1;
+    pointer-events: none;
 }
 
-.filtros-lista-campo input,
-.filtros-lista-campo select {
+.filtros-lista-campo input {
     font-family: var(--font-ui);
     font-size: 0.85rem;
-    padding: 7px 10px;
-    border: 1px solid var(--color-linea);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-superficie);
+    border: none;
+    border-bottom: 1px solid var(--color-linea);
+    background-color: transparent;
     color: var(--color-tinta);
+    padding: 12px 2px 7px;
+    transition: border-color 0.15s ease;
+}
+
+.filtros-lista-campo input:hover {
+    border-bottom-color: var(--color-tinta-muted);
+}
+
+.filtros-lista-campo input:focus {
+    outline: none;
+    border-bottom-color: var(--color-terracota);
 }
 
 .filtros-lista-limpiar {
@@ -39,30 +54,28 @@
     align-items: center;
     gap: 6px;
     background: transparent;
-    border: 1px solid var(--color-linea);
-    border-radius: var(--radius-sm);
-    padding: 7px 12px;
+    border: none;
+    border-bottom: 1px solid transparent;
+    padding: 7px 2px;
     font-family: var(--font-ui);
     font-size: 0.82rem;
     font-weight: 600;
-    color: var(--color-tinta-muted);
+    color: var(--color-terracota-dark);
     cursor: pointer;
-    transition: background-color 0.15s ease, color 0.15s ease;
-    height: fit-content;
+    transition: border-color 0.15s ease;
 }
 
 .filtros-lista-limpiar:hover {
-    background-color: var(--color-base-1);
-    color: var(--color-tinta);
+    border-bottom-color: var(--color-terracota);
 }
 
 @media (max-width: 700px) {
     .filtros-lista {
         flex-direction: column;
         align-items: stretch;
+        gap: var(--space-4);
     }
 
-    .filtros-lista-campo select,
     .filtros-lista-campo input {
         width: 100%;
     }

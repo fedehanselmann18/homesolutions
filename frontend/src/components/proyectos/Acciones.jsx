@@ -60,7 +60,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
     const canManage = usuario?.rol === "admin";
     const toast = useToast();
 
-    const [subTab, setSubTab] = useState("gastos");
+    const [subTab, setSubTab] = useState("compras");
 
     const [compras, setCompras] = useState([]);
     const [gastos, setGastos] = useState([]);
@@ -353,6 +353,12 @@ export function Acciones({ proyectoId, proyectoNombre }) {
         <div>
             <div className="acciones-subtabs">
                 <button
+                    className={`acciones-subtab ${subTab === "compras" ? "active" : ""}`}
+                    onClick={() => setSubTab("compras")}
+                >
+                    Compras
+                </button>
+                <button
                     className={`acciones-subtab ${subTab === "gastos" ? "active" : ""}`}
                     onClick={() => setSubTab("gastos")}
                 >
@@ -364,13 +370,55 @@ export function Acciones({ proyectoId, proyectoNombre }) {
                 >
                     Cobros
                 </button>
-                <button
-                    className={`acciones-subtab ${subTab === "compras" ? "active" : ""}`}
-                    onClick={() => setSubTab("compras")}
-                >
-                    Compras
-                </button>
             </div>
+
+            {subTab === "compras" && (
+                <div className="acciones-seccion">
+                    <div className="acciones-header">
+                        <h2>Compras del Proyecto</h2>
+                        {canManage && <button onClick={handleNuevaCompra}>Nueva compra</button>}
+                    </div>
+
+                    {compras.length > 0 && (
+                        <FiltrosLista
+                            filtros={filtrosCompras}
+                            onCambiar={setFiltrosCompras}
+                            mostrarNotas
+                            mostrarEstadoPago
+                            mostrarEstadoEnvio
+                        />
+                    )}
+
+                    {compras.length === 0 ? (
+                        <p>No hay compras registradas para este proyecto.</p>
+                    ) : comprasFiltradas.length === 0 ? (
+                        <p>Ninguna compra coincide con los filtros.</p>
+                    ) : (
+                        <div className="acciones-grid">
+                            {comprasFiltradas.map((compra) => (
+                                <CompraCard
+                                    key={compra.id}
+                                    compra={compra}
+                                    faseNombre={nombreFase(compra.fase_id)}
+                                    proveedorNombre={nombreProveedor(compra.proveedor_id)}
+                                    productos={productos}
+                                    onEditar={handleEditarCompra}
+                                    onEliminar={handleEliminarCompra}
+                                    onTogglePago={handleToggleEstadoPagoCompra}
+                                    onToggleEnvio={handleToggleEstadoEnvioCompra}
+                                    onVerComprobante={getComprobanteCompra}
+                                    onAgregarComprobante={handleAgregarComprobantesCompra}
+                                    onEliminarComprobante={handleEliminarComprobanteCompra}
+                                    onAgregarNota={handleAgregarNotaCompra}
+                                    onVerNota={getNotaCompra}
+                                    onEliminarNota={handleEliminarNotaCompra}
+                                    onAbrirDetalle={(c) => setDetalle({ tipo: "compra", entidad: c })}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
 
             {subTab === "gastos" && (
                 <div className="acciones-seccion">
@@ -446,54 +494,6 @@ export function Acciones({ proyectoId, proyectoNombre }) {
                                     onVerNota={getNotaCobro}
                                     onEliminarNota={handleEliminarNotaCobro}
                                     onAbrirDetalle={(c) => setDetalle({ tipo: "cobro", entidad: c })}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {subTab === "compras" && (
-                <div className="acciones-seccion">
-                    <div className="acciones-header">
-                        <h2>Compras del Proyecto</h2>
-                        {canManage && <button onClick={handleNuevaCompra}>Nueva compra</button>}
-                    </div>
-
-                    {compras.length > 0 && (
-                        <FiltrosLista
-                            filtros={filtrosCompras}
-                            onCambiar={setFiltrosCompras}
-                            mostrarNotas
-                            mostrarEstadoPago
-                            mostrarEstadoEnvio
-                        />
-                    )}
-
-                    {compras.length === 0 ? (
-                        <p>No hay compras registradas para este proyecto.</p>
-                    ) : comprasFiltradas.length === 0 ? (
-                        <p>Ninguna compra coincide con los filtros.</p>
-                    ) : (
-                        <div className="acciones-grid">
-                            {comprasFiltradas.map((compra) => (
-                                <CompraCard
-                                    key={compra.id}
-                                    compra={compra}
-                                    faseNombre={nombreFase(compra.fase_id)}
-                                    proveedorNombre={nombreProveedor(compra.proveedor_id)}
-                                    productos={productos}
-                                    onEditar={handleEditarCompra}
-                                    onEliminar={handleEliminarCompra}
-                                    onTogglePago={handleToggleEstadoPagoCompra}
-                                    onToggleEnvio={handleToggleEstadoEnvioCompra}
-                                    onVerComprobante={getComprobanteCompra}
-                                    onAgregarComprobante={handleAgregarComprobantesCompra}
-                                    onEliminarComprobante={handleEliminarComprobanteCompra}
-                                    onAgregarNota={handleAgregarNotaCompra}
-                                    onVerNota={getNotaCompra}
-                                    onEliminarNota={handleEliminarNotaCompra}
-                                    onAbrirDetalle={(c) => setDetalle({ tipo: "compra", entidad: c })}
                                 />
                             ))}
                         </div>
