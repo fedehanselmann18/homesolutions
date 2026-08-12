@@ -394,7 +394,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
                     ) : comprasFiltradas.length === 0 ? (
                         <p>Ninguna compra coincide con los filtros.</p>
                     ) : (
-                        <div className="acciones-grid">
+                        <div className="acciones-grid acciones-grid--compras">
                             {comprasFiltradas.map((compra) => (
                                 <CompraCard
                                     key={compra.id}

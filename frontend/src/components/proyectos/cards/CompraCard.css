@@ -2,7 +2,7 @@
     background-color: var(--color-superficie);
     border: 1px solid var(--color-linea);
     border-radius: var(--radius-sm);
-    padding: var(--space-4);
+    padding: 0;
     font-family: var(--font-ui);
     display: flex;
     flex-direction: column;
@@ -13,7 +13,39 @@
 
 .compra-card:hover {
     border-color: var(--color-tinta);
+}
+
+.compra-card-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+    align-items: stretch;
+    flex: 1;
+    min-width: 0;
+}
+
+.compra-card-col-izq {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px 16px 16px;
+    min-width: 0;
+}
+
+.compra-card-col-der {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px 16px 16px;
+    min-width: 0;
     background-color: var(--color-base-1);
+    border-left: 1px solid var(--color-linea);
+    border-top-right-radius: var(--radius-sm);
+    border-bottom-right-radius: var(--radius-sm);
+}
+
+.compra-card-col-der-seccion {
+    padding-top: 10px;
+    border-top: 1px solid var(--color-linea);
 }
 
 .compra-card-contenido {
@@ -147,6 +179,7 @@
 }
 
 .compra-card-producto-item {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -155,6 +188,56 @@
     border-radius: var(--radius-sm);
     background-color: var(--color-base-1);
     border: 1px solid var(--color-linea);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.compra-card-producto-item:hover {
+    border-color: var(--color-terracota);
+}
+
+.compra-card-producto-item--abierto {
+    border-color: var(--color-terracota);
+    background-color: var(--color-terracota-tint);
+}
+
+.compra-card-producto-popover {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 5;
+    cursor: default;
+    background-color: var(--color-superficie);
+    border: 1px solid var(--color-terracota);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    box-shadow: var(--shadow-overlay);
+}
+
+.compra-card-producto-popover-nombre {
+    margin: 0 0 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-tinta);
+}
+
+.compra-card-producto-popover-fila {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.76rem;
+    color: var(--color-tinta-muted);
+    padding: 2px 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.compra-card-producto-popover-fila--total {
+    margin-top: 4px;
+    padding-top: 6px;
+    border-top: 1px solid var(--color-linea);
+    font-weight: 700;
+    color: var(--color-tinta);
 }
 
 .compra-card-producto-nombre {
@@ -198,6 +281,8 @@
     flex-wrap: wrap;
     gap: 8px;
     margin-top: auto;
+    padding-top: 10px;
+    border-top: 1px solid var(--color-linea);
 }
 
 .compra-card-btn {
@@ -243,8 +328,20 @@
     border-color: var(--color-oxido);
 }
 
-@media (max-width: 480px) {
-    .compra-card {
-        padding: var(--space-3);
+@media (max-width: 560px) {
+    .compra-card-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .compra-card-col-der {
+        border-left: none;
+        border-top: 1px solid var(--color-linea);
+        border-top-right-radius: 0;
+        border-bottom-left-radius: var(--radius-sm);
+    }
+
+    .compra-card-col-izq,
+    .compra-card-col-der {
+        padding: 12px 14px 14px;
     }
 }

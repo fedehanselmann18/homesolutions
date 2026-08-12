@@ -193,3 +193,69 @@
     font-size: 0.78rem;
     color: var(--color-oxido);
 }
+
+.seccion-notas-item--compacta {
+    padding: 0;
+    overflow: hidden;
+}
+
+.seccion-notas-item-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 7px 9px;
+    font-family: var(--font-ui);
+    text-align: left;
+    cursor: pointer;
+}
+
+.seccion-notas-item-motivo-inline {
+    font-weight: 500;
+    color: var(--color-tinta-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.seccion-notas-item--compacta .seccion-notas-item-tipo {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.72rem;
+}
+
+.seccion-notas-item-toggle-derecha {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.seccion-notas-item--compacta .seccion-notas-item-monto {
+    font-size: 0.78rem;
+}
+
+.seccion-notas-chevron {
+    color: var(--color-tinta-muted);
+    transition: transform 0.15s ease;
+    flex-shrink: 0;
+}
+
+.seccion-notas-chevron--abierta {
+    transform: rotate(180deg);
+}
+
+.seccion-notas-item-detalle {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 0 9px 8px;
+}
+
+.seccion-notas-item--compacta .seccion-notas-item-productos {
+    font-style: normal;
+}
