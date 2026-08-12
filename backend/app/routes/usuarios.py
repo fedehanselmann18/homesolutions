@@ -33,13 +33,18 @@ def get_users(db: Session = Depends(get_db),
 
 
 @router.get("/login-options", status_code=status.HTTP_200_OK)
-def get_login_options(db: Session = Depends(get_db)):
+@limiter.limit("30/hour")
+def get_login_options(request: Request, db: Session = Depends(get_db)):
     """
     Endpoint público (sin login, a propósito: alimenta el combo de usuario
     de la pantalla de login, antes de que exista sesión). Devuelve
     ÚNICAMENTE los nombres de usuario -- nada de id, rol ni timestamps --
     para no exponer quién es admin ni ids reales a cualquiera que llegue acá
     sin autenticarse.
+
+    Rate limit: 30/hour por IP. Es un uso legítimo súper esporádico (una vez
+    por visita a /login), así que un límite bajo no molesta a nadie real y
+    frena el scraping masivo de usernames válidos.
     """
     nombres = db.query(models.Usuario.nombre_usuario).all()
     return [nombre for (nombre,) in nombres]
