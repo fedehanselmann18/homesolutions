@@ -78,6 +78,26 @@
   --shadow-overlay: 0 16px 40px rgba(24, 24, 27, 0.16);
 }
 
+/* Convención de nombres de clase: BEM (bloque__elemento--modificador).
+   Ya se usa así en buena parte de los componentes; queda explícita acá para
+   no depender de que se infiera mirando ejemplos sueltos.
+
+   - Bloque: el componente en sí, en kebab-case. Ej.: `.proyecto-card`,
+     `.modal-contenido` (ver ProyectoCard.jsx, cualquier modal en
+     components/modals/).
+   - Elemento (bloque__elemento): una parte del bloque que no tiene sentido
+     fuera de él. Ej.: `.proyecto-card__nombre`, `.proyecto-header__top`
+     (ver ProyectoCard.jsx, ProyectoDetalleHeader.jsx).
+   - Modificador (bloque--modificador o bloque__elemento--modificador): una
+     variante del bloque o elemento. Ej.: `.modal-contenido--ancho` (modal más
+     ancho para formularios con más campos), `.panel-kpis--notas` (variante en
+     grid de la franja de KPIs, ver Dashboard.jsx).
+
+   No es estricto: hay clases utilitarias sin bloque (`.btn`, `.badge`,
+   `.campo-error` acá mismo) que son intencionalmente globales, no parte de
+   un componente puntual. BEM aplica a las clases *propias* de cada
+   componente, no a esas utilidades compartidas. */
+
 /* Reset mínimo global.
 
    El margin de 8px que traen los navegadores por defecto en <body> dejaba a
