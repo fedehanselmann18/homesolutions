@@ -237,3 +237,12 @@ textarea:focus-visible,
 .cifra {
   font-variant-numeric: tabular-nums;
 }
+
+/* Error de validación mostrado debajo de un campo de formulario (onChange,
+   no recién al hacer submit) — usado por los modales de compra/gasto/cobro. */
+.campo-error {
+  margin: 2px 0 0;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--color-oxido);
+}

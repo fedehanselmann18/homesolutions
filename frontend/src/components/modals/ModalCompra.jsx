@@ -7,7 +7,14 @@ import { getTipoProducto } from "../../constants/tipoProducto";
 import { getCondicionPagoLabel } from "../../constants/estadoCompra";
 import { useExtraccionIA } from "../../hooks/useExtraccionIA";
 import { useToast } from "../../context/useToast";
+import { validarRequerido, validarFecha } from "../../utils/formValidation";
 import "./ModalCompra.css";
+
+const validarCampo = (name, value) => {
+    if (name === "descripcion") return validarRequerido(value, "La descripción es obligatoria.");
+    if (name === "fecha") return validarFecha(value);
+    return null;
+};
 
 const CONDICION_PAGO_OPCIONES = ["contado", "cuenta_corriente", "cheque", "transferencia"];
 const ESTADO_PAGO_OPCIONES = [
@@ -50,6 +57,7 @@ export function ModalCompra({
     const [impuestos, setImpuestos] = useState([]);
     const [comprobantesCambios, setComprobantesCambios] = useState({ archivos: [], eliminarIds: [] });
     const [guardando, setGuardando] = useState(false);
+    const [errores, setErrores] = useState({});
     const { extraer, extrayendo } = useExtraccionIA();
     const toast = useToast();
 
@@ -103,6 +111,7 @@ export function ModalCompra({
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
+        setErrores((prev) => ({ ...prev, [name]: validarCampo(name, value) }));
 
         // Las líneas de detalle quedan atadas a un proveedor -- si cambia,
         // los productos ya elegidos dejan de tener sentido.
@@ -234,6 +243,14 @@ export function ModalCompra({
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const nuevosErrores = {
+            descripcion: validarCampo("descripcion", form.descripcion),
+            fecha: validarCampo("fecha", form.fecha),
+        };
+        setErrores(nuevosErrores);
+        if (Object.values(nuevosErrores).some(Boolean)) return;
+
         setGuardando(true);
         try {
             await onGuardar(
@@ -349,11 +366,13 @@ export function ModalCompra({
                                 onChange={handleChange}
                                 required
                             />
+                            {errores.descripcion && <p className="campo-error">{errores.descripcion}</p>}
                         </label>
 
                         <label>
                             Fecha
                             <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required />
+                            {errores.fecha && <p className="campo-error">{errores.fecha}</p>}
                         </label>
                     </div>
 

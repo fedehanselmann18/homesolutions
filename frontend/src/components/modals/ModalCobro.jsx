@@ -4,7 +4,15 @@ import { ComprobantesUploader } from "../shared/ComprobantesUploader";
 import { TIPOS_FACTURA } from "../../constants/tipoFactura";
 import { useExtraccionIA } from "../../hooks/useExtraccionIA";
 import { useToast } from "../../context/useToast";
+import { validarRequerido, validarMonto, validarFecha } from "../../utils/formValidation";
 import "./ModalCobro.css";
+
+const validarCampo = (name, value) => {
+    if (name === "descripcion") return validarRequerido(value, "La descripción es obligatoria.");
+    if (name === "monto") return validarMonto(value);
+    if (name === "fecha") return validarFecha(value);
+    return null;
+};
 
 export function ModalCobro({
     cobro,
@@ -24,6 +32,7 @@ export function ModalCobro({
     });
     const [comprobantesCambios, setComprobantesCambios] = useState({ archivos: [], eliminarIds: [] });
     const [guardando, setGuardando] = useState(false);
+    const [errores, setErrores] = useState({});
     const { extraer, extrayendo } = useExtraccionIA();
     const toast = useToast();
 
@@ -43,6 +52,7 @@ export function ModalCobro({
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
+        setErrores((prev) => ({ ...prev, [name]: validarCampo(name, value) }));
     };
 
     // Cobro no tiene fase/categoría/proveedor (ver modelo), así que acá la
@@ -74,6 +84,14 @@ export function ModalCobro({
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        const nuevosErrores = {
+            descripcion: validarCampo("descripcion", form.descripcion),
+            monto: validarCampo("monto", form.monto),
+            fecha: validarCampo("fecha", form.fecha),
+        };
+        setErrores(nuevosErrores);
+        if (Object.values(nuevosErrores).some(Boolean)) return;
 
         const payload = {
             descripcion: form.descripcion,
@@ -153,6 +171,7 @@ export function ModalCobro({
                                 onChange={handleChange}
                                 required
                             />
+                            {errores.descripcion && <p className="campo-error">{errores.descripcion}</p>}
                         </label>
 
                         <div className="modal-form-fila">
@@ -167,6 +186,7 @@ export function ModalCobro({
                                     step="0.01"
                                     required
                                 />
+                                {errores.monto && <p className="campo-error">{errores.monto}</p>}
                             </label>
 
                             <label>
@@ -178,6 +198,7 @@ export function ModalCobro({
                                     onChange={handleChange}
                                     required
                                 />
+                                {errores.fecha && <p className="campo-error">{errores.fecha}</p>}
                             </label>
                         </div>
 
