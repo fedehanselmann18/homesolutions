@@ -220,6 +220,14 @@ class Compra(TimestampMixin, Base):
         """
         precio_neto + suma de todos los impuestos aplicados - notas de crédito
         + notas de débito (ver NotaCompra). No se persiste.
+
+        B-04: requiere que impuestos_aplicados y notas vengan eager-loaded
+        (ver joinedload(Compra.impuestos_aplicados) y
+        joinedload(Compra.notas) en routes/compras.py). Si no, cada acceso
+        a self.impuestos_aplicados/self.notas dispara una query aparte por
+        Compra (N+1) EN SILENCIO -- SQLAlchemy no avisa, simplemente hace
+        lazy load fila por fila. detalle NO hace falta para ESTE cálculo
+        (sí lo usan categorias/tipos_compra, más abajo).
         """
         notas_credito = sum(float(n.monto) for n in self.notas if n.tipo == "nota_credito")
         notas_debito = sum(float(n.monto) for n in self.notas if n.tipo == "nota_debito")

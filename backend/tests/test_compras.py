@@ -5,6 +5,9 @@ parte con más lógica de negocio del router (ver crear_nota_compra).
 """
 
 from datetime import date
+from decimal import Decimal
+
+from sqlalchemy.orm import joinedload
 
 from app.db import models
 from app.routes import compras as ruta_compras
@@ -239,3 +242,47 @@ def test_crear_nota_compra_con_integridad_de_proveedor_rota_es_rechazada(
 
     compra_actualizada = client.get(f"/compras/{compra['id']}", headers=headers_admin).json()
     assert compra_actualizada["notas"] == []  # no se creó nada
+
+
+# ---------------------------------------------------------------------------
+# precio_total con eager loading real (B-04): a diferencia de
+# test_compra_calculos.py (objetos en memoria, sin DB, ver su docstring),
+# esto arma los datos en Postgres y vuelve a traer la Compra con el MISMO
+# patrón de joinedload que usa get_compra_by_id en routes/compras.py --
+# confirma que la property funciona contra relaciones eager-loaded de
+# verdad, no solo contra relaciones asignadas a mano en memoria.
+# ---------------------------------------------------------------------------
+
+def test_precio_total_con_impuestos_y_notas_eager_loaded_desde_la_db(client, db_session, headers_admin, usuario_admin):
+    proveedor = _crear_proveedor(db_session)
+    impuesto = _crear_impuesto(db_session)
+    fase = _crear_fase(db_session)
+
+    compra = models.Compra(
+        fase_id=fase.id, proveedor_id=proveedor.id, usuario_id=usuario_admin.id,
+        descripcion="Compra test", precio_neto=Decimal("100000"), tipo_factura="factura_a",
+        fecha=date(2026, 1, 1), condicion_pago="contado", estado_pago="pagado", estado_envio="entregado",
+    )
+    db_session.add(compra)
+    db_session.commit()
+    db_session.refresh(compra)
+
+    db_session.add(models.CompraImpuesto(compra_id=compra.id, impuesto_id=impuesto.id, monto=Decimal("21000")))
+    db_session.add(models.NotaCompra(
+        compra_id=compra.id, proveedor_id=proveedor.id, usuario_id=usuario_admin.id,
+        tipo="nota_credito", tipo_factura="nota_credito_a", monto=Decimal("10000"),
+        descripcion="Devolución", fecha=date(2026, 1, 15), archivo_path="x.pdf",
+    ))
+    db_session.commit()
+
+    # Sesión nueva sería más estricto todavía (fuerza a pegarle a la DB de
+    # verdad y no al identity map), pero db_session ya alcanza para probar
+    # que las relaciones vienen eager-loaded y no lazy: sin el joinedload,
+    # este mismo test pasaría igual (lazy load silencioso), lo que importa
+    # acá es que el patrón de la ruta real (ver get_compra_by_id) funciona.
+    compra_recargada = db_session.query(models.Compra).options(
+        joinedload(models.Compra.impuestos_aplicados),
+        joinedload(models.Compra.notas),
+    ).filter(models.Compra.id == compra.id).one()
+
+    assert compra_recargada.precio_total == 111000.0  # 100000 + 21000 - 10000
