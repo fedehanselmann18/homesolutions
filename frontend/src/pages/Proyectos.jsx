@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useProyectos } from "../hooks/useProyectos";
 import ProyectoCard from "../components/proyectos/ProyectoCard";
 import ModalProyecto from "../components/modals/ModalProyecto";
+import ModalConfirmar from "../components/modals/ModalConfirmar";
 import useAuth from "../context/useAuth";
 import ProyectosHeader from "../components/proyectos/ProyectoHeader";
 import { Cargando } from "../components/shared/Cargando";
@@ -27,6 +28,7 @@ export function Proyectos() {
 
   const [modalAbierto, setModalAbierto] = useState(false);
   const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null);
+  const [proyectoAEliminar, setProyectoAEliminar] = useState(null);
 
   if (loading) {
     return <Cargando texto="Cargando proyectos..." />;
@@ -65,7 +67,13 @@ export function Proyectos() {
     }
   };
 
-  const handleEliminar = async (proyecto) => {
+  const handleSolicitarEliminar = (proyecto) => {
+    setProyectoAEliminar(proyecto);
+  };
+
+  const handleConfirmarEliminar = async () => {
+    const proyecto = proyectoAEliminar;
+    setProyectoAEliminar(null);
     try {
       await borrarProyecto(proyecto.id);
     } catch (error) {
@@ -107,7 +115,7 @@ export function Proyectos() {
                     key={proyecto.id}
                     proyecto={proyecto}
                     onEditar={abrirModalEditar}
-                    onEliminar={handleEliminar}
+                    onEliminar={handleSolicitarEliminar}
                   />
                 ))}
               </div>
@@ -121,6 +129,16 @@ export function Proyectos() {
           proyecto={proyectoSeleccionado}
           onGuardar={handleGuardar}
           onCerrar={cerrarModal}
+        />
+      )}
+
+      {proyectoAEliminar && (
+        <ModalConfirmar
+          titulo="Eliminar proyecto"
+          mensaje="Esta acción no se puede deshacer."
+          nombreRecurso={proyectoAEliminar.nombre}
+          onConfirmar={handleConfirmarEliminar}
+          onCancelar={() => setProyectoAEliminar(null)}
         />
       )}
     </div>

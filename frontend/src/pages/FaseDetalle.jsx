@@ -44,6 +44,7 @@ import { TarjetaKpi } from "../components/shared/TarjetaKpi";
 import ModalGasto from "../components/modals/ModalGasto";
 import ModalCompra from "../components/modals/ModalCompra";
 import ModalNota from "../components/modals/ModalNota";
+import ModalConfirmar from "../components/modals/ModalConfirmar";
 import ModalDetalleGasto from "../components/modals/ModalDetalleGasto";
 import ModalDetalleCompra from "../components/modals/ModalDetalleCompra";
 import { Cargando } from "../components/shared/Cargando";
@@ -95,6 +96,9 @@ export function FaseDetalle() {
 
     const [detalle, setDetalle] = useState(null); // { tipo: "gasto" | "compra", entidad }
     const cerrarDetalle = () => setDetalle(null);
+
+    const [confirmarEliminar, setConfirmarEliminar] = useState(null); // { tipo: "gasto" | "compra", id, nombre }
+    const cerrarConfirmarEliminar = () => setConfirmarEliminar(null);
 
     const [filtrosGastos, setFiltrosGastos] = useState(FILTROS_VACIOS);
     const [filtrosCompras, setFiltrosCompras] = useState(FILTROS_VACIOS);
@@ -234,6 +238,11 @@ export function FaseDetalle() {
         }
     };
 
+    const handleSolicitarEliminarGasto = (gastoId) => {
+        const gasto = gastosFase.find((g) => g.id === gastoId);
+        setConfirmarEliminar({ tipo: "gasto", id: gastoId, nombre: gasto?.descripcion });
+    };
+
     const handleEliminarGasto = async (gastoId) => {
         try {
             await eliminarGasto(gastoId);
@@ -283,6 +292,17 @@ export function FaseDetalle() {
             console.error("Error guardando compra:", err);
             toast.error("No se pudo guardar la compra.");
         }
+    };
+
+    const handleSolicitarEliminarCompra = (compraId) => {
+        const compra = comprasFase.find((c) => c.id === compraId);
+        setConfirmarEliminar({
+            tipo: "compra",
+            id: compraId,
+            nombre: compra
+                ? `${nombreProveedor(compra.proveedor_id) ?? "Compra"} - ${formatFecha(compra.fecha)}`
+                : undefined,
+        });
     };
 
     const handleEliminarCompra = async (compraId) => {
@@ -343,6 +363,14 @@ export function FaseDetalle() {
     const handleEliminarNotaCompra = async (compraId, notaId) => {
         await eliminarNotaCompra(compraId, notaId);
         refetchAcciones();
+    };
+
+    // --- Confirmación de borrado (compra/gasto) ---
+    const handleConfirmarEliminar = async () => {
+        const { tipo, id } = confirmarEliminar;
+        cerrarConfirmarEliminar();
+        if (tipo === "gasto") await handleEliminarGasto(id);
+        else if (tipo === "compra") await handleEliminarCompra(id);
     };
 
     if (cargando) return <Cargando texto="Cargando fase..." />;
@@ -457,7 +485,7 @@ export function FaseDetalle() {
                     onCambiarFiltrosCompras={setFiltrosCompras}
                     onNuevaCompra={handleNuevaCompra}
                     onEditarCompra={handleEditarCompra}
-                    onEliminarCompra={handleEliminarCompra}
+                    onEliminarCompra={handleSolicitarEliminarCompra}
                     onTogglePagoCompra={handleToggleEstadoPagoCompra}
                     onToggleEnvioCompra={handleToggleEstadoEnvioCompra}
                     onVerComprobanteCompra={getComprobanteCompra}
@@ -473,7 +501,7 @@ export function FaseDetalle() {
                     onCambiarFiltrosGastos={setFiltrosGastos}
                     onNuevoGasto={handleNuevoGasto}
                     onEditarGasto={handleEditarGasto}
-                    onEliminarGasto={handleEliminarGasto}
+                    onEliminarGasto={handleSolicitarEliminarGasto}
                     onVerComprobanteGasto={getComprobanteGasto}
                     onAgregarComprobanteGasto={handleAgregarComprobantesGasto}
                     onEliminarComprobanteGasto={handleEliminarComprobanteGasto}
@@ -559,6 +587,16 @@ export function FaseDetalle() {
                     onCerrar={cerrarDetalle}
                     onVerComprobante={(c) => getComprobanteCompra(detalle.entidad.id, c.id)}
                     onVerNota={(n) => getNotaCompra(detalle.entidad.id, n.id)}
+                />
+            )}
+
+            {confirmarEliminar && (
+                <ModalConfirmar
+                    titulo={`Eliminar ${confirmarEliminar.tipo}`}
+                    mensaje="Esta acción no se puede deshacer."
+                    nombreRecurso={confirmarEliminar.nombre}
+                    onConfirmar={handleConfirmarEliminar}
+                    onCancelar={cerrarConfirmarEliminar}
                 />
             )}
         </div>

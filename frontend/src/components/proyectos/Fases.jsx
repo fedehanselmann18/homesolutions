@@ -6,6 +6,7 @@ import {
     eliminarFase,
 } from "../../services/faseService";
 import ModalFase from "../modals/ModalFase";
+import ModalConfirmar from "../modals/ModalConfirmar";
 import FaseCard from "./fases/FaseCard";
 import "./Fases.css";
 import useAuth from "../../context/useAuth";
@@ -28,6 +29,7 @@ export function Fases({ proyectoId }) {
     const [fases, setFases] = useState([]);
     const [modalAbierto, setModalAbierto] = useState(false);
     const [faseEditando, setFaseEditando] = useState(null);
+    const [faseAEliminar, setFaseAEliminar] = useState(null);
 
     useEffect(() => {
         fetchProyectoFases();
@@ -68,7 +70,13 @@ export function Fases({ proyectoId }) {
         }
     };
 
-    const handleEliminarFase = async (faseId) => {
+    const handleSolicitarEliminarFase = (faseId) => {
+        setFaseAEliminar(fases.find((f) => f.id === faseId) ?? { id: faseId });
+    };
+
+    const handleConfirmarEliminarFase = async () => {
+        const faseId = faseAEliminar.id;
+        setFaseAEliminar(null);
         try {
             await eliminarFase(faseId);
             fetchProyectoFases();
@@ -107,7 +115,7 @@ export function Fases({ proyectoId }) {
                                         fase={fase}
                                         proyectoId={proyectoId}
                                         onEditar={handleEditarFase}
-                                        onEliminar={handleEliminarFase}
+                                        onEliminar={handleSolicitarEliminarFase}
                                     />
                                 ))}
                             </div>
@@ -121,6 +129,16 @@ export function Fases({ proyectoId }) {
                     fase={faseEditando}
                     onGuardar={handleGuardarFase}
                     onCerrar={() => setModalAbierto(false)}
+                />
+            )}
+
+            {faseAEliminar && (
+                <ModalConfirmar
+                    titulo="Eliminar fase"
+                    mensaje="Esta acción no se puede deshacer."
+                    nombreRecurso={faseAEliminar.nombre}
+                    onConfirmar={handleConfirmarEliminarFase}
+                    onCancelar={() => setFaseAEliminar(null)}
                 />
             )}
         </div>

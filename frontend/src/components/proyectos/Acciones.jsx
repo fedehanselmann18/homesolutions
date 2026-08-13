@@ -40,6 +40,7 @@ import { getImpuestos } from "../../services/impuestosService";
 import useAuth from "../../context/useAuth";
 import { useToast } from "../../context/useToast";
 import { obtenerDetalleBackend } from "../../utils/errorHandling";
+import { formatMoneda, formatFecha } from "../../utils/formato";
 
 import GastoCard from "./cards/GastoCard";
 import CobroCard from "./cards/CobroCard";
@@ -48,6 +49,7 @@ import ModalGasto from "../modals/ModalGasto";
 import ModalCobro from "../modals/ModalCobro";
 import ModalCompra from "../modals/ModalCompra";
 import ModalNota from "../modals/ModalNota";
+import ModalConfirmar from "../modals/ModalConfirmar";
 import ModalDetalleGasto from "../modals/ModalDetalleGasto";
 import ModalDetalleCobro from "../modals/ModalDetalleCobro";
 import ModalDetalleCompra from "../modals/ModalDetalleCompra";
@@ -97,6 +99,9 @@ export function Acciones({ proyectoId, proyectoNombre }) {
 
     const [detalle, setDetalle] = useState(null); // { tipo: "gasto" | "cobro" | "compra", entidad }
     const cerrarDetalle = () => setDetalle(null);
+
+    const [confirmarEliminar, setConfirmarEliminar] = useState(null); // { tipo: "gasto" | "cobro" | "compra", id, nombre }
+    const cerrarConfirmarEliminar = () => setConfirmarEliminar(null);
 
     useEffect(() => {
         fetchAcciones();
@@ -172,6 +177,11 @@ export function Acciones({ proyectoId, proyectoNombre }) {
         }
     };
 
+    const handleSolicitarEliminarGasto = (gastoId) => {
+        const gasto = gastos.find((g) => g.id === gastoId);
+        setConfirmarEliminar({ tipo: "gasto", id: gastoId, nombre: gasto?.descripcion });
+    };
+
     const handleEliminarGasto = async (gastoId) => {
         try {
             await eliminarGasto(gastoId);
@@ -223,6 +233,15 @@ export function Acciones({ proyectoId, proyectoNombre }) {
         }
     };
 
+    const handleSolicitarEliminarCobro = (cobroId) => {
+        const cobro = cobros.find((c) => c.id === cobroId);
+        setConfirmarEliminar({
+            tipo: "cobro",
+            id: cobroId,
+            nombre: cobro ? `${formatMoneda(cobro.monto)} del ${formatFecha(cobro.fecha)}` : undefined,
+        });
+    };
+
     const handleEliminarCobro = async (cobroId) => {
         try {
             await eliminarCobro(cobroId);
@@ -272,6 +291,17 @@ export function Acciones({ proyectoId, proyectoNombre }) {
             console.error("Error guardando compra:", error);
             toast.error(obtenerDetalleBackend(error) ?? "No se pudo guardar la compra.");
         }
+    };
+
+    const handleSolicitarEliminarCompra = (compraId) => {
+        const compra = compras.find((c) => c.id === compraId);
+        setConfirmarEliminar({
+            tipo: "compra",
+            id: compraId,
+            nombre: compra
+                ? `${nombreProveedor(compra.proveedor_id) ?? "Compra"} - ${formatFecha(compra.fecha)}`
+                : undefined,
+        });
     };
 
     const handleEliminarCompra = async (compraId) => {
@@ -350,6 +380,15 @@ export function Acciones({ proyectoId, proyectoNombre }) {
         fetchAcciones();
     };
 
+    // --- Confirmación de borrado (compra/gasto/cobro) ---
+    const handleConfirmarEliminar = async () => {
+        const { tipo, id } = confirmarEliminar;
+        cerrarConfirmarEliminar();
+        if (tipo === "gasto") await handleEliminarGasto(id);
+        else if (tipo === "cobro") await handleEliminarCobro(id);
+        else if (tipo === "compra") await handleEliminarCompra(id);
+    };
+
     return (
         <div>
             <div className="acciones-subtabs">
@@ -404,7 +443,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
                                     proveedorNombre={nombreProveedor(compra.proveedor_id)}
                                     productos={productos}
                                     onEditar={handleEditarCompra}
-                                    onEliminar={handleEliminarCompra}
+                                    onEliminar={handleSolicitarEliminarCompra}
                                     onTogglePago={handleToggleEstadoPagoCompra}
                                     onToggleEnvio={handleToggleEstadoEnvioCompra}
                                     onVerComprobante={getComprobanteCompra}
@@ -448,7 +487,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
                                     gasto={gasto}
                                     faseNombre={gasto.fase_id ? nombreFase(gasto.fase_id) : null}
                                     onEditar={handleEditarGasto}
-                                    onEliminar={handleEliminarGasto}
+                                    onEliminar={handleSolicitarEliminarGasto}
                                     onVerComprobante={getComprobanteGasto}
                                     onAgregarComprobante={handleAgregarComprobantesGasto}
                                     onEliminarComprobante={handleEliminarComprobanteGasto}
@@ -487,7 +526,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
                                     key={cobro.id}
                                     cobro={cobro}
                                     onEditar={handleEditarCobro}
-                                    onEliminar={handleEliminarCobro}
+                                    onEliminar={handleSolicitarEliminarCobro}
                                     onVerComprobante={getComprobanteCobro}
                                     onAgregarComprobante={handleAgregarComprobantesCobro}
                                     onEliminarComprobante={handleEliminarComprobanteCobro}
@@ -574,6 +613,16 @@ export function Acciones({ proyectoId, proyectoNombre }) {
                     onCerrar={cerrarDetalle}
                     onVerComprobante={(c) => getComprobanteCompra(detalle.entidad.id, c.id)}
                     onVerNota={(n) => getNotaCompra(detalle.entidad.id, n.id)}
+                />
+            )}
+
+            {confirmarEliminar && (
+                <ModalConfirmar
+                    titulo={`Eliminar ${confirmarEliminar.tipo}`}
+                    mensaje="Esta acción no se puede deshacer."
+                    nombreRecurso={confirmarEliminar.nombre}
+                    onConfirmar={handleConfirmarEliminar}
+                    onCancelar={cerrarConfirmarEliminar}
                 />
             )}
         </div>
