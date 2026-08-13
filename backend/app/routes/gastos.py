@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 from app.db import models
@@ -6,6 +6,7 @@ from app.audit import log_auditoria
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db.db import get_db
 from app.files.storage import subir_comprobante, eliminar_comprobante, ver_comprobante
+from app.limiter import limiter
 from app.schemas import GastoCreate, GastoUpdate, GastoOut, ComprobanteGastoOut
 
 router = APIRouter(
@@ -59,7 +60,9 @@ def get_gastos_by_fase(fase_id: str,
 
 
 @router.post("/crear", response_model=GastoOut, status_code=status.HTTP_201_CREATED)
-def create_gasto(gasto: GastoCreate,
+@limiter.limit("100/minute")
+def create_gasto(request: Request,
+                  gasto: GastoCreate,
                   db: Session = Depends(get_db),
                   current_user: models.Usuario = Depends(requiere_admin)):
     proyecto = db.query(models.Proyecto).filter(models.Proyecto.id == gasto.proyecto_id).first()
@@ -160,7 +163,9 @@ def delete_gasto(gasto_id: str,
 
 
 @router.post("/{gasto_id}/comprobantes", response_model=ComprobanteGastoOut, status_code=status.HTTP_201_CREATED)
-def upload_comprobante_gasto(gasto_id: str,
+@limiter.limit("20/minute")
+def upload_comprobante_gasto(request: Request,
+                              gasto_id: str,
                               archivo: UploadFile = File(...),
                               db: Session = Depends(get_db),
                               current_user: models.Usuario = Depends(requiere_admin)):

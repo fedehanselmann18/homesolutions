@@ -1,6 +1,6 @@
 import json
 
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File, Form
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
@@ -9,6 +9,7 @@ from app.audit import log_auditoria
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db.db import get_db
 from app.files.storage import subir_comprobante, eliminar_comprobante, ver_comprobante
+from app.limiter import limiter
 from datetime import date
 from app.schemas import (
     CompraCreate, CompraUpdate, CompraOut,
@@ -94,7 +95,9 @@ def get_compras_by_proyecto(proyecto_id: str,
 # ---------------------------------------------------------------------------
 
 @router.post("/crear", response_model=CompraOut, status_code=status.HTTP_201_CREATED)
-def create_compra(compra: CompraCreate,
+@limiter.limit("100/minute")
+def create_compra(request: Request,
+                   compra: CompraCreate,
                    db: Session = Depends(get_db),
                    current_user: models.Usuario = Depends(requiere_admin)):
     fase = db.query(models.Fase).filter(models.Fase.id == compra.fase_id).first()
@@ -320,7 +323,9 @@ def delete_impuesto_compra(compra_id: str,
 # ---------------------------------------------------------------------------
 
 @router.post("/{compra_id}/comprobantes", response_model=ComprobanteCompraOut, status_code=status.HTTP_201_CREATED)
-def upload_comprobante_compra(compra_id: str,
+@limiter.limit("20/minute")
+def upload_comprobante_compra(request: Request,
+                               compra_id: str,
                                archivo: UploadFile = File(...),
                                db: Session = Depends(get_db),
                                current_user: models.Usuario = Depends(requiere_admin)):
@@ -391,7 +396,9 @@ def _restante_detalle_compra(db: Session, detalle_compra_id: str, cantidad_compr
 
 
 @router.post("/{compra_id}/notas", response_model=NotaCompraOut, status_code=status.HTTP_201_CREATED)
-def crear_nota_compra(compra_id: str,
+@limiter.limit("20/minute")
+def crear_nota_compra(request: Request,
+                       compra_id: str,
                        archivo: UploadFile = File(...),
                        tipo: str = Form(...),  # "nota_credito" | "nota_debito"
                        tipo_factura: str = Form(...),  # SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro)

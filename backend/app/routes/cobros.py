@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File, Form
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.db import models
@@ -6,6 +6,7 @@ from app.audit import log_auditoria
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db.db import get_db
 from app.files.storage import subir_comprobante, eliminar_comprobante, ver_comprobante
+from app.limiter import limiter
 from datetime import date
 from app.schemas import CobroCreate, CobroUpdate, CobroOut, ComprobanteCobroOut, NotaCobroOut
 
@@ -47,7 +48,9 @@ def get_cobros_by_proyecto(proyecto_id: str,
 
 
 @router.post("/crear", response_model=CobroOut, status_code=status.HTTP_201_CREATED)
-def create_cobro(cobro: CobroCreate,
+@limiter.limit("100/minute")
+def create_cobro(request: Request,
+                  cobro: CobroCreate,
                   db: Session = Depends(get_db),
                   current_user: models.Usuario = Depends(requiere_admin)):
     proyecto = db.query(models.Proyecto).filter(models.Proyecto.id == cobro.proyecto_id).first()
@@ -121,7 +124,9 @@ def delete_cobro(cobro_id: str,
 
 
 @router.post("/{cobro_id}/comprobantes", response_model=ComprobanteCobroOut, status_code=status.HTTP_201_CREATED)
-def upload_comprobante_cobro(cobro_id: str,
+@limiter.limit("20/minute")
+def upload_comprobante_cobro(request: Request,
+                              cobro_id: str,
                               archivo: UploadFile = File(...),
                               db: Session = Depends(get_db),
                               current_user: models.Usuario = Depends(requiere_admin)):
@@ -181,7 +186,9 @@ def delete_comprobante_cobro(cobro_id: str,
 # ---------------------------------------------------------------------------
 
 @router.post("/{cobro_id}/notas", response_model=NotaCobroOut, status_code=status.HTTP_201_CREATED)
-def crear_nota_cobro(cobro_id: str,
+@limiter.limit("20/minute")
+def crear_nota_cobro(request: Request,
+                      cobro_id: str,
                       archivo: UploadFile = File(...),
                       tipo: str = Form(...),  # "nota_credito" | "nota_debito"
                       tipo_factura: str = Form(...),  # SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro)
