@@ -13,7 +13,6 @@ import {
 import { useProyectos, useFases, useGastos, useCobros, useCompras } from "../hooks/queries";
 
 import { TarjetaKpi, BarraProgreso } from "../components/shared/TarjetaKpi";
-import { Cargando } from "../components/shared/Cargando";
 import { calcularPanel } from "../utils/panel";
 import { formatMoneda, formatMonedaCorta, formatFecha } from "../utils/formato";
 import { VERDE, ROJO, NARANJA, AZUL } from "../constants/colores";
@@ -27,6 +26,53 @@ const TIPOS_MOVIMIENTO = {
   nota_credito: { label: "Nota de crédito", color: "#dc2626", signo: "−" },
   nota_debito: { label: "Nota de débito", color: NARANJA, signo: "+" },
 };
+
+// Reproduce la estructura real del panel (header, KPIs, proyectos, gráfico)
+// con bloques placeholder, en vez de tapar todo con un spinner monolítico.
+// calcularPanel necesita los 5 recursos juntos (los KPIs salen de cruzarlos
+// entre sí), así que aunque cada useQuery resuelve por separado, no hay una
+// sección que pueda pintarse con datos reales antes que las demás -- el
+// skeleton cubre esa espera combinada en vez de fingir progreso por KPI.
+function DashboardSkeleton() {
+  return (
+    <div className="panel">
+      <div className="panel-header">
+        <div className="skeleton skeleton--titulo" />
+        <div className="skeleton skeleton--subtitulo" />
+      </div>
+
+      <div className="panel-kpis">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="panel-kpi-skeleton">
+            <div className="skeleton skeleton--kpi-label" />
+            <div className="skeleton skeleton--kpi-valor" />
+            <div className="skeleton skeleton--kpi-detalle" />
+          </div>
+        ))}
+      </div>
+
+      <section className="panel-seccion">
+        <div className="skeleton skeleton--seccion-titulo" />
+        <div className="panel-proyectos-grid">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="skeleton skeleton--proyecto-card" />
+          ))}
+        </div>
+      </section>
+
+      <div className="panel-fila">
+        <section className="panel-seccion">
+          <div className="skeleton skeleton--seccion-titulo" />
+          <div className="skeleton skeleton--grafico" />
+        </section>
+        <section className="panel-seccion">
+          <div className="skeleton skeleton--seccion-titulo" />
+          <div className="skeleton skeleton--actividad" />
+        </section>
+      </div>
+    </div>
+  );
+}
 
 function Seccion({ titulo, descripcion, children }) {
   return (
@@ -175,7 +221,7 @@ export function Dashboard() {
 
   const panel = useMemo(() => (datos ? calcularPanel(datos) : null), [datos]);
 
-  if (cargando) return <Cargando texto="Cargando panel..." />;
+  if (cargando) return <DashboardSkeleton />;
   if (error || !panel)
     return <p className="panel-vacio">No se pudieron cargar los datos del panel.</p>;
 

@@ -309,3 +309,83 @@
   font-variant-numeric: tabular-nums;
   flex-shrink: 0;
 }
+
+/* --- Skeleton de carga: misma estructura que el panel real, con bloques
+   placeholder en vez de contenido, mientras se resuelve el fetch inicial. --- */
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-base-2) 25%,
+    var(--color-linea) 37%,
+    var(--color-base-2) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+.skeleton--titulo {
+  width: 160px;
+  height: 2rem;
+}
+
+.skeleton--subtitulo {
+  width: 260px;
+  height: 0.9rem;
+  margin-top: 8px;
+}
+
+.panel-kpi-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeleton--kpi-label {
+  width: 70%;
+  height: 0.72rem;
+}
+
+.skeleton--kpi-valor {
+  width: 90%;
+  height: 1.6rem;
+}
+
+.skeleton--kpi-detalle {
+  width: 55%;
+  height: 0.72rem;
+}
+
+.skeleton--seccion-titulo {
+  width: 200px;
+  height: 1.05rem;
+  margin-bottom: var(--space-4);
+}
+
+.skeleton--proyecto-card {
+  height: 148px;
+}
+
+.skeleton--grafico {
+  height: 260px;
+}
+
+.skeleton--actividad {
+  height: 260px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
