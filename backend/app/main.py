@@ -1,14 +1,17 @@
 import logging
 
-from fastapi import FastAPI, Request, status
+from fastapi import Depends, FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi import _rate_limit_exceeded_handler
+from sqlalchemy import text
+from sqlalchemy.orm import Session
 
 from app.config import settings
+from app.db.db import get_db
 from app.limiter import limiter
 from app.security_middleware import CSRFMiddleware, SecurityHeadersMiddleware, UnhandledExceptionMiddleware
 from app.routes import (login,
@@ -95,3 +98,12 @@ app.include_router(ia.router)
 @app.get("/")
 async def root():
     return {"message": "Welcome to HomeSolutions API!"}
+
+
+@app.get("/health")
+def health_check(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception:
+        return JSONResponse(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, content={"status": "error"})
+    return {"status": "ok"}
