@@ -1,7 +1,7 @@
 import mimetypes
 import shutil
+import threading
 import uuid
-from functools import lru_cache
 from pathlib import Path
 
 import boto3
@@ -59,21 +59,50 @@ def ruta_absoluta(path) -> Path:
     return ruta if ruta.is_absolute() else RAIZ_BACKEND / ruta
 
 
-@lru_cache
+# B-12: singleton con lock en vez de @lru_cache -- @lru_cache no tiene forma
+# de invalidarse selectivamente para ESTA función sin afectar otras (y
+# cache_clear() de una función sin argumentos igual no distingue "credenciales
+# viejas" de "quiero una instancia nueva"). Con esto, reset_r2_client() fuerza
+# que la próxima llamada arme un cliente nuevo -- por ejemplo después de
+# rotar R2_ACCESS_KEY_ID/R2_SECRET_ACCESS_KEY -- sin reiniciar el proceso.
+_r2_client_instance = None
+_r2_client_lock = threading.Lock()
+
+
 def _r2_client():
     """
     Cliente boto3 apuntando al endpoint S3-compatible de Cloudflare R2.
-    Cacheado (lru_cache) para no reabrir conexión en cada request.
-    Solo se llama cuando settings.r2_configurado es True.
+    Cacheado como singleton (no se reabre conexión en cada request) hasta
+    que se llame a reset_r2_client(). Solo se llama cuando
+    settings.r2_configurado es True.
     """
-    return boto3.client(
-        "s3",
-        endpoint_url=settings.r2_endpoint_url,
-        aws_access_key_id=settings.R2_ACCESS_KEY_ID,
-        aws_secret_access_key=settings.R2_SECRET_ACCESS_KEY,
-        region_name="auto",
-        config=Config(signature_version="s3v4"),
-    )
+    global _r2_client_instance
+    if _r2_client_instance is None:
+        with _r2_client_lock:
+            # Doble chequeo: otro thread pudo haber creado el cliente
+            # mientras este esperaba el lock (FastAPI corre las rutas sync
+            # en un threadpool, esto sí puede pasar concurrentemente).
+            if _r2_client_instance is None:
+                _r2_client_instance = boto3.client(
+                    "s3",
+                    endpoint_url=settings.r2_endpoint_url,
+                    aws_access_key_id=settings.R2_ACCESS_KEY_ID,
+                    aws_secret_access_key=settings.R2_SECRET_ACCESS_KEY,
+                    region_name="auto",
+                    config=Config(signature_version="s3v4"),
+                )
+    return _r2_client_instance
+
+
+def reset_r2_client() -> None:
+    """
+    Fuerza que la próxima llamada a _r2_client() arme una instancia nueva,
+    con las credenciales que tenga settings en ese momento -- usar después
+    de rotar credenciales de R2, sin reiniciar el proceso del backend.
+    """
+    global _r2_client_instance
+    with _r2_client_lock:
+        _r2_client_instance = None
 
 
 def _validar(archivo: UploadFile) -> str:
