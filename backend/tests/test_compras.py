@@ -202,3 +202,40 @@ def test_crear_nota_compra_devolucion_supera_cantidad_comprada_es_rechazado(
     )
 
     assert respuesta.status_code == 400
+
+
+def test_crear_nota_compra_con_integridad_de_proveedor_rota_es_rechazada(
+    client, db_session, headers_admin, monkeypatch
+):
+    """No se puede forzar un mismatch real por la API (proveedor_id siempre
+    se copia de la compra en crear_nota_compra) -- este test verifica que la
+    ruta de verdad usa validar_integridad_nota_compra (ver test_compra_
+    calculos.py para el chequeo en sí, sin mock): si esa validación explota,
+    el request tiene que fallar con 400 y NO crear la nota."""
+    monkeypatch.setattr(ruta_compras, "subir_comprobante", lambda *a, **k: "notas_compra/fake/nota.pdf")
+
+    def _simular_mismatch(nota, compra):
+        raise ValueError("mismatch simulado de proveedor")
+
+    monkeypatch.setattr(ruta_compras.models, "validar_integridad_nota_compra", _simular_mismatch)
+
+    compra, _, _ = _crear_compra_con_detalle(client, db_session, headers_admin)
+
+    respuesta = client.post(
+        f"/compras/{compra['id']}/notas",
+        data={
+            "tipo": "nota_debito",
+            "tipo_factura": "nota_debito_a",
+            "descripcion": "Ajuste",
+            "fecha": "2026-01-20",
+            "monto": 1000,
+        },
+        files={"archivo": ("nota.pdf", b"%PDF-1.4 fake", "application/pdf")},
+        headers=headers_admin,
+    )
+
+    assert respuesta.status_code == 400
+    assert "mismatch simulado" in respuesta.json()["detail"]
+
+    compra_actualizada = client.get(f"/compras/{compra['id']}", headers=headers_admin).json()
+    assert compra_actualizada["notas"] == []  # no se creó nada

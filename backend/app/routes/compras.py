@@ -439,6 +439,11 @@ def crear_nota_compra(request: Request,
         archivo_path=path
     )
 
+    try:
+        models.validar_integridad_nota_compra(nueva_nota, compra)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+
     if usa_lineas_producto:
         # Devolución de producto (nota_credito) o reposición de producto
         # (nota_debito, ej: te cambian 3 aires fallados por 3 nuevos y esos 3

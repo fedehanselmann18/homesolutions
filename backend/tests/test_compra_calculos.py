@@ -13,6 +13,8 @@ test_login.py y test_productos.py.
 import uuid
 from decimal import Decimal
 
+import pytest
+
 from app.db import models
 
 
@@ -251,3 +253,25 @@ def test_precio_total_de_compra_usa_el_monto_frozen_de_la_nota_no_recalcula_deta
     ]
 
     assert compra.precio_total == 94000.0  # 100000 - 6000, sin importar el detalle interno
+
+
+# ---------------------------------------------------------------------------
+# validar_integridad_nota_compra (B-14): NotaCompra.proveedor_id se
+# denormaliza desde Compra.proveedor_id al crearla -- este chequeo hace
+# explícita esa garantía en vez de confiar en que el caller la copie bien.
+# ---------------------------------------------------------------------------
+
+def test_validar_integridad_nota_compra_no_hace_nada_si_coinciden():
+    proveedor_id = uuid.uuid4()
+    compra = models.Compra(id=uuid.uuid4(), proveedor_id=proveedor_id)
+    nota = models.NotaCompra(id=uuid.uuid4(), proveedor_id=proveedor_id)
+
+    models.validar_integridad_nota_compra(nota, compra)  # no levanta nada
+
+
+def test_validar_integridad_nota_compra_rechaza_proveedor_distinto():
+    compra = models.Compra(id=uuid.uuid4(), proveedor_id=uuid.uuid4())
+    nota = models.NotaCompra(id=uuid.uuid4(), proveedor_id=uuid.uuid4())  # otro proveedor
+
+    with pytest.raises(ValueError, match="proveedor"):
+        models.validar_integridad_nota_compra(nota, compra)

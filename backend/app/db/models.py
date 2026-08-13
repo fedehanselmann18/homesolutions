@@ -407,6 +407,22 @@ class NotaCompraDetalle(TimestampMixin, Base):
     detalle: Mapped["DetalleCompra | None"] = relationship()
 
 
+def validar_integridad_nota_compra(nota: "NotaCompra", compra: "Compra") -> None:
+    """
+    NotaCompra.proveedor_id se denormaliza desde Compra.proveedor_id al
+    crearla (ver routes/compras.py: crear_nota_compra) -- hasta acá era una
+    copia implícita, sin nada que garantice que de verdad coincidan si algún
+    código nuevo arma la nota distinto. Este chequeo lo hace explícito:
+    levanta ValueError (el caller la traduce a 400) si por lo que sea no
+    matchean, en vez de dejar que una nota quede asociada al proveedor
+    equivocado en la cuenta corriente.
+    """
+    if nota.proveedor_id != compra.proveedor_id:
+        raise ValueError(
+            "La nota no puede quedar asociada a un proveedor distinto al de la compra que la originó"
+        )
+
+
 class NotaCompraImpuesto(TimestampMixin, Base):
     """Entidad asociativa NotaCompra<->Impuesto, mismo criterio que CompraImpuesto:
     impuestos que se suman al monto de una devolución de productos."""
