@@ -50,6 +50,18 @@
   --font-display: "Public Sans", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-ui: "Public Sans", -apple-system, BlinkMacSystemFont, sans-serif;
 
+  /* escala tipográfica — reemplaza los font-size sueltos (0.68rem, 0.74rem,
+     0.82rem, 1.02rem, etc.) que fueron apareciendo componente a componente.
+     --text-xs cubre los meta-textos/chips más chicos; --text-3xl, los
+     números grandes de KPI. */
+  --text-xs: 0.72rem;
+  --text-sm: 0.82rem;
+  --text-base: 0.9rem;
+  --text-lg: 1.05rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.6rem;
+  --text-3xl: 2rem;
+
   /* espaciado — escala de 4px */
   --space-1: 4px;
   --space-2: 8px;
