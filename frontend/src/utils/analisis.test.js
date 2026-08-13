@@ -139,4 +139,53 @@ describe("calcularAnalisis", () => {
     const gastosPaso = resultado.cascada.find((p) => p.nombre === "Gastos");
     expect(gastosPaso.rango).toEqual([1000, 800]); // sigue desde donde terminó "Cobrado"
   });
+
+  it("un gasto con monto negativo (corrección) resta del total en vez de sumar", () => {
+    const resultado = calcularAnalisis({
+      cobros: [{ monto_neto: 1000 }],
+      gastos: [{ monto: 300, categorias: [] }, { monto: -100, categorias: [] }],
+    });
+    expect(resultado.totales.gastos).toBe(200);
+    expect(resultado.totales.disponible).toBe(800);
+  });
+
+  it("una nota de crédito mayor al monto de la compra puede dejar el total de compras en negativo", () => {
+    const resultado = calcularAnalisis({
+      compras: [
+        { precio_neto: 100, impuestos_aplicados: [], notas: [{ tipo: "nota_credito", monto: 500 }] },
+      ],
+    });
+    expect(resultado.totales.compras).toBe(-400);
+  });
+
+  it("ignora items null/undefined dentro de los arrays de notas sin explotar", () => {
+    const resultado = calcularAnalisis({
+      compras: [{ precio_neto: 100, impuestos_aplicados: [], notas: null }],
+      cobros: [{ monto: 50, monto_neto: null }],
+    });
+    expect(resultado.totales.compras).toBe(100);
+    expect(resultado.totales.cobrado).toBe(50); // monto_neto null -> cae al bruto
+  });
+
+  it("cobradoPorFase: si está 'en rojo' (gastó más de lo cobrado) no hay fila 'Disponible' y la base es lo gastado", () => {
+    const resultado = calcularAnalisis({
+      fases: [{ id: 1, nombre: "Demolición" }],
+      cobros: [{ monto_neto: 100 }],
+      compras: [{ fase_id: 1, precio_neto: 400, precio_total: 400, impuestos_aplicados: [], notas: [] }],
+    });
+    expect(resultado.totales.disponible).toBeLessThan(0);
+    expect(resultado.cobradoPorFase.find((f) => f.nombre === "Disponible")).toBeUndefined();
+    const total = resultado.cobradoPorFase.reduce((acc, f) => acc + f.monto, 0);
+    expect(total).toBe(resultado.totales.egresos); // base = totalEgresos, no totalCobrado
+  });
+
+  it("cobradoPorFase: con margen positivo sí incluye la fila 'Disponible'", () => {
+    const resultado = calcularAnalisis({
+      fases: [{ id: 1, nombre: "Demolición" }],
+      cobros: [{ monto_neto: 1000 }],
+      compras: [{ fase_id: 1, precio_neto: 300, precio_total: 300, impuestos_aplicados: [], notas: [] }],
+    });
+    const disponibleFila = resultado.cobradoPorFase.find((f) => f.nombre === "Disponible");
+    expect(disponibleFila.monto).toBe(700);
+  });
 });
