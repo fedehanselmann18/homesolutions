@@ -181,14 +181,14 @@ class Compra(TimestampMixin, Base):
     # CORREGIDO: la Compra siempre pertenece a una Fase (CompraCreate.fase_id es obligatorio,
     # así lo definiste con Agus) -> CASCADE + not nullable, no SET NULL.
     fase_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("fases.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("fases.id", ondelete="CASCADE"), nullable=False, index=True
     )
     # RESTRICT: no se puede borrar un proveedor/usuario si tiene compras -> se pierde trazabilidad.
     proveedor_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("proveedores.id", ondelete="RESTRICT"), nullable=False
+        ForeignKey("proveedores.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     usuario_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False
+        ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False, index=True
     )
 
     descripcion: Mapped[str] = mapped_column(String(500), nullable=False)
@@ -358,10 +358,10 @@ class NotaCompra(TimestampMixin, Base):
         ForeignKey("compras.id", ondelete="CASCADE"), nullable=False
     )
     proveedor_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("proveedores.id", ondelete="RESTRICT"), nullable=False
+        ForeignKey("proveedores.id", ondelete="RESTRICT"), nullable=False, index=True
     )
     usuario_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False
+        ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False, index=True
     )
 
     tipo: Mapped[str] = mapped_column(String(20), nullable=False)  # nota_credito | nota_debito
@@ -445,14 +445,14 @@ class Gasto(TimestampMixin, Base):
 
     id: Mapped[uuid.UUID] = uuid_pk()
     proyecto_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("proyectos.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("proyectos.id", ondelete="CASCADE"), nullable=False, index=True
     )
     # SET NULL: si se borra la Fase, el Gasto se desvincula pero sigue existiendo (es del Proyecto).
     fase_id: Mapped[uuid.UUID | None] = mapped_column(
-        ForeignKey("fases.id", ondelete="SET NULL"), nullable=True
+        ForeignKey("fases.id", ondelete="SET NULL"), nullable=True, index=True
     )
     usuario_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False
+        ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False, index=True
     )
 
     monto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
@@ -488,10 +488,10 @@ class Cobro(TimestampMixin, Base):
 
     id: Mapped[uuid.UUID] = uuid_pk()
     proyecto_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("proyectos.id", ondelete="CASCADE"), nullable=False
+        ForeignKey("proyectos.id", ondelete="CASCADE"), nullable=False, index=True
     )
     usuario_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False
+        ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False, index=True
     )
 
     monto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
