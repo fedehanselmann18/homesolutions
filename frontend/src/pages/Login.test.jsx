@@ -4,10 +4,8 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { Login } from "./Login";
 import { useAuth } from "../context/useAuth";
-import { getOpcionesLogin } from "../services/usuarioService";
 
 vi.mock("../context/useAuth");
-vi.mock("../services/usuarioService");
 
 const renderLogin = () =>
   render(
@@ -19,19 +17,9 @@ const renderLogin = () =>
 describe("Login", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    getOpcionesLogin.mockResolvedValue(["Agustin", "Aldana", "Alejandro"]);
   });
 
-  it("carga las opciones de usuario desde el endpoint público (sin exponer id/rol)", async () => {
-    useAuth.mockReturnValue({ login: vi.fn() });
-    renderLogin();
-
-    await waitFor(() => expect(getOpcionesLogin).toHaveBeenCalledTimes(1));
-    expect(await screen.findByRole("option", { name: "Agustin" })).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "Aldana" })).toBeInTheDocument();
-  });
-
-  it("muestra un error si se intenta enviar sin elegir usuario ni contraseña", async () => {
+  it("muestra un error si se intenta enviar sin ingresar usuario ni contraseña", async () => {
     useAuth.mockReturnValue({ login: vi.fn() });
     renderLogin();
     const user = userEvent.setup();
@@ -47,8 +35,7 @@ describe("Login", () => {
     renderLogin();
     const user = userEvent.setup();
 
-    await screen.findByRole("option", { name: "Agustin" });
-    await user.selectOptions(screen.getByRole("combobox"), "Agustin");
+    await user.type(screen.getByPlaceholderText("Tu usuario"), "Agustin");
     await user.type(screen.getByPlaceholderText("••••••••"), "clave-super-segura");
     await user.click(screen.getByRole("button", { name: /ingresar/i }));
 
@@ -69,8 +56,7 @@ describe("Login", () => {
     renderLogin();
     const user = userEvent.setup();
 
-    await screen.findByRole("option", { name: "Agustin" });
-    await user.selectOptions(screen.getByRole("combobox"), "Agustin");
+    await user.type(screen.getByPlaceholderText("Tu usuario"), "Agustin");
     await user.type(screen.getByPlaceholderText("••••••••"), "mala-clave");
     await user.click(screen.getByRole("button", { name: /ingresar/i }));
 
@@ -86,8 +72,7 @@ describe("Login", () => {
     renderLogin();
     const user = userEvent.setup();
 
-    await screen.findByRole("option", { name: "Agustin" });
-    await user.selectOptions(screen.getByRole("combobox"), "Agustin");
+    await user.type(screen.getByPlaceholderText("Tu usuario"), "Agustin");
     await user.type(screen.getByPlaceholderText("••••••••"), "clave-cualquiera");
     await user.click(screen.getByRole("button", { name: /ingresar/i }));
 

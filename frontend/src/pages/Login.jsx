@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
-import { getOpcionesLogin } from "../services/usuarioService";
 import { obtenerMensajeError } from "../utils/errorHandling";
 import logoHS from "../assets/HS_logo_blanco.png";
 import "./Login.css";
@@ -9,18 +8,6 @@ import "./Login.css";
 export function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
-
-  // Sin sesión todavía, así que se usa el endpoint público que solo
-  // devuelve nombres de usuario (no id ni rol -- ver /usuarios/login-options).
-  const [nombresUsuario, setNombresUsuario] = useState([]);
-  const [cargandoUsuarios, setCargandoUsuarios] = useState(true);
-
-  useEffect(() => {
-    getOpcionesLogin()
-      .then(setNombresUsuario)
-      .catch(() => setNombresUsuario([]))
-      .finally(() => setCargandoUsuarios(false));
-  }, []);
 
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [password, setPassword] = useState("");
@@ -70,20 +57,13 @@ export function Login() {
 
           <label className="login-field">
             <span>Usuario</span>
-            <select
+            <input
+              type="text"
               value={nombreUsuario}
               onChange={(e) => setNombreUsuario(e.target.value)}
-              disabled={cargandoUsuarios}
-            >
-              <option value="" disabled>
-                {cargandoUsuarios ? "Cargando..." : "Seleccioná tu usuario"}
-              </option>
-              {nombresUsuario.map((nombre) => (
-                <option key={nombre} value={nombre}>
-                  {nombre}
-                </option>
-              ))}
-            </select>
+              placeholder="Tu usuario"
+              autoComplete="username"
+            />
           </label>
 
           <label className="login-field">
