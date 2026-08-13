@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     database_name: str
     SECRET_KEY: str
     ALGORITHM: str
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
     @field_validator("SECRET_KEY")
     @classmethod
