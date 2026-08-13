@@ -1,46 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
-import {
-    getComprasPorProyecto,
-    crearCompra,
-    actualizarCompra,
-    eliminarCompra,
-    subirComprobanteCompra,
-    getComprobanteCompra,
-    eliminarComprobanteCompra,
-    crearNotaCompra,
-    getNotaCompra,
-    eliminarNotaCompra,
-} from "../../services/compraService";
-import {
-    getGastosPorProyecto,
-    crearGasto,
-    actualizarGasto,
-    eliminarGasto,
-    subirComprobanteGasto,
-    getComprobanteGasto,
-    eliminarComprobanteGasto,
-} from "../../services/gastoService";
-import {
-    getCobrosPorProyecto,
-    crearCobro,
-    actualizarCobro,
-    eliminarCobro,
-    subirComprobanteCobro,
-    getComprobanteCobro,
-    eliminarComprobanteCobro,
-    crearNotaCobro,
-    getNotaCobro,
-    eliminarNotaCobro,
-} from "../../services/cobroService";
-import { getFasesPorProyecto } from "../../services/faseService";
-import { getCategoriasGasto } from "../../services/categoriaGastoService";
-import { getProveedores } from "../../services/proveedorService";
-import { getProductos } from "../../services/productoService";
-import { getImpuestos } from "../../services/impuestosService";
+import { useMemo, useState } from "react";
+import { getComprobanteCompra, getNotaCompra } from "../../services/compraService";
+import { getComprobanteGasto } from "../../services/gastoService";
+import { getComprobanteCobro, getNotaCobro } from "../../services/cobroService";
 import useAuth from "../../context/useAuth";
-import { useToast } from "../../context/useToast";
-import { obtenerDetalleBackend } from "../../utils/errorHandling";
 import { formatMoneda, formatFecha } from "../../utils/formato";
+import { useAccionesProyecto } from "../../hooks/useAccionesProyecto";
 
 import GastoCard from "./cards/GastoCard";
 import CobroCard from "./cards/CobroCard";
@@ -61,13 +25,36 @@ import "./Acciones.css";
 export function Acciones({ proyectoId, proyectoNombre }) {
     const { usuario } = useAuth();
     const canManage = usuario?.rol === "admin";
-    const toast = useToast();
 
     const [subTab, setSubTab] = useState("compras");
 
-    const [compras, setCompras] = useState([]);
-    const [gastos, setGastos] = useState([]);
-    const [cobros, setCobros] = useState([]);
+    const {
+        compras,
+        gastos,
+        cobros,
+        fases,
+        categoriasGasto,
+        proveedores,
+        productos,
+        impuestos,
+        guardarGasto,
+        eliminarGasto,
+        agregarComprobantesGasto,
+        eliminarComprobanteGasto,
+        guardarCobro,
+        eliminarCobro,
+        agregarComprobantesCobro,
+        eliminarComprobanteCobro,
+        guardarCompra,
+        eliminarCompra,
+        toggleEstadoPagoCompra,
+        toggleEstadoEnvioCompra,
+        agregarComprobantesCompra,
+        eliminarComprobanteCompra,
+        guardarNota,
+        eliminarNotaCompra,
+        eliminarNotaCobro,
+    } = useAccionesProyecto(proyectoId);
 
     const [filtrosGastos, setFiltrosGastos] = useState(FILTROS_VACIOS);
     const [filtrosCobros, setFiltrosCobros] = useState(FILTROS_VACIOS);
@@ -76,13 +63,6 @@ export function Acciones({ proyectoId, proyectoNombre }) {
     const gastosFiltrados = useMemo(() => filtrarGastos(gastos, filtrosGastos), [gastos, filtrosGastos]);
     const cobrosFiltrados = useMemo(() => filtrarCobros(cobros, filtrosCobros), [cobros, filtrosCobros]);
     const comprasFiltradas = useMemo(() => filtrarCompras(compras, filtrosCompras), [compras, filtrosCompras]);
-
-    // Listas de apoyo para los selects de los modales
-    const [fases, setFases] = useState([]);
-    const [categoriasGasto, setCategoriasGasto] = useState([]);
-    const [proveedores, setProveedores] = useState([]);
-    const [productos, setProductos] = useState([]);
-    const [impuestos, setImpuestos] = useState([]);
 
     const [modalGastoAbierto, setModalGastoAbierto] = useState(false);
     const [gastoEditando, setGastoEditando] = useState(null);
@@ -103,46 +83,6 @@ export function Acciones({ proyectoId, proyectoNombre }) {
     const [confirmarEliminar, setConfirmarEliminar] = useState(null); // { tipo: "gasto" | "cobro" | "compra", id, nombre }
     const cerrarConfirmarEliminar = () => setConfirmarEliminar(null);
 
-    useEffect(() => {
-        fetchAcciones();
-        fetchListasDeApoyo();
-    }, [proyectoId]);
-
-    const fetchAcciones = async () => {
-        try {
-            const [comprasData, gastosData, cobrosData] = await Promise.all([
-                getComprasPorProyecto(proyectoId),
-                getGastosPorProyecto(proyectoId),
-                getCobrosPorProyecto(proyectoId),
-            ]);
-            setCompras(comprasData);
-            setGastos(gastosData);
-            setCobros(cobrosData);
-        } catch (error) {
-            console.error("Error fetching acciones:", error);
-        }
-    };
-
-    const fetchListasDeApoyo = async () => {
-        try {
-            const [fasesData, categoriasData, proveedoresData, productosData, impuestosData] =
-                await Promise.all([
-                    getFasesPorProyecto(proyectoId),
-                    getCategoriasGasto(),
-                    getProveedores(),
-                    getProductos(),
-                    getImpuestos(),
-                ]);
-            setFases(fasesData);
-            setCategoriasGasto(categoriasData);
-            setProveedores(proveedoresData);
-            setProductos(productosData);
-            setImpuestos(impuestosData);
-        } catch (error) {
-            console.error("Error fetching listas de apoyo:", error);
-        }
-    };
-
     const nombreFase = (faseId) => fases.find((f) => f.id === faseId)?.nombre;
     const nombreProveedor = (proveedorId) => proveedores.find((p) => p.id === proveedorId)?.nombre;
 
@@ -157,23 +97,13 @@ export function Acciones({ proyectoId, proyectoNombre }) {
         setModalGastoAbierto(true);
     };
 
-    const handleGuardarGasto = async (datosForm, comprobantesCambios = { archivos: [], eliminarIds: [] }) => {
+    const handleGuardarGasto = async (datosForm, comprobantesCambios) => {
         try {
-            const gasto = gastoEditando
-                ? await actualizarGasto(gastoEditando.id, datosForm)
-                : await crearGasto({ ...datosForm, proyecto_id: proyectoId });
-
-            await Promise.all([
-                ...comprobantesCambios.eliminarIds.map((id) => eliminarComprobanteGasto(gasto.id, id)),
-                ...comprobantesCambios.archivos.map((archivo) => subirComprobanteGasto(gasto.id, archivo)),
-            ]);
-
+            await guardarGasto(gastoEditando, datosForm, comprobantesCambios);
             setModalGastoAbierto(false);
             setGastoEditando(null);
-            fetchAcciones();
-        } catch (error) {
-            console.error("Error guardando gasto:", error);
-            toast.error(obtenerDetalleBackend(error) ?? "No se pudo guardar el gasto.");
+        } catch {
+            // el hook ya mostró el toast de error
         }
     };
 
@@ -185,21 +115,9 @@ export function Acciones({ proyectoId, proyectoNombre }) {
     const handleEliminarGasto = async (gastoId) => {
         try {
             await eliminarGasto(gastoId);
-            fetchAcciones();
-        } catch (error) {
-            console.error("Error eliminando gasto:", error);
-            toast.error(obtenerDetalleBackend(error) ?? "No se pudo eliminar el gasto.");
+        } catch {
+            // el hook ya mostró el toast de error
         }
-    };
-
-    const handleAgregarComprobantesGasto = async (gastoId, files) => {
-        await Promise.all(Array.from(files).map((archivo) => subirComprobanteGasto(gastoId, archivo)));
-        fetchAcciones();
-    };
-
-    const handleEliminarComprobanteGasto = async (gastoId, comprobanteId) => {
-        await eliminarComprobanteGasto(gastoId, comprobanteId);
-        fetchAcciones();
     };
 
     // --- Cobros ---
@@ -213,23 +131,13 @@ export function Acciones({ proyectoId, proyectoNombre }) {
         setModalCobroAbierto(true);
     };
 
-    const handleGuardarCobro = async (datosForm, comprobantesCambios = { archivos: [], eliminarIds: [] }) => {
+    const handleGuardarCobro = async (datosForm, comprobantesCambios) => {
         try {
-            const cobro = cobroEditando
-                ? await actualizarCobro(cobroEditando.id, datosForm)
-                : await crearCobro({ ...datosForm, proyecto_id: proyectoId });
-
-            await Promise.all([
-                ...comprobantesCambios.eliminarIds.map((id) => eliminarComprobanteCobro(cobro.id, id)),
-                ...comprobantesCambios.archivos.map((archivo) => subirComprobanteCobro(cobro.id, archivo)),
-            ]);
-
+            await guardarCobro(cobroEditando, datosForm, comprobantesCambios);
             setModalCobroAbierto(false);
             setCobroEditando(null);
-            fetchAcciones();
-        } catch (error) {
-            console.error("Error guardando cobro:", error);
-            toast.error(obtenerDetalleBackend(error) ?? "No se pudo guardar el cobro.");
+        } catch {
+            // el hook ya mostró el toast de error
         }
     };
 
@@ -245,21 +153,9 @@ export function Acciones({ proyectoId, proyectoNombre }) {
     const handleEliminarCobro = async (cobroId) => {
         try {
             await eliminarCobro(cobroId);
-            fetchAcciones();
-        } catch (error) {
-            console.error("Error eliminando cobro:", error);
-            toast.error(obtenerDetalleBackend(error) ?? "No se pudo eliminar el cobro.");
+        } catch {
+            // el hook ya mostró el toast de error
         }
-    };
-
-    const handleAgregarComprobantesCobro = async (cobroId, files) => {
-        await Promise.all(Array.from(files).map((archivo) => subirComprobanteCobro(cobroId, archivo)));
-        fetchAcciones();
-    };
-
-    const handleEliminarComprobanteCobro = async (cobroId, comprobanteId) => {
-        await eliminarComprobanteCobro(cobroId, comprobanteId);
-        fetchAcciones();
     };
 
     // --- Compras ---
@@ -273,23 +169,13 @@ export function Acciones({ proyectoId, proyectoNombre }) {
         setModalCompraAbierto(true);
     };
 
-    const handleGuardarCompra = async (datosForm, comprobantesCambios = { archivos: [], eliminarIds: [] }) => {
+    const handleGuardarCompra = async (datosForm, comprobantesCambios) => {
         try {
-            const compra = compraEditando
-                ? await actualizarCompra(compraEditando.id, datosForm)
-                : await crearCompra(datosForm);
-
-            await Promise.all([
-                ...comprobantesCambios.eliminarIds.map((id) => eliminarComprobanteCompra(compra.id, id)),
-                ...comprobantesCambios.archivos.map((archivo) => subirComprobanteCompra(compra.id, archivo)),
-            ]);
-
+            await guardarCompra(compraEditando, datosForm, comprobantesCambios);
             setModalCompraAbierto(false);
             setCompraEditando(null);
-            fetchAcciones();
-        } catch (error) {
-            console.error("Error guardando compra:", error);
-            toast.error(obtenerDetalleBackend(error) ?? "No se pudo guardar la compra.");
+        } catch {
+            // el hook ya mostró el toast de error
         }
     };
 
@@ -307,43 +193,25 @@ export function Acciones({ proyectoId, proyectoNombre }) {
     const handleEliminarCompra = async (compraId) => {
         try {
             await eliminarCompra(compraId);
-            fetchAcciones();
-        } catch (error) {
-            console.error("Error eliminando compra:", error);
-            toast.error(obtenerDetalleBackend(error) ?? "No se pudo eliminar la compra.");
+        } catch {
+            // el hook ya mostró el toast de error
         }
     };
 
     const handleToggleEstadoPagoCompra = async (compra) => {
         try {
-            const estado_pago = compra.estado_pago === "pagado" ? "pendiente" : "pagado";
-            await actualizarCompra(compra.id, { estado_pago });
-            fetchAcciones();
-        } catch (error) {
-            console.error("Error actualizando el estado de pago de la compra:", error);
-            toast.error(obtenerDetalleBackend(error) ?? "No se pudo actualizar el estado de pago.");
+            await toggleEstadoPagoCompra(compra);
+        } catch {
+            // el hook ya mostró el toast de error
         }
     };
 
     const handleToggleEstadoEnvioCompra = async (compra) => {
         try {
-            const estado_envio = compra.estado_envio === "entregado" ? "pedido" : "entregado";
-            await actualizarCompra(compra.id, { estado_envio });
-            fetchAcciones();
-        } catch (error) {
-            console.error("Error actualizando el estado de envío de la compra:", error);
-            toast.error(obtenerDetalleBackend(error) ?? "No se pudo actualizar el estado de envío.");
+            await toggleEstadoEnvioCompra(compra);
+        } catch {
+            // el hook ya mostró el toast de error
         }
-    };
-
-    const handleAgregarComprobantesCompra = async (compraId, files) => {
-        await Promise.all(Array.from(files).map((archivo) => subirComprobanteCompra(compraId, archivo)));
-        fetchAcciones();
-    };
-
-    const handleEliminarComprobanteCompra = async (compraId, comprobanteId) => {
-        await eliminarComprobanteCompra(compraId, comprobanteId);
-        fetchAcciones();
     };
 
     // --- Notas (cuenta corriente: nota de crédito / débito) ---
@@ -360,24 +228,9 @@ export function Acciones({ proyectoId, proyectoNombre }) {
     };
 
     const handleGuardarNota = async (payload) => {
-        if (notaContexto === "compra") {
-            await crearNotaCompra(notaEntidad.id, payload);
-        } else {
-            await crearNotaCobro(notaEntidad.id, payload);
-        }
+        await guardarNota(notaContexto, notaEntidad, payload);
         setModalNotaAbierto(false);
         setNotaEntidad(null);
-        fetchAcciones();
-    };
-
-    const handleEliminarNotaCompra = async (compraId, notaId) => {
-        await eliminarNotaCompra(compraId, notaId);
-        fetchAcciones();
-    };
-
-    const handleEliminarNotaCobro = async (cobroId, notaId) => {
-        await eliminarNotaCobro(cobroId, notaId);
-        fetchAcciones();
     };
 
     // --- Confirmación de borrado (compra/gasto/cobro) ---
@@ -447,11 +300,11 @@ export function Acciones({ proyectoId, proyectoNombre }) {
                                     onTogglePago={handleToggleEstadoPagoCompra}
                                     onToggleEnvio={handleToggleEstadoEnvioCompra}
                                     onVerComprobante={getComprobanteCompra}
-                                    onAgregarComprobante={handleAgregarComprobantesCompra}
-                                    onEliminarComprobante={handleEliminarComprobanteCompra}
+                                    onAgregarComprobante={agregarComprobantesCompra}
+                                    onEliminarComprobante={eliminarComprobanteCompra}
                                     onAgregarNota={handleAgregarNotaCompra}
                                     onVerNota={getNotaCompra}
-                                    onEliminarNota={handleEliminarNotaCompra}
+                                    onEliminarNota={eliminarNotaCompra}
                                     onAbrirDetalle={(c) => setDetalle({ tipo: "compra", entidad: c })}
                                 />
                             ))}
@@ -489,8 +342,8 @@ export function Acciones({ proyectoId, proyectoNombre }) {
                                     onEditar={handleEditarGasto}
                                     onEliminar={handleSolicitarEliminarGasto}
                                     onVerComprobante={getComprobanteGasto}
-                                    onAgregarComprobante={handleAgregarComprobantesGasto}
-                                    onEliminarComprobante={handleEliminarComprobanteGasto}
+                                    onAgregarComprobante={agregarComprobantesGasto}
+                                    onEliminarComprobante={eliminarComprobanteGasto}
                                     onAbrirDetalle={(g) => setDetalle({ tipo: "gasto", entidad: g })}
                                 />
                             ))}
@@ -528,11 +381,11 @@ export function Acciones({ proyectoId, proyectoNombre }) {
                                     onEditar={handleEditarCobro}
                                     onEliminar={handleSolicitarEliminarCobro}
                                     onVerComprobante={getComprobanteCobro}
-                                    onAgregarComprobante={handleAgregarComprobantesCobro}
-                                    onEliminarComprobante={handleEliminarComprobanteCobro}
+                                    onAgregarComprobante={agregarComprobantesCobro}
+                                    onEliminarComprobante={eliminarComprobanteCobro}
                                     onAgregarNota={handleAgregarNotaCobro}
                                     onVerNota={getNotaCobro}
-                                    onEliminarNota={handleEliminarNotaCobro}
+                                    onEliminarNota={eliminarNotaCobro}
                                     onAbrirDetalle={(c) => setDetalle({ tipo: "cobro", entidad: c })}
                                 />
                             ))}

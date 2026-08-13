@@ -1,44 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, CalendarDays, Clock } from "lucide-react";
 
-import { getFasePorId, actualizarFase } from "../services/faseService";
-import { getProyectoPorId } from "../services/proyectoService";
-import {
-    getGastosPorFase,
-    getGastosPorProyecto,
-    crearGasto,
-    actualizarGasto,
-    eliminarGasto,
-    subirComprobanteGasto,
-    getComprobanteGasto,
-    eliminarComprobanteGasto,
-} from "../services/gastoService";
-import {
-    getComprasPorFase,
-    getComprasPorProyecto,
-    crearCompra,
-    actualizarCompra,
-    eliminarCompra,
-    subirComprobanteCompra,
-    getComprobanteCompra,
-    eliminarComprobanteCompra,
-    crearNotaCompra,
-    getNotaCompra,
-    eliminarNotaCompra,
-} from "../services/compraService";
-import { getCobrosPorProyecto } from "../services/cobroService";
-import { getCategoriasGasto } from "../services/categoriaGastoService";
-import { getProveedores } from "../services/proveedorService";
-import { getProductos } from "../services/productoService";
-import { getImpuestos } from "../services/impuestosService";
+import { getComprobanteCompra, getNotaCompra } from "../services/compraService";
+import { getComprobanteGasto } from "../services/gastoService";
 
 import useAuth from "../context/useAuth";
 import { getEstadoLabel } from "../constants/estados";
 import { diasDesde } from "../utils/seguimiento";
-import { notasDeCompras, totalNotasCredito, totalNotasDebito } from "../utils/notas";
 import { FILTROS_VACIOS, filtrarCompras, filtrarGastos } from "../utils/filtros";
 import { formatMoneda, formatFecha } from "../utils/formato";
+import { ROJO } from "../constants/colores";
+import { useFaseDetalle } from "../hooks/useFaseDetalle";
 
 import { TarjetaKpi } from "../components/shared/TarjetaKpi";
 import ModalGasto from "../components/modals/ModalGasto";
@@ -49,7 +22,6 @@ import ModalDetalleGasto from "../components/modals/ModalDetalleGasto";
 import ModalDetalleCompra from "../components/modals/ModalDetalleCompra";
 import { Cargando } from "../components/shared/Cargando";
 import { Breadcrumbs } from "../components/shared/Breadcrumbs";
-import { useToast } from "../context/useToast";
 import AccionesFase from "../components/fases/AccionesFase";
 import SeguimientoFase from "../components/fases/SeguimientoFase";
 import AnalisisFase from "../components/fases/AnalisisFase";
@@ -59,33 +31,43 @@ import "../components/proyectos/Seguimiento.css";
 import "../components/proyectos/AnalisisGeneral.css";
 import "./FaseDetalle.css";
 
-const ROJO = "#dc2626";
-
 const diasTexto = (dias) => `hace ${dias} ${dias === 1 ? "día" : "días"}`;
-const sumar = (items, obtenerMonto) => items.reduce((acc, item) => acc + (obtenerMonto(item) || 0), 0);
 
 export function FaseDetalle() {
     const { proyectoId, faseId } = useParams();
     const navigate = useNavigate();
     const { usuario } = useAuth();
     const canManage = usuario?.rol === "admin";
-    const toast = useToast();
 
     const [tabActiva, setTabActiva] = useState("acciones");
 
-    const [fase, setFase] = useState(null);
-    const [proyecto, setProyecto] = useState(null);
-    const [gastosFase, setGastosFase] = useState([]);
-    const [comprasFase, setComprasFase] = useState([]);
-    const [gastosProyecto, setGastosProyecto] = useState([]);
-    const [comprasProyecto, setComprasProyecto] = useState([]);
-    const [cobrosProyecto, setCobrosProyecto] = useState([]);
-    const [proveedores, setProveedores] = useState([]);
-    const [productos, setProductos] = useState([]);
-    const [categoriasGasto, setCategoriasGasto] = useState([]);
-    const [impuestos, setImpuestos] = useState([]);
-    const [cargando, setCargando] = useState(true);
-    const [error, setError] = useState(null);
+    const {
+        fase,
+        proyecto,
+        gastosFase,
+        comprasFase,
+        cobrosProyecto,
+        proveedores,
+        productos,
+        categoriasGasto,
+        impuestos,
+        kpis,
+        cargando,
+        error,
+        marcarTerminada,
+        guardarGasto,
+        eliminarGasto,
+        agregarComprobantesGasto,
+        eliminarComprobanteGasto,
+        guardarCompra,
+        eliminarCompra,
+        toggleEstadoPagoCompra,
+        toggleEstadoEnvioCompra,
+        agregarComprobantesCompra,
+        eliminarComprobanteCompra,
+        guardarNota,
+        eliminarNotaCompra,
+    } = useFaseDetalle(faseId);
 
     const [modalGastoAbierto, setModalGastoAbierto] = useState(false);
     const [gastoEditando, setGastoEditando] = useState(null);
@@ -107,106 +89,7 @@ export function FaseDetalle() {
     const gastosFaseFiltrados = useMemo(() => filtrarGastos(gastosFase, filtrosGastos), [gastosFase, filtrosGastos]);
     const comprasFaseFiltradas = useMemo(() => filtrarCompras(comprasFase, filtrosCompras), [comprasFase, filtrosCompras]);
 
-    useEffect(() => {
-        fetchTodo();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [faseId]);
-
-    const fetchTodo = async () => {
-        try {
-            setCargando(true);
-            setError(null);
-            const faseData = await getFasePorId(faseId);
-
-            const [
-                proyectoData,
-                gastosFaseData,
-                comprasFaseData,
-                gastosProyectoData,
-                comprasProyectoData,
-                cobrosProyectoData,
-                proveedoresData,
-                productosData,
-                categoriasData,
-                impuestosData,
-            ] = await Promise.all([
-                getProyectoPorId(faseData.proyecto_id),
-                getGastosPorFase(faseId),
-                getComprasPorFase(faseId),
-                getGastosPorProyecto(faseData.proyecto_id),
-                getComprasPorProyecto(faseData.proyecto_id),
-                getCobrosPorProyecto(faseData.proyecto_id),
-                getProveedores(),
-                getProductos(),
-                getCategoriasGasto(),
-                getImpuestos(),
-            ]);
-
-            setFase(faseData);
-            setProyecto(proyectoData);
-            setGastosFase(gastosFaseData);
-            setComprasFase(comprasFaseData);
-            setGastosProyecto(gastosProyectoData);
-            setComprasProyecto(comprasProyectoData);
-            setCobrosProyecto(cobrosProyectoData);
-            setProveedores(proveedoresData);
-            setProductos(productosData);
-            setCategoriasGasto(categoriasData);
-            setImpuestos(impuestosData);
-        } catch (err) {
-            console.error("Error fetching detalle de fase:", err);
-            setError(err);
-        } finally {
-            setCargando(false);
-        }
-    };
-
-    const refetchAcciones = async () => {
-        const [gastosFaseData, comprasFaseData, gastosProyectoData, comprasProyectoData] = await Promise.all([
-            getGastosPorFase(faseId),
-            getComprasPorFase(faseId),
-            getGastosPorProyecto(fase.proyecto_id),
-            getComprasPorProyecto(fase.proyecto_id),
-        ]);
-        setGastosFase(gastosFaseData);
-        setComprasFase(comprasFaseData);
-        setGastosProyecto(gastosProyectoData);
-        setComprasProyecto(comprasProyectoData);
-    };
-
-    const kpis = useMemo(() => {
-        if (!proyecto) return null;
-        // precio_total ya incluye impuestos + notas de crédito/débito (ver
-        // Compra.precio_total en el backend) -- "gastado en esta fase" ya
-        // sale bien sin tocar nada acá.
-        const gastadoFase = sumar(gastosFase, (g) => g.monto) + sumar(comprasFase, (c) => c.precio_total);
-        const totalGastoProyecto = sumar(gastosProyecto, (g) => g.monto) + sumar(comprasProyecto, (c) => c.precio_total);
-        const precioAcordado = Number(proyecto.precio_acordado ?? 0);
-
-        const notasFase = notasDeCompras(comprasFase);
-
-        return {
-            gastadoFase,
-            pctPresupuesto: precioAcordado > 0 ? (gastadoFase / precioAcordado) * 100 : 0,
-            pctGastoTotal: totalGastoProyecto > 0 ? (gastadoFase / totalGastoProyecto) * 100 : 0,
-            notasCreditoFase: totalNotasCredito(notasFase),
-            notasDebitoFase: totalNotasDebito(notasFase),
-            cantidadNotasFase: notasFase.length,
-        };
-    }, [proyecto, gastosFase, comprasFase, gastosProyecto, comprasProyecto]);
-
     const nombreProveedor = (proveedorId) => proveedores.find((p) => p.id === proveedorId)?.nombre;
-
-    // --- Marcar como terminada ---
-    const handleMarcarTerminada = async () => {
-        try {
-            const actualizada = await actualizarFase(fase.id, { estado: "terminada" });
-            setFase(actualizada);
-        } catch (err) {
-            console.error("Error marcando la fase como terminada:", err);
-            toast.error("No se pudo marcar la fase como terminada.");
-        }
-    };
 
     // --- Gastos ---
     const handleNuevoGasto = () => {
@@ -219,23 +102,13 @@ export function FaseDetalle() {
         setModalGastoAbierto(true);
     };
 
-    const handleGuardarGasto = async (datosForm, comprobantesCambios = { archivos: [], eliminarIds: [] }) => {
+    const handleGuardarGasto = async (datosForm, comprobantesCambios) => {
         try {
-            const gasto = gastoEditando
-                ? await actualizarGasto(gastoEditando.id, datosForm)
-                : await crearGasto({ ...datosForm, proyecto_id: proyecto.id });
-
-            await Promise.all([
-                ...comprobantesCambios.eliminarIds.map((id) => eliminarComprobanteGasto(gasto.id, id)),
-                ...comprobantesCambios.archivos.map((archivo) => subirComprobanteGasto(gasto.id, archivo)),
-            ]);
-
+            await guardarGasto(gastoEditando, datosForm, comprobantesCambios);
             setModalGastoAbierto(false);
             setGastoEditando(null);
-            refetchAcciones();
-        } catch (err) {
-            console.error("Error guardando gasto:", err);
-            toast.error("No se pudo guardar el gasto.");
+        } catch {
+            // el hook ya mostró el toast de error
         }
     };
 
@@ -247,21 +120,9 @@ export function FaseDetalle() {
     const handleEliminarGasto = async (gastoId) => {
         try {
             await eliminarGasto(gastoId);
-            refetchAcciones();
-        } catch (err) {
-            console.error("Error eliminando gasto:", err);
-            toast.error("No se pudo eliminar el gasto.");
+        } catch {
+            // el hook ya mostró el toast de error
         }
-    };
-
-    const handleAgregarComprobantesGasto = async (gastoId, files) => {
-        await Promise.all(Array.from(files).map((archivo) => subirComprobanteGasto(gastoId, archivo)));
-        refetchAcciones();
-    };
-
-    const handleEliminarComprobanteGasto = async (gastoId, comprobanteId) => {
-        await eliminarComprobanteGasto(gastoId, comprobanteId);
-        refetchAcciones();
     };
 
     // --- Compras ---
@@ -275,23 +136,13 @@ export function FaseDetalle() {
         setModalCompraAbierto(true);
     };
 
-    const handleGuardarCompra = async (datosForm, comprobantesCambios = { archivos: [], eliminarIds: [] }) => {
+    const handleGuardarCompra = async (datosForm, comprobantesCambios) => {
         try {
-            const compra = compraEditando
-                ? await actualizarCompra(compraEditando.id, datosForm)
-                : await crearCompra(datosForm);
-
-            await Promise.all([
-                ...comprobantesCambios.eliminarIds.map((id) => eliminarComprobanteCompra(compra.id, id)),
-                ...comprobantesCambios.archivos.map((archivo) => subirComprobanteCompra(compra.id, archivo)),
-            ]);
-
+            await guardarCompra(compraEditando, datosForm, comprobantesCambios);
             setModalCompraAbierto(false);
             setCompraEditando(null);
-            refetchAcciones();
-        } catch (err) {
-            console.error("Error guardando compra:", err);
-            toast.error("No se pudo guardar la compra.");
+        } catch {
+            // el hook ya mostró el toast de error
         }
     };
 
@@ -309,43 +160,25 @@ export function FaseDetalle() {
     const handleEliminarCompra = async (compraId) => {
         try {
             await eliminarCompra(compraId);
-            refetchAcciones();
-        } catch (err) {
-            console.error("Error eliminando compra:", err);
-            toast.error("No se pudo eliminar la compra.");
+        } catch {
+            // el hook ya mostró el toast de error
         }
     };
 
     const handleToggleEstadoPagoCompra = async (compra) => {
         try {
-            const estado_pago = compra.estado_pago === "pagado" ? "pendiente" : "pagado";
-            await actualizarCompra(compra.id, { estado_pago });
-            refetchAcciones();
-        } catch (err) {
-            console.error("Error actualizando el estado de pago de la compra:", err);
-            toast.error("No se pudo actualizar el estado de pago.");
+            await toggleEstadoPagoCompra(compra);
+        } catch {
+            // el hook ya mostró el toast de error
         }
     };
 
     const handleToggleEstadoEnvioCompra = async (compra) => {
         try {
-            const estado_envio = compra.estado_envio === "entregado" ? "pedido" : "entregado";
-            await actualizarCompra(compra.id, { estado_envio });
-            refetchAcciones();
-        } catch (err) {
-            console.error("Error actualizando el estado de envío de la compra:", err);
-            toast.error("No se pudo actualizar el estado de envío.");
+            await toggleEstadoEnvioCompra(compra);
+        } catch {
+            // el hook ya mostró el toast de error
         }
-    };
-
-    const handleAgregarComprobantesCompra = async (compraId, files) => {
-        await Promise.all(Array.from(files).map((archivo) => subirComprobanteCompra(compraId, archivo)));
-        refetchAcciones();
-    };
-
-    const handleEliminarComprobanteCompra = async (compraId, comprobanteId) => {
-        await eliminarComprobanteCompra(compraId, comprobanteId);
-        refetchAcciones();
     };
 
     // --- Notas (cuenta corriente: nota de crédito / débito) ---
@@ -355,15 +188,9 @@ export function FaseDetalle() {
     };
 
     const handleGuardarNota = async (payload) => {
-        await crearNotaCompra(notaCompra.id, payload);
+        await guardarNota(notaCompra, payload);
         setModalNotaAbierto(false);
         setNotaCompra(null);
-        refetchAcciones();
-    };
-
-    const handleEliminarNotaCompra = async (compraId, notaId) => {
-        await eliminarNotaCompra(compraId, notaId);
-        refetchAcciones();
     };
 
     // --- Confirmación de borrado (compra/gasto) ---
@@ -435,7 +262,7 @@ export function FaseDetalle() {
                 </div>
 
                 {puedeMarcarTerminada && (
-                    <button type="button" className="fase-detalle-btn-terminar" onClick={handleMarcarTerminada}>
+                    <button type="button" className="fase-detalle-btn-terminar" onClick={marcarTerminada}>
                         Marcar como terminada
                     </button>
                 )}
@@ -498,11 +325,11 @@ export function FaseDetalle() {
                     onTogglePagoCompra={handleToggleEstadoPagoCompra}
                     onToggleEnvioCompra={handleToggleEstadoEnvioCompra}
                     onVerComprobanteCompra={getComprobanteCompra}
-                    onAgregarComprobanteCompra={handleAgregarComprobantesCompra}
-                    onEliminarComprobanteCompra={handleEliminarComprobanteCompra}
+                    onAgregarComprobanteCompra={agregarComprobantesCompra}
+                    onEliminarComprobanteCompra={eliminarComprobanteCompra}
                     onAgregarNotaCompra={handleAgregarNotaCompra}
                     onVerNotaCompra={getNotaCompra}
-                    onEliminarNotaCompra={handleEliminarNotaCompra}
+                    onEliminarNotaCompra={eliminarNotaCompra}
                     onAbrirDetalleCompra={(c) => setDetalle({ tipo: "compra", entidad: c })}
                     gastos={gastosFase}
                     gastosFiltrados={gastosFaseFiltrados}
@@ -512,8 +339,8 @@ export function FaseDetalle() {
                     onEditarGasto={handleEditarGasto}
                     onEliminarGasto={handleSolicitarEliminarGasto}
                     onVerComprobanteGasto={getComprobanteGasto}
-                    onAgregarComprobanteGasto={handleAgregarComprobantesGasto}
-                    onEliminarComprobanteGasto={handleEliminarComprobanteGasto}
+                    onAgregarComprobanteGasto={agregarComprobantesGasto}
+                    onEliminarComprobanteGasto={eliminarComprobanteGasto}
                     onAbrirDetalleGasto={(g) => setDetalle({ tipo: "gasto", entidad: g })}
                 />
             )}

@@ -1,10 +1,7 @@
-import { useState, useEffect } from "react";
-import {
-    getFasesPorProyecto,
-    crearFase,
-    actualizarFase,
-    eliminarFase,
-} from "../../services/faseService";
+import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { crearFase, actualizarFase, eliminarFase } from "../../services/faseService";
+import { useFasesPorProyecto } from "../../hooks/queries";
 import ModalFase from "../modals/ModalFase";
 import ModalConfirmar from "../modals/ModalConfirmar";
 import FaseCard from "./fases/FaseCard";
@@ -26,23 +23,16 @@ export function Fases({ proyectoId }) {
     const { usuario } = useAuth();
     const canManage = usuario?.rol === "admin";
     const toast = useToast();
-    const [fases, setFases] = useState([]);
+    const queryClient = useQueryClient();
+    const { data: fases = [] } = useFasesPorProyecto(proyectoId);
     const [modalAbierto, setModalAbierto] = useState(false);
     const [faseEditando, setFaseEditando] = useState(null);
     const [faseAEliminar, setFaseAEliminar] = useState(null);
 
-    useEffect(() => {
-        fetchProyectoFases();
-    }, [proyectoId]);
-
-    const fetchProyectoFases = async () => {
-        try {
-            const data = await getFasesPorProyecto(proyectoId);
-            setFases(data);
-        } catch (error) {
-            console.error("Error fetching fases:", error);
-        }
-    };
+    // Invalidar por el prefijo "fases" alcanza tanto esta key ("por
+    // proyecto") como la global de Dashboard y la "detalle" de FaseDetalle
+    // -- ver lib/queryKeys.js.
+    const invalidarFases = () => queryClient.invalidateQueries({ queryKey: ["fases"] });
 
     const handleNuevaFase = () => {
         setFaseEditando(null);
@@ -63,7 +53,7 @@ export function Fases({ proyectoId }) {
             }
             setModalAbierto(false);
             setFaseEditando(null);
-            fetchProyectoFases();
+            invalidarFases();
         } catch (error) {
             console.error("Error guardando fase:", error);
             toast.error(obtenerDetalleBackend(error) ?? "No se pudo guardar la fase.");
@@ -79,7 +69,7 @@ export function Fases({ proyectoId }) {
         setFaseAEliminar(null);
         try {
             await eliminarFase(faseId);
-            fetchProyectoFases();
+            invalidarFases();
         } catch (error) {
             console.error("Error eliminando fase:", error);
             toast.error(obtenerDetalleBackend(error) ?? "No se pudo eliminar la fase.");

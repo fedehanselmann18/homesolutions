@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     Bar,
@@ -10,22 +10,14 @@ import {
     XAxis,
     YAxis,
 } from "recharts";
-import { getProyectos } from "../services/proyectoService";
-import { getFases } from "../services/faseService";
-import { getGastos } from "../services/gastoService";
-import { getCobros } from "../services/cobroService";
-import { getCompras } from "../services/compraService";
+import { useProyectos, useFases, useGastos, useCobros, useCompras } from "../hooks/queries";
 
 import { TarjetaKpi, BarraProgreso } from "../components/shared/TarjetaKpi";
 import { Cargando } from "../components/shared/Cargando";
 import { calcularPanel } from "../utils/panel";
 import { formatMoneda, formatMonedaCorta, formatFecha } from "../utils/formato";
+import { VERDE, ROJO, NARANJA, AZUL } from "../constants/colores";
 import "./Dashboard.css";
-
-const VERDE = "#16a34a";
-const ROJO = "#dc2626";
-const NARANJA = "#d97706";
-const AZUL = "#64748b";
 
 const TIPOS_MOVIMIENTO = {
     cobro: { label: "Cobro", color: VERDE, signo: "+" },
@@ -131,35 +123,32 @@ function TarjetaProyecto({ proyecto, onClick }) {
 
 export function Dashboard() {
     const navigate = useNavigate();
-    const [datos, setDatos] = useState(null);
-    const [cargando, setCargando] = useState(true);
-    const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const fetchDatos = async () => {
-            try {
-                setCargando(true);
-                setError(null);
-                // Los endpoints globales traen todo de una: el Panel agrupa por
-                // proyecto en el front, así no hacen falta N requests por proyecto.
-                const [proyectos, fases, gastos, cobros, compras] = await Promise.all([
-                    getProyectos(),
-                    getFases(),
-                    getGastos(),
-                    getCobros(),
-                    getCompras(),
-                ]);
-                setDatos({ proyectos, fases, gastos, cobros, compras });
-            } catch (err) {
-                console.error("Error fetching datos del panel:", err);
-                setError(err);
-            } finally {
-                setCargando(false);
-            }
-        };
+    // Los endpoints globales traen todo de una: el Panel agrupa por proyecto
+    // en el front, así no hacen falta N requests por proyecto.
+    const proyectosQuery = useProyectos();
+    const fasesQuery = useFases();
+    const gastosQuery = useGastos();
+    const cobrosQuery = useCobros();
+    const comprasQuery = useCompras();
 
-        fetchDatos();
-    }, []);
+    const cargando =
+        proyectosQuery.isLoading || fasesQuery.isLoading || gastosQuery.isLoading || cobrosQuery.isLoading || comprasQuery.isLoading;
+    const error = proyectosQuery.error || fasesQuery.error || gastosQuery.error || cobrosQuery.error || comprasQuery.error;
+
+    const datos = useMemo(
+        () =>
+            cargando || error
+                ? null
+                : {
+                      proyectos: proyectosQuery.data,
+                      fases: fasesQuery.data,
+                      gastos: gastosQuery.data,
+                      cobros: cobrosQuery.data,
+                      compras: comprasQuery.data,
+                  },
+        [cargando, error, proyectosQuery.data, fasesQuery.data, gastosQuery.data, cobrosQuery.data, comprasQuery.data]
+    );
 
     const panel = useMemo(() => (datos ? calcularPanel(datos) : null), [datos]);
 

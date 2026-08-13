@@ -1,15 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Clock, AlertTriangle } from "lucide-react";
 
-import { getProyectoPorId } from "../../services/proyectoService";
-import { getFasesPorProyecto } from "../../services/faseService";
-import { getGastosPorProyecto } from "../../services/gastoService";
-import { getCobrosPorProyecto } from "../../services/cobroService";
-import { getComprasPorProyecto, getComprobanteCompra, getNotaCompra } from "../../services/compraService";
+import { getComprobanteCompra, getNotaCompra } from "../../services/compraService";
 import { getComprobanteGasto } from "../../services/gastoService";
 import { getComprobanteCobro, getNotaCobro } from "../../services/cobroService";
-import { getProductos } from "../../services/productoService";
-import { getProveedores } from "../../services/proveedorService";
+import {
+    useProyecto,
+    useFasesPorProyecto,
+    useGastosPorProyecto,
+    useCobrosPorProyecto,
+    useComprasPorProyecto,
+    useProductos,
+    useProveedores,
+} from "../../hooks/queries";
 
 import { TarjetaAlerta } from "../shared/TarjetaAlerta";
 import { TarjetaKpi } from "../shared/TarjetaKpi";
@@ -23,12 +26,8 @@ import { calcularSeguimiento, DIAS_FASE_ESTANCADA } from "../../utils/seguimient
 import { formatMoneda, formatFecha } from "../../utils/formato";
 import { getCondicionPagoLabel } from "../../constants/estadoCompra";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
+import { VERDE, ROJO, NARANJA, GRIS } from "../../constants/colores";
 import "./Seguimiento.css";
-
-const VERDE = "#16a34a";
-const ROJO = "#dc2626";
-const NARANJA = "#d97706";
-const GRIS = "#64748b";
 
 const diasTexto = (dias) => `hace ${dias} ${dias === 1 ? "día" : "días"}`;
 
@@ -61,36 +60,51 @@ function badgesCompra(compra) {
 }
 
 export function Seguimiento({ proyectoId, onIrATab }) {
-    const [datos, setDatos] = useState(null);
-    const [cargando, setCargando] = useState(true);
-    const [error, setError] = useState(null);
     const [detalle, setDetalle] = useState(null); // { tipo: "compra" | "gasto" | "cobro", entidad }
 
-    useEffect(() => {
-        const fetchDatos = async () => {
-            try {
-                setCargando(true);
-                setError(null);
-                const [proyecto, fases, gastos, cobros, compras, productos, proveedores] = await Promise.all([
-                    getProyectoPorId(proyectoId),
-                    getFasesPorProyecto(proyectoId),
-                    getGastosPorProyecto(proyectoId),
-                    getCobrosPorProyecto(proyectoId),
-                    getComprasPorProyecto(proyectoId),
-                    getProductos(),
-                    getProveedores(),
-                ]);
-                setDatos({ proyecto, fases, gastos, cobros, compras, productos, proveedores });
-            } catch (err) {
-                console.error("Error fetching datos del seguimiento:", err);
-                setError(err);
-            } finally {
-                setCargando(false);
-            }
-        };
+    const proyectoQuery = useProyecto(proyectoId);
+    const fasesQuery = useFasesPorProyecto(proyectoId);
+    const gastosQuery = useGastosPorProyecto(proyectoId);
+    const cobrosQuery = useCobrosPorProyecto(proyectoId);
+    const comprasQuery = useComprasPorProyecto(proyectoId);
+    const productosQuery = useProductos();
+    const proveedoresQuery = useProveedores();
 
-        fetchDatos();
-    }, [proyectoId]);
+    const cargando =
+        proyectoQuery.isLoading ||
+        fasesQuery.isLoading ||
+        gastosQuery.isLoading ||
+        cobrosQuery.isLoading ||
+        comprasQuery.isLoading ||
+        productosQuery.isLoading ||
+        proveedoresQuery.isLoading;
+    const error =
+        proyectoQuery.error || fasesQuery.error || gastosQuery.error || cobrosQuery.error || comprasQuery.error;
+
+    const datos = useMemo(
+        () =>
+            cargando
+                ? null
+                : {
+                      proyecto: proyectoQuery.data,
+                      fases: fasesQuery.data,
+                      gastos: gastosQuery.data,
+                      cobros: cobrosQuery.data,
+                      compras: comprasQuery.data,
+                      productos: productosQuery.data,
+                      proveedores: proveedoresQuery.data,
+                  },
+        [
+            cargando,
+            proyectoQuery.data,
+            fasesQuery.data,
+            gastosQuery.data,
+            cobrosQuery.data,
+            comprasQuery.data,
+            productosQuery.data,
+            proveedoresQuery.data,
+        ]
+    );
 
     const seguimiento = useMemo(() => (datos ? calcularSeguimiento(datos) : null), [datos]);
 
