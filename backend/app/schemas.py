@@ -30,11 +30,39 @@ CORREGIDO (respecto a la versión anterior):
   estaban bien — el problema estaba del lado del modelo.
 """
 
+import re
 import uuid
 from datetime import date, datetime
 
 from pydantic import BaseModel, ConfigDict, field_validator
 from typing import Optional
+
+# XX-XXXXXXXX-X, con o sin guiones (los grupos son fijos: 2 dígitos de tipo,
+# 8 de DNI/razón social, 1 verificador -- ver _validar_cuit).
+_CUIT_REGEX = re.compile(r"^(\d{2})-?(\d{8})-?(\d{1})$")
+_CUIT_MULTIPLICADORES = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
+
+
+def _validar_cuit(valor: str) -> str:
+    """Valida formato (11 dígitos, con o sin guiones) y el dígito
+    verificador con el algoritmo estándar de AFIP (módulo 11). Devuelve el
+    valor tal cual lo mandó el cliente (con o sin guiones, no se normaliza)
+    si es válido, o levanta ValueError con un mensaje claro si no."""
+    coincidencia = _CUIT_REGEX.match(valor.strip())
+    if not coincidencia:
+        raise ValueError("El CUIT tiene que tener el formato XX-XXXXXXXX-X (11 dígitos, con o sin guiones)")
+
+    digitos = "".join(coincidencia.groups())
+    suma = sum(int(d) * m for d, m in zip(digitos[:10], _CUIT_MULTIPLICADORES))
+    resto = suma % 11
+    verificador_esperado = 11 - resto
+    if verificador_esperado == 11:
+        verificador_esperado = 0
+
+    if verificador_esperado == 10 or int(digitos[10]) != verificador_esperado:
+        raise ValueError("El CUIT no es válido (el dígito verificador no coincide)")
+
+    return valor.strip()
 
 
 class TimestampOut(BaseModel):
@@ -159,7 +187,10 @@ class ProveedorBase(BaseModel):
 
 
 class ProveedorCreate(ProveedorBase):
-    pass
+    @field_validator("cuit")
+    @classmethod
+    def cuit_valido(cls, valor: str) -> str:
+        return _validar_cuit(valor)
 
 
 class ProveedorUpdate(BaseModel):
@@ -168,6 +199,13 @@ class ProveedorUpdate(BaseModel):
     direccion: str | None = None
     telefono: str | None = None
     email: str | None = None
+
+    @field_validator("cuit")
+    @classmethod
+    def cuit_valido(cls, valor: str | None) -> str | None:
+        if valor is None:
+            return None
+        return _validar_cuit(valor)
 
 
 class ProveedorOut(ProveedorBase, TimestampOut):
