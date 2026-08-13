@@ -1,28 +1,25 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from app.db import models
+
 from app.auth.oAuth2 import get_current_user, requiere_admin
+from app.db import models
 from app.db.db import get_db
 from app.files.storage import eliminar_comprobante
-from app.schemas import FaseCreate, FaseUpdate, FaseOut
+from app.schemas import FaseCreate, FaseOut, FaseUpdate
 
-router = APIRouter(
-    prefix="/fases",
-    tags=["fases"]
-)
+router = APIRouter(prefix="/fases", tags=["fases"])
 
 
 @router.get("/", response_model=list[FaseOut], status_code=status.HTTP_200_OK)
-def get_all_fases(db: Session = Depends(get_db),
-                   current_user: models.Usuario = Depends(get_current_user)):
+def get_all_fases(db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)):
     return db.query(models.Fase).all()
 
 
 @router.get("/{fase_id}", response_model=FaseOut, status_code=status.HTTP_200_OK)
-def get_fase_by_id(fase_id: str,
-                    db: Session = Depends(get_db),
-                    current_user: models.Usuario = Depends(get_current_user)):
+def get_fase_by_id(
+    fase_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)
+):
     fase = db.query(models.Fase).filter(models.Fase.id == fase_id).first()
     if not fase:
         raise HTTPException(status_code=404, detail="Fase no encontrada")
@@ -30,9 +27,9 @@ def get_fase_by_id(fase_id: str,
 
 
 @router.get("/proyectos/{proyecto_id}/fases", response_model=list[FaseOut], status_code=status.HTTP_200_OK)
-def get_fases_by_proyecto(proyecto_id: str,
-                           db: Session = Depends(get_db),
-                           current_user: models.Usuario = Depends(get_current_user)):
+def get_fases_by_proyecto(
+    proyecto_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)
+):
     proyecto = db.query(models.Proyecto).filter(models.Proyecto.id == proyecto_id).first()
     if not proyecto:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
@@ -41,18 +38,15 @@ def get_fases_by_proyecto(proyecto_id: str,
 
 
 @router.post("/crear", response_model=FaseOut, status_code=status.HTTP_201_CREATED)
-def create_fase(fase: FaseCreate,
-                 db: Session = Depends(get_db),
-                 current_user: models.Usuario = Depends(requiere_admin)):
+def create_fase(
+    fase: FaseCreate, db: Session = Depends(get_db), current_user: models.Usuario = Depends(requiere_admin)
+):
     proyecto = db.query(models.Proyecto).filter(models.Proyecto.id == fase.proyecto_id).first()
     if not proyecto:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
 
     nueva_fase = models.Fase(
-        proyecto_id=fase.proyecto_id,
-        nombre=fase.nombre,
-        descripcion=fase.descripcion,
-        estado=fase.estado
+        proyecto_id=fase.proyecto_id, nombre=fase.nombre, descripcion=fase.descripcion, estado=fase.estado
     )
 
     try:
@@ -67,10 +61,12 @@ def create_fase(fase: FaseCreate,
 
 
 @router.put("/{fase_id}", response_model=FaseOut, status_code=status.HTTP_200_OK)
-def update_fase(fase_id: str,
-                 fase: FaseUpdate,
-                 db: Session = Depends(get_db),
-                 current_user: models.Usuario = Depends(requiere_admin)):
+def update_fase(
+    fase_id: str,
+    fase: FaseUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
     fase_existente = db.query(models.Fase).filter(models.Fase.id == fase_id).first()
     if not fase_existente:
         raise HTTPException(status_code=404, detail="Fase no encontrada")
@@ -89,9 +85,9 @@ def update_fase(fase_id: str,
 
 
 @router.delete("/{fase_id}", response_model=FaseOut, status_code=status.HTTP_200_OK)
-def delete_fase(fase_id: str,
-                 db: Session = Depends(get_db),
-                 current_user: models.Usuario = Depends(requiere_admin)):
+def delete_fase(
+    fase_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(requiere_admin)
+):
     fase = db.query(models.Fase).filter(models.Fase.id == fase_id).first()
     if not fase:
         raise HTTPException(status_code=404, detail="Fase no encontrada")

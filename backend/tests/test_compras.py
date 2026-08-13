@@ -5,6 +5,9 @@ parte con más lógica de negocio del router (ver crear_nota_compra).
 """
 
 from datetime import date
+from decimal import Decimal
+
+from sqlalchemy.orm import joinedload
 
 from app.db import models
 from app.routes import compras as ruta_compras
@@ -20,7 +23,11 @@ def _crear_proveedor(db_session):
 
 def _crear_producto(db_session, proveedor, precio=100000):
     producto = models.Producto(
-        proveedor_id=proveedor.id, marca="Surrey", modelo="3000F", tipo="equipo", precio=precio,
+        proveedor_id=proveedor.id,
+        marca="Surrey",
+        modelo="3000F",
+        tipo="equipo",
+        precio=precio,
     )
     db_session.add(producto)
     db_session.commit()
@@ -38,8 +45,11 @@ def _crear_impuesto(db_session, nombre="IVA"):
 
 def _crear_fase(db_session):
     proyecto = models.Proyecto(
-        nombre="Proyecto Test", direccion="Calle Falsa 123", fecha_inicio=date(2026, 1, 1),
-        estado="en_curso", precio_acordado=1000000,
+        nombre="Proyecto Test",
+        direccion="Calle Falsa 123",
+        fecha_inicio=date(2026, 1, 1),
+        estado="en_curso",
+        precio_acordado=1000000,
     )
     fase = models.Fase(nombre="Fase Test", estado="en_curso", proyecto=proyecto)
     db_session.add_all([proyecto, fase])
@@ -97,7 +107,9 @@ def _crear_compra_con_detalle(client, db_session, headers_admin, precio_unitario
             "condicion_pago": "contado",
             "estado_pago": "pagado",
             "estado_envio": "entregado",
-            "detalle": [{"producto_id": str(producto.id), "cantidad": cantidad, "precio_unitario": precio_unitario}],
+            "detalle": [
+                {"producto_id": str(producto.id), "cantidad": cantidad, "precio_unitario": precio_unitario}
+            ],
             "impuestos": [],
         },
         headers=headers_admin,
@@ -154,7 +166,9 @@ def test_crear_nota_compra_devolucion_producto_actualiza_precio_total(
     patrón que test_ia.py) para no escribir en disco durante el test."""
     monkeypatch.setattr(ruta_compras, "subir_comprobante", lambda *a, **k: "notas_compra/fake/nota.pdf")
 
-    compra, _, _ = _crear_compra_con_detalle(client, db_session, headers_admin, precio_unitario=100000, cantidad=2)
+    compra, _, _ = _crear_compra_con_detalle(
+        client, db_session, headers_admin, precio_unitario=100000, cantidad=2
+    )
     detalle_compra_id = compra["detalle"][0]["id"]
 
     respuesta = client.post(
@@ -184,7 +198,9 @@ def test_crear_nota_compra_devolucion_supera_cantidad_comprada_es_rechazado(
 ):
     monkeypatch.setattr(ruta_compras, "subir_comprobante", lambda *a, **k: "notas_compra/fake/nota.pdf")
 
-    compra, _, _ = _crear_compra_con_detalle(client, db_session, headers_admin, precio_unitario=100000, cantidad=2)
+    compra, _, _ = _crear_compra_con_detalle(
+        client, db_session, headers_admin, precio_unitario=100000, cantidad=2
+    )
     detalle_compra_id = compra["detalle"][0]["id"]
 
     respuesta = client.post(
@@ -239,3 +255,72 @@ def test_crear_nota_compra_con_integridad_de_proveedor_rota_es_rechazada(
 
     compra_actualizada = client.get(f"/compras/{compra['id']}", headers=headers_admin).json()
     assert compra_actualizada["notas"] == []  # no se creó nada
+
+
+# ---------------------------------------------------------------------------
+# precio_total con eager loading real (B-04): a diferencia de
+# test_compra_calculos.py (objetos en memoria, sin DB, ver su docstring),
+# esto arma los datos en Postgres y vuelve a traer la Compra con el MISMO
+# patrón de joinedload que usa get_compra_by_id en routes/compras.py --
+# confirma que la property funciona contra relaciones eager-loaded de
+# verdad, no solo contra relaciones asignadas a mano en memoria.
+# ---------------------------------------------------------------------------
+
+
+def test_precio_total_con_impuestos_y_notas_eager_loaded_desde_la_db(
+    client, db_session, headers_admin, usuario_admin
+):
+    proveedor = _crear_proveedor(db_session)
+    impuesto = _crear_impuesto(db_session)
+    fase = _crear_fase(db_session)
+
+    compra = models.Compra(
+        fase_id=fase.id,
+        proveedor_id=proveedor.id,
+        usuario_id=usuario_admin.id,
+        descripcion="Compra test",
+        precio_neto=Decimal("100000"),
+        tipo_factura="factura_a",
+        fecha=date(2026, 1, 1),
+        condicion_pago="contado",
+        estado_pago="pagado",
+        estado_envio="entregado",
+    )
+    db_session.add(compra)
+    db_session.commit()
+    db_session.refresh(compra)
+
+    db_session.add(
+        models.CompraImpuesto(compra_id=compra.id, impuesto_id=impuesto.id, monto=Decimal("21000"))
+    )
+    db_session.add(
+        models.NotaCompra(
+            compra_id=compra.id,
+            proveedor_id=proveedor.id,
+            usuario_id=usuario_admin.id,
+            tipo="nota_credito",
+            tipo_factura="nota_credito_a",
+            monto=Decimal("10000"),
+            descripcion="Devolución",
+            fecha=date(2026, 1, 15),
+            archivo_path="x.pdf",
+        )
+    )
+    db_session.commit()
+
+    # Sesión nueva sería más estricto todavía (fuerza a pegarle a la DB de
+    # verdad y no al identity map), pero db_session ya alcanza para probar
+    # que las relaciones vienen eager-loaded y no lazy: sin el joinedload,
+    # este mismo test pasaría igual (lazy load silencioso), lo que importa
+    # acá es que el patrón de la ruta real (ver get_compra_by_id) funciona.
+    compra_recargada = (
+        db_session.query(models.Compra)
+        .options(
+            joinedload(models.Compra.impuestos_aplicados),
+            joinedload(models.Compra.notas),
+        )
+        .filter(models.Compra.id == compra.id)
+        .one()
+    )
+
+    assert compra_recargada.precio_total == 111000.0  # 100000 + 21000 - 10000

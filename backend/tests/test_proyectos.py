@@ -43,8 +43,11 @@ def test_crear_proyecto_sin_ser_admin_es_rechazado(client, headers_lectura):
 
 def test_actualizar_proyecto_solo_pisa_los_campos_enviados(client, db_session, headers_admin):
     proyecto = models.Proyecto(
-        nombre="Casa Vieja", direccion="Calle Falsa 123", fecha_inicio=date(2026, 1, 1),
-        estado="a_iniciar", precio_acordado=1000000,
+        nombre="Casa Vieja",
+        direccion="Calle Falsa 123",
+        fecha_inicio=date(2026, 1, 1),
+        estado="a_iniciar",
+        precio_acordado=1000000,
     )
     db_session.add(proyecto)
     db_session.commit()
@@ -67,26 +70,44 @@ def _armar_arbol_completo(db_session, usuario, proveedor):
     comprobante, sin fase) y un Cobro (con comprobante) -- las tres ramas
     que delete_project tiene que recorrer y limpiar."""
     proyecto = models.Proyecto(
-        nombre="Proyecto Cascada", direccion="Calle 1", fecha_inicio=date(2026, 1, 1),
-        estado="en_curso", precio_acordado=1000000,
+        nombre="Proyecto Cascada",
+        direccion="Calle 1",
+        fecha_inicio=date(2026, 1, 1),
+        estado="en_curso",
+        precio_acordado=1000000,
     )
     fase = models.Fase(nombre="Fase 1", estado="en_curso", proyecto=proyecto)
     compra = models.Compra(
-        fase=fase, proveedor_id=proveedor.id, usuario_id=usuario.id,
-        descripcion="Compra test", precio_neto=100000, tipo_factura="A",
-        fecha=date(2026, 1, 1), condicion_pago="contado", estado_pago="pagado", estado_envio="entregado",
+        fase=fase,
+        proveedor_id=proveedor.id,
+        usuario_id=usuario.id,
+        descripcion="Compra test",
+        precio_neto=100000,
+        tipo_factura="A",
+        fecha=date(2026, 1, 1),
+        condicion_pago="contado",
+        estado_pago="pagado",
+        estado_envio="entregado",
     )
     compra.comprobantes = [models.ComprobanteCompra(archivo_path="uploads/comprobantes_compra/c1/a.pdf")]
 
     gasto = models.Gasto(
-        proyecto=proyecto, usuario_id=usuario.id, monto=5000, descripcion="Gasto test",
-        fecha=date(2026, 1, 1), tipo_factura="A",
+        proyecto=proyecto,
+        usuario_id=usuario.id,
+        monto=5000,
+        descripcion="Gasto test",
+        fecha=date(2026, 1, 1),
+        tipo_factura="A",
     )
     gasto.comprobantes = [models.ComprobanteGasto(archivo_path="uploads/comprobantes_gasto/g1/b.pdf")]
 
     cobro = models.Cobro(
-        proyecto=proyecto, usuario_id=usuario.id, monto=200000, descripcion="Cobro test",
-        fecha=date(2026, 1, 1), tipo_factura="A",
+        proyecto=proyecto,
+        usuario_id=usuario.id,
+        monto=200000,
+        descripcion="Cobro test",
+        fecha=date(2026, 1, 1),
+        tipo_factura="A",
     )
     cobro.comprobantes = [models.ComprobanteCobro(archivo_path="uploads/comprobantes_cobro/co1/c.pdf")]
 
@@ -108,9 +129,7 @@ def test_eliminar_proyecto_borra_en_cascada_y_limpia_comprobantes(
     proyecto, fase, compra, gasto, cobro = _armar_arbol_completo(db_session, usuario_admin, proveedor)
 
     rutas_borradas = []
-    monkeypatch.setattr(
-        ruta_proyectos, "eliminar_comprobante", lambda path: rutas_borradas.append(path)
-    )
+    monkeypatch.setattr(ruta_proyectos, "eliminar_comprobante", lambda path: rutas_borradas.append(path))
 
     respuesta = client.delete(f"/proyectos/{proyecto.id}", headers=headers_admin)
     assert respuesta.status_code == 200
@@ -135,8 +154,11 @@ def test_eliminar_proyecto_borra_en_cascada_y_limpia_comprobantes(
 
 def test_eliminar_proyecto_sin_ser_admin_es_rechazado(client, db_session, headers_lectura):
     proyecto = models.Proyecto(
-        nombre="Proyecto Protegido", direccion="Calle 1", fecha_inicio=date(2026, 1, 1),
-        estado="a_iniciar", precio_acordado=1000000,
+        nombre="Proyecto Protegido",
+        direccion="Calle 1",
+        fecha_inicio=date(2026, 1, 1),
+        estado="a_iniciar",
+        precio_acordado=1000000,
     )
     db_session.add(proyecto)
     db_session.commit()

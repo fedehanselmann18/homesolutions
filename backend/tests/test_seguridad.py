@@ -8,10 +8,10 @@ import uuid
 
 from app.auth.oAuth2 import create_access_token
 
-
 # ---------------------------------------------------------------------------
 # Endpoint público reducido de usuarios
 # ---------------------------------------------------------------------------
+
 
 def test_login_options_no_requiere_auth_y_solo_trae_nombres(client, usuario_admin):
     respuesta = client.get("/usuarios/login-options")
@@ -35,6 +35,7 @@ def test_lista_completa_de_usuarios_con_auth_funciona(client, headers_admin):
 # ---------------------------------------------------------------------------
 # Alta de usuario: roles fijos, no lo que mande el cliente
 # ---------------------------------------------------------------------------
+
 
 def test_crear_usuario_con_nombre_no_autorizado_es_rechazado(client):
     respuesta = client.post(
@@ -67,14 +68,16 @@ def test_crear_usuario_con_rol_correcto_usa_el_rol_del_servidor(client):
 # CSRF: solo aplica cuando la sesión viaja por cookie, no con Authorization header
 # ---------------------------------------------------------------------------
 
+
 def test_request_mutante_con_cookie_de_sesion_sin_csrf_header_es_rechazado(client, usuario_admin):
     token = create_access_token(data={"user_id": str(usuario_admin.id)})
     client.cookies.set("access_token", token)
     client.cookies.set("csrf_token", "un-valor-cualquiera")
 
-    respuesta = client.post("/productos/crear", json={
-        "proveedor_id": "no-existe", "marca": "x", "modelo": "x", "tipo": "x", "precio": 1
-    })
+    respuesta = client.post(
+        "/productos/crear",
+        json={"proveedor_id": "no-existe", "marca": "x", "modelo": "x", "tipo": "x", "precio": 1},
+    )
 
     assert respuesta.status_code == 403
     assert "csrf" in respuesta.json()["detail"].lower()
@@ -113,6 +116,7 @@ def test_request_mutante_con_authorization_header_no_exige_csrf(client, headers_
 # Rate limiting
 # ---------------------------------------------------------------------------
 
+
 def test_rate_limit_de_login_bloquea_despues_de_5_intentos_por_minuto(client, usuario_admin):
     for _ in range(5):
         respuesta = client.post(
@@ -131,6 +135,7 @@ def test_rate_limit_de_login_bloquea_despues_de_5_intentos_por_minuto(client, us
 # ---------------------------------------------------------------------------
 # Reporte PDF: solo admin, "lectura" no puede generarlo
 # ---------------------------------------------------------------------------
+
 
 def test_reporte_pdf_rechaza_a_usuario_de_lectura(client, headers_lectura):
     respuesta = client.get(f"/proyectos/{uuid.uuid4()}/reporte-pdf", headers=headers_lectura)

@@ -152,7 +152,10 @@ def _resumen_ejecutivo(totales: dict, deuda_total: float, notas: dict) -> list[s
         frases.append(f"Hay {_fmt(deuda_total)} pendientes de pago a proveedores.")
 
     ajuste_neto_notas = (
-        notas["compras"]["debito"] - notas["compras"]["credito"] + notas["cobros"]["debito"] - notas["cobros"]["credito"]
+        notas["compras"]["debito"]
+        - notas["compras"]["credito"]
+        + notas["cobros"]["debito"]
+        - notas["cobros"]["credito"]
     )
     if notas["compras"]["cantidad"] + notas["cobros"]["cantidad"] > 0:
         direccion = "sumaron" if ajuste_neto_notas > 0 else "restaron"
@@ -195,9 +198,7 @@ def calcular_analisis_proyecto(
     total_cobrado = sum(c.monto_neto for c in cobros)
     total_gastos = sum(_num(g.monto) for g in gastos)
     total_compras_neto = sum(_num(c.precio_neto) for c in compras)
-    total_impuestos = sum(
-        sum(_num(ci.monto) for ci in c.impuestos_aplicados) for c in compras
-    )
+    total_impuestos = sum(sum(_num(ci.monto) for ci in c.impuestos_aplicados) for c in compras)
 
     # Notas de crédito/débito de las compras (cuenta corriente con proveedores).
     notas_compra = [n for c in compras for n in c.notas]
@@ -261,8 +262,16 @@ def calcular_analisis_proyecto(
     deuda_lista = sorted(deuda_por_proveedor.values(), key=lambda d: d["monto"], reverse=True)
 
     notas = {
-        "compras": {"credito": notas_credito_compras, "debito": notas_debito_compras, "cantidad": len(notas_compra)},
-        "cobros": {"credito": notas_credito_cobros, "debito": notas_debito_cobros, "cantidad": len(notas_cobro)},
+        "compras": {
+            "credito": notas_credito_compras,
+            "debito": notas_debito_compras,
+            "cantidad": len(notas_compra),
+        },
+        "cobros": {
+            "credito": notas_credito_cobros,
+            "debito": notas_debito_cobros,
+            "cantidad": len(notas_cobro),
+        },
     }
     totales = {
         "cobrado": total_cobrado,

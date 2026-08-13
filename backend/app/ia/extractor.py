@@ -17,6 +17,7 @@ factura, sigue siendo el precio de catálogo (ver IADetalleSugerido en
 schemas.py). Si el proveedor no matcheó, no tiene sentido sugerir productos
 (no sabríamos de qué proveedor son), así que se descartan todos.
 """
+
 import json
 import logging
 
@@ -66,7 +67,9 @@ def _armar_prompt(tipo_entidad: str, contexto: dict) -> str:
     ]
 
     if "monto" in campos:
-        partes.append("monto: el importe TOTAL final del comprobante, como número (sin '$' ni puntos de miles).")
+        partes.append(
+            "monto: el importe TOTAL final del comprobante, como número (sin '$' ni puntos de miles)."
+        )
     if "fecha" in campos:
         partes.append("fecha: la fecha de emisión del comprobante, en formato YYYY-MM-DD.")
     if "descripcion" in campos:
@@ -77,7 +80,9 @@ def _armar_prompt(tipo_entidad: str, contexto: dict) -> str:
 
     if "proveedor_id" in campos:
         proveedores = contexto.get("proveedores") or []
-        listado = "\n".join(f"- id={p['id']} | nombre={p['nombre']} | cuit={p.get('cuit', '')}" for p in proveedores)
+        listado = "\n".join(
+            f"- id={p['id']} | nombre={p['nombre']} | cuit={p.get('cuit', '')}" for p in proveedores
+        )
         partes.append(
             "proveedor_id: si el nombre o CUIT que figura en el comprobante "
             "coincide con alguno de esta lista, devolvé ESE id EXACTO tal "
@@ -110,8 +115,8 @@ def _armar_prompt(tipo_entidad: str, contexto: dict) -> str:
         partes.append(
             "impuestos: si el comprobante desglosa IVA, percepciones, "
             "retenciones u otros impuestos como líneas separadas del neto, "
-            "devolvé una lista de objetos {\"impuesto_id\": <id EXACTO de la "
-            "lista>, \"monto\": <importe en pesos, tal cual figura>} -- el "
+            'devolvé una lista de objetos {"impuesto_id": <id EXACTO de la '
+            'lista>, "monto": <importe en pesos, tal cual figura>} -- el '
             "monto SÍ tiene que ser el que dice el comprobante (no lo "
             "inventes ni lo calcules). Si un impuesto del comprobante no "
             "coincide con ninguno de esta lista, omitilo (no inventes un id). "
@@ -128,7 +133,7 @@ def _armar_prompt(tipo_entidad: str, contexto: dict) -> str:
         partes.append(
             "detalle: si podés reconocer, en las líneas del comprobante, "
             "productos que coincidan con marca+modelo de esta lista, devolvé "
-            "una lista de objetos {\"producto_id\": <id EXACTO>, \"cantidad\": <número>} "
+            'una lista de objetos {"producto_id": <id EXACTO>, "cantidad": <número>} '
             "-- SOLO para productos que pertenezcan al MISMO proveedor que "
             "identificaste en proveedor_id (fijate que el proveedor_id de cada "
             "producto coincida). Si no reconocés ningún producto de esa lista, "
@@ -208,7 +213,9 @@ def _limpiar_detalle(datos: dict, contexto: dict, proveedor_id, advertencias: li
         producto_id = linea.get("producto_id")
         cantidad = linea.get("cantidad")
         if producto_id is None or str(producto_id) not in proveedor_por_producto:
-            advertencias.append("La IA sugirió un producto que no está en tu catálogo, revisá el detalle a mano.")
+            advertencias.append(
+                "La IA sugirió un producto que no está en tu catálogo, revisá el detalle a mano."
+            )
             continue
         if proveedor_por_producto[str(producto_id)] != str(proveedor_id):
             advertencias.append("La IA sugirió un producto de otro proveedor, se descartó esa línea.")
@@ -283,7 +290,9 @@ def _validar_y_limpiar(datos: dict, tipo_entidad: str, contexto: dict) -> IAExtr
             advertencias.append(f"No reconocí el tipo de factura '{tipo_factura}', elegilo a mano.")
         tipo_factura = None
 
-    proveedor_id = limpiar_id("proveedor_id", "proveedores", "proveedor") if "proveedor_id" in campos else None
+    proveedor_id = (
+        limpiar_id("proveedor_id", "proveedores", "proveedor") if "proveedor_id" in campos else None
+    )
 
     resultado = {
         "monto": datos.get("monto") if "monto" in campos else None,
@@ -297,7 +306,9 @@ def _validar_y_limpiar(datos: dict, tipo_entidad: str, contexto: dict) -> IAExtr
             if "categoria_gasto_id" in campos
             else None
         ),
-        "detalle": _limpiar_detalle(datos, contexto, proveedor_id, advertencias) if "detalle" in campos else [],
+        "detalle": (
+            _limpiar_detalle(datos, contexto, proveedor_id, advertencias) if "detalle" in campos else []
+        ),
         "impuestos": _limpiar_impuestos(datos, contexto, advertencias) if "impuestos" in campos else [],
         "advertencias": advertencias,
     }

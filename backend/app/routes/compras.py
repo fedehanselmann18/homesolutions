@@ -1,105 +1,155 @@
 import json
+from datetime import date
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File, Form
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
-from app.db import models
+
 from app.audit import log_auditoria
 from app.auth.oAuth2 import get_current_user, requiere_admin
+from app.db import models
 from app.db.db import get_db
-from app.files.storage import subir_comprobante, eliminar_comprobante, ver_comprobante
+from app.files.storage import eliminar_comprobante, subir_comprobante, ver_comprobante
 from app.limiter import limiter
-from datetime import date
+from app.pagination import ParametrosPaginacion
 from app.schemas import (
-    CompraCreate, CompraUpdate, CompraOut,
-    DetalleCompraCreate, DetalleCompraOut,
-    CompraImpuestoCreate, CompraImpuestoOut,
-    ComprobanteCompraOut, NotaCompraOut
+    CompraCreate,
+    CompraImpuestoCreate,
+    CompraImpuestoOut,
+    CompraOut,
+    CompraUpdate,
+    ComprobanteCompraOut,
+    DetalleCompraCreate,
+    DetalleCompraOut,
+    NotaCompraOut,
 )
 
-router = APIRouter(
-    prefix="/compras",
-    tags=["compras"]
-)
+router = APIRouter(prefix="/compras", tags=["compras"])
 
 # ---------------------------------------------------------------------------
 # GET (lista completa + anidados por proyecto/fase)
 # ---------------------------------------------------------------------------
 
+
 @router.get("/", response_model=list[CompraOut], status_code=status.HTTP_200_OK)
-def get_all_compras(proveedor_id: str | None = None,
-                     db: Session = Depends(get_db),
-                     current_user: models.Usuario = Depends(get_current_user)):
+def get_all_compras(
+    proveedor_id: str | None = None,
+    paginacion: ParametrosPaginacion = Depends(),
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user),
+):
     query = db.query(models.Compra).options(
-        joinedload(models.Compra.detalle).joinedload(models.DetalleCompra.producto).joinedload(models.Producto.categorias),
+        joinedload(models.Compra.detalle)
+        .joinedload(models.DetalleCompra.producto)
+        .joinedload(models.Producto.categorias),
         joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
         joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
-        joinedload(models.Compra.notas).joinedload(models.NotaCompra.impuestos_aplicados).joinedload(models.NotaCompraImpuesto.impuesto),
+        joinedload(models.Compra.notas)
+        .joinedload(models.NotaCompra.impuestos_aplicados)
+        .joinedload(models.NotaCompraImpuesto.impuesto),
     )
     if proveedor_id:
         query = query.filter(models.Compra.proveedor_id == proveedor_id)
+    # order_by explícito: sin esto, limit/offset no tienen un orden estable
+    # entre llamadas (Postgres no garantiza nada sin ORDER BY).
+    query = query.order_by(models.Compra.fecha_creacion.desc()).offset(paginacion.offset)
+    if paginacion.limit is not None:
+        query = query.limit(paginacion.limit)
     return query.all()
 
 
 @router.get("/{compra_id}", response_model=CompraOut, status_code=status.HTTP_200_OK)
-def get_compra_by_id(compra_id: str,
-                      db: Session = Depends(get_db),
-                      current_user: models.Usuario = Depends(get_current_user)):
-    compra = db.query(models.Compra).options(
-        joinedload(models.Compra.detalle).joinedload(models.DetalleCompra.producto).joinedload(models.Producto.categorias),
-        joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
-        joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
-        joinedload(models.Compra.notas).joinedload(models.NotaCompra.impuestos_aplicados).joinedload(models.NotaCompraImpuesto.impuesto),
-    ).filter(models.Compra.id == compra_id).first()
+def get_compra_by_id(
+    compra_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)
+):
+    compra = (
+        db.query(models.Compra)
+        .options(
+            joinedload(models.Compra.detalle)
+            .joinedload(models.DetalleCompra.producto)
+            .joinedload(models.Producto.categorias),
+            joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
+            joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
+            joinedload(models.Compra.notas)
+            .joinedload(models.NotaCompra.impuestos_aplicados)
+            .joinedload(models.NotaCompraImpuesto.impuesto),
+        )
+        .filter(models.Compra.id == compra_id)
+        .first()
+    )
     if not compra:
         raise HTTPException(status_code=404, detail="Compra no encontrada")
     return compra
 
 
 @router.get("/fases/{fase_id}/compras", response_model=list[CompraOut], status_code=status.HTTP_200_OK)
-def get_compras_by_fase(fase_id: str,
-                         db: Session = Depends(get_db),
-                         current_user: models.Usuario = Depends(get_current_user)):
+def get_compras_by_fase(
+    fase_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)
+):
     fase = db.query(models.Fase).filter(models.Fase.id == fase_id).first()
     if not fase:
         raise HTTPException(status_code=404, detail="Fase no encontrada")
 
-    return db.query(models.Compra).options(
-        joinedload(models.Compra.detalle).joinedload(models.DetalleCompra.producto).joinedload(models.Producto.categorias),
-        joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
-        joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
-        joinedload(models.Compra.notas).joinedload(models.NotaCompra.impuestos_aplicados).joinedload(models.NotaCompraImpuesto.impuesto),
-    ).filter(models.Compra.fase_id == fase_id).all()
+    return (
+        db.query(models.Compra)
+        .options(
+            joinedload(models.Compra.detalle)
+            .joinedload(models.DetalleCompra.producto)
+            .joinedload(models.Producto.categorias),
+            joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
+            joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
+            joinedload(models.Compra.notas)
+            .joinedload(models.NotaCompra.impuestos_aplicados)
+            .joinedload(models.NotaCompraImpuesto.impuesto),
+        )
+        .filter(models.Compra.fase_id == fase_id)
+        .all()
+    )
 
 
-@router.get("/proyectos/{proyecto_id}/compras", response_model=list[CompraOut], status_code=status.HTTP_200_OK)
-def get_compras_by_proyecto(proyecto_id: str,
-                             db: Session = Depends(get_db),
-                             current_user: models.Usuario = Depends(get_current_user)):
+@router.get(
+    "/proyectos/{proyecto_id}/compras", response_model=list[CompraOut], status_code=status.HTTP_200_OK
+)
+def get_compras_by_proyecto(
+    proyecto_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)
+):
     proyecto = db.query(models.Proyecto).filter(models.Proyecto.id == proyecto_id).first()
     if not proyecto:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
 
     # Compra no tiene FK directa a Proyecto, se llega vía Fase -> join necesario
-    return db.query(models.Compra).join(models.Fase).options(
-        joinedload(models.Compra.detalle).joinedload(models.DetalleCompra.producto).joinedload(models.Producto.categorias),
-        joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
-        joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
-        joinedload(models.Compra.notas).joinedload(models.NotaCompra.impuestos_aplicados).joinedload(models.NotaCompraImpuesto.impuesto),
-    ).filter(models.Fase.proyecto_id == proyecto_id).all()
+    return (
+        db.query(models.Compra)
+        .join(models.Fase)
+        .options(
+            joinedload(models.Compra.detalle)
+            .joinedload(models.DetalleCompra.producto)
+            .joinedload(models.Producto.categorias),
+            joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
+            joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
+            joinedload(models.Compra.notas)
+            .joinedload(models.NotaCompra.impuestos_aplicados)
+            .joinedload(models.NotaCompraImpuesto.impuesto),
+        )
+        .filter(models.Fase.proyecto_id == proyecto_id)
+        .all()
+    )
 
 
 # ---------------------------------------------------------------------------
 # POST : Crear compra (con detalle e impuestos anidados en el mismo body)
 # ---------------------------------------------------------------------------
 
+
 @router.post("/crear", response_model=CompraOut, status_code=status.HTTP_201_CREATED)
 @limiter.limit("100/minute")
-def create_compra(request: Request,
-                   compra: CompraCreate,
-                   db: Session = Depends(get_db),
-                   current_user: models.Usuario = Depends(requiere_admin)):
+def create_compra(
+    request: Request,
+    compra: CompraCreate,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
     fase = db.query(models.Fase).filter(models.Fase.id == compra.fase_id).first()
     if not fase:
         raise HTTPException(status_code=404, detail="Fase no encontrada")
@@ -118,27 +168,26 @@ def create_compra(request: Request,
         fecha=compra.fecha,
         condicion_pago=compra.condicion_pago,
         estado_pago=compra.estado_pago,
-        estado_envio=compra.estado_envio
+        estado_envio=compra.estado_envio,
     )
 
     for linea in compra.detalle:
         producto = db.query(models.Producto).filter(models.Producto.id == linea.producto_id).first()
         if not producto:
             raise HTTPException(status_code=404, detail=f"Producto {linea.producto_id} no encontrado")
-        nueva_compra.detalle.append(models.DetalleCompra(
-            producto_id=linea.producto_id,
-            cantidad=linea.cantidad,
-            precio_unitario=linea.precio_unitario
-        ))
+        nueva_compra.detalle.append(
+            models.DetalleCompra(
+                producto_id=linea.producto_id, cantidad=linea.cantidad, precio_unitario=linea.precio_unitario
+            )
+        )
 
     for imp in compra.impuestos:
         impuesto = db.query(models.Impuesto).filter(models.Impuesto.id == imp.impuesto_id).first()
         if not impuesto:
             raise HTTPException(status_code=404, detail=f"Impuesto {imp.impuesto_id} no encontrado")
-        nueva_compra.impuestos_aplicados.append(models.CompraImpuesto(
-            impuesto_id=imp.impuesto_id,
-            monto=imp.monto
-        ))
+        nueva_compra.impuestos_aplicados.append(
+            models.CompraImpuesto(impuesto_id=imp.impuesto_id, monto=imp.monto)
+        )
 
     try:
         db.add(nueva_compra)
@@ -156,11 +205,14 @@ def create_compra(request: Request,
 # PUT : Actualizar compra (solo campos propios, no detalle/impuestos)
 # ---------------------------------------------------------------------------
 
+
 @router.put("/{compra_id}", response_model=CompraOut, status_code=status.HTTP_200_OK)
-def update_compra(compra_id: str,
-                   compra: CompraUpdate,
-                   db: Session = Depends(get_db),
-                   current_user: models.Usuario = Depends(requiere_admin)):
+def update_compra(
+    compra_id: str,
+    compra: CompraUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
     compra_existente = db.query(models.Compra).filter(models.Compra.id == compra_id).first()
     if not compra_existente:
         raise HTTPException(status_code=404, detail="Compra no encontrada")
@@ -195,10 +247,11 @@ def update_compra(compra_id: str,
 # DELETE : Eliminar compra
 # ---------------------------------------------------------------------------
 
+
 @router.delete("/{compra_id}", response_model=CompraOut, status_code=status.HTTP_200_OK)
-def delete_compra(compra_id: str,
-                   db: Session = Depends(get_db),
-                   current_user: models.Usuario = Depends(requiere_admin)):
+def delete_compra(
+    compra_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(requiere_admin)
+):
     compra = db.query(models.Compra).filter(models.Compra.id == compra_id).first()
     if not compra:
         raise HTTPException(status_code=404, detail="Compra no encontrada")
@@ -222,11 +275,14 @@ def delete_compra(compra_id: str,
 # Sub-recurso: Detalle de Compra
 # ---------------------------------------------------------------------------
 
+
 @router.post("/{compra_id}/detalle", response_model=DetalleCompraOut, status_code=status.HTTP_201_CREATED)
-def add_detalle_compra(compra_id: str,
-                        detalle: DetalleCompraCreate,
-                        db: Session = Depends(get_db),
-                        current_user: models.Usuario = Depends(requiere_admin)):
+def add_detalle_compra(
+    compra_id: str,
+    detalle: DetalleCompraCreate,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
     compra = db.query(models.Compra).filter(models.Compra.id == compra_id).first()
     if not compra:
         raise HTTPException(status_code=404, detail="Compra no encontrada")
@@ -239,7 +295,7 @@ def add_detalle_compra(compra_id: str,
         compra_id=compra_id,
         producto_id=detalle.producto_id,
         cantidad=detalle.cantidad,
-        precio_unitario=detalle.precio_unitario
+        precio_unitario=detalle.precio_unitario,
     )
     db.add(nueva_linea)
     db.commit()
@@ -249,14 +305,17 @@ def add_detalle_compra(compra_id: str,
 
 
 @router.delete("/{compra_id}/detalle/{detalle_id}", status_code=status.HTTP_200_OK)
-def delete_detalle_compra(compra_id: str,
-                           detalle_id: str,
-                           db: Session = Depends(get_db),
-                           current_user: models.Usuario = Depends(requiere_admin)):
-    linea = db.query(models.DetalleCompra).filter(
-        models.DetalleCompra.id == detalle_id,
-        models.DetalleCompra.compra_id == compra_id
-    ).first()
+def delete_detalle_compra(
+    compra_id: str,
+    detalle_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
+    linea = (
+        db.query(models.DetalleCompra)
+        .filter(models.DetalleCompra.id == detalle_id, models.DetalleCompra.compra_id == compra_id)
+        .first()
+    )
     if not linea:
         raise HTTPException(status_code=404, detail="Línea de detalle no encontrada")
 
@@ -270,11 +329,14 @@ def delete_detalle_compra(compra_id: str,
 # Sub-recurso: Impuestos aplicados a la Compra
 # ---------------------------------------------------------------------------
 
+
 @router.post("/{compra_id}/impuestos", response_model=CompraImpuestoOut, status_code=status.HTTP_201_CREATED)
-def add_impuesto_compra(compra_id: str,
-                         impuesto_data: CompraImpuestoCreate,
-                         db: Session = Depends(get_db),
-                         current_user: models.Usuario = Depends(requiere_admin)):
+def add_impuesto_compra(
+    compra_id: str,
+    impuesto_data: CompraImpuestoCreate,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
     compra = db.query(models.Compra).filter(models.Compra.id == compra_id).first()
     if not compra:
         raise HTTPException(status_code=404, detail="Compra no encontrada")
@@ -284,9 +346,7 @@ def add_impuesto_compra(compra_id: str,
         raise HTTPException(status_code=404, detail="Impuesto no encontrado")
 
     nuevo_impuesto_aplicado = models.CompraImpuesto(
-        compra_id=compra_id,
-        impuesto_id=impuesto_data.impuesto_id,
-        monto=impuesto_data.monto
+        compra_id=compra_id, impuesto_id=impuesto_data.impuesto_id, monto=impuesto_data.monto
     )
 
     try:
@@ -301,14 +361,19 @@ def add_impuesto_compra(compra_id: str,
 
 
 @router.delete("/{compra_id}/impuestos/{impuesto_aplicado_id}", status_code=status.HTTP_200_OK)
-def delete_impuesto_compra(compra_id: str,
-                            impuesto_aplicado_id: str,
-                            db: Session = Depends(get_db),
-                            current_user: models.Usuario = Depends(requiere_admin)):
-    impuesto_aplicado = db.query(models.CompraImpuesto).filter(
-        models.CompraImpuesto.id == impuesto_aplicado_id,
-        models.CompraImpuesto.compra_id == compra_id
-    ).first()
+def delete_impuesto_compra(
+    compra_id: str,
+    impuesto_aplicado_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
+    impuesto_aplicado = (
+        db.query(models.CompraImpuesto)
+        .filter(
+            models.CompraImpuesto.id == impuesto_aplicado_id, models.CompraImpuesto.compra_id == compra_id
+        )
+        .first()
+    )
     if not impuesto_aplicado:
         raise HTTPException(status_code=404, detail="Impuesto aplicado no encontrado")
 
@@ -322,23 +387,25 @@ def delete_impuesto_compra(compra_id: str,
 # Comprobantes
 # ---------------------------------------------------------------------------
 
-@router.post("/{compra_id}/comprobantes", response_model=ComprobanteCompraOut, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/{compra_id}/comprobantes", response_model=ComprobanteCompraOut, status_code=status.HTTP_201_CREATED
+)
 @limiter.limit("20/minute")
-def upload_comprobante_compra(request: Request,
-                               compra_id: str,
-                               archivo: UploadFile = File(...),
-                               db: Session = Depends(get_db),
-                               current_user: models.Usuario = Depends(requiere_admin)):
+def upload_comprobante_compra(
+    request: Request,
+    compra_id: str,
+    archivo: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
     compra = db.query(models.Compra).filter(models.Compra.id == compra_id).first()
     if not compra:
         raise HTTPException(status_code=404, detail="Compra no encontrada")
 
     path = subir_comprobante(archivo, "comprobantes_compra", compra_id)
 
-    nuevo_comprobante = models.ComprobanteCompra(
-        compra_id=compra_id,
-        archivo_path=path
-    )
+    nuevo_comprobante = models.ComprobanteCompra(compra_id=compra_id, archivo_path=path)
     db.add(nuevo_comprobante)
     db.commit()
     db.refresh(nuevo_comprobante)
@@ -347,14 +414,19 @@ def upload_comprobante_compra(request: Request,
 
 
 @router.get("/{compra_id}/comprobantes/{comprobante_id}")
-def get_comprobante_compra(compra_id: str,
-                            comprobante_id: str,
-                            db: Session = Depends(get_db),
-                            current_user: models.Usuario = Depends(get_current_user)):
-    comprobante = db.query(models.ComprobanteCompra).filter(
-        models.ComprobanteCompra.id == comprobante_id,
-        models.ComprobanteCompra.compra_id == compra_id
-    ).first()
+def get_comprobante_compra(
+    compra_id: str,
+    comprobante_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user),
+):
+    comprobante = (
+        db.query(models.ComprobanteCompra)
+        .filter(
+            models.ComprobanteCompra.id == comprobante_id, models.ComprobanteCompra.compra_id == compra_id
+        )
+        .first()
+    )
     if not comprobante:
         raise HTTPException(status_code=404, detail="Comprobante no encontrado")
 
@@ -362,14 +434,19 @@ def get_comprobante_compra(compra_id: str,
 
 
 @router.delete("/{compra_id}/comprobantes/{comprobante_id}", status_code=status.HTTP_200_OK)
-def delete_comprobante_compra(compra_id: str,
-                               comprobante_id: str,
-                               db: Session = Depends(get_db),
-                               current_user: models.Usuario = Depends(requiere_admin)):
-    comprobante = db.query(models.ComprobanteCompra).filter(
-        models.ComprobanteCompra.id == comprobante_id,
-        models.ComprobanteCompra.compra_id == compra_id
-    ).first()
+def delete_comprobante_compra(
+    compra_id: str,
+    comprobante_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
+    comprobante = (
+        db.query(models.ComprobanteCompra)
+        .filter(
+            models.ComprobanteCompra.id == comprobante_id, models.ComprobanteCompra.compra_id == compra_id
+        )
+        .first()
+    )
     if not comprobante:
         raise HTTPException(status_code=404, detail="Comprobante no encontrado")
 
@@ -384,32 +461,43 @@ def delete_comprobante_compra(compra_id: str,
 # Notas (cuenta corriente: nota de crédito / nota de débito)
 # ---------------------------------------------------------------------------
 
+
 def _restante_detalle_compra(db: Session, detalle_compra_id: str, cantidad_comprada: float) -> float:
     """Cuánto de una línea de compra queda disponible para devolver: lo
     comprado menos lo ya acreditado en TODAS las notas de devolución previas
     que referencian esa misma línea (no solo las de la nota que se está
     creando ahora)."""
-    ya_devuelto = db.query(func.coalesce(func.sum(models.NotaCompraDetalle.cantidad), 0)).filter(
-        models.NotaCompraDetalle.detalle_compra_id == detalle_compra_id
-    ).scalar()
+    ya_devuelto = (
+        db.query(func.coalesce(func.sum(models.NotaCompraDetalle.cantidad), 0))
+        .filter(models.NotaCompraDetalle.detalle_compra_id == detalle_compra_id)
+        .scalar()
+    )
     return float(cantidad_comprada) - float(ya_devuelto or 0)
 
 
 @router.post("/{compra_id}/notas", response_model=NotaCompraOut, status_code=status.HTTP_201_CREATED)
 @limiter.limit("20/minute")
-def crear_nota_compra(request: Request,
-                       compra_id: str,
-                       archivo: UploadFile = File(...),
-                       tipo: str = Form(...),  # "nota_credito" | "nota_debito"
-                       tipo_factura: str = Form(...),  # SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro)
-                       descripcion: str = Form(...),
-                       fecha: date = Form(...),
-                       origen: str | None = Form(None),  # "devolucion_producto" | "reposicion_producto" | "acuerdo_comercial" | "otro"
-                       monto: float | None = Form(None),  # obligatorio salvo devolucion_producto/reposicion_producto (se calcula solo)
-                       detalles_json: str | None = Form(None),  # JSON [{detalle_compra_id, cantidad}], solo devolucion_producto/reposicion_producto
-                       impuestos_json: str | None = Form(None),  # JSON [{impuesto_id, monto}], opcional junto a detalles_json
-                       db: Session = Depends(get_db),
-                       current_user: models.Usuario = Depends(requiere_admin)):
+def crear_nota_compra(
+    request: Request,
+    compra_id: str,
+    archivo: UploadFile = File(...),
+    tipo: str = Form(...),  # "nota_credito" | "nota_debito"
+    tipo_factura: str = Form(...),  # SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro)
+    descripcion: str = Form(...),
+    fecha: date = Form(...),
+    origen: str | None = Form(
+        None
+    ),  # "devolucion_producto" | "reposicion_producto" | "acuerdo_comercial" | "otro"
+    monto: float | None = Form(
+        None
+    ),  # obligatorio salvo devolucion_producto/reposicion_producto (se calcula solo)
+    detalles_json: str | None = Form(
+        None
+    ),  # JSON [{detalle_compra_id, cantidad}], solo devolucion_producto/reposicion_producto
+    impuestos_json: str | None = Form(None),  # JSON [{impuesto_id, monto}], opcional junto a detalles_json
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
     compra = db.query(models.Compra).filter(models.Compra.id == compra_id).first()
     if not compra:
         raise HTTPException(status_code=404, detail="Compra no encontrada")
@@ -436,7 +524,7 @@ def crear_nota_compra(request: Request,
         monto=0,  # se pisa más abajo (calculado o manual)
         descripcion=descripcion,
         fecha=fecha,
-        archivo_path=path
+        archivo_path=path,
     )
 
     try:
@@ -462,14 +550,21 @@ def crear_nota_compra(request: Request,
             detalle_compra_id = linea.get("detalle_compra_id")
             cantidad = linea.get("cantidad")
             if not detalle_compra_id or cantidad is None or float(cantidad) <= 0:
-                raise HTTPException(status_code=400, detail="Cada línea necesita producto y cantidad mayor a 0")
+                raise HTTPException(
+                    status_code=400, detail="Cada línea necesita producto y cantidad mayor a 0"
+                )
 
-            detalle = db.query(models.DetalleCompra).filter(
-                models.DetalleCompra.id == detalle_compra_id,
-                models.DetalleCompra.compra_id == compra_id
-            ).first()
+            detalle = (
+                db.query(models.DetalleCompra)
+                .filter(
+                    models.DetalleCompra.id == detalle_compra_id, models.DetalleCompra.compra_id == compra_id
+                )
+                .first()
+            )
             if not detalle:
-                raise HTTPException(status_code=404, detail="Esa línea de producto no pertenece a esta compra")
+                raise HTTPException(
+                    status_code=404, detail="Esa línea de producto no pertenece a esta compra"
+                )
 
             # El tope de "cuánto queda disponible" SOLO aplica a la devolución
             # (no podés acreditar más de lo que compraste). La reposición
@@ -480,14 +575,16 @@ def crear_nota_compra(request: Request,
                 if float(cantidad) > restante:
                     raise HTTPException(
                         status_code=400,
-                        detail=f"Solo podés devolver hasta {restante:g} unidades de esa línea (ya devuelto en notas anteriores)"
+                        detail=f"Solo podés devolver hasta {restante:g} unidades de esa línea (ya devuelto en notas anteriores)",
                     )
 
-            nueva_nota.detalles.append(models.NotaCompraDetalle(
-                detalle_compra_id=detalle_compra_id,
-                cantidad=cantidad,
-                precio_unitario=detalle.precio_unitario
-            ))
+            nueva_nota.detalles.append(
+                models.NotaCompraDetalle(
+                    detalle_compra_id=detalle_compra_id,
+                    cantidad=cantidad,
+                    precio_unitario=detalle.precio_unitario,
+                )
+            )
             total_lineas += float(cantidad) * float(detalle.precio_unitario)
 
         total_impuestos = 0.0
@@ -503,10 +600,9 @@ def crear_nota_compra(request: Request,
             impuesto = db.query(models.Impuesto).filter(models.Impuesto.id == impuesto_id).first()
             if not impuesto:
                 raise HTTPException(status_code=404, detail=f"Impuesto {impuesto_id} no encontrado")
-            nueva_nota.impuestos_aplicados.append(models.NotaCompraImpuesto(
-                impuesto_id=impuesto_id,
-                monto=monto_imp
-            ))
+            nueva_nota.impuestos_aplicados.append(
+                models.NotaCompraImpuesto(impuesto_id=impuesto_id, monto=monto_imp)
+            )
             total_impuestos += float(monto_imp)
 
         nueva_nota.monto = total_lineas + total_impuestos
@@ -524,14 +620,17 @@ def crear_nota_compra(request: Request,
 
 
 @router.get("/{compra_id}/notas/{nota_id}")
-def ver_nota_compra(compra_id: str,
-                     nota_id: str,
-                     db: Session = Depends(get_db),
-                     current_user: models.Usuario = Depends(get_current_user)):
-    nota = db.query(models.NotaCompra).filter(
-        models.NotaCompra.id == nota_id,
-        models.NotaCompra.compra_id == compra_id
-    ).first()
+def ver_nota_compra(
+    compra_id: str,
+    nota_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user),
+):
+    nota = (
+        db.query(models.NotaCompra)
+        .filter(models.NotaCompra.id == nota_id, models.NotaCompra.compra_id == compra_id)
+        .first()
+    )
     if not nota:
         raise HTTPException(status_code=404, detail="Nota no encontrada")
 
@@ -539,14 +638,17 @@ def ver_nota_compra(compra_id: str,
 
 
 @router.delete("/{compra_id}/notas/{nota_id}", status_code=status.HTTP_200_OK)
-def eliminar_nota_compra(compra_id: str,
-                          nota_id: str,
-                          db: Session = Depends(get_db),
-                          current_user: models.Usuario = Depends(requiere_admin)):
-    nota = db.query(models.NotaCompra).filter(
-        models.NotaCompra.id == nota_id,
-        models.NotaCompra.compra_id == compra_id
-    ).first()
+def eliminar_nota_compra(
+    compra_id: str,
+    nota_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
+    nota = (
+        db.query(models.NotaCompra)
+        .filter(models.NotaCompra.id == nota_id, models.NotaCompra.compra_id == compra_id)
+        .first()
+    )
     if not nota:
         raise HTTPException(status_code=404, detail="Nota no encontrada")
 

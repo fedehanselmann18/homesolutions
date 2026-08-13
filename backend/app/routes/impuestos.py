@@ -9,27 +9,26 @@ DELETE /impuestos/{id}    -> requiere_admin (RESTRICT vía CompraImpuesto)
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from app.db import models
-from app.auth.oAuth2 import get_current_user, requiere_admin
-from app.db.db import get_db
-from app.schemas import ImpuestoCreate, ImpuestoUpdate, ImpuestoOut
 
-router = APIRouter(
-    prefix="/impuestos",
-    tags=["impuestos"]
-)
+from app.auth.oAuth2 import get_current_user, requiere_admin
+from app.db import models
+from app.db.db import get_db
+from app.schemas import ImpuestoCreate, ImpuestoOut, ImpuestoUpdate
+
+router = APIRouter(prefix="/impuestos", tags=["impuestos"])
 
 
 @router.get("/", response_model=list[ImpuestoOut], status_code=status.HTTP_200_OK)
-def get_all_impuestos(db: Session = Depends(get_db),
-                       current_user: models.Usuario = Depends(get_current_user)):
+def get_all_impuestos(
+    db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)
+):
     return db.query(models.Impuesto).all()
 
 
 @router.get("/{impuesto_id}", response_model=ImpuestoOut, status_code=status.HTTP_200_OK)
-def get_impuesto_by_id(impuesto_id: str,
-                        db: Session = Depends(get_db),
-                        current_user: models.Usuario = Depends(get_current_user)):
+def get_impuesto_by_id(
+    impuesto_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)
+):
     impuesto = db.query(models.Impuesto).filter(models.Impuesto.id == impuesto_id).first()
     if not impuesto:
         raise HTTPException(status_code=404, detail="Impuesto no encontrado")
@@ -37,12 +36,12 @@ def get_impuesto_by_id(impuesto_id: str,
 
 
 @router.post("/crear", response_model=ImpuestoOut, status_code=status.HTTP_201_CREATED)
-def create_impuesto(impuesto: ImpuestoCreate,
-                     db: Session = Depends(get_db),
-                     current_user: models.Usuario = Depends(requiere_admin)):
-    nuevo_impuesto = models.Impuesto(
-        nombre=impuesto.nombre
-    )
+def create_impuesto(
+    impuesto: ImpuestoCreate,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
+    nuevo_impuesto = models.Impuesto(nombre=impuesto.nombre)
     try:
         db.add(nuevo_impuesto)
         db.commit()
@@ -55,10 +54,12 @@ def create_impuesto(impuesto: ImpuestoCreate,
 
 
 @router.put("/{impuesto_id}", response_model=ImpuestoOut, status_code=status.HTTP_200_OK)
-def update_impuesto(impuesto_id: str,
-                     impuesto: ImpuestoUpdate,
-                     db: Session = Depends(get_db),
-                     current_user: models.Usuario = Depends(requiere_admin)):
+def update_impuesto(
+    impuesto_id: str,
+    impuesto: ImpuestoUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
     impuesto_existente = db.query(models.Impuesto).filter(models.Impuesto.id == impuesto_id).first()
     if not impuesto_existente:
         raise HTTPException(status_code=404, detail="Impuesto no encontrado")
@@ -77,9 +78,9 @@ def update_impuesto(impuesto_id: str,
 
 
 @router.delete("/{impuesto_id}", response_model=ImpuestoOut, status_code=status.HTTP_200_OK)
-def delete_impuesto(impuesto_id: str,
-                     db: Session = Depends(get_db),
-                     current_user: models.Usuario = Depends(requiere_admin)):
+def delete_impuesto(
+    impuesto_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(requiere_admin)
+):
     impuesto = db.query(models.Impuesto).filter(models.Impuesto.id == impuesto_id).first()
     if not impuesto:
         raise HTTPException(status_code=404, detail="Impuesto no encontrado")
@@ -91,6 +92,9 @@ def delete_impuesto(impuesto_id: str,
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=400, detail="No se puede eliminar el impuesto porque fue aplicado en una o más compras")
+        raise HTTPException(
+            status_code=400,
+            detail="No se puede eliminar el impuesto porque fue aplicado en una o más compras",
+        )
 
     return impuesto_data

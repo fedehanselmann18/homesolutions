@@ -52,8 +52,14 @@ def _impuesto_aplicado(monto, nombre="IVA"):
 
 def _nota_compra(tipo, monto, origen=None, tipo_factura="factura_a", detalles=None, impuestos_aplicados=None):
     nota = models.NotaCompra(
-        id=uuid.uuid4(), archivo_path="x.pdf", tipo=tipo, monto=monto, origen=origen,
-        tipo_factura=tipo_factura, descripcion="test", fecha=None,
+        id=uuid.uuid4(),
+        archivo_path="x.pdf",
+        tipo=tipo,
+        monto=monto,
+        origen=origen,
+        tipo_factura=tipo_factura,
+        descripcion="test",
+        fecha=None,
     )
     nota.detalles = detalles or []
     nota.impuestos_aplicados = impuestos_aplicados or []
@@ -62,15 +68,23 @@ def _nota_compra(tipo, monto, origen=None, tipo_factura="factura_a", detalles=No
 
 def _nota_cobro(tipo, monto, origen=None, tipo_factura="factura_a"):
     return models.NotaCobro(
-        id=uuid.uuid4(), archivo_path="x.pdf", tipo=tipo, monto=monto, origen=origen,
-        tipo_factura=tipo_factura, descripcion="test", fecha=None,
+        id=uuid.uuid4(),
+        archivo_path="x.pdf",
+        tipo=tipo,
+        monto=monto,
+        origen=origen,
+        tipo_factura=tipo_factura,
+        descripcion="test",
+        fecha=None,
     )
 
 
 def _nota_compra_detalle(detalle_compra_id, cantidad, precio_unitario):
     return models.NotaCompraDetalle(
-        id=uuid.uuid4(), detalle_compra_id=detalle_compra_id,
-        cantidad=cantidad, precio_unitario=precio_unitario,
+        id=uuid.uuid4(),
+        detalle_compra_id=detalle_compra_id,
+        cantidad=cantidad,
+        precio_unitario=precio_unitario,
     )
 
 
@@ -230,7 +244,9 @@ def test_nota_debito_reposicion_producto_suma_al_total_como_cualquier_debito():
     compra.impuestos_aplicados = []
     compra.notas = [
         _nota_compra(
-            "nota_debito", Decimal("9000"), origen="reposicion_producto",
+            "nota_debito",
+            Decimal("9000"),
+            origen="reposicion_producto",
             detalles=[_nota_compra_detalle(detalle_id, cantidad=3, precio_unitario=Decimal("3000"))],
         )
     ]
@@ -247,7 +263,9 @@ def test_precio_total_de_compra_usa_el_monto_frozen_de_la_nota_no_recalcula_deta
     compra.impuestos_aplicados = []
     compra.notas = [
         _nota_compra(
-            "nota_credito", Decimal("6000"), origen="devolucion_producto",
+            "nota_credito",
+            Decimal("6000"),
+            origen="devolucion_producto",
             detalles=[_nota_compra_detalle(uuid.uuid4(), cantidad=2, precio_unitario=Decimal("3000"))],
         )
     ]
@@ -260,6 +278,7 @@ def test_precio_total_de_compra_usa_el_monto_frozen_de_la_nota_no_recalcula_deta
 # denormaliza desde Compra.proveedor_id al crearla -- este chequeo hace
 # explícita esa garantía en vez de confiar en que el caller la copie bien.
 # ---------------------------------------------------------------------------
+
 
 def test_validar_integridad_nota_compra_no_hace_nada_si_coinciden():
     proveedor_id = uuid.uuid4()

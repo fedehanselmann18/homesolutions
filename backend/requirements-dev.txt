@@ -5,3 +5,7 @@
 pytest==8.3.4
 httpx==0.28.1
 pytest-cov==6.0.0
+
+# Formateo/orden de imports (D-04). Config en pyproject.toml. Uso: black . && isort .
+black==26.5.1
+isort==8.0.1

@@ -4,29 +4,31 @@ from fastapi import Depends, FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
-from slowapi import _rate_limit_exceeded_handler
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.db.db import get_db
 from app.limiter import limiter
+from app.routes import (
+    categoriagasto,
+    categorias,
+    cobros,
+    compras,
+    fases,
+    gastos,
+    ia,
+    impuestos,
+    login,
+    productos,
+    proveedores,
+    proyectos,
+    usuarios,
+)
 from app.security_middleware import CSRFMiddleware, SecurityHeadersMiddleware, UnhandledExceptionMiddleware
-from app.routes import (login,
-                        usuarios,
-                        proyectos,
-                        categorias,
-                        categoriagasto,
-                        impuestos,
-                        proveedores,
-                        fases,
-                        productos,
-                        compras,
-                        cobros,
-                        gastos,
-                        ia)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -49,6 +51,7 @@ async def manejador_error_validacion(request: Request, exc: RequestValidationErr
     detalle = "Revisá los datos ingresados"
     detalle += f": {', '.join(campos)}." if campos else "."
     return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, content={"detail": detalle})
+
 
 # Orden de middlewares: Starlette hace user_middleware.insert(0, ...) en cada
 # add_middleware (ver build_middleware_stack), o sea que el ÚLTIMO agregado
@@ -94,6 +97,7 @@ app.include_router(compras.router)
 app.include_router(cobros.router)
 app.include_router(gastos.router)
 app.include_router(ia.router)
+
 
 @app.get("/")
 async def root():

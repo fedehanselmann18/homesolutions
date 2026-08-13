@@ -6,7 +6,9 @@ siempre un JSON {"detail": "..."} prolijo.
 """
 
 
-def test_excepcion_no_controlada_devuelve_json_limpio_sin_traceback(client, db_session, headers_admin, monkeypatch):
+def test_excepcion_no_controlada_devuelve_json_limpio_sin_traceback(
+    client, db_session, headers_admin, monkeypatch
+):
     def _explota(*args, **kwargs):
         raise RuntimeError("boom: fallo simulado de base de datos")
 

@@ -1,27 +1,32 @@
 import secrets
 
-from fastapi import APIRouter, status, Depends, Request, Response
+from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.orm import Session
+
+from app.auth.exceptions import invalid_login_exception, invalid_token_exception
+from app.auth.oAuth2 import (
+    create_access_token,
+    create_refresh_token,
+    get_refresh_token,
+    resolver_usuario_vigente,
+    verify_refresh_token,
+)
+from app.auth.verification import verify_password
+from app.config import settings
 from app.db import models
 from app.db.db import get_db
-from sqlalchemy.orm import Session
-from app.auth.oAuth2 import create_access_token
-from app.auth.verification import verify_password
-from app.auth.exceptions import invalid_login_exception
-from app.schemas import RespuestaLogin
-from fastapi.security import OAuth2PasswordRequestForm
-from app.config import settings
 from app.limiter import limiter
+from app.schemas import RespuestaLogin
 
-router = APIRouter(
-    prefix="/auth",
-    tags=["auth"]
-)
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 # En producción (HTTPS) las cookies van marcadas "secure": el browser no las
 # manda por http://. En local (dev) se corre sin HTTPS, así que se desactiva
 # o el login nunca dejaría cookie puesta.
 COOKIE_SECURE = settings.ENVIRONMENT == "production"
 ACCESS_TOKEN_MAX_AGE = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+REFRESH_TOKEN_MAX_AGE = settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
 
 # Frontend (Vercel) y backend (Railway) viven en dominios distintos en
 # producción -> son "cross-site". Con SameSite=Lax el browser guarda la
@@ -33,25 +38,15 @@ ACCESS_TOKEN_MAX_AGE = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
 COOKIE_SAMESITE = "none" if settings.ENVIRONMENT == "production" else "lax"
 
 
-@router.post("/login", response_model=RespuestaLogin, status_code=status.HTTP_200_OK)
-@limiter.limit("5/minute")
-def login(request: Request, response: Response,
-          user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-
-    user = db.query(models.Usuario).filter(
-        models.Usuario.nombre_usuario == user_credentials.username
-    ).first()
-
-    if not user:
-        raise invalid_login_exception
-
-    if not verify_password(user_credentials.password, user.hashed_password):
-        raise invalid_login_exception
-
-    access_token = create_access_token(data={"user_id": str(user.id)})
-
-    # Cookie httpOnly: no la puede leer JS (mitiga robo por XSS). El
-    # frontend web ya no la maneja a mano, el browser la adjunta solo.
+def _setear_cookies_sesion(response: Response, access_token: str) -> None:
+    """
+    Cookie httpOnly del access token + cookie (NO httponly, la lee el
+    frontend) de csrf_token, mismo max_age que el access token -- ver
+    security_middleware.py y axiosClient.js. Compartido entre login y
+    refresh: los dos emiten un access token nuevo y los dos necesitan
+    renovar el csrf_token junto con él (si no, el csrf_token quedaría
+    vencido en el browser aunque la sesión siga viva vía refresh token).
+    """
     response.set_cookie(
         key="access_token",
         value=access_token,
@@ -62,9 +57,6 @@ def login(request: Request, response: Response,
         path="/",
     )
 
-    # Cookie CSRF: a propósito NO httponly, el frontend la lee y la reenvía
-    # como header X-CSRF-Token en cada request que modifica datos (ver
-    # security_middleware.py y axiosClient.js).
     csrf_token = secrets.token_urlsafe(32)
     response.set_cookie(
         key="csrf_token",
@@ -74,6 +66,41 @@ def login(request: Request, response: Response,
         samesite=COOKIE_SAMESITE,
         max_age=ACCESS_TOKEN_MAX_AGE,
         path="/",
+    )
+
+
+@router.post("/login", response_model=RespuestaLogin, status_code=status.HTTP_200_OK)
+@limiter.limit("5/minute")
+def login(
+    request: Request,
+    response: Response,
+    user_credentials: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+):
+
+    user = db.query(models.Usuario).filter(models.Usuario.nombre_usuario == user_credentials.username).first()
+
+    if not user:
+        raise invalid_login_exception
+
+    if not verify_password(user_credentials.password, user.hashed_password):
+        raise invalid_login_exception
+
+    access_token = create_access_token(data={"user_id": str(user.id)})
+    _setear_cookies_sesion(response, access_token)
+
+    # Refresh token (B-06): cookie separada, de larga duración, acotada a
+    # path="/auth" -- no tiene sentido que viaje en CADA request como el
+    # access token, solo la necesitan POST /auth/refresh y /auth/logout.
+    refresh_token = create_refresh_token(data={"user_id": str(user.id)})
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=COOKIE_SECURE,
+        samesite=COOKIE_SAMESITE,
+        max_age=REFRESH_TOKEN_MAX_AGE,
+        path="/auth",
     )
 
     # B-05: el JWT ya NO viaja en el body (antes sí, "por compatibilidad").
@@ -88,11 +115,31 @@ def login(request: Request, response: Response,
     return {"message": "Sesión iniciada"}
 
 
+@router.post("/refresh", response_model=RespuestaLogin, status_code=status.HTTP_200_OK)
+def refresh(request: Request, response: Response, db: Session = Depends(get_db)):
+    """
+    Renueva el access token (y el csrf_token que viaja junto) usando el
+    refresh token de larga duración, sin pedir credenciales de nuevo. El
+    refresh token en sí NO se rota acá -- sigue siendo el mismo hasta que
+    venza (REFRESH_TOKEN_EXPIRE_DAYS) o se revoque (ver
+    resolver_usuario_vigente, B-06).
+    """
+    refresh_token = get_refresh_token(request)
+    token_data = verify_refresh_token(refresh_token, invalid_token_exception)
+    user = resolver_usuario_vigente(token_data, db, invalid_token_exception)
+
+    access_token = create_access_token(data={"user_id": str(user.id)})
+    _setear_cookies_sesion(response, access_token)
+
+    return {"message": "Token renovado"}
+
+
 @router.post("/logout", status_code=status.HTTP_200_OK)
 def logout(response: Response):
-    # secure/samesite tienen que coincidir con los que se usaron al crearlas
-    # -- si no, en algunos browsers el Set-Cookie de borrado no pisa la
-    # cookie original y queda viva hasta que expire sola.
+    # secure/samesite/path tienen que coincidir con los que se usaron al
+    # crearlas -- si no, en algunos browsers el Set-Cookie de borrado no
+    # pisa la cookie original y queda viva hasta que expire sola.
     response.delete_cookie("access_token", path="/", secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE)
     response.delete_cookie("csrf_token", path="/", secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE)
+    response.delete_cookie("refresh_token", path="/auth", secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE)
     return {"message": "Sesión cerrada"}

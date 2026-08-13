@@ -25,23 +25,23 @@ import io
 from datetime import date, datetime
 from pathlib import Path
 
+from reportlab.graphics.charts.barcharts import HorizontalBarChart, VerticalBarChart
+from reportlab.graphics.charts.piecharts import Pie
+from reportlab.graphics.shapes import Circle, Drawing, Line, Rect, String
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.platypus import (
+    Paragraph,
     SimpleDocTemplate,
+    Spacer,
     Table,
     TableStyle,
-    Paragraph,
-    Spacer,
 )
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.graphics.shapes import Drawing, Rect, String, Circle, Line
-from reportlab.graphics.charts.piecharts import Pie
-from reportlab.graphics.charts.barcharts import HorizontalBarChart, VerticalBarChart
 
 ASSETS = Path(__file__).parent / "assets"
 FUENTES = ASSETS / "fuentes"
@@ -119,19 +119,58 @@ def _estilos():
     _registrar_fuentes()
     hoja = getSampleStyleSheet()
     return {
-        "titulo": ParagraphStyle("titulo", parent=hoja["Normal"], fontName="Marca-Bold", fontSize=20, textColor=NEGRO, leading=24),
-        "subtitulo": ParagraphStyle("subtitulo", parent=hoja["Normal"], fontName="Marca", fontSize=10, textColor=GRIS_OSCURO, leading=14),
-        "seccion": ParagraphStyle("seccion", parent=hoja["Normal"], fontName="Marca-Bold", fontSize=13, textColor=OLIVA, spaceBefore=16, spaceAfter=8),
-        "subseccion": ParagraphStyle("subseccion", parent=hoja["Normal"], fontName="Marca-Bold", fontSize=10.5, textColor=GRIS_OSCURO, spaceBefore=10, spaceAfter=4),
-        "texto": ParagraphStyle("texto", parent=hoja["Normal"], fontName="Marca", fontSize=9.5, textColor=NEGRO, leading=13),
-        "vacio": ParagraphStyle("vacio", parent=hoja["Normal"], fontName="Marca-Italic", fontSize=9.5, textColor=GRIS_OSCURO),
-        "resumen_item": ParagraphStyle("resumen_item", parent=hoja["Normal"], fontName="Marca", fontSize=10, textColor=NEGRO, leading=15, leftIndent=10, bulletIndent=0),
+        "titulo": ParagraphStyle(
+            "titulo", parent=hoja["Normal"], fontName="Marca-Bold", fontSize=20, textColor=NEGRO, leading=24
+        ),
+        "subtitulo": ParagraphStyle(
+            "subtitulo",
+            parent=hoja["Normal"],
+            fontName="Marca",
+            fontSize=10,
+            textColor=GRIS_OSCURO,
+            leading=14,
+        ),
+        "seccion": ParagraphStyle(
+            "seccion",
+            parent=hoja["Normal"],
+            fontName="Marca-Bold",
+            fontSize=13,
+            textColor=OLIVA,
+            spaceBefore=16,
+            spaceAfter=8,
+        ),
+        "subseccion": ParagraphStyle(
+            "subseccion",
+            parent=hoja["Normal"],
+            fontName="Marca-Bold",
+            fontSize=10.5,
+            textColor=GRIS_OSCURO,
+            spaceBefore=10,
+            spaceAfter=4,
+        ),
+        "texto": ParagraphStyle(
+            "texto", parent=hoja["Normal"], fontName="Marca", fontSize=9.5, textColor=NEGRO, leading=13
+        ),
+        "vacio": ParagraphStyle(
+            "vacio", parent=hoja["Normal"], fontName="Marca-Italic", fontSize=9.5, textColor=GRIS_OSCURO
+        ),
+        "resumen_item": ParagraphStyle(
+            "resumen_item",
+            parent=hoja["Normal"],
+            fontName="Marca",
+            fontSize=10,
+            textColor=NEGRO,
+            leading=15,
+            leftIndent=10,
+            bulletIndent=0,
+        ),
     }
 
 
 # ---------------------------------------------------------------------------
 # Gráficos (reportlab.graphics)
 # ---------------------------------------------------------------------------
+
 
 def _color_paso_cascada(paso: dict):
     if paso["tipo"] in ("total", "ajuste"):
@@ -187,10 +226,30 @@ def _grafico_cascada(cascada: list[dict], ancho: float = 470, alto: float = 210)
         # de un paso negativo (barra "colgando" cerca del cero) se pise con
         # el nombre del paso en el eje x, de abajo.
         y_etiqueta = y_arriba + 4
-        d.add(String(x + ancho_barra / 2, y_etiqueta, etiqueta_valor, fontName="Marca-Bold", fontSize=6.5, fillColor=NEGRO, textAnchor="middle"))
+        d.add(
+            String(
+                x + ancho_barra / 2,
+                y_etiqueta,
+                etiqueta_valor,
+                fontName="Marca-Bold",
+                fontSize=6.5,
+                fillColor=NEGRO,
+                textAnchor="middle",
+            )
+        )
 
         nombre = ETIQUETAS_CORTAS_CASCADA.get(paso["nombre"], paso["nombre"])
-        d.add(String(x + ancho_barra / 2, margen_inf - 12, nombre, fontName="Marca", fontSize=6.5, fillColor=GRIS_OSCURO, textAnchor="middle"))
+        d.add(
+            String(
+                x + ancho_barra / 2,
+                margen_inf - 12,
+                nombre,
+                fontName="Marca",
+                fontSize=6.5,
+                fillColor=GRIS_OSCURO,
+                textAnchor="middle",
+            )
+        )
 
     return d
 
@@ -234,7 +293,9 @@ def _grafico_donut(datos: list[dict], ancho: float = 250) -> Drawing:
     return d
 
 
-def _grafico_barras_horizontal(datos: list[dict], campo_nombre: str, campo_valor: str, color, ancho: float = 470) -> Drawing:
+def _grafico_barras_horizontal(
+    datos: list[dict], campo_nombre: str, campo_valor: str, color, ancho: float = 470
+) -> Drawing:
     """Ranking horizontal (top proveedores, egresos por fase). El primero de `datos` queda arriba."""
     n = len(datos)
     alto = max(n * 24 + 40, 90)
@@ -242,7 +303,9 @@ def _grafico_barras_horizontal(datos: list[dict], campo_nombre: str, campo_valor
     if n == 0:
         return d
 
-    ordenados = list(reversed(datos))  # reportlab dibuja el índice 0 abajo -> invertimos para que el 1° quede arriba
+    ordenados = list(
+        reversed(datos)
+    )  # reportlab dibuja el índice 0 abajo -> invertimos para que el 1° quede arriba
 
     bc = HorizontalBarChart()
     bc.x = 110
@@ -293,9 +356,17 @@ def _grafico_notas(notas: dict, ancho: float = 260, alto: float = 190) -> Drawin
 
     # Leyenda manual.
     d.add(Rect(ancho - 10, alto - 15, 8, 8, fillColor=ROJO, strokeColor=None))
-    d.add(String(ancho - 18, alto - 16, "Crédito", fontName="Marca", fontSize=7, fillColor=NEGRO, textAnchor="end"))
+    d.add(
+        String(
+            ancho - 18, alto - 16, "Crédito", fontName="Marca", fontSize=7, fillColor=NEGRO, textAnchor="end"
+        )
+    )
     d.add(Rect(ancho - 10, alto - 28, 8, 8, fillColor=NARANJA, strokeColor=None))
-    d.add(String(ancho - 18, alto - 29, "Débito", fontName="Marca", fontSize=7, fillColor=NEGRO, textAnchor="end"))
+    d.add(
+        String(
+            ancho - 18, alto - 29, "Débito", fontName="Marca", fontSize=7, fillColor=NEGRO, textAnchor="end"
+        )
+    )
 
     return d
 
@@ -303,6 +374,7 @@ def _grafico_notas(notas: dict, ancho: float = 260, alto: float = 190) -> Drawin
 # ---------------------------------------------------------------------------
 # Tablas
 # ---------------------------------------------------------------------------
+
 
 def _tabla_totales(analisis: dict) -> Table:
     t = analisis["totales"]
@@ -338,8 +410,18 @@ def _tabla_notas(analisis: dict) -> Table:
     n = analisis["notas"]
     filas = [
         ["", "Nota de crédito", "Nota de débito", "Cantidad"],
-        ["Compras (proveedores)", formato_moneda(n["compras"]["credito"]), formato_moneda(n["compras"]["debito"]), str(n["compras"]["cantidad"])],
-        ["Cobros (cliente)", formato_moneda(n["cobros"]["credito"]), formato_moneda(n["cobros"]["debito"]), str(n["cobros"]["cantidad"])],
+        [
+            "Compras (proveedores)",
+            formato_moneda(n["compras"]["credito"]),
+            formato_moneda(n["compras"]["debito"]),
+            str(n["compras"]["cantidad"]),
+        ],
+        [
+            "Cobros (cliente)",
+            formato_moneda(n["cobros"]["credito"]),
+            formato_moneda(n["cobros"]["debito"]),
+            str(n["cobros"]["cantidad"]),
+        ],
     ]
     tabla = Table(filas, colWidths=[55 * mm, 35 * mm, 35 * mm, 25 * mm])
     tabla.setStyle(
@@ -366,7 +448,9 @@ def _tabla_fases(analisis: dict) -> Table | None:
         return None
     filas = [["Fase", "Estado", "Gastado", "% presup."]]
     for f in fases:
-        filas.append([f["nombre"], f["estado"], formato_moneda(f["gastado"]), formato_pct(f["pct_presupuesto"])])
+        filas.append(
+            [f["nombre"], f["estado"], formato_moneda(f["gastado"]), formato_pct(f["pct_presupuesto"])]
+        )
     tabla = Table(filas, colWidths=[60 * mm, 40 * mm, 40 * mm, 30 * mm])
     tabla.setStyle(
         TableStyle(
@@ -438,12 +522,18 @@ def _header_footer(canvas, doc, proyecto_nombre: str):
     canvas.setFillColor(GRIS_OSCURO)
     canvas.drawString(20 * mm, 12 * mm, "Home Solutions · ventas@homesolutions.ar · www.homesolutions.ar")
     canvas.drawRightString(ancho - 20 * mm, 12 * mm, f"Página {doc.page}")
-    canvas.drawString(20 * mm, 8 * mm, f"Reporte de {proyecto_nombre} · generado el {datetime.now().strftime('%d/%m/%Y %H:%M')}")
+    canvas.drawString(
+        20 * mm,
+        8 * mm,
+        f"Reporte de {proyecto_nombre} · generado el {datetime.now().strftime('%d/%m/%Y %H:%M')}",
+    )
 
     canvas.restoreState()
 
 
-def generar_pdf_proyecto(proyecto, fases: list, gastos: list, cobros: list, compras: list, analisis: dict) -> bytes:
+def generar_pdf_proyecto(
+    proyecto, fases: list, gastos: list, cobros: list, compras: list, analisis: dict
+) -> bytes:
     """Arma el PDF de reporte y devuelve los bytes (para servir como Response)."""
     estilos = _estilos()
     buffer = io.BytesIO()
@@ -491,9 +581,19 @@ def generar_pdf_proyecto(proyecto, fases: list, gastos: list, cobros: list, comp
         story.append(Paragraph("Gastos e impuestos", estilos["seccion"]))
         celdas = []
         if analisis["gastos_por_categoria"]:
-            celdas.append([Paragraph("Gastos por categoría", estilos["subseccion"]), _grafico_donut(analisis["gastos_por_categoria"])])
+            celdas.append(
+                [
+                    Paragraph("Gastos por categoría", estilos["subseccion"]),
+                    _grafico_donut(analisis["gastos_por_categoria"]),
+                ]
+            )
         if analisis["impuestos_por_tipo"]:
-            celdas.append([Paragraph("Impuestos por tipo", estilos["subseccion"]), _grafico_donut(analisis["impuestos_por_tipo"])])
+            celdas.append(
+                [
+                    Paragraph("Impuestos por tipo", estilos["subseccion"]),
+                    _grafico_donut(analisis["impuestos_por_tipo"]),
+                ]
+            )
         for titulo, grafico in celdas:
             story.append(titulo)
             story.append(grafico)

@@ -67,3 +67,30 @@ def test_subir_y_eliminar_comprobante_local_streamea_el_contenido_completo(tmp_p
 
     storage.eliminar_comprobante(path_relativo)
     assert not ruta_completa.exists()
+
+
+# ---------------------------------------------------------------------------
+# _r2_client / reset_r2_client (B-12): singleton con lock en vez de
+# @lru_cache, para poder forzar una instancia nueva (ej. tras rotar
+# credenciales) sin reiniciar el proceso. boto3.client() no hace ninguna
+# llamada de red al construirse, así que se puede probar sin mockear nada.
+# ---------------------------------------------------------------------------
+
+
+def test_r2_client_es_singleton_entre_llamadas():
+    storage.reset_r2_client()
+    try:
+        assert storage._r2_client() is storage._r2_client()
+    finally:
+        storage.reset_r2_client()
+
+
+def test_reset_r2_client_fuerza_una_instancia_nueva():
+    storage.reset_r2_client()
+    try:
+        cliente_1 = storage._r2_client()
+        storage.reset_r2_client()
+        cliente_2 = storage._r2_client()
+        assert cliente_1 is not cliente_2
+    finally:
+        storage.reset_r2_client()
