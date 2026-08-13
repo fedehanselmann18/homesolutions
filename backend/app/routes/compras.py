@@ -5,6 +5,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 from app.db import models
+from app.audit import log_auditoria
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db.db import get_db
 from app.files.storage import subir_comprobante, eliminar_comprobante, ver_comprobante
@@ -144,6 +145,7 @@ def create_compra(compra: CompraCreate,
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al crear la compra: datos inválidos")
 
+    log_auditoria(current_user.id, "create", "Compra", nueva_compra.id)
     return nueva_compra
 
 
@@ -182,6 +184,7 @@ def update_compra(compra_id: str,
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al actualizar la compra: datos inválidos")
 
+    log_auditoria(current_user.id, "update", "Compra", compra_existente.id)
     return compra_existente
 
 
@@ -208,6 +211,7 @@ def delete_compra(compra_id: str,
     db.delete(compra)
     db.commit()
 
+    log_auditoria(current_user.id, "delete", "Compra", compra_data.id)
     return compra_data
 
 

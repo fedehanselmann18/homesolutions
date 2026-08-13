@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
 from app.db import models
+from app.audit import log_auditoria
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db.db import get_db
 from app.files.storage import subir_comprobante, eliminar_comprobante, ver_comprobante
@@ -97,6 +98,7 @@ def create_gasto(gasto: GastoCreate,
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al crear el gasto: datos inválidos")
 
+    log_auditoria(current_user.id, "create", "Gasto", nuevo_gasto.id)
     return nuevo_gasto
 
 
@@ -133,6 +135,7 @@ def update_gasto(gasto_id: str,
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al actualizar el gasto: datos inválidos")
 
+    log_auditoria(current_user.id, "update", "Gasto", gasto_existente.id)
     return gasto_existente
 
 
@@ -152,6 +155,7 @@ def delete_gasto(gasto_id: str,
     db.delete(gasto)
     db.commit()
 
+    log_auditoria(current_user.id, "delete", "Gasto", gasto_data.id)
     return gasto_data
 
 

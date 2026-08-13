@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File,
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from app.db import models
+from app.audit import log_auditoria
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db.db import get_db
 from app.files.storage import subir_comprobante, eliminar_comprobante, ver_comprobante
@@ -70,6 +71,7 @@ def create_cobro(cobro: CobroCreate,
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al crear el cobro: datos inválidos")
 
+    log_auditoria(current_user.id, "create", "Cobro", nuevo_cobro.id)
     return nuevo_cobro
 
 
@@ -92,6 +94,7 @@ def update_cobro(cobro_id: str,
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al actualizar el cobro: datos inválidos")
 
+    log_auditoria(current_user.id, "update", "Cobro", cobro_existente.id)
     return cobro_existente
 
 
@@ -113,6 +116,7 @@ def delete_cobro(cobro_id: str,
     db.delete(cobro)
     db.commit()
 
+    log_auditoria(current_user.id, "delete", "Cobro", cobro_data.id)
     return cobro_data
 
 

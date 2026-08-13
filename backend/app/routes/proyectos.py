@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from app.db.db import get_db
 from app.db import models
 from app.schemas import ProyectoCreate, ProyectoUpdate, ProyectoOut
+from app.audit import log_auditoria
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.files.storage import eliminar_comprobante
 from app.reportes.calculos import calcular_analisis_proyecto
@@ -57,6 +58,7 @@ def create_project(proyecto: ProyectoCreate,
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al crear el proyecto: datos inválidos")
 
+    log_auditoria(current_user.id, "create", "Proyecto", nuevo_proyecto.id)
     return nuevo_proyecto
 
 # DELETE : Eliminar un proyecto por id de proyecto
@@ -86,6 +88,7 @@ def delete_project(proyecto_id: str,
     db.delete(proyecto)
     db.commit()
 
+    log_auditoria(current_user.id, "delete", "Proyecto", proyecto_data.id)
     return proyecto_data
 
 # PUT : Actualizar un proyecto por id de proyecto
@@ -109,6 +112,7 @@ def update_project(proyecto_id: str,
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al actualizar el proyecto: datos inválidos")
 
+    log_auditoria(current_user.id, "update", "Proyecto", proyecto_existente.id)
     return proyecto_existente
 
 
