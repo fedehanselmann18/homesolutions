@@ -4,6 +4,7 @@ import { TIPOS_NOTA, ORIGENES_NOTA_COMPRA, ORIGENES_NOTA_COBRO } from "../../con
 import { TIPOS_FACTURA } from "../../constants/tipoFactura";
 import { restanteDetalleCompra } from "../../utils/notas";
 import { formatMoneda } from "../../utils/formato";
+import { obtenerMensajeError } from "../../utils/errorHandling";
 import "./ModalNota.css";
 
 const EXTENSIONES_PERMITIDAS = ".pdf,.jpg,.jpeg,.png";
@@ -208,7 +209,7 @@ export function ModalNota({ contexto, entidad, productos = [], impuestosDisponib
                 ...payloadExtra,
             });
         } catch (err) {
-            setError(err?.response?.data?.detail ?? err?.message ?? "No se pudo guardar la nota.");
+            setError(obtenerMensajeError(err));
             setGuardando(false);
         }
     };

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Paperclip, X } from "lucide-react";
 import { extensionDeArchivo, iconoParaArchivo, nombreDeArchivo as nombreDeArchivoExistente } from "../../utils/archivos";
+import { obtenerMensajeError } from "../../utils/errorHandling";
 import "./ComprobantesUploader.css";
 
 const EXTENSIONES_PERMITIDAS = [".pdf", ".jpg", ".jpeg", ".png"];
@@ -104,7 +105,7 @@ export function ComprobantesUploader({ existentes = [], onVerExistente, onCambio
             window.open(url, "_blank", "noopener,noreferrer");
             setTimeout(() => URL.revokeObjectURL(url), 60_000);
         } catch (err) {
-            setErrores([err?.message ?? "No se pudo abrir el comprobante"]);
+            setErrores([obtenerMensajeError(err)]);
         } finally {
             setViendoId(null);
         }

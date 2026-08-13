@@ -1,12 +1,16 @@
-from fastapi import FastAPI
+import logging
+
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 from slowapi import _rate_limit_exceeded_handler
 
 from app.config import settings
 from app.limiter import limiter
-from app.security_middleware import CSRFMiddleware, SecurityHeadersMiddleware
+from app.security_middleware import CSRFMiddleware, SecurityHeadersMiddleware, UnhandledExceptionMiddleware
 from app.routes import (login,
                         usuarios,
                         proyectos,
@@ -20,10 +24,28 @@ from app.routes import (login,
                         cobros,
                         gastos,
                         ia)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+
 app = FastAPI()
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+@app.exception_handler(RequestValidationError)
+async def manejador_error_validacion(request: Request, exc: RequestValidationError):
+    # Traduce el array técnico default de FastAPI/Pydantic (loc/msg/type por
+    # cada campo) a un mensaje legible en español -- ver detalle de cada
+    # campo en los logs si hace falta debuggear, acá al usuario solo le
+    # importa CUÁLES campos revisar.
+    campos = [str(error["loc"][-1]) for error in exc.errors() if error.get("loc")]
+    detalle = "Revisá los datos ingresados"
+    detalle += f": {', '.join(campos)}." if campos else "."
+    return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, content={"detail": detalle})
 
 # Orden de middlewares: Starlette hace user_middleware.insert(0, ...) en cada
 # add_middleware (ver build_middleware_stack), o sea que el ÚLTIMO agregado
@@ -36,6 +58,15 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # producción: front y back en dominios distintos, un 403 de CSRF llegaba sin
 # headers de CORS y el browser lo mostraba como error de CORS). Por eso CORS
 # se agrega al final.
+#
+# UnhandledExceptionMiddleware se agrega PRIMERO (capa más interna de todas,
+# justo al lado del router) por la misma razón pero al revés: si una
+# excepción no controlada se escapa hasta el ServerErrorMiddleware que pone
+# Starlette por fuera de TODO (más externo que CORS), esa respuesta 500
+# tampoco pasaría por CORS. Atrapándola acá adentro, la respuesta que arma
+# este middleware sigue su camino de vuelta normal a través de CSRF/
+# SecurityHeaders/CORS como cualquier response común.
+app.add_middleware(UnhandledExceptionMiddleware)
 app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(CSRFMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)

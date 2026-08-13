@@ -3,6 +3,7 @@ import { X, FileMinus, FilePlus, ChevronDown } from "lucide-react";
 import { getOrigenNotaLabel } from "../../constants/notas";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
 import { formatMoneda, formatFecha } from "../../utils/formato";
+import { obtenerMensajeError } from "../../utils/errorHandling";
 import "./SeccionNotas.css";
 
 /**
@@ -61,7 +62,7 @@ export function SeccionNotas({
         try {
             await onEliminar(notaId);
         } catch (err) {
-            setError(err?.message ?? "No se pudo eliminar la nota");
+            setError(obtenerMensajeError(err));
         } finally {
             setEliminandoId(null);
         }
@@ -77,7 +78,7 @@ export function SeccionNotas({
             window.open(url, "_blank", "noopener,noreferrer");
             setTimeout(() => URL.revokeObjectURL(url), 60_000);
         } catch (err) {
-            setError(err?.message ?? "No se pudo abrir el comprobante");
+            setError(obtenerMensajeError(err));
         } finally {
             setViendoId(null);
         }

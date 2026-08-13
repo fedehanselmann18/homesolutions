@@ -1,5 +1,5 @@
 """
-Dos middlewares chicos, agrupados acá para no ensuciar main.py:
+Middlewares chicos, agrupados acá para no ensuciar main.py:
 
 1. SecurityHeadersMiddleware: agrega headers HTTP estándar que mitigan
    ataques comunes (clickjacking, sniffing de content-type, etc.). No
@@ -13,13 +13,28 @@ Dos middlewares chicos, agrupados acá para no ensuciar main.py:
    viaja solo. Requiere que el cliente mande de vuelta, en el header
    X-CSRF-Token, el mismo valor que el server puso en la cookie csrf_token
    (legible por JS a propósito, a diferencia de access_token).
+
+3. UnhandledExceptionMiddleware: red de seguridad para bugs/fallos no
+   anticipados (ej. la DB se cae a mitad de un request). Sin esto, una
+   excepción que se escapa de una ruta la agarra Starlette con su
+   ServerErrorMiddleware, que es MÁS externo que CORSMiddleware (ver el
+   comentario de orden de middlewares en main.py) -- la respuesta de error
+   nunca pasaría por CORSMiddleware y el browser la vería como "bloqueado
+   por CORS" en vez del 500 real, igual que el bug ya documentado para CSRF.
+   Por eso este middleware atrapa la excepción ACÁ (más adentro que CORS,
+   ver el orden de app.add_middleware en main.py) y devuelve la respuesta
+   él mismo -- así sí pasa por CORS/SecurityHeaders en su camino de vuelta.
 """
+
+import logging
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 MUTATING_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
 
@@ -69,3 +84,17 @@ class CSRFMiddleware(BaseHTTPMiddleware):
                     )
 
         return await call_next(request)
+
+
+class UnhandledExceptionMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        try:
+            return await call_next(request)
+        except Exception:
+            # Traceback completo server-side para poder debuggear; al
+            # cliente nunca le llega el nombre de la excepción ni el stack.
+            logger.exception("Error no controlado en %s %s", request.method, request.url.path)
+            return JSONResponse(
+                status_code=500,
+                content={"detail": "Ocurrió un error inesperado. Intentá de nuevo en unos minutos."},
+            )

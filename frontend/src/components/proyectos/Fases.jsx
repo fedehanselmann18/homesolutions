@@ -11,6 +11,7 @@ import "./Fases.css";
 import useAuth from "../../context/useAuth";
 import { useToast } from "../../context/useToast";
 import { ESTADO_LABELS } from "../../constants/estados";
+import { obtenerDetalleBackend } from "../../utils/errorHandling";
 
 // Orden fijo: en curso primero, después por empezar, y terminadas (incluye
 // "auditada", que en la práctica es una fase ya terminada) al final.
@@ -63,7 +64,7 @@ export function Fases({ proyectoId }) {
             fetchProyectoFases();
         } catch (error) {
             console.error("Error guardando fase:", error);
-            toast.error("No se pudo guardar la fase.");
+            toast.error(obtenerDetalleBackend(error) ?? "No se pudo guardar la fase.");
         }
     };
 
@@ -73,7 +74,7 @@ export function Fases({ proyectoId }) {
             fetchProyectoFases();
         } catch (error) {
             console.error("Error eliminando fase:", error);
-            toast.error("No se pudo eliminar la fase.");
+            toast.error(obtenerDetalleBackend(error) ?? "No se pudo eliminar la fase.");
         }
     };
 

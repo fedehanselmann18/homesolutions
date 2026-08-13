@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { X } from "lucide-react";
 import { iconoParaArchivo, nombreDeArchivo } from "../../utils/archivos";
+import { obtenerMensajeError } from "../../utils/errorHandling";
 import "./SeccionComprobantes.css";
 
 /**
@@ -39,7 +40,7 @@ export function SeccionComprobantes({
         try {
             await onAgregar(files);
         } catch (err) {
-            setError(err?.message ?? "No se pudo subir el comprobante");
+            setError(obtenerMensajeError(err));
         } finally {
             setSubiendo(false);
             e.target.value = "";
@@ -52,7 +53,7 @@ export function SeccionComprobantes({
         try {
             await onEliminar(comprobanteId);
         } catch (err) {
-            setError(err?.message ?? "No se pudo eliminar el comprobante");
+            setError(obtenerMensajeError(err));
         } finally {
             setEliminandoId(null);
         }
@@ -68,7 +69,7 @@ export function SeccionComprobantes({
             window.open(url, "_blank", "noopener,noreferrer");
             setTimeout(() => URL.revokeObjectURL(url), 60_000);
         } catch (err) {
-            setError(err?.message ?? "No se pudo abrir el comprobante");
+            setError(obtenerMensajeError(err));
         } finally {
             setViendoId(null);
         }

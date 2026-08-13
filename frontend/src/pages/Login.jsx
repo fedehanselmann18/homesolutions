@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/useAuth";
 import { getOpcionesLogin } from "../services/usuarioService";
+import { obtenerMensajeError } from "../utils/errorHandling";
 import logoHS from "../assets/HS_logo_blanco.png";
 import "./Login.css";
 
@@ -42,8 +43,16 @@ export function Login() {
     } catch (err) {
       // El backend devuelve 401 tanto si el usuario no existe como si la
       // contraseña es incorrecta (invalid_login_exception), así que el
-      // mensaje es genérico a propósito: no hay que distinguir cuál falló.
-      setError(`Usuario o contraseña incorrectos. ${err.message}`);
+      // mensaje es genérico a propósito: no hay que mostrar el detail crudo
+      // del backend acá (aunque ya venga en español), porque distinguir
+      // "usuario no existe" de "contraseña incorrecta" habilitaría
+      // enumeración de usuarios. Cualquier otro error (sin conexión, 429,
+      // 500) sí usa el mensaje real -- ahí no hay nada que proteger.
+      if (err?.response?.status === 401) {
+        setError("Usuario o contraseña incorrectos.");
+      } else {
+        setError(obtenerMensajeError(err));
+      }
     } finally {
       setEnviando(false);
     }

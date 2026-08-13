@@ -39,6 +39,7 @@ import { getProductos } from "../../services/productoService";
 import { getImpuestos } from "../../services/impuestosService";
 import useAuth from "../../context/useAuth";
 import { useToast } from "../../context/useToast";
+import { obtenerDetalleBackend } from "../../utils/errorHandling";
 
 import GastoCard from "./cards/GastoCard";
 import CobroCard from "./cards/CobroCard";
@@ -167,7 +168,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
             fetchAcciones();
         } catch (error) {
             console.error("Error guardando gasto:", error);
-            toast.error("No se pudo guardar el gasto.");
+            toast.error(obtenerDetalleBackend(error) ?? "No se pudo guardar el gasto.");
         }
     };
 
@@ -177,7 +178,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
             fetchAcciones();
         } catch (error) {
             console.error("Error eliminando gasto:", error);
-            toast.error("No se pudo eliminar el gasto.");
+            toast.error(obtenerDetalleBackend(error) ?? "No se pudo eliminar el gasto.");
         }
     };
 
@@ -218,7 +219,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
             fetchAcciones();
         } catch (error) {
             console.error("Error guardando cobro:", error);
-            toast.error("No se pudo guardar el cobro.");
+            toast.error(obtenerDetalleBackend(error) ?? "No se pudo guardar el cobro.");
         }
     };
 
@@ -228,7 +229,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
             fetchAcciones();
         } catch (error) {
             console.error("Error eliminando cobro:", error);
-            toast.error("No se pudo eliminar el cobro.");
+            toast.error(obtenerDetalleBackend(error) ?? "No se pudo eliminar el cobro.");
         }
     };
 
@@ -269,7 +270,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
             fetchAcciones();
         } catch (error) {
             console.error("Error guardando compra:", error);
-            toast.error("No se pudo guardar la compra.");
+            toast.error(obtenerDetalleBackend(error) ?? "No se pudo guardar la compra.");
         }
     };
 
@@ -279,7 +280,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
             fetchAcciones();
         } catch (error) {
             console.error("Error eliminando compra:", error);
-            toast.error("No se pudo eliminar la compra.");
+            toast.error(obtenerDetalleBackend(error) ?? "No se pudo eliminar la compra.");
         }
     };
 
@@ -290,7 +291,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
             fetchAcciones();
         } catch (error) {
             console.error("Error actualizando el estado de pago de la compra:", error);
-            toast.error("No se pudo actualizar el estado de pago.");
+            toast.error(obtenerDetalleBackend(error) ?? "No se pudo actualizar el estado de pago.");
         }
     };
 
@@ -301,7 +302,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
             fetchAcciones();
         } catch (error) {
             console.error("Error actualizando el estado de envío de la compra:", error);
-            toast.error("No se pudo actualizar el estado de envío.");
+            toast.error(obtenerDetalleBackend(error) ?? "No se pudo actualizar el estado de envío.");
         }
     };
 
