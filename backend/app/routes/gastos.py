@@ -1,77 +1,91 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File
+from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
-from app.db import models
+
 from app.audit import log_auditoria
 from app.auth.oAuth2 import get_current_user, requiere_admin
+from app.db import models
 from app.db.db import get_db
-from app.files.storage import subir_comprobante, eliminar_comprobante, ver_comprobante
+from app.files.storage import eliminar_comprobante, subir_comprobante, ver_comprobante
 from app.limiter import limiter
 from app.pagination import ParametrosPaginacion
-from app.schemas import GastoCreate, GastoUpdate, GastoOut, ComprobanteGastoOut
+from app.schemas import ComprobanteGastoOut, GastoCreate, GastoOut, GastoUpdate
 
-router = APIRouter(
-    prefix="/gastos",
-    tags=["gastos"]
-)
+router = APIRouter(prefix="/gastos", tags=["gastos"])
 
 
 @router.get("/", response_model=list[GastoOut], status_code=status.HTTP_200_OK)
-def get_all_gastos(paginacion: ParametrosPaginacion = Depends(),
-                    db: Session = Depends(get_db),
-                    current_user: models.Usuario = Depends(get_current_user)):
-    query = db.query(models.Gasto).options(joinedload(models.Gasto.categorias)).order_by(
-        models.Gasto.fecha_creacion.desc()
-    ).offset(paginacion.offset)
+def get_all_gastos(
+    paginacion: ParametrosPaginacion = Depends(),
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user),
+):
+    query = (
+        db.query(models.Gasto)
+        .options(joinedload(models.Gasto.categorias))
+        .order_by(models.Gasto.fecha_creacion.desc())
+        .offset(paginacion.offset)
+    )
     if paginacion.limit is not None:
         query = query.limit(paginacion.limit)
     return query.all()
 
 
 @router.get("/{gasto_id}", response_model=GastoOut, status_code=status.HTTP_200_OK)
-def get_gasto_by_id(gasto_id: str,
-                     db: Session = Depends(get_db),
-                     current_user: models.Usuario = Depends(get_current_user)):
-    gasto = db.query(models.Gasto).options(joinedload(models.Gasto.categorias)).filter(
-        models.Gasto.id == gasto_id
-    ).first()
+def get_gasto_by_id(
+    gasto_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)
+):
+    gasto = (
+        db.query(models.Gasto)
+        .options(joinedload(models.Gasto.categorias))
+        .filter(models.Gasto.id == gasto_id)
+        .first()
+    )
     if not gasto:
         raise HTTPException(status_code=404, detail="Gasto no encontrado")
     return gasto
 
 
 @router.get("/proyectos/{proyecto_id}/gastos", response_model=list[GastoOut], status_code=status.HTTP_200_OK)
-def get_gastos_by_proyecto(proyecto_id: str,
-                            db: Session = Depends(get_db),
-                            current_user: models.Usuario = Depends(get_current_user)):
+def get_gastos_by_proyecto(
+    proyecto_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)
+):
     proyecto = db.query(models.Proyecto).filter(models.Proyecto.id == proyecto_id).first()
     if not proyecto:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
 
-    return db.query(models.Gasto).options(joinedload(models.Gasto.categorias)).filter(
-        models.Gasto.proyecto_id == proyecto_id
-    ).all()
+    return (
+        db.query(models.Gasto)
+        .options(joinedload(models.Gasto.categorias))
+        .filter(models.Gasto.proyecto_id == proyecto_id)
+        .all()
+    )
 
 
 @router.get("/fases/{fase_id}/gastos", response_model=list[GastoOut], status_code=status.HTTP_200_OK)
-def get_gastos_by_fase(fase_id: str,
-                        db: Session = Depends(get_db),
-                        current_user: models.Usuario = Depends(get_current_user)):
+def get_gastos_by_fase(
+    fase_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)
+):
     fase = db.query(models.Fase).filter(models.Fase.id == fase_id).first()
     if not fase:
         raise HTTPException(status_code=404, detail="Fase no encontrada")
 
-    return db.query(models.Gasto).options(joinedload(models.Gasto.categorias)).filter(
-        models.Gasto.fase_id == fase_id
-    ).all()
+    return (
+        db.query(models.Gasto)
+        .options(joinedload(models.Gasto.categorias))
+        .filter(models.Gasto.fase_id == fase_id)
+        .all()
+    )
 
 
 @router.post("/crear", response_model=GastoOut, status_code=status.HTTP_201_CREATED)
 @limiter.limit("100/minute")
-def create_gasto(request: Request,
-                  gasto: GastoCreate,
-                  db: Session = Depends(get_db),
-                  current_user: models.Usuario = Depends(requiere_admin)):
+def create_gasto(
+    request: Request,
+    gasto: GastoCreate,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
     proyecto = db.query(models.Proyecto).filter(models.Proyecto.id == gasto.proyecto_id).first()
     if not proyecto:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
@@ -83,9 +97,11 @@ def create_gasto(request: Request,
 
     categorias = []
     if gasto.categoria_gasto_ids:
-        categorias = db.query(models.CategoriaGasto).filter(
-            models.CategoriaGasto.id.in_(gasto.categoria_gasto_ids)
-        ).all()
+        categorias = (
+            db.query(models.CategoriaGasto)
+            .filter(models.CategoriaGasto.id.in_(gasto.categoria_gasto_ids))
+            .all()
+        )
         if len(categorias) != len(gasto.categoria_gasto_ids):
             raise HTTPException(status_code=404, detail="Una o más categorías de gasto no existen")
 
@@ -97,7 +113,7 @@ def create_gasto(request: Request,
         descripcion=gasto.descripcion,
         fecha=gasto.fecha,
         tipo_factura=gasto.tipo_factura,
-        categorias=categorias
+        categorias=categorias,
     )
 
     try:
@@ -113,10 +129,12 @@ def create_gasto(request: Request,
 
 
 @router.put("/{gasto_id}", response_model=GastoOut, status_code=status.HTTP_200_OK)
-def update_gasto(gasto_id: str,
-                  gasto: GastoUpdate,
-                  db: Session = Depends(get_db),
-                  current_user: models.Usuario = Depends(requiere_admin)):
+def update_gasto(
+    gasto_id: str,
+    gasto: GastoUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
     gasto_existente = db.query(models.Gasto).filter(models.Gasto.id == gasto_id).first()
     if not gasto_existente:
         raise HTTPException(status_code=404, detail="Gasto no encontrado")
@@ -150,9 +168,9 @@ def update_gasto(gasto_id: str,
 
 
 @router.delete("/{gasto_id}", response_model=GastoOut, status_code=status.HTTP_200_OK)
-def delete_gasto(gasto_id: str,
-                  db: Session = Depends(get_db),
-                  current_user: models.Usuario = Depends(requiere_admin)):
+def delete_gasto(
+    gasto_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(requiere_admin)
+):
     gasto = db.query(models.Gasto).filter(models.Gasto.id == gasto_id).first()
     if not gasto:
         raise HTTPException(status_code=404, detail="Gasto no encontrado")
@@ -169,23 +187,24 @@ def delete_gasto(gasto_id: str,
     return gasto_data
 
 
-@router.post("/{gasto_id}/comprobantes", response_model=ComprobanteGastoOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{gasto_id}/comprobantes", response_model=ComprobanteGastoOut, status_code=status.HTTP_201_CREATED
+)
 @limiter.limit("20/minute")
-def upload_comprobante_gasto(request: Request,
-                              gasto_id: str,
-                              archivo: UploadFile = File(...),
-                              db: Session = Depends(get_db),
-                              current_user: models.Usuario = Depends(requiere_admin)):
+def upload_comprobante_gasto(
+    request: Request,
+    gasto_id: str,
+    archivo: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
     gasto = db.query(models.Gasto).filter(models.Gasto.id == gasto_id).first()
     if not gasto:
         raise HTTPException(status_code=404, detail="Gasto no encontrado")
 
     path = subir_comprobante(archivo, "comprobantes_gasto", gasto_id)
 
-    nuevo_comprobante = models.ComprobanteGasto(
-        gasto_id=gasto_id,
-        archivo_path=path
-    )
+    nuevo_comprobante = models.ComprobanteGasto(gasto_id=gasto_id, archivo_path=path)
     db.add(nuevo_comprobante)
     db.commit()
     db.refresh(nuevo_comprobante)
@@ -194,14 +213,17 @@ def upload_comprobante_gasto(request: Request,
 
 
 @router.get("/{gasto_id}/comprobantes/{comprobante_id}")
-def get_comprobante_gasto(gasto_id: str,
-                           comprobante_id: str,
-                           db: Session = Depends(get_db),
-                           current_user: models.Usuario = Depends(get_current_user)):
-    comprobante = db.query(models.ComprobanteGasto).filter(
-        models.ComprobanteGasto.id == comprobante_id,
-        models.ComprobanteGasto.gasto_id == gasto_id
-    ).first()
+def get_comprobante_gasto(
+    gasto_id: str,
+    comprobante_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user),
+):
+    comprobante = (
+        db.query(models.ComprobanteGasto)
+        .filter(models.ComprobanteGasto.id == comprobante_id, models.ComprobanteGasto.gasto_id == gasto_id)
+        .first()
+    )
     if not comprobante:
         raise HTTPException(status_code=404, detail="Comprobante no encontrado")
 
@@ -209,14 +231,17 @@ def get_comprobante_gasto(gasto_id: str,
 
 
 @router.delete("/{gasto_id}/comprobantes/{comprobante_id}", status_code=status.HTTP_200_OK)
-def delete_comprobante_gasto(gasto_id: str,
-                              comprobante_id: str,
-                              db: Session = Depends(get_db),
-                              current_user: models.Usuario = Depends(requiere_admin)):
-    comprobante = db.query(models.ComprobanteGasto).filter(
-        models.ComprobanteGasto.id == comprobante_id,
-        models.ComprobanteGasto.gasto_id == gasto_id
-    ).first()
+def delete_comprobante_gasto(
+    gasto_id: str,
+    comprobante_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
+    comprobante = (
+        db.query(models.ComprobanteGasto)
+        .filter(models.ComprobanteGasto.id == comprobante_id, models.ComprobanteGasto.gasto_id == gasto_id)
+        .first()
+    )
     if not comprobante:
         raise HTTPException(status_code=404, detail="Comprobante no encontrado")
 

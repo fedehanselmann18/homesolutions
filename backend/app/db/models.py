@@ -28,9 +28,18 @@ Ajustá el import de `Base` a como esté armado tu database.py.
 import uuid
 from datetime import date, datetime
 
-from sqlalchemy import ForeignKey, Numeric, String, Table, Column, DateTime, func, UniqueConstraint  # CORREGIDO: + UniqueConstraint
-
+from sqlalchemy import (  # CORREGIDO: + UniqueConstraint
+    Column,
+    DateTime,
+    ForeignKey,
+    Numeric,
+    String,
+    Table,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from app.db.db import Base
 
 
@@ -53,6 +62,7 @@ class TimestampMixin:
 # Usuario
 # ---------------------------------------------------------------------------
 
+
 class Usuario(TimestampMixin, Base):
     __tablename__ = "usuarios"
 
@@ -65,6 +75,7 @@ class Usuario(TimestampMixin, Base):
 # ---------------------------------------------------------------------------
 # Proyecto / Fase
 # ---------------------------------------------------------------------------
+
 
 class Proyecto(TimestampMixin, Base):
     __tablename__ = "proyectos"
@@ -103,6 +114,7 @@ class Fase(TimestampMixin, Base):
 # Proveedor / Producto / Categorias / Impuesto (catálogos)
 # ---------------------------------------------------------------------------
 
+
 class Proveedor(TimestampMixin, Base):
     __tablename__ = "proveedores"
 
@@ -115,11 +127,14 @@ class Proveedor(TimestampMixin, Base):
 
     # Si el proveedor no tiene compras cargadas, borrarlo se lleva su catálogo.
     # Si tiene compras, Compra.proveedor_id (RESTRICT) va a impedir el borrado antes de llegar acá.
-    productos: Mapped[list["Producto"]] = relationship(back_populates="proveedor", cascade="all, delete-orphan")
+    productos: Mapped[list["Producto"]] = relationship(
+        back_populates="proveedor", cascade="all, delete-orphan"
+    )
 
 
 class Categoria(TimestampMixin, Base):
     """Categoría compartida entre Producto y Compra (Aires, Cafeteras, Cables...)."""
+
     __tablename__ = "categorias"
 
     id: Mapped[uuid.UUID] = uuid_pk()
@@ -129,6 +144,7 @@ class Categoria(TimestampMixin, Base):
 
 class CategoriaGasto(TimestampMixin, Base):
     """Categoría propia de Gasto (Flete, Almuerzo, Gastos bancarios...)."""
+
     __tablename__ = "categorias_gasto"
 
     id: Mapped[uuid.UUID] = uuid_pk()
@@ -174,6 +190,7 @@ class Producto(TimestampMixin, Base):
 # Compra (+ detalle, categorías, impuestos, comprobantes)
 # ---------------------------------------------------------------------------
 
+
 class Compra(TimestampMixin, Base):
     __tablename__ = "compras"
 
@@ -192,7 +209,9 @@ class Compra(TimestampMixin, Base):
     )
 
     descripcion: Mapped[str] = mapped_column(String(500), nullable=False)
-    precio_neto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)  # sin impuestos, se carga a mano
+    precio_neto: Mapped[float] = mapped_column(
+        Numeric(12, 2), nullable=False
+    )  # sin impuestos, se carga a mano
     tipo_factura: Mapped[str] = mapped_column(String(30), nullable=False)
     fecha: Mapped[date] = mapped_column(nullable=False)  # fecha de negocio, se carga a mano
     condicion_pago: Mapped[str] = mapped_column(String(30), nullable=False)
@@ -203,12 +222,17 @@ class Compra(TimestampMixin, Base):
     proveedor: Mapped["Proveedor"] = relationship()
     usuario: Mapped["Usuario"] = relationship()
     detalle: Mapped[list["DetalleCompra"]] = relationship(
-        back_populates="compra", cascade="all, delete-orphan",
+        back_populates="compra",
+        cascade="all, delete-orphan",
         # al leer, hacer selectinload(Compra.detalle).joinedload(DetalleCompra.producto).joinedload(Producto.categorias)
         # para que las properties de abajo no disparen N+1 queries
     )
-    impuestos_aplicados: Mapped[list["CompraImpuesto"]] = relationship(back_populates="compra", cascade="all, delete-orphan")
-    comprobantes: Mapped[list["ComprobanteCompra"]] = relationship(back_populates="compra", cascade="all, delete-orphan")
+    impuestos_aplicados: Mapped[list["CompraImpuesto"]] = relationship(
+        back_populates="compra", cascade="all, delete-orphan"
+    )
+    comprobantes: Mapped[list["ComprobanteCompra"]] = relationship(
+        back_populates="compra", cascade="all, delete-orphan"
+    )
     # Cuenta corriente de esta compra con el proveedor: notas de crédito/débito,
     # cada una opcionalmente atada a una línea puntual de producto devuelto
     # (ver NotaCompra más abajo). Comprobante* es SOLO el archivo (factura,
@@ -268,12 +292,11 @@ class Compra(TimestampMixin, Base):
 
 class DetalleCompra(TimestampMixin, Base):
     """Línea de detalle: qué productos (y cantidad/precio) componen una Compra."""
+
     __tablename__ = "detalle_compra"
 
     id: Mapped[uuid.UUID] = uuid_pk()
-    compra_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("compras.id", ondelete="CASCADE"), nullable=False
-    )
+    compra_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("compras.id", ondelete="CASCADE"), nullable=False)
     # RESTRICT: no se puede borrar un producto que ya fue comprado -> se pierde el historial.
     producto_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("productos.id", ondelete="RESTRICT"), nullable=False
@@ -299,16 +322,13 @@ class CompraImpuesto(TimestampMixin, Base):
       relación `impuesto.nombre`) y además rompía el insert, porque CompraImpuestoCreate
       nunca lo mandaba y la columna era NOT NULL sin default.
     """
+
     __tablename__ = "compra_impuesto"
-    __table_args__ = (
-        UniqueConstraint("compra_id", "impuesto_id", name="uq_compra_impuesto"),
-    )
+    __table_args__ = (UniqueConstraint("compra_id", "impuesto_id", name="uq_compra_impuesto"),)
 
     id: Mapped[uuid.UUID] = uuid_pk()
 
-    compra_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("compras.id", ondelete="CASCADE"), nullable=False
-    )
+    compra_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("compras.id", ondelete="CASCADE"), nullable=False)
     impuesto_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("impuestos.id", ondelete="RESTRICT"), nullable=False
     )
@@ -321,12 +341,11 @@ class CompraImpuesto(TimestampMixin, Base):
 class ComprobanteCompra(TimestampMixin, Base):
     """Archivo adjunto a una Compra (factura, remito...). Sin plata propia:
     para movimientos de cuenta corriente (nota de crédito/débito) ver NotaCompra."""
+
     __tablename__ = "comprobantes_compra"
 
     id: Mapped[uuid.UUID] = uuid_pk()
-    compra_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("compras.id", ondelete="CASCADE"), nullable=False
-    )
+    compra_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("compras.id", ondelete="CASCADE"), nullable=False)
     archivo_path: Mapped[str] = mapped_column(String(500), nullable=False)
 
     compra: Mapped["Compra"] = relationship(back_populates="comprobantes")
@@ -359,12 +378,11 @@ class NotaCompra(TimestampMixin, Base):
       No se recalcula después: si se borra un detalle o cambia el precio del
       producto, esta nota sigue reflejando lo que efectivamente se acreditó.
     """
+
     __tablename__ = "notas_compra"
 
     id: Mapped[uuid.UUID] = uuid_pk()
-    compra_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("compras.id", ondelete="CASCADE"), nullable=False
-    )
+    compra_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("compras.id", ondelete="CASCADE"), nullable=False)
     proveedor_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("proveedores.id", ondelete="RESTRICT"), nullable=False, index=True
     )
@@ -383,8 +401,12 @@ class NotaCompra(TimestampMixin, Base):
     compra: Mapped["Compra"] = relationship(back_populates="notas")
     proveedor: Mapped["Proveedor"] = relationship()
     usuario: Mapped["Usuario"] = relationship()
-    detalles: Mapped[list["NotaCompraDetalle"]] = relationship(back_populates="nota", cascade="all, delete-orphan")
-    impuestos_aplicados: Mapped[list["NotaCompraImpuesto"]] = relationship(back_populates="nota", cascade="all, delete-orphan")
+    detalles: Mapped[list["NotaCompraDetalle"]] = relationship(
+        back_populates="nota", cascade="all, delete-orphan"
+    )
+    impuestos_aplicados: Mapped[list["NotaCompraImpuesto"]] = relationship(
+        back_populates="nota", cascade="all, delete-orphan"
+    )
 
 
 class NotaCompraDetalle(TimestampMixin, Base):
@@ -396,6 +418,7 @@ class NotaCompraDetalle(TimestampMixin, Base):
     nota y su monto ya frozen siguen existiendo, solo se pierde la referencia
     exacta al producto (igual criterio que el detalle_compra_id anterior en NotaCompra).
     """
+
     __tablename__ = "notas_compra_detalle"
 
     id: Mapped[uuid.UUID] = uuid_pk()
@@ -434,10 +457,9 @@ def validar_integridad_nota_compra(nota: "NotaCompra", compra: "Compra") -> None
 class NotaCompraImpuesto(TimestampMixin, Base):
     """Entidad asociativa NotaCompra<->Impuesto, mismo criterio que CompraImpuesto:
     impuestos que se suman al monto de una devolución de productos."""
+
     __tablename__ = "nota_compra_impuesto"
-    __table_args__ = (
-        UniqueConstraint("nota_id", "impuesto_id", name="uq_nota_compra_impuesto"),
-    )
+    __table_args__ = (UniqueConstraint("nota_id", "impuesto_id", name="uq_nota_compra_impuesto"),)
 
     id: Mapped[uuid.UUID] = uuid_pk()
     nota_id: Mapped[uuid.UUID] = mapped_column(
@@ -488,16 +510,16 @@ class Gasto(TimestampMixin, Base):
     fase: Mapped["Fase | None"] = relationship(back_populates="gastos")
     usuario: Mapped["Usuario"] = relationship()
     categorias: Mapped[list["CategoriaGasto"]] = relationship(secondary=gasto_categoria)
-    comprobantes: Mapped[list["ComprobanteGasto"]] = relationship(back_populates="gasto", cascade="all, delete-orphan")
+    comprobantes: Mapped[list["ComprobanteGasto"]] = relationship(
+        back_populates="gasto", cascade="all, delete-orphan"
+    )
 
 
 class ComprobanteGasto(TimestampMixin, Base):
     __tablename__ = "comprobantes_gasto"
 
     id: Mapped[uuid.UUID] = uuid_pk()
-    gasto_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("gastos.id", ondelete="CASCADE"), nullable=False
-    )
+    gasto_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("gastos.id", ondelete="CASCADE"), nullable=False)
     archivo_path: Mapped[str] = mapped_column(String(500), nullable=False)
 
     gasto: Mapped["Gasto"] = relationship(back_populates="comprobantes")
@@ -506,6 +528,7 @@ class ComprobanteGasto(TimestampMixin, Base):
 # ---------------------------------------------------------------------------
 # Cobro (+ comprobantes)
 # ---------------------------------------------------------------------------
+
 
 class Cobro(TimestampMixin, Base):
     __tablename__ = "cobros"
@@ -525,7 +548,9 @@ class Cobro(TimestampMixin, Base):
 
     proyecto: Mapped["Proyecto"] = relationship(back_populates="cobros")
     usuario: Mapped["Usuario"] = relationship()
-    comprobantes: Mapped[list["ComprobanteCobro"]] = relationship(back_populates="cobro", cascade="all, delete-orphan")
+    comprobantes: Mapped[list["ComprobanteCobro"]] = relationship(
+        back_populates="cobro", cascade="all, delete-orphan"
+    )
     # Cuenta corriente de este cobro con el "cliente" (Proyecto): notas de
     # crédito/débito. Mismo criterio que Compra.notas, ver NotaCobro.
     notas: Mapped[list["NotaCobro"]] = relationship(back_populates="cobro", cascade="all, delete-orphan")
@@ -544,12 +569,11 @@ class Cobro(TimestampMixin, Base):
 class ComprobanteCobro(TimestampMixin, Base):
     """Archivo adjunto a un Cobro (factura, recibo...). Para movimientos de
     cuenta corriente (nota de crédito/débito) ver NotaCobro."""
+
     __tablename__ = "comprobantes_cobro"
 
     id: Mapped[uuid.UUID] = uuid_pk()
-    cobro_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("cobros.id", ondelete="CASCADE"), nullable=False
-    )
+    cobro_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("cobros.id", ondelete="CASCADE"), nullable=False)
     archivo_path: Mapped[str] = mapped_column(String(500), nullable=False)
 
     cobro: Mapped["Cobro"] = relationship(back_populates="comprobantes")
@@ -561,12 +585,11 @@ class NotaCobro(TimestampMixin, Base):
     crédito o de débito. Mismo criterio que NotaCompra pero del lado Cobro --
     sin detalle_compra_id porque Cobro no tiene líneas de producto.
     """
+
     __tablename__ = "notas_cobro"
 
     id: Mapped[uuid.UUID] = uuid_pk()
-    cobro_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("cobros.id", ondelete="CASCADE"), nullable=False
-    )
+    cobro_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("cobros.id", ondelete="CASCADE"), nullable=False)
     proyecto_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("proyectos.id", ondelete="RESTRICT"), nullable=False
     )
@@ -575,8 +598,12 @@ class NotaCobro(TimestampMixin, Base):
     )
 
     tipo: Mapped[str] = mapped_column(String(20), nullable=False)  # nota_credito | nota_debito
-    origen: Mapped[str | None] = mapped_column(String(30), nullable=True)  # ajuste_precio | acuerdo_comercial | otro
-    tipo_factura: Mapped[str] = mapped_column(String(30), nullable=False)  # SIEMPRE obligatorio, ver NotaCompra
+    origen: Mapped[str | None] = mapped_column(
+        String(30), nullable=True
+    )  # ajuste_precio | acuerdo_comercial | otro
+    tipo_factura: Mapped[str] = mapped_column(
+        String(30), nullable=False
+    )  # SIEMPRE obligatorio, ver NotaCompra
     monto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     descripcion: Mapped[str] = mapped_column(String(500), nullable=False)
     fecha: Mapped[date] = mapped_column(nullable=False)

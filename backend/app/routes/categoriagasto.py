@@ -9,34 +9,38 @@ DELETE /categorias-gasto/{id}    -> requiere_admin (RESTRICT vía gasto_categori
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from app.db import models
-from app.auth.oAuth2 import get_current_user, requiere_admin
-from app.db.db import get_db
-from app.schemas import CategoriaGastoCreate, CategoriaGastoUpdate, CategoriaGastoOut
 
-router = APIRouter(
-    prefix="/categorias-gasto",
-    tags=["categorias_gasto"]
-)
+from app.auth.oAuth2 import get_current_user, requiere_admin
+from app.db import models
+from app.db.db import get_db
+from app.schemas import CategoriaGastoCreate, CategoriaGastoOut, CategoriaGastoUpdate
+
+router = APIRouter(prefix="/categorias-gasto", tags=["categorias_gasto"])
+
 
 @router.get("/", response_model=list[CategoriaGastoOut], status_code=status.HTTP_200_OK)
-def get_all_categories_gasto(db: Session = Depends(get_db),
-                   current_user: models.Usuario = Depends(get_current_user)):
+def get_all_categories_gasto(
+    db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)
+):
     return db.query(models.CategoriaGasto).all()
 
+
 @router.get("/{categoria_id}", response_model=CategoriaGastoOut, status_code=status.HTTP_200_OK)
-def get_category_gasto_by_id(categoria_id: str,
-                   db: Session = Depends(get_db),
-                   current_user: models.Usuario = Depends(get_current_user)):
+def get_category_gasto_by_id(
+    categoria_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)
+):
     categoria = db.query(models.CategoriaGasto).filter(models.CategoriaGasto.id == categoria_id).first()
     if not categoria:
         raise HTTPException(status_code=404, detail="Categoría de gasto no encontrada")
     return categoria
 
+
 @router.post("/crear", response_model=CategoriaGastoOut, status_code=status.HTTP_201_CREATED)
-def create_category_gasto(categoria: CategoriaGastoCreate,
-                   db: Session = Depends(get_db),
-                   current_user: models.Usuario = Depends(requiere_admin)):
+def create_category_gasto(
+    categoria: CategoriaGastoCreate,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
     nueva_categoria = models.CategoriaGasto(
         nombre=categoria.nombre,
     )
@@ -50,12 +54,17 @@ def create_category_gasto(categoria: CategoriaGastoCreate,
 
     return nueva_categoria
 
+
 @router.put("/{categoria_id}", response_model=CategoriaGastoOut, status_code=status.HTTP_200_OK)
-def update_category_gasto(categoria_id: str,
-                   categoria: CategoriaGastoUpdate,
-                   db: Session = Depends(get_db),
-                   current_user: models.Usuario = Depends(requiere_admin)):
-    categoria_existente = db.query(models.CategoriaGasto).filter(models.CategoriaGasto.id == categoria_id).first()
+def update_category_gasto(
+    categoria_id: str,
+    categoria: CategoriaGastoUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
+    categoria_existente = (
+        db.query(models.CategoriaGasto).filter(models.CategoriaGasto.id == categoria_id).first()
+    )
     if not categoria_existente:
         raise HTTPException(status_code=404, detail="Categoría de gasto no encontrada")
 
@@ -67,14 +76,17 @@ def update_category_gasto(categoria_id: str,
         db.refresh(categoria_existente)
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=400, detail="Error al actualizar la categoría de gasto: datos inválidos")
+        raise HTTPException(
+            status_code=400, detail="Error al actualizar la categoría de gasto: datos inválidos"
+        )
 
     return categoria_existente
 
+
 @router.delete("/{categoria_id}", response_model=CategoriaGastoOut, status_code=status.HTTP_200_OK)
-def delete_category_gasto(categoria_id: str,
-                           db: Session = Depends(get_db),
-                           current_user: models.Usuario = Depends(requiere_admin)):
+def delete_category_gasto(
+    categoria_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(requiere_admin)
+):
     categoria = db.query(models.CategoriaGasto).filter(models.CategoriaGasto.id == categoria_id).first()
     if not categoria:
         raise HTTPException(status_code=404, detail="Categoría de gasto no encontrada")
@@ -86,6 +98,8 @@ def delete_category_gasto(categoria_id: str,
         db.commit()
     except IntegrityError:
         db.rollback()
-        raise HTTPException(status_code=400, detail="No se puede eliminar la categoría de gasto porque tiene gastos asociados")
+        raise HTTPException(
+            status_code=400, detail="No se puede eliminar la categoría de gasto porque tiene gastos asociados"
+        )
 
     return categoria_data

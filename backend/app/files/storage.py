@@ -7,7 +7,7 @@ from pathlib import Path
 import boto3
 from botocore.client import Config
 from botocore.exceptions import BotoCoreError, ClientError
-from fastapi import UploadFile, HTTPException
+from fastapi import HTTPException, UploadFile
 from fastapi.responses import FileResponse, Response
 
 from app.config import settings
@@ -43,6 +43,7 @@ BYTES_FIRMA = 8
 def contenido_coincide_con_extension(contenido: bytes, ext: str) -> bool:
     firmas = FIRMAS_POR_EXTENSION.get(ext, ())
     return any(contenido.startswith(firma) for firma in firmas)
+
 
 # Raíz del backend (.../backend), calculada desde este archivo. Los paths se
 # guardan relativos en la DB (para no romperlos si se mueve el proyecto de
@@ -239,11 +240,7 @@ def ver_comprobante(path: str):
             raise HTTPException(status_code=404, detail="Comprobante no encontrado en R2") from exc
 
         contenido = objeto["Body"].read()
-        media_type = (
-            objeto.get("ContentType")
-            or mimetypes.guess_type(path)[0]
-            or "application/octet-stream"
-        )
+        media_type = objeto.get("ContentType") or mimetypes.guess_type(path)[0] or "application/octet-stream"
         nombre = Path(path).name
         return Response(
             content=contenido,

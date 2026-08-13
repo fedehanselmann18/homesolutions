@@ -1,0 +1,14 @@
+[tool.black]
+# 110 en vez del default (88): el estilo del repo ya usa líneas más largas
+# a propósito (comentarios en español bien descriptivos, firmas de rutas
+# con varios parámetros) -- 88 hubiera generado un reformateo mucho más
+# agresivo sin agregar legibilidad real.
+line-length = 110
+target-version = ["py312"]
+
+[tool.isort]
+# profile "black" ordena los imports de forma compatible con cómo black
+# formatea el resto -- sin esto, los dos tools pueden "pelearse" reformateando
+# la misma línea en loop.
+profile = "black"
+line_length = 110

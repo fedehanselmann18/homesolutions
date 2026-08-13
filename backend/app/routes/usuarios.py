@@ -1,18 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from app.db import models
+
 from app.auth.oAuth2 import get_current_user
 from app.auth.verification import hash_password
 from app.config import settings
+from app.db import models
 from app.db.db import get_db
 from app.limiter import limiter
 from app.schemas import UsuarioCreate, UsuarioOut
 
-router = APIRouter(
-    prefix="/usuarios",
-    tags=["usuarios"]
-)
+router = APIRouter(prefix="/usuarios", tags=["usuarios"])
 
 # Equipo cerrado y conocido de antemano: solo las personas listadas en
 # ROLES_PERMITIDOS_JSON (ver config.py, B-11) pueden crear cuenta, y el rol
@@ -23,9 +21,9 @@ router = APIRouter(
 
 # GET : all users, get user by id, get current user info (user logged in)
 
+
 @router.get("/", response_model=list[UsuarioOut], status_code=status.HTTP_200_OK)
-def get_users(db: Session = Depends(get_db),
-              current_user: models.Usuario = Depends(get_current_user)):
+def get_users(db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)):
     return db.query(models.Usuario).all()
 
 
@@ -76,6 +74,7 @@ def get_user(
 
 # POST : Create user (autoregistro único, restringido al equipo conocido)
 
+
 @router.post("/crear", response_model=UsuarioOut, status_code=status.HTTP_201_CREATED)
 @limiter.limit("10/hour")
 def create_user(request: Request, usuario: UsuarioCreate, db: Session = Depends(get_db)):
@@ -97,9 +96,9 @@ def create_user(request: Request, usuario: UsuarioCreate, db: Session = Depends(
             detail=f"Rol inválido para {usuario.nombre_usuario}: debe ser '{rol_esperado}'",
         )
 
-    existente = db.query(models.Usuario).filter(
-        models.Usuario.nombre_usuario == usuario.nombre_usuario
-    ).first()
+    existente = (
+        db.query(models.Usuario).filter(models.Usuario.nombre_usuario == usuario.nombre_usuario).first()
+    )
     if existente:
         raise HTTPException(status_code=400, detail="Ese usuario ya tiene cuenta creada")
 

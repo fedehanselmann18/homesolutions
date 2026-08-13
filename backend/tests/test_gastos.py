@@ -8,8 +8,11 @@ from app.db import models
 
 def _crear_proyecto(db_session):
     proyecto = models.Proyecto(
-        nombre="Proyecto Test", direccion="Calle Falsa 123", fecha_inicio=date(2026, 1, 1),
-        estado="en_curso", precio_acordado=1000000,
+        nombre="Proyecto Test",
+        direccion="Calle Falsa 123",
+        fecha_inicio=date(2026, 1, 1),
+        estado="en_curso",
+        precio_acordado=1000000,
     )
     db_session.add(proyecto)
     db_session.commit()
@@ -87,8 +90,12 @@ def test_actualizar_gasto_reemplaza_categorias_no_las_suma(client, db_session, h
     bancarios = _crear_categoria_gasto(db_session, "Gastos bancarios")
 
     gasto = models.Gasto(
-        proyecto=proyecto, usuario_id=usuario_admin.id, monto=1000, descripcion="Gasto",
-        fecha=date(2026, 1, 1), tipo_factura="factura_b",
+        proyecto=proyecto,
+        usuario_id=usuario_admin.id,
+        monto=1000,
+        descripcion="Gasto",
+        fecha=date(2026, 1, 1),
+        tipo_factura="factura_b",
     )
     gasto.categorias = [flete]
     db_session.add(gasto)

@@ -76,6 +76,7 @@ def test_subir_y_eliminar_comprobante_local_streamea_el_contenido_completo(tmp_p
 # llamada de red al construirse, así que se puede probar sin mockear nada.
 # ---------------------------------------------------------------------------
 
+
 def test_r2_client_es_singleton_entre_llamadas():
     storage.reset_r2_client()
     try:

@@ -22,7 +22,9 @@ class ParametrosPaginacion:
     def __init__(
         self,
         limit: int | None = Query(
-            None, ge=1, le=500,
+            None,
+            ge=1,
+            le=500,
             description="Máximo de resultados. Sin este parámetro, devuelve la lista completa.",
         ),
         offset: int = Query(0, ge=0, description="Resultados a saltear desde el principio."),

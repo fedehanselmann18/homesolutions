@@ -16,10 +16,7 @@ from app.db import models
 
 
 def _crear_proveedores(db_session, cantidad):
-    proveedores = [
-        models.Proveedor(nombre=f"Proveedor {i}", cuit="20-12345678-6")
-        for i in range(cantidad)
-    ]
+    proveedores = [models.Proveedor(nombre=f"Proveedor {i}", cuit="20-12345678-6") for i in range(cantidad)]
     db_session.add_all(proveedores)
     db_session.commit()
     return proveedores
@@ -58,10 +55,12 @@ def test_listado_de_productos_respeta_limit(client, db_session, headers_admin):
     db_session.add(proveedor)
     db_session.commit()
     db_session.refresh(proveedor)
-    db_session.add_all([
-        models.Producto(proveedor_id=proveedor.id, marca="A", modelo=str(i), tipo="equipo", precio=1000)
-        for i in range(4)
-    ])
+    db_session.add_all(
+        [
+            models.Producto(proveedor_id=proveedor.id, marca="A", modelo=str(i), tipo="equipo", precio=1000)
+            for i in range(4)
+        ]
+    )
     db_session.commit()
 
     respuesta = client.get("/productos/?limit=1", headers=headers_admin)
@@ -76,10 +75,12 @@ def test_productos_por_proveedor_no_se_pagina(client, db_session, headers_admin)
     db_session.add(proveedor)
     db_session.commit()
     db_session.refresh(proveedor)
-    db_session.add_all([
-        models.Producto(proveedor_id=proveedor.id, marca="A", modelo=str(i), tipo="equipo", precio=1000)
-        for i in range(4)
-    ])
+    db_session.add_all(
+        [
+            models.Producto(proveedor_id=proveedor.id, marca="A", modelo=str(i), tipo="equipo", precio=1000)
+            for i in range(4)
+        ]
+    )
     db_session.commit()
 
     respuesta = client.get(f"/productos/proveedores/{proveedor.id}/productos", headers=headers_admin)
@@ -89,16 +90,23 @@ def test_productos_por_proveedor_no_se_pagina(client, db_session, headers_admin)
 
 def _crear_gastos(db_session, usuario_admin, cantidad):
     proyecto = models.Proyecto(
-        nombre="Proyecto Test", direccion="Calle 1", fecha_inicio=date(2026, 1, 1),
-        estado="en_curso", precio_acordado=1000000,
+        nombre="Proyecto Test",
+        direccion="Calle 1",
+        fecha_inicio=date(2026, 1, 1),
+        estado="en_curso",
+        precio_acordado=1000000,
     )
     db_session.add(proyecto)
     db_session.commit()
     db_session.refresh(proyecto)
     gastos = [
         models.Gasto(
-            proyecto_id=proyecto.id, usuario_id=usuario_admin.id, monto=1000, descripcion=f"Gasto {i}",
-            fecha=date(2026, 1, 1), tipo_factura="factura_b",
+            proyecto_id=proyecto.id,
+            usuario_id=usuario_admin.id,
+            monto=1000,
+            descripcion=f"Gasto {i}",
+            fecha=date(2026, 1, 1),
+            tipo_factura="factura_b",
         )
         for i in range(cantidad)
     ]

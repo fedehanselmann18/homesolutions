@@ -1,14 +1,16 @@
-import jwt
-from jwt import PyJWTError
 from datetime import datetime, timedelta, timezone
-from app.schemas import DatosToken
+
+import jwt
 from fastapi import Depends, HTTPException, Request
 from fastapi.security import OAuth2PasswordBearer
+from jwt import PyJWTError
 from sqlalchemy.orm import Session
+
+from app.auth.exceptions import invalid_token_exception
+from app.config import settings
 from app.db import models
 from app.db.db import get_db
-from app.config import settings
-from app.auth.exceptions import invalid_token_exception
+from app.schemas import DatosToken
 
 # auto_error=False: si no viene Authorization header no explota acá, sigue
 # a get_token que prueba con la cookie antes de rendirse.
@@ -128,8 +130,7 @@ def resolver_usuario_vigente(token_data: DatosToken, db: Session, credentials_ex
     return user
 
 
-def get_current_user(token: str = Depends(get_token),
-                      db: Session = Depends(get_db)) -> models.Usuario:
+def get_current_user(token: str = Depends(get_token), db: Session = Depends(get_db)) -> models.Usuario:
     token_data = verify_access_token(token, invalid_token_exception)
     return resolver_usuario_vigente(token_data, db, invalid_token_exception)
 

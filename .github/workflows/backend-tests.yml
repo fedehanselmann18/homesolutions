@@ -52,3 +52,15 @@ jobs:
       - name: Correr pytest
         working-directory: backend
         run: pytest
+
+      # D-04: no-bloqueante a propósito -- black/isort recién se agregaron
+      # (ver pyproject.toml) y todavía no hay un hábito de correrlos antes de
+      # cada commit. Que el check falle en rojo desde el día 1 sin que nadie
+      # lo haya pedido generaría más ruido que valor; continue-on-error deja
+      # la señal visible en el summary del run sin bloquear el merge.
+      - name: Chequear formato (black + isort) -- no bloqueante
+        working-directory: backend
+        continue-on-error: true
+        run: |
+          black --check app tests
+          isort --check-only app tests

@@ -1,9 +1,10 @@
 import secrets
 
-from fastapi import APIRouter, status, Depends, Request, Response
-from app.db import models
-from app.db.db import get_db
+from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+
+from app.auth.exceptions import invalid_login_exception, invalid_token_exception
 from app.auth.oAuth2 import (
     create_access_token,
     create_refresh_token,
@@ -12,16 +13,13 @@ from app.auth.oAuth2 import (
     verify_refresh_token,
 )
 from app.auth.verification import verify_password
-from app.auth.exceptions import invalid_login_exception, invalid_token_exception
-from app.schemas import RespuestaLogin
-from fastapi.security import OAuth2PasswordRequestForm
 from app.config import settings
+from app.db import models
+from app.db.db import get_db
 from app.limiter import limiter
+from app.schemas import RespuestaLogin
 
-router = APIRouter(
-    prefix="/auth",
-    tags=["auth"]
-)
+router = APIRouter(prefix="/auth", tags=["auth"])
 
 # En producción (HTTPS) las cookies van marcadas "secure": el browser no las
 # manda por http://. En local (dev) se corre sin HTTPS, así que se desactiva
@@ -73,12 +71,14 @@ def _setear_cookies_sesion(response: Response, access_token: str) -> None:
 
 @router.post("/login", response_model=RespuestaLogin, status_code=status.HTTP_200_OK)
 @limiter.limit("5/minute")
-def login(request: Request, response: Response,
-          user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+def login(
+    request: Request,
+    response: Response,
+    user_credentials: OAuth2PasswordRequestForm = Depends(),
+    db: Session = Depends(get_db),
+):
 
-    user = db.query(models.Usuario).filter(
-        models.Usuario.nombre_usuario == user_credentials.username
-    ).first()
+    user = db.query(models.Usuario).filter(models.Usuario.nombre_usuario == user_credentials.username).first()
 
     if not user:
         raise invalid_login_exception

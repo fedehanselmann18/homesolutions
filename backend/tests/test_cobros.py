@@ -9,8 +9,11 @@ from app.routes import cobros as ruta_cobros
 
 def _crear_proyecto(db_session):
     proyecto = models.Proyecto(
-        nombre="Proyecto Test", direccion="Calle Falsa 123", fecha_inicio=date(2026, 1, 1),
-        estado="en_curso", precio_acordado=1000000,
+        nombre="Proyecto Test",
+        direccion="Calle Falsa 123",
+        fecha_inicio=date(2026, 1, 1),
+        estado="en_curso",
+        precio_acordado=1000000,
     )
     db_session.add(proyecto)
     db_session.commit()
@@ -59,8 +62,12 @@ def test_crear_cobro_sin_ser_admin_es_rechazado(client, db_session, headers_lect
 def test_actualizar_cobro(client, db_session, headers_admin, usuario_admin):
     proyecto = _crear_proyecto(db_session)
     cobro = models.Cobro(
-        proyecto=proyecto, usuario_id=usuario_admin.id, monto=100000, descripcion="Pago inicial",
-        fecha=date(2026, 1, 1), tipo_factura="factura_a",
+        proyecto=proyecto,
+        usuario_id=usuario_admin.id,
+        monto=100000,
+        descripcion="Pago inicial",
+        fecha=date(2026, 1, 1),
+        tipo_factura="factura_a",
     )
     db_session.add(cobro)
     db_session.commit()
@@ -83,8 +90,12 @@ def test_crear_nota_cobro_actualiza_monto_neto(client, db_session, headers_admin
 
     proyecto = _crear_proyecto(db_session)
     cobro = models.Cobro(
-        proyecto=proyecto, usuario_id=usuario_admin.id, monto=100000, descripcion="Pago inicial",
-        fecha=date(2026, 1, 1), tipo_factura="factura_a",
+        proyecto=proyecto,
+        usuario_id=usuario_admin.id,
+        monto=100000,
+        descripcion="Pago inicial",
+        fecha=date(2026, 1, 1),
+        tipo_factura="factura_a",
     )
     db_session.add(cobro)
     db_session.commit()

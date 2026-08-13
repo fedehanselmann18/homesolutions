@@ -1,27 +1,28 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status, UploadFile, File, Form
+from datetime import date
+
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
-from app.db import models
+
 from app.audit import log_auditoria
 from app.auth.oAuth2 import get_current_user, requiere_admin
+from app.db import models
 from app.db.db import get_db
-from app.files.storage import subir_comprobante, eliminar_comprobante, ver_comprobante
+from app.files.storage import eliminar_comprobante, subir_comprobante, ver_comprobante
 from app.limiter import limiter
 from app.pagination import ParametrosPaginacion
-from datetime import date
-from app.schemas import CobroCreate, CobroUpdate, CobroOut, ComprobanteCobroOut, NotaCobroOut
+from app.schemas import CobroCreate, CobroOut, CobroUpdate, ComprobanteCobroOut, NotaCobroOut
 
-router = APIRouter(
-    prefix="/cobros",
-    tags=["cobros"]
-)
+router = APIRouter(prefix="/cobros", tags=["cobros"])
 
 
 @router.get("/", response_model=list[CobroOut], status_code=status.HTTP_200_OK)
-def get_all_cobros(proyecto_id: str | None = None,  # "cliente": Cobro cuelga de Proyecto, no hay entidad Cliente propia
-                    paginacion: ParametrosPaginacion = Depends(),
-                    db: Session = Depends(get_db),
-                    current_user: models.Usuario = Depends(get_current_user)):
+def get_all_cobros(
+    proyecto_id: str | None = None,  # "cliente": Cobro cuelga de Proyecto, no hay entidad Cliente propia
+    paginacion: ParametrosPaginacion = Depends(),
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user),
+):
     query = db.query(models.Cobro)
     if proyecto_id:
         query = query.filter(models.Cobro.proyecto_id == proyecto_id)
@@ -32,9 +33,9 @@ def get_all_cobros(proyecto_id: str | None = None,  # "cliente": Cobro cuelga de
 
 
 @router.get("/{cobro_id}", response_model=CobroOut, status_code=status.HTTP_200_OK)
-def get_cobro_by_id(cobro_id: str,
-                     db: Session = Depends(get_db),
-                     current_user: models.Usuario = Depends(get_current_user)):
+def get_cobro_by_id(
+    cobro_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)
+):
     cobro = db.query(models.Cobro).filter(models.Cobro.id == cobro_id).first()
     if not cobro:
         raise HTTPException(status_code=404, detail="Cobro no encontrado")
@@ -42,9 +43,9 @@ def get_cobro_by_id(cobro_id: str,
 
 
 @router.get("/proyectos/{proyecto_id}/cobros", response_model=list[CobroOut], status_code=status.HTTP_200_OK)
-def get_cobros_by_proyecto(proyecto_id: str,
-                            db: Session = Depends(get_db),
-                            current_user: models.Usuario = Depends(get_current_user)):
+def get_cobros_by_proyecto(
+    proyecto_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)
+):
     proyecto = db.query(models.Proyecto).filter(models.Proyecto.id == proyecto_id).first()
     if not proyecto:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
@@ -54,10 +55,12 @@ def get_cobros_by_proyecto(proyecto_id: str,
 
 @router.post("/crear", response_model=CobroOut, status_code=status.HTTP_201_CREATED)
 @limiter.limit("100/minute")
-def create_cobro(request: Request,
-                  cobro: CobroCreate,
-                  db: Session = Depends(get_db),
-                  current_user: models.Usuario = Depends(requiere_admin)):
+def create_cobro(
+    request: Request,
+    cobro: CobroCreate,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
     proyecto = db.query(models.Proyecto).filter(models.Proyecto.id == cobro.proyecto_id).first()
     if not proyecto:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
@@ -68,7 +71,7 @@ def create_cobro(request: Request,
         monto=cobro.monto,
         descripcion=cobro.descripcion,
         fecha=cobro.fecha,
-        tipo_factura=cobro.tipo_factura
+        tipo_factura=cobro.tipo_factura,
     )
 
     try:
@@ -84,10 +87,12 @@ def create_cobro(request: Request,
 
 
 @router.put("/{cobro_id}", response_model=CobroOut, status_code=status.HTTP_200_OK)
-def update_cobro(cobro_id: str,
-                  cobro: CobroUpdate,
-                  db: Session = Depends(get_db),
-                  current_user: models.Usuario = Depends(requiere_admin)):
+def update_cobro(
+    cobro_id: str,
+    cobro: CobroUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
     cobro_existente = db.query(models.Cobro).filter(models.Cobro.id == cobro_id).first()
     if not cobro_existente:
         raise HTTPException(status_code=404, detail="Cobro no encontrado")
@@ -107,9 +112,9 @@ def update_cobro(cobro_id: str,
 
 
 @router.delete("/{cobro_id}", response_model=CobroOut, status_code=status.HTTP_200_OK)
-def delete_cobro(cobro_id: str,
-                  db: Session = Depends(get_db),
-                  current_user: models.Usuario = Depends(requiere_admin)):
+def delete_cobro(
+    cobro_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(requiere_admin)
+):
     cobro = db.query(models.Cobro).filter(models.Cobro.id == cobro_id).first()
     if not cobro:
         raise HTTPException(status_code=404, detail="Cobro no encontrado")
@@ -128,23 +133,24 @@ def delete_cobro(cobro_id: str,
     return cobro_data
 
 
-@router.post("/{cobro_id}/comprobantes", response_model=ComprobanteCobroOut, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/{cobro_id}/comprobantes", response_model=ComprobanteCobroOut, status_code=status.HTTP_201_CREATED
+)
 @limiter.limit("20/minute")
-def upload_comprobante_cobro(request: Request,
-                              cobro_id: str,
-                              archivo: UploadFile = File(...),
-                              db: Session = Depends(get_db),
-                              current_user: models.Usuario = Depends(requiere_admin)):
+def upload_comprobante_cobro(
+    request: Request,
+    cobro_id: str,
+    archivo: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
     cobro = db.query(models.Cobro).filter(models.Cobro.id == cobro_id).first()
     if not cobro:
         raise HTTPException(status_code=404, detail="Cobro no encontrado")
 
     path = subir_comprobante(archivo, "comprobantes_cobro", cobro_id)
 
-    nuevo_comprobante = models.ComprobanteCobro(
-        cobro_id=cobro_id,
-        archivo_path=path
-    )
+    nuevo_comprobante = models.ComprobanteCobro(cobro_id=cobro_id, archivo_path=path)
     db.add(nuevo_comprobante)
     db.commit()
     db.refresh(nuevo_comprobante)
@@ -153,14 +159,17 @@ def upload_comprobante_cobro(request: Request,
 
 
 @router.get("/{cobro_id}/comprobantes/{comprobante_id}")
-def get_comprobante_cobro(cobro_id: str,
-                           comprobante_id: str,
-                           db: Session = Depends(get_db),
-                           current_user: models.Usuario = Depends(get_current_user)):
-    comprobante = db.query(models.ComprobanteCobro).filter(
-        models.ComprobanteCobro.id == comprobante_id,
-        models.ComprobanteCobro.cobro_id == cobro_id
-    ).first()
+def get_comprobante_cobro(
+    cobro_id: str,
+    comprobante_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user),
+):
+    comprobante = (
+        db.query(models.ComprobanteCobro)
+        .filter(models.ComprobanteCobro.id == comprobante_id, models.ComprobanteCobro.cobro_id == cobro_id)
+        .first()
+    )
     if not comprobante:
         raise HTTPException(status_code=404, detail="Comprobante no encontrado")
 
@@ -168,14 +177,17 @@ def get_comprobante_cobro(cobro_id: str,
 
 
 @router.delete("/{cobro_id}/comprobantes/{comprobante_id}", status_code=status.HTTP_200_OK)
-def delete_comprobante_cobro(cobro_id: str,
-                              comprobante_id: str,
-                              db: Session = Depends(get_db),
-                              current_user: models.Usuario = Depends(requiere_admin)):
-    comprobante = db.query(models.ComprobanteCobro).filter(
-        models.ComprobanteCobro.id == comprobante_id,
-        models.ComprobanteCobro.cobro_id == cobro_id
-    ).first()
+def delete_comprobante_cobro(
+    cobro_id: str,
+    comprobante_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
+    comprobante = (
+        db.query(models.ComprobanteCobro)
+        .filter(models.ComprobanteCobro.id == comprobante_id, models.ComprobanteCobro.cobro_id == cobro_id)
+        .first()
+    )
     if not comprobante:
         raise HTTPException(status_code=404, detail="Comprobante no encontrado")
 
@@ -190,19 +202,22 @@ def delete_comprobante_cobro(cobro_id: str,
 # Notas (cuenta corriente: nota de crédito / nota de débito)
 # ---------------------------------------------------------------------------
 
+
 @router.post("/{cobro_id}/notas", response_model=NotaCobroOut, status_code=status.HTTP_201_CREATED)
 @limiter.limit("20/minute")
-def crear_nota_cobro(request: Request,
-                      cobro_id: str,
-                      archivo: UploadFile = File(...),
-                      tipo: str = Form(...),  # "nota_credito" | "nota_debito"
-                      tipo_factura: str = Form(...),  # SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro)
-                      monto: float = Form(...),
-                      descripcion: str = Form(...),
-                      fecha: date = Form(...),
-                      origen: str | None = Form(None),  # "ajuste_precio" | "acuerdo_comercial" | "otro"
-                      db: Session = Depends(get_db),
-                      current_user: models.Usuario = Depends(requiere_admin)):
+def crear_nota_cobro(
+    request: Request,
+    cobro_id: str,
+    archivo: UploadFile = File(...),
+    tipo: str = Form(...),  # "nota_credito" | "nota_debito"
+    tipo_factura: str = Form(...),  # SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro)
+    monto: float = Form(...),
+    descripcion: str = Form(...),
+    fecha: date = Form(...),
+    origen: str | None = Form(None),  # "ajuste_precio" | "acuerdo_comercial" | "otro"
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
     cobro = db.query(models.Cobro).filter(models.Cobro.id == cobro_id).first()
     if not cobro:
         raise HTTPException(status_code=404, detail="Cobro no encontrado")
@@ -222,7 +237,7 @@ def crear_nota_cobro(request: Request,
         monto=monto,
         descripcion=descripcion,
         fecha=fecha,
-        archivo_path=path
+        archivo_path=path,
     )
     db.add(nueva_nota)
     db.commit()
@@ -232,14 +247,17 @@ def crear_nota_cobro(request: Request,
 
 
 @router.get("/{cobro_id}/notas/{nota_id}")
-def ver_nota_cobro(cobro_id: str,
-                    nota_id: str,
-                    db: Session = Depends(get_db),
-                    current_user: models.Usuario = Depends(get_current_user)):
-    nota = db.query(models.NotaCobro).filter(
-        models.NotaCobro.id == nota_id,
-        models.NotaCobro.cobro_id == cobro_id
-    ).first()
+def ver_nota_cobro(
+    cobro_id: str,
+    nota_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user),
+):
+    nota = (
+        db.query(models.NotaCobro)
+        .filter(models.NotaCobro.id == nota_id, models.NotaCobro.cobro_id == cobro_id)
+        .first()
+    )
     if not nota:
         raise HTTPException(status_code=404, detail="Nota no encontrada")
 
@@ -247,14 +265,17 @@ def ver_nota_cobro(cobro_id: str,
 
 
 @router.delete("/{cobro_id}/notas/{nota_id}", status_code=status.HTTP_200_OK)
-def eliminar_nota_cobro(cobro_id: str,
-                         nota_id: str,
-                         db: Session = Depends(get_db),
-                         current_user: models.Usuario = Depends(requiere_admin)):
-    nota = db.query(models.NotaCobro).filter(
-        models.NotaCobro.id == nota_id,
-        models.NotaCobro.cobro_id == cobro_id
-    ).first()
+def eliminar_nota_cobro(
+    cobro_id: str,
+    nota_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(requiere_admin),
+):
+    nota = (
+        db.query(models.NotaCobro)
+        .filter(models.NotaCobro.id == nota_id, models.NotaCobro.cobro_id == cobro_id)
+        .first()
+    )
     if not nota:
         raise HTTPException(status_code=404, detail="Nota no encontrada")
 

@@ -33,9 +33,9 @@ CORREGIDO (respecto a la versión anterior):
 import re
 import uuid
 from datetime import date, datetime
+from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, field_validator
-from typing import Optional
 
 # XX-XXXXXXXX-X, con o sin guiones (los grupos son fijos: 2 dígitos de tipo,
 # 8 de DNI/razón social, 1 verificador -- ver _validar_cuit).
@@ -69,6 +69,7 @@ class TimestampOut(BaseModel):
     fecha_creacion: datetime
     fecha_actualizacion: datetime
 
+
 # ---------------------------------------------------------------------------
 # Token schemas
 # ---------------------------------------------------------------------------
@@ -76,7 +77,9 @@ class RespuestaLogin(BaseModel):
     """Body de POST /auth/login. El JWT en sí NO viaja acá -- ver comentario
     en routes/login.py sobre por qué (B-05: evitar que el token quede
     expuesto en logs/histories que sí capturan el body de la respuesta)."""
+
     message: str
+
 
 class DatosToken(BaseModel):
     user_id: Optional[uuid.UUID] = None
@@ -89,6 +92,7 @@ class DatosToken(BaseModel):
 # ---------------------------------------------------------------------------
 # Usuario
 # ---------------------------------------------------------------------------
+
 
 class UsuarioBase(BaseModel):
     nombre_usuario: str
@@ -129,6 +133,7 @@ class UsuarioOut(UsuarioBase, TimestampOut):
 # Proyecto / Fase
 # ---------------------------------------------------------------------------
 
+
 class ProyectoBase(BaseModel):
     nombre: str
     direccion: str
@@ -151,7 +156,7 @@ class ProyectoUpdate(BaseModel):
 
 class ProyectoOut(ProyectoBase, TimestampOut):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: uuid.UUID
 
 
@@ -181,6 +186,7 @@ class FaseOut(FaseBase, TimestampOut):
 # ---------------------------------------------------------------------------
 # Proveedor / Producto / Categorías / Impuesto
 # ---------------------------------------------------------------------------
+
 
 class ProveedorBase(BaseModel):
     nombre: str
@@ -245,6 +251,7 @@ class CategoriaGastoBase(BaseModel):
 class CategoriaGastoCreate(CategoriaGastoBase):
     pass
 
+
 class CategoriaGastoUpdate(BaseModel):
     nombre: str | None = None
 
@@ -261,6 +268,7 @@ class ImpuestoBase(BaseModel):
 
 class ImpuestoCreate(ImpuestoBase):
     pass
+
 
 class ImpuestoUpdate(BaseModel):
     nombre: str | None = None
@@ -304,6 +312,7 @@ class ProductoOut(ProductoBase, TimestampOut):
 # Compra (+ detalle, impuestos, comprobantes)
 # ---------------------------------------------------------------------------
 
+
 class DetalleCompraBase(BaseModel):
     producto_id: uuid.UUID
     cantidad: float
@@ -332,7 +341,9 @@ class CompraImpuestoCreate(CompraImpuestoBase):
 class CompraImpuestoOut(CompraImpuestoBase, TimestampOut):
     model_config = ConfigDict(from_attributes=True)
 
-    id: uuid.UUID  # CORREGIDO: faltaba exponer el id propio de la línea (ahora que ya no es parte de la PK compuesta)
+    id: (
+        uuid.UUID
+    )  # CORREGIDO: faltaba exponer el id propio de la línea (ahora que ya no es parte de la PK compuesta)
     impuesto: ImpuestoOut
 
 
@@ -345,6 +356,7 @@ class ComprobanteCompraOut(TimestampOut):
 
 class NotaCompraDetalleOut(TimestampOut):
     """Línea de producto devuelto dentro de una NotaCompra (origen="devolucion_producto")."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
@@ -367,6 +379,7 @@ class NotaCompraOut(TimestampOut):
     El archivo (comprobante que te dan) se sube junto con el resto en el mismo
     endpoint multipart -- no hay NotaCompraCreate porque los campos no-archivo
     viajan como Form fields, no como JSON (ver routes/compras.py)."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
@@ -437,6 +450,7 @@ class CompraOut(CompraBase, TimestampOut):
 # Gasto (+ comprobantes)
 # ---------------------------------------------------------------------------
 
+
 class ComprobanteGastoOut(TimestampOut):
     model_config = ConfigDict(from_attributes=True)
 
@@ -483,6 +497,7 @@ class GastoOut(GastoBase, TimestampOut):
 # Cobro (+ comprobantes)
 # ---------------------------------------------------------------------------
 
+
 class ComprobanteCobroOut(TimestampOut):
     model_config = ConfigDict(from_attributes=True)
 
@@ -494,6 +509,7 @@ class NotaCobroOut(TimestampOut):
     """Movimiento de cuenta corriente (nota de crédito/débito) de un Cobro.
     Mismo criterio que NotaCompraOut, sin detalle_compra_id (Cobro no tiene
     líneas de producto)."""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
@@ -544,6 +560,7 @@ class CobroOut(CobroBase, TimestampOut):
 # IA (lectura automática de comprobantes)
 # ---------------------------------------------------------------------------
 
+
 class IADetalleSugerido(BaseModel):
     """
     Una línea de producto que la IA propone para el detalle de una Compra.
@@ -552,6 +569,7 @@ class IADetalleSugerido(BaseModel):
     de acá: sigue siendo el precio de catálogo (Producto.precio), congelado
     al elegir el producto, igual que si lo cargaras a mano en ModalCompra.
     """
+
     producto_id: uuid.UUID
     cantidad: float
 
@@ -565,6 +583,7 @@ class IAImpuestoSugerido(BaseModel):
     riesgo que con matchear productos. impuesto_id solo se acepta si
     coincide con uno del catálogo que mandó el front (ver _validar_y_limpiar).
     """
+
     impuesto_id: uuid.UUID
     monto: float
 
@@ -589,6 +608,7 @@ class IAExtraccionComprobante(BaseModel):
     criterio para `detalle`: cada línea se descarta si el producto no existe
     en el catálogo que mandó el front o no pertenece al proveedor resuelto.
     """
+
     monto: float | None = None
     fecha: date | None = None
     tipo_factura: str | None = None

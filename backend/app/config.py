@@ -100,7 +100,9 @@ class Settings(BaseSettings):
 
     @property
     def r2_configurado(self) -> bool:
-        return all([self.R2_ACCOUNT_ID, self.R2_ACCESS_KEY_ID, self.R2_SECRET_ACCESS_KEY, self.R2_BUCKET_NAME])
+        return all(
+            [self.R2_ACCOUNT_ID, self.R2_ACCESS_KEY_ID, self.R2_SECRET_ACCESS_KEY, self.R2_BUCKET_NAME]
+        )
 
     @property
     def r2_endpoint_url(self) -> str:

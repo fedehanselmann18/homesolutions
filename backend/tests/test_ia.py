@@ -7,6 +7,7 @@ endpoint (auth, validación de archivo, manejo de errores) sin depender de la
 API real. La lógica de _validar_y_limpiar (qué hace con lo que devuelve el
 modelo) se prueba aparte, directo contra la función pura, sin mock.
 """
+
 import io
 import uuid
 
@@ -70,7 +71,9 @@ def test_extension_no_permitida(client, headers_admin):
 def test_archivo_supera_tamanio_maximo(client, headers_admin, monkeypatch):
     import app.routes.ia as ruta_ia
 
-    monkeypatch.setattr(ruta_ia, "TAMANIO_MAXIMO_BYTES", 10)  # bajamos el límite para no mandar 10MB de verdad
+    monkeypatch.setattr(
+        ruta_ia, "TAMANIO_MAXIMO_BYTES", 10
+    )  # bajamos el límite para no mandar 10MB de verdad
     archivo = ("factura.pdf", io.BytesIO(b"contenido mas largo que 10 bytes"), "application/pdf")
     resp = client.post(
         "/ia/extraer-comprobante",
@@ -124,6 +127,7 @@ def test_extraccion_con_error_de_ia_da_502(client, headers_admin, monkeypatch):
 # inventado).
 # ---------------------------------------------------------------------------
 
+
 def test_descarta_id_que_no_esta_en_el_catalogo():
     id_real = str(uuid.uuid4())
     contexto = {"categorias_gasto": [{"id": id_real, "nombre": "Flete"}]}
@@ -171,12 +175,15 @@ def test_compra_no_expone_monto_aunque_la_ia_lo_devuelva():
 # proveedor que la misma extracción resolvió.
 # ---------------------------------------------------------------------------
 
+
 def test_detalle_se_descarta_si_no_hay_proveedor_resuelto():
     id_proveedor = str(uuid.uuid4())
     id_producto = str(uuid.uuid4())
     contexto = {
         "proveedores": [{"id": id_proveedor, "nombre": "CobreSur Materiales"}],
-        "productos": [{"id": id_producto, "marca": "CobreSur", "modelo": "Gas R410A", "proveedor_id": id_proveedor}],
+        "productos": [
+            {"id": id_producto, "marca": "CobreSur", "modelo": "Gas R410A", "proveedor_id": id_proveedor}
+        ],
     }
     # proveedor_id NO viene en los datos -- la IA no lo pudo identificar.
     datos = {"detalle": [{"producto_id": id_producto, "cantidad": 3}], "advertencias": []}
@@ -194,7 +201,12 @@ def test_detalle_descarta_producto_de_otro_proveedor():
     contexto = {
         "proveedores": [{"id": id_proveedor_correcto, "nombre": "CobreSur Materiales"}],
         "productos": [
-            {"id": id_producto_de_otro, "marca": "BGH", "modelo": "Split 4500W", "proveedor_id": id_proveedor_otro},
+            {
+                "id": id_producto_de_otro,
+                "marca": "BGH",
+                "modelo": "Split 4500W",
+                "proveedor_id": id_proveedor_otro,
+            },
         ],
     }
     datos = {
@@ -215,7 +227,12 @@ def test_detalle_acepta_producto_del_proveedor_correcto():
     contexto = {
         "proveedores": [{"id": id_proveedor, "nombre": "CobreSur Materiales"}],
         "productos": [
-            {"id": id_producto, "marca": "CobreSur", "modelo": 'Caño de Cobre 3/8" x 15m', "proveedor_id": id_proveedor},
+            {
+                "id": id_producto,
+                "marca": "CobreSur",
+                "modelo": 'Caño de Cobre 3/8" x 15m',
+                "proveedor_id": id_proveedor,
+            },
         ],
     }
     datos = {
