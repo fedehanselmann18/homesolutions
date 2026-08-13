@@ -80,6 +80,10 @@ class RespuestaLogin(BaseModel):
 
 class DatosToken(BaseModel):
     user_id: Optional[uuid.UUID] = None
+    # Cuándo se emitió el JWT (claim "iat") -- ver revocación en
+    # auth/oAuth2.py (B-06): un token con iat anterior a la última
+    # modificación del usuario se trata como inválido.
+    iat: Optional[datetime] = None
 
 
 # ---------------------------------------------------------------------------

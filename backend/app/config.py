@@ -16,6 +16,10 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    # B-06: refresh token de larga duración, en una cookie separada del
+    # access token (ver auth/oAuth2.py y POST /auth/refresh) -- renueva la
+    # sesión sin pedir credenciales de nuevo hasta que venza esto.
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
     @field_validator("SECRET_KEY")
     @classmethod

@@ -17,6 +17,14 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login", auto_error=False)
 SECRET_KEY = settings.SECRET_KEY
 ALGORITHM = settings.ALGORITHM
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
+REFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS
+
+# Margen contra desfasaje de reloj entre el proceso de la app y el server de
+# Postgres (fecha_actualizacion usa server_default now() de la DB, no el
+# reloj de Python) -- sin esto, un token recién emitido podría leerse como
+# "emitido antes del corte" por unos milisegundos de diferencia entre
+# relojes, y quedar revocado apenas se crea.
+TOLERANCIA_REVOCACION = timedelta(seconds=5)
 
 
 def get_token(request: Request, token_header: str = Depends(oauth2_scheme)) -> str:
@@ -35,23 +43,57 @@ def get_token(request: Request, token_header: str = Depends(oauth2_scheme)) -> s
     raise invalid_token_exception
 
 
-def create_access_token(data: dict):
+def get_refresh_token(request: Request) -> str:
+    """
+    El refresh token SOLO viaja por cookie httpOnly, nunca por header: a
+    diferencia del access token, no hay razón legítima para que un cliente
+    lo mande a mano en cada request -- solo lo necesita el propio browser,
+    una vez, contra POST /auth/refresh (ver login.py, cookie con
+    path="/auth" para acotar a qué rutas se la manda).
+    """
+    token_cookie = request.cookies.get("refresh_token")
+    if token_cookie:
+        return token_cookie
+
+    raise invalid_token_exception
+
+
+def _crear_token(data: dict, expira_en: timedelta, tipo: str) -> str:
+    ahora = datetime.now(timezone.utc)
     to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
+    to_encode.update({"iat": ahora, "exp": ahora + expira_en, "type": tipo})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def verify_access_token(token: str, credentials_exception):
+def create_access_token(data: dict) -> str:
+    return _crear_token(data, timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES), "access")
+
+
+def create_refresh_token(data: dict) -> str:
+    """
+    Token de larga duración (ver REFRESH_TOKEN_EXPIRE_DAYS), separado del
+    access token -- ver POST /auth/refresh. El claim "type" evita que este
+    token se pueda usar como si fuera un access token en una ruta protegida
+    (y viceversa): verify_access_token/verify_refresh_token chequean cada
+    uno el tipo que esperan.
+    """
+    return _crear_token(data, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS), "refresh")
+
+
+def _verificar_token(token: str, tipo_esperado: str, credentials_exception) -> DatosToken:
     try:
         decoded_token = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        id: str = decoded_token.get("user_id")
 
-        if id is None:
+        if decoded_token.get("type") != tipo_esperado:
             raise credentials_exception
 
-        token_data = DatosToken(user_id=id)
+        id: str = decoded_token.get("user_id")
+        iat = decoded_token.get("iat")
+
+        if id is None or iat is None:
+            raise credentials_exception
+
+        token_data = DatosToken(user_id=id, iat=datetime.fromtimestamp(iat, tz=timezone.utc))
 
     except PyJWTError:
         raise credentials_exception
@@ -59,17 +101,37 @@ def verify_access_token(token: str, credentials_exception):
     return token_data
 
 
-def get_current_user(token: str = Depends(get_token),
-                      db: Session = Depends(get_db)):
+def verify_access_token(token: str, credentials_exception) -> DatosToken:
+    return _verificar_token(token, "access", credentials_exception)
 
-    token_data = verify_access_token(token, invalid_token_exception)
 
+def verify_refresh_token(token: str, credentials_exception) -> DatosToken:
+    return _verificar_token(token, "refresh", credentials_exception)
+
+
+def resolver_usuario_vigente(token_data: DatosToken, db: Session, credentials_exception) -> models.Usuario:
+    """
+    Busca el Usuario del token y chequea revocación (B-06): si el token se
+    emitió antes de user.fecha_actualizacion (con TOLERANCIA_REVOCACION de
+    margen), se lo trata como inválido -- "tocar" la fila del usuario
+    (cualquier UPDATE) invalida de una todas sus sesiones activas, access y
+    refresh tokens por igual, sin necesitar una blacklist aparte. Usado
+    tanto por get_current_user como por POST /auth/refresh.
+    """
     user = db.query(models.Usuario).filter(models.Usuario.id == token_data.user_id).first()
-
     if user is None:
-        raise invalid_token_exception
+        raise credentials_exception
+
+    if token_data.iat < user.fecha_actualizacion - TOLERANCIA_REVOCACION:
+        raise credentials_exception
 
     return user
+
+
+def get_current_user(token: str = Depends(get_token),
+                      db: Session = Depends(get_db)) -> models.Usuario:
+    token_data = verify_access_token(token, invalid_token_exception)
+    return resolver_usuario_vigente(token_data, db, invalid_token_exception)
 
 
 def requiere_admin(current_user: models.Usuario = Depends(get_current_user)):
