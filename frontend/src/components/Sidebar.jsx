@@ -1,13 +1,14 @@
 import { NavLink, useNavigate } from "react-router-dom";
+import { LayoutDashboard, Building2, Truck, GitCompare } from "lucide-react";
 import { useAuth } from "../context/useAuth";
 import logo from "../assets/HS_logo_blanco.png";
 import "./Sidebar.css";
 
 const ITEMS_NAV = [
-  { to: "/", label: "Panel", soloAdmin: false },
-  { to: "/proyectos", label: "Proyectos", soloAdmin: false },
-  { to: "/proveedores", label: "Proveedores", soloAdmin: false },
-  { to: "/comparador", label: "Comparador", soloAdmin: false },
+  { to: "/", label: "Panel", icono: LayoutDashboard, soloAdmin: false },
+  { to: "/proyectos", label: "Proyectos", icono: Building2, soloAdmin: false },
+  { to: "/proveedores", label: "Proveedores", icono: Truck, soloAdmin: false },
+  { to: "/comparador", label: "Comparador", icono: GitCompare, soloAdmin: false },
 ];
 
 export function Sidebar() {
@@ -35,6 +36,7 @@ export function Sidebar() {
               isActive ? "sidebar-link sidebar-link-active" : "sidebar-link"
             }
           >
+            <item.icono size={17} strokeWidth={2} className="sidebar-link-icono" />
             {item.label}
           </NavLink>
         ))}

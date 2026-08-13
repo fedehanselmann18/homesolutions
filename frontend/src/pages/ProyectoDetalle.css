@@ -2,6 +2,12 @@
     font-family: var(--font-ui);
 }
 
+.proyecto-detalle-error {
+    display: flex;
+    justify-content: center;
+    padding-top: var(--space-12);
+}
+
 /* Pestañas de carpeta: la activa "se despega" de la línea para leerse
    conectada al contenido de abajo, en vez de un grupo de botones pill. */
 .tabs {

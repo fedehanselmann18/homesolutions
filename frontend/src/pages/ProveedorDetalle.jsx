@@ -42,6 +42,7 @@ import ModalProducto from "../components/modals/ModalProducto";
 import ModalCompra from "../components/modals/ModalCompra";
 import ModalNota from "../components/modals/ModalNota";
 import ModalDetalleCompra from "../components/modals/ModalDetalleCompra";
+import ModalConfirmar from "../components/modals/ModalConfirmar";
 import { Cargando } from "../components/shared/Cargando";
 import { TarjetaAlerta } from "../components/shared/TarjetaAlerta";
 import FiltrosLista from "../components/shared/FiltrosLista";
@@ -80,6 +81,10 @@ export function ProveedorDetalle() {
     const [compraDetalle, setCompraDetalle] = useState(null);
 
     const [filtrosCompras, setFiltrosCompras] = useState(FILTROS_VACIOS);
+
+    const [confirmarEliminarProveedor, setConfirmarEliminarProveedor] = useState(false);
+    const [productoAEliminar, setProductoAEliminar] = useState(null);
+    const [compraAEliminar, setCompraAEliminar] = useState(null);
 
     useEffect(() => {
         fetchTodo();
@@ -169,7 +174,8 @@ export function ProveedorDetalle() {
         }
     };
 
-    const handleEliminarProveedor = async () => {
+    const handleConfirmarEliminarProveedor = async () => {
+        setConfirmarEliminarProveedor(false);
         try {
             await eliminarProveedor(id);
             navigate("/proveedores");
@@ -206,7 +212,9 @@ export function ProveedorDetalle() {
         }
     };
 
-    const handleEliminarProducto = async (productoId) => {
+    const handleConfirmarEliminarProducto = async () => {
+        const productoId = productoAEliminar.id;
+        setProductoAEliminar(null);
         try {
             await eliminarProducto(productoId);
             refetchProductos();
@@ -247,7 +255,9 @@ export function ProveedorDetalle() {
         }
     };
 
-    const handleEliminarCompra = async (compraId) => {
+    const handleConfirmarEliminarCompra = async () => {
+        const compraId = compraAEliminar.id;
+        setCompraAEliminar(null);
         try {
             await eliminarCompra(compraId);
             refetchCompras();
@@ -328,7 +338,7 @@ export function ProveedorDetalle() {
                                 <Pencil size={14} strokeWidth={2} />
                                 Editar
                             </button>
-                            <button type="button" className="proveedor-detalle-btn-eliminar" onClick={handleEliminarProveedor}>
+                            <button type="button" className="proveedor-detalle-btn-eliminar" onClick={() => setConfirmarEliminarProveedor(true)}>
                                 <Trash2 size={14} strokeWidth={2} />
                                 Eliminar
                             </button>
@@ -464,7 +474,7 @@ export function ProveedorDetalle() {
                                                     <button
                                                         type="button"
                                                         className="proveedor-detalle-btn-eliminar-texto"
-                                                        onClick={() => handleEliminarProducto(producto.id)}
+                                                        onClick={() => setProductoAEliminar(producto)}
                                                     >
                                                         Eliminar
                                                     </button>
@@ -509,7 +519,9 @@ export function ProveedorDetalle() {
                                 proveedorNombre={proveedor.nombre}
                                 productos={productos}
                                 onEditar={handleEditarCompra}
-                                onEliminar={handleEliminarCompra}
+                                onEliminar={(compraId) =>
+                                    setCompraAEliminar(resumen.comprasDelProveedor.find((c) => c.id === compraId))
+                                }
                                 onTogglePago={handleToggleEstadoPagoCompra}
                                 onToggleEnvio={handleToggleEstadoEnvioCompra}
                                 onVerComprobante={getComprobanteCompra}
@@ -576,6 +588,36 @@ export function ProveedorDetalle() {
                     onCerrar={() => setCompraDetalle(null)}
                     onVerComprobante={(c) => getComprobanteCompra(compraDetalle.id, c.id)}
                     onVerNota={(n) => getNotaCompra(compraDetalle.id, n.id)}
+                />
+            )}
+
+            {confirmarEliminarProveedor && (
+                <ModalConfirmar
+                    titulo="Eliminar proveedor"
+                    mensaje="Esta acción no se puede deshacer."
+                    nombreRecurso={proveedor.nombre}
+                    onConfirmar={handleConfirmarEliminarProveedor}
+                    onCancelar={() => setConfirmarEliminarProveedor(false)}
+                />
+            )}
+
+            {productoAEliminar && (
+                <ModalConfirmar
+                    titulo="Eliminar producto"
+                    mensaje="Esta acción no se puede deshacer."
+                    nombreRecurso={`${productoAEliminar.marca} ${productoAEliminar.modelo}`}
+                    onConfirmar={handleConfirmarEliminarProducto}
+                    onCancelar={() => setProductoAEliminar(null)}
+                />
+            )}
+
+            {compraAEliminar && (
+                <ModalConfirmar
+                    titulo="Eliminar compra"
+                    mensaje="Esta acción no se puede deshacer."
+                    nombreRecurso={`Compra del ${formatFecha(compraAEliminar.fecha)}`}
+                    onConfirmar={handleConfirmarEliminarCompra}
+                    onCancelar={() => setCompraAEliminar(null)}
                 />
             )}
         </div>

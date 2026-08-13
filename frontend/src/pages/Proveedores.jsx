@@ -12,6 +12,7 @@ import { useToast } from "../context/useToast";
 
 import ProveedorCard from "../components/proveedores/ProveedorCard";
 import ModalProveedor from "../components/modals/ModalProveedor";
+import ModalConfirmar from "../components/modals/ModalConfirmar";
 import { Cargando } from "../components/shared/Cargando";
 import "./Proveedores.css";
 
@@ -38,6 +39,7 @@ export function Proveedores() {
 
     const [modalAbierto, setModalAbierto] = useState(false);
     const [proveedorSeleccionado, setProveedorSeleccionado] = useState(null);
+    const [proveedorAEliminar, setProveedorAEliminar] = useState(null);
 
     useEffect(() => {
         const fetchDatos = async () => {
@@ -105,7 +107,13 @@ export function Proveedores() {
         }
     };
 
-    const handleEliminar = async (proveedor) => {
+    const handleSolicitarEliminar = (proveedor) => {
+        setProveedorAEliminar(proveedor);
+    };
+
+    const handleConfirmarEliminar = async () => {
+        const proveedor = proveedorAEliminar;
+        setProveedorAEliminar(null);
         try {
             await borrarProveedor(proveedor.id);
         } catch (err) {
@@ -174,7 +182,7 @@ export function Proveedores() {
                             totalNotasCredito={totalNotasCredito}
                             totalNotasDebito={totalNotasDebito}
                             onEditar={abrirModalEditar}
-                            onEliminar={handleEliminar}
+                            onEliminar={handleSolicitarEliminar}
                         />
                     ))}
                 </div>
@@ -185,6 +193,16 @@ export function Proveedores() {
                     proveedor={proveedorSeleccionado}
                     onGuardar={handleGuardar}
                     onCerrar={cerrarModal}
+                />
+            )}
+
+            {proveedorAEliminar && (
+                <ModalConfirmar
+                    titulo="Eliminar proveedor"
+                    mensaje="Esta acción no se puede deshacer."
+                    nombreRecurso={proveedorAEliminar.nombre}
+                    onConfirmar={handleConfirmarEliminar}
+                    onCancelar={() => setProveedorAEliminar(null)}
                 />
             )}
         </div>

@@ -55,6 +55,16 @@ describe("filtrarCompras", () => {
     expect(resultado).toHaveLength(1);
     expect(resultado[0].estado_pago).toBe("pagado");
   });
+
+  it("con un array vacío devuelve vacío sin explotar", () => {
+    expect(filtrarCompras([], { ...FILTROS_VACIOS, estadoPago: "pagado" })).toEqual([]);
+  });
+
+  it("no explota si 'notas' viene null en vez de array", () => {
+    const compras = [compra({ notas: null })];
+    expect(filtrarCompras(compras, { ...FILTROS_VACIOS, notas: "sin_notas" })).toHaveLength(1);
+    expect(filtrarCompras(compras, { ...FILTROS_VACIOS, notas: "con_credito" })).toHaveLength(0);
+  });
 });
 
 describe("filtrarCobros", () => {
@@ -68,6 +78,15 @@ describe("filtrarCobros", () => {
 
     const sinComprobante = filtrarCobros(cobros, { ...FILTROS_VACIOS, comprobante: "sin" });
     expect(sinComprobante).toHaveLength(1);
+  });
+
+  it("no explota si 'comprobantes' viene null en vez de array", () => {
+    const cobros = [{ fecha: "2026-01-01", notas: [], comprobantes: null }];
+    expect(filtrarCobros(cobros, { ...FILTROS_VACIOS, comprobante: "sin" })).toHaveLength(1);
+  });
+
+  it("con un array vacío devuelve vacío sin explotar", () => {
+    expect(filtrarCobros([])).toEqual([]);
   });
 });
 
@@ -86,6 +105,10 @@ describe("filtrarGastos", () => {
     });
     expect(resultado).toHaveLength(1);
     expect(resultado[0].fecha).toBe("2026-03-01");
+  });
+
+  it("con un array vacío devuelve vacío sin explotar", () => {
+    expect(filtrarGastos([], { ...FILTROS_VACIOS, tipoFactura: "A" })).toEqual([]);
   });
 });
 

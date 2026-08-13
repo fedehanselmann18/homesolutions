@@ -1,13 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, Treemap, XAxis, YAxis } from "recharts";
 
-import { getProyectoPorId, descargarReportePdfProyecto } from "../../services/proyectoService";
-import { getFasesPorProyecto } from "../../services/faseService";
-import { getGastosPorProyecto } from "../../services/gastoService";
-import { getCobrosPorProyecto } from "../../services/cobroService";
-import { getComprasPorProyecto } from "../../services/compraService";
-import { getProductos } from "../../services/productoService";
-import { getProveedores } from "../../services/proveedorService";
+import { descargarReportePdfProyecto } from "../../services/proyectoService";
+import {
+    useProyecto,
+    useFasesPorProyecto,
+    useGastosPorProyecto,
+    useCobrosPorProyecto,
+    useComprasPorProyecto,
+    useProductos,
+    useProveedores,
+} from "../../hooks/queries";
 
 import { TarjetaKpi } from "../shared/TarjetaKpi";
 import { Cargando } from "../shared/Cargando";
@@ -16,12 +19,8 @@ import { formatMoneda, formatMonedaCorta } from "../../utils/formato";
 import { useToast } from "../../context/useToast";
 import useAuth from "../../context/useAuth";
 import { Seccion, TooltipMoneda, ContenidoTreemap, Torta, COLORES_TORTA } from "./AnalisisGraficos";
+import { VERDE, ROJO, AZUL, NARANJA } from "../../constants/colores";
 import "./AnalisisGeneral.css";
-
-const VERDE = "#16a34a";
-const ROJO = "#dc2626";
-const AZUL = "#64748b";
-const NARANJA = "#d97706";
 
 const COLOR_CASCADA = {
     entrada: VERDE,
@@ -70,33 +69,49 @@ export function AnalisisGeneral({ proyectoId }) {
     const toast = useToast();
     const { usuario } = useAuth();
     const esAdmin = usuario?.rol === "admin";
-    const [datos, setDatos] = useState(null);
-    const [cargando, setCargando] = useState(true);
     const [descargandoReporte, setDescargandoReporte] = useState(false);
 
-    useEffect(() => {
-        const fetchDatos = async () => {
-            try {
-                setCargando(true);
-                const [proyecto, fases, gastos, cobros, compras, productos, proveedores] = await Promise.all([
-                    getProyectoPorId(proyectoId),
-                    getFasesPorProyecto(proyectoId),
-                    getGastosPorProyecto(proyectoId),
-                    getCobrosPorProyecto(proyectoId),
-                    getComprasPorProyecto(proyectoId),
-                    getProductos(),
-                    getProveedores(),
-                ]);
-                setDatos({ proyecto, fases, gastos, cobros, compras, productos, proveedores });
-            } catch (error) {
-                console.error("Error fetching datos del análisis:", error);
-            } finally {
-                setCargando(false);
-            }
-        };
+    const proyectoQuery = useProyecto(proyectoId);
+    const fasesQuery = useFasesPorProyecto(proyectoId);
+    const gastosQuery = useGastosPorProyecto(proyectoId);
+    const cobrosQuery = useCobrosPorProyecto(proyectoId);
+    const comprasQuery = useComprasPorProyecto(proyectoId);
+    const productosQuery = useProductos();
+    const proveedoresQuery = useProveedores();
 
-        fetchDatos();
-    }, [proyectoId]);
+    const cargando =
+        proyectoQuery.isLoading ||
+        fasesQuery.isLoading ||
+        gastosQuery.isLoading ||
+        cobrosQuery.isLoading ||
+        comprasQuery.isLoading ||
+        productosQuery.isLoading ||
+        proveedoresQuery.isLoading;
+
+    const datos = useMemo(
+        () =>
+            cargando
+                ? null
+                : {
+                      proyecto: proyectoQuery.data,
+                      fases: fasesQuery.data,
+                      gastos: gastosQuery.data,
+                      cobros: cobrosQuery.data,
+                      compras: comprasQuery.data,
+                      productos: productosQuery.data,
+                      proveedores: proveedoresQuery.data,
+                  },
+        [
+            cargando,
+            proyectoQuery.data,
+            fasesQuery.data,
+            gastosQuery.data,
+            cobrosQuery.data,
+            comprasQuery.data,
+            productosQuery.data,
+            proveedoresQuery.data,
+        ]
+    );
 
     const analisis = useMemo(() => (datos ? calcularAnalisis(datos) : null), [datos]);
 

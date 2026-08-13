@@ -1,31 +1,29 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
-import { getProyectoPorId } from "../services/proyectoService";
+import { useProyecto } from "../hooks/queries";
 import ProyectoDetalleHeader from "../components/proyectos/ProyectoDetalleHeader";
 import Fases from "../components/proyectos/Fases";
 import Acciones from "../components/proyectos/Acciones";
 import AnalisisGeneral from "../components/proyectos/AnalisisGeneral";
 import Seguimiento from "../components/proyectos/Seguimiento";
 import { Cargando } from "../components/shared/Cargando";
+import { EstadoError } from "../components/shared/EstadoError";
+import { Breadcrumbs } from "../components/shared/Breadcrumbs";
+import { obtenerMensajeError } from "../utils/errorHandling";
 import "./ProyectoDetalle.css";
 
 function ProyectoDetalle() {
     const { id } = useParams()
-    const [proyecto, setProyecto] = useState(null);
+    const { data: proyecto, error } = useProyecto(id);
     const [tabActiva, setTabActiva] = useState("fases");
 
-    useEffect(() => {
-        const fetchProyecto = async () => {
-            try {
-                const data = await getProyectoPorId(id);
-                setProyecto(data);
-            } catch (error) {
-                console.error("Error fetching proyecto:", error);
-            }
-        };
-
-        fetchProyecto();
-    }, [id]);
+    if (error) {
+        return (
+            <div className="proyecto-detalle-error">
+                <EstadoError mensaje={obtenerMensajeError(error)} grande />
+            </div>
+        );
+    }
 
     if (!proyecto) {
         return <Cargando texto="Cargando proyecto..." />;
@@ -33,6 +31,8 @@ function ProyectoDetalle() {
 
     return (
         <div className="proyecto-detalle">
+
+            <Breadcrumbs items={[{ label: "Proyectos", to: "/proyectos" }, { label: proyecto.nombre }]} />
 
             <ProyectoDetalleHeader proyecto={proyecto} />
 
