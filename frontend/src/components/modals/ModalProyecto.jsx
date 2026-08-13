@@ -17,6 +17,7 @@ export function ModalProyecto({ proyecto, onGuardar, onCerrar }) {
     estado: "a_iniciar",
     precio_acordado: "",
   });
+  const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
     if (proyecto) {
@@ -35,12 +36,17 @@ export function ModalProyecto({ proyecto, onGuardar, onCerrar }) {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onGuardar({
-      ...form,
-      precio_acordado: Number(form.precio_acordado),
-    });
+    setGuardando(true);
+    try {
+      await onGuardar({
+        ...form,
+        precio_acordado: Number(form.precio_acordado),
+      });
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
@@ -107,11 +113,11 @@ export function ModalProyecto({ proyecto, onGuardar, onCerrar }) {
           </label>
 
           <div className="modal-acciones">
-            <button type="button" onClick={onCerrar} className="modal-btn-cancelar">
+            <button type="button" onClick={onCerrar} className="modal-btn-cancelar" disabled={guardando}>
               Cancelar
             </button>
-            <button type="submit" className="modal-btn-guardar">
-              {esEdicion ? "Guardar cambios" : "Crear proyecto"}
+            <button type="submit" className="modal-btn-guardar" disabled={guardando}>
+              {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Crear proyecto"}
             </button>
           </div>
         </form>

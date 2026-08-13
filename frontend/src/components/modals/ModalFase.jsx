@@ -16,6 +16,7 @@ export function ModalFase({ fase, onGuardar, onCerrar }) {
     descripcion: "",
     estado: "por_empezar",
   });
+  const [guardando, setGuardando] = useState(false);
 
   useEffect(() => {
     if (fase) {
@@ -32,12 +33,17 @@ export function ModalFase({ fase, onGuardar, onCerrar }) {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     // Ojo: proyecto_id no se maneja acá. Si es creación (FaseCreate),
     // el componente padre debe agregarlo antes de llamar al service:
     // onGuardar({ ...form, proyecto_id: proyectoId })
-    onGuardar(form);
+    setGuardando(true);
+    try {
+      await onGuardar(form);
+    } finally {
+      setGuardando(false);
+    }
   };
 
   return (
@@ -79,11 +85,11 @@ export function ModalFase({ fase, onGuardar, onCerrar }) {
           </label>
 
           <div className="modal-acciones">
-            <button type="button" onClick={onCerrar} className="modal-btn-cancelar">
+            <button type="button" onClick={onCerrar} className="modal-btn-cancelar" disabled={guardando}>
               Cancelar
             </button>
-            <button type="submit" className="modal-btn-guardar">
-              {esEdicion ? "Guardar cambios" : "Crear fase"}
+            <button type="submit" className="modal-btn-guardar" disabled={guardando}>
+              {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Crear fase"}
             </button>
           </div>
         </form>
