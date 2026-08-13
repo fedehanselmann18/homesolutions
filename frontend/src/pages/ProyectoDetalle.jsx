@@ -7,25 +7,38 @@ import Acciones from "../components/proyectos/Acciones";
 import AnalisisGeneral from "../components/proyectos/AnalisisGeneral";
 import Seguimiento from "../components/proyectos/Seguimiento";
 import { Cargando } from "../components/shared/Cargando";
+import { EstadoVacio } from "../components/shared/EstadoVacio";
+import { obtenerMensajeError } from "../utils/errorHandling";
 import "./ProyectoDetalle.css";
 
 function ProyectoDetalle() {
     const { id } = useParams()
     const [proyecto, setProyecto] = useState(null);
+    const [error, setError] = useState(null);
     const [tabActiva, setTabActiva] = useState("fases");
 
     useEffect(() => {
         const fetchProyecto = async () => {
             try {
+                setError(null);
                 const data = await getProyectoPorId(id);
                 setProyecto(data);
-            } catch (error) {
-                console.error("Error fetching proyecto:", error);
+            } catch (err) {
+                console.error("Error fetching proyecto:", err);
+                setError(err);
             }
         };
 
         fetchProyecto();
     }, [id]);
+
+    if (error) {
+        return (
+            <div className="proyecto-detalle-error">
+                <EstadoVacio mensaje={obtenerMensajeError(error)} grande />
+            </div>
+        );
+    }
 
     if (!proyecto) {
         return <Cargando texto="Cargando proyecto..." />;
