@@ -48,6 +48,7 @@ import ModalConfirmar from "../components/modals/ModalConfirmar";
 import ModalDetalleGasto from "../components/modals/ModalDetalleGasto";
 import ModalDetalleCompra from "../components/modals/ModalDetalleCompra";
 import { Cargando } from "../components/shared/Cargando";
+import { Breadcrumbs } from "../components/shared/Breadcrumbs";
 import { useToast } from "../context/useToast";
 import AccionesFase from "../components/fases/AccionesFase";
 import SeguimientoFase from "../components/fases/SeguimientoFase";
@@ -387,6 +388,14 @@ export function FaseDetalle() {
 
     return (
         <div className="fase-detalle">
+            <Breadcrumbs
+                items={[
+                    { label: "Proyectos", to: "/proyectos" },
+                    { label: proyecto.nombre, to: `/proyectos/${proyectoId}` },
+                    { label: fase.nombre },
+                ]}
+            />
+
             <button type="button" className="fase-detalle-volver" onClick={() => navigate(`/proyectos/${proyectoId}`)}>
                 <ArrowLeft size={16} strokeWidth={2} />
                 Volver al proyecto

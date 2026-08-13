@@ -8,6 +8,7 @@ import AnalisisGeneral from "../components/proyectos/AnalisisGeneral";
 import Seguimiento from "../components/proyectos/Seguimiento";
 import { Cargando } from "../components/shared/Cargando";
 import { EstadoVacio } from "../components/shared/EstadoVacio";
+import { Breadcrumbs } from "../components/shared/Breadcrumbs";
 import { obtenerMensajeError } from "../utils/errorHandling";
 import "./ProyectoDetalle.css";
 
@@ -46,6 +47,8 @@ function ProyectoDetalle() {
 
     return (
         <div className="proyecto-detalle">
+
+            <Breadcrumbs items={[{ label: "Proyectos", to: "/proyectos" }, { label: proyecto.nombre }]} />
 
             <ProyectoDetalleHeader proyecto={proyecto} />
 
