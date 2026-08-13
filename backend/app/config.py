@@ -33,6 +33,9 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: Optional[str] = None
     # Configurable por si Google renombra/discontinúa el modelo (pasa seguido)
     # sin tener que tocar código, solo el .env.
+    # Verificado contra ai.google.dev (ficha del modelo + changelog) el
+    # 2026-08-13: "gemini-3.6-flash" es GA desde el 21/07/2026 y es el
+    # Flash más nuevo disponible -- el default sigue siendo válido.
     GEMINI_MODEL: str = "gemini-3.6-flash"
 
     # "development" (default, local) | "production" (deploy real).
