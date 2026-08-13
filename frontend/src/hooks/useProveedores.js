@@ -36,9 +36,7 @@ export function useProveedores() {
 
   const editarProveedor = async (proveedorId, cambios) => {
     const actualizado = await actualizarProveedor(proveedorId, cambios);
-    setProveedores((prev) =>
-      prev.map((p) => (p.id === proveedorId ? actualizado : p))
-    );
+    setProveedores((prev) => prev.map((p) => (p.id === proveedorId ? actualizado : p)));
     return actualizado;
   };
 

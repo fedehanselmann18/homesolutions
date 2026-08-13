@@ -32,11 +32,15 @@ export function notasDeCobros(cobros = []) {
 }
 
 export function totalNotasCredito(notas = []) {
-  return notas.filter((n) => n.tipo === "nota_credito").reduce((acc, n) => acc + (Number(n.monto) || 0), 0);
+  return notas
+    .filter((n) => n.tipo === "nota_credito")
+    .reduce((acc, n) => acc + (Number(n.monto) || 0), 0);
 }
 
 export function totalNotasDebito(notas = []) {
-  return notas.filter((n) => n.tipo === "nota_debito").reduce((acc, n) => acc + (Number(n.monto) || 0), 0);
+  return notas
+    .filter((n) => n.tipo === "nota_debito")
+    .reduce((acc, n) => acc + (Number(n.monto) || 0), 0);
 }
 
 /**

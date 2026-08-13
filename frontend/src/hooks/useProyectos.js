@@ -36,9 +36,7 @@ export function useProyectos() {
 
   const editarProyecto = async (proyectoId, cambios) => {
     const actualizado = await actualizarProyecto(proyectoId, cambios);
-    setProyectos((prev) =>
-      prev.map((p) => (p.id === proyectoId ? actualizado : p))
-    );
+    setProyectos((prev) => prev.map((p) => (p.id === proyectoId ? actualizado : p)));
     return actualizado;
   };
 

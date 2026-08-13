@@ -8,10 +8,10 @@ export const ESTADOS = {
 };
 
 export const ESTADO_LABELS = {
-    por_empezar: { color: "#6b7280", label: "Por empezar", icono: Clock },
-    en_curso: { color: "#d97706", label: "En curso", icono: CirclePlay },
-    terminada: { color: "#16a34a", label: "Terminada", icono: CircleCheckBig },
-    auditada: { color: "#64748b", label: "Auditada", icono: Search },
+  por_empezar: { color: "#6b7280", label: "Por empezar", icono: Clock },
+  en_curso: { color: "#d97706", label: "En curso", icono: CirclePlay },
+  terminada: { color: "#16a34a", label: "Terminada", icono: CircleCheckBig },
+  auditada: { color: "#64748b", label: "Auditada", icono: Search },
 };
 
 export function getEstado(estado) {

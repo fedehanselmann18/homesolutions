@@ -1,12 +1,12 @@
-import axios from 'axios';
+import axios from "axios";
 
 const axiosClient = axios.create({
-    baseURL : import.meta.env.VITE_API_URL,
-    // El JWT ahora viaja en una cookie httpOnly, no en localStorage: el
-    // browser tiene que adjuntarla sola en cada request cross-origin
-    // (front en Vercel, back en Railway), y para eso axios necesita
-    // withCredentials en true.
-    withCredentials: true,
+  baseURL: import.meta.env.VITE_API_URL,
+  // El JWT ahora viaja en una cookie httpOnly, no en localStorage: el
+  // browser tiene que adjuntarla sola en cada request cross-origin
+  // (front en Vercel, back en Railway), y para eso axios necesita
+  // withCredentials en true.
+  withCredentials: true,
 });
 
 const MUTATING_METHODS = new Set(["post", "put", "patch", "delete"]);

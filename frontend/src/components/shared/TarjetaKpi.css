@@ -3,55 +3,55 @@
    nivel del contenedor que la usa (ver .panel-kpis, .analisis-kpis, etc). */
 
 .kpi {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    padding: 0;
-    font-family: var(--font-ui);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0;
+  font-family: var(--font-ui);
 }
 
 /* Variante sin caja, para usarla adentro de otro bloque (idéntica al
    default hoy que el default tampoco tiene caja; se conserva la clase
    para no tocar los componentes que la usan). */
 .kpi--plano {
-    gap: 4px;
+  gap: 4px;
 }
 
 .kpi-titulo {
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--color-tinta-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-tinta-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .kpi-valor {
-    font-family: var(--font-display);
-    font-size: 1.7rem;
-    font-weight: 600;
-    color: var(--color-tinta);
-    line-height: 1.15;
-    font-variant-numeric: tabular-nums;
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 600;
+  color: var(--color-tinta);
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
 }
 
 .kpi-valor--destacado {
-    font-size: 2rem;
+  font-size: 2rem;
 }
 
 .kpi-detalle {
-    font-size: 0.8rem;
-    color: var(--color-tinta-muted);
+  font-size: 0.8rem;
+  color: var(--color-tinta-muted);
 }
 
 .kpi-progreso {
-    height: 6px;
-    border-radius: var(--radius-pill);
-    background-color: var(--color-base-2);
-    overflow: hidden;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-base-2);
+  overflow: hidden;
 }
 
 .kpi-progreso-relleno {
-    height: 100%;
-    border-radius: var(--radius-pill);
-    transition: width 0.25s ease;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  transition: width 0.25s ease;
 }

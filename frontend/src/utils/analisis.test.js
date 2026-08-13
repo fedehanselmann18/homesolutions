@@ -64,7 +64,11 @@ describe("calcularAnalisis", () => {
   it("una nota de débito de compra suma al total de compras", () => {
     const resultado = calcularAnalisis({
       compras: [
-        { precio_neto: 1000, impuestos_aplicados: [], notas: [{ tipo: "nota_debito", monto: 150 }] },
+        {
+          precio_neto: 1000,
+          impuestos_aplicados: [],
+          notas: [{ tipo: "nota_debito", monto: 150 }],
+        },
       ],
     });
     expect(resultado.totales.compras).toBe(1150);
@@ -99,9 +103,7 @@ describe("calcularAnalisis", () => {
 
   it("reparte el monto de un gasto en partes iguales entre sus categorías", () => {
     const resultado = calcularAnalisis({
-      gastos: [
-        { monto: 100, categorias: [{ nombre: "Mano de obra" }, { nombre: "Materiales" }] },
-      ],
+      gastos: [{ monto: 100, categorias: [{ nombre: "Mano de obra" }, { nombre: "Materiales" }] }],
     });
     const porCategoria = resultado.gastosPorCategoria;
     expect(porCategoria).toHaveLength(2);
@@ -114,7 +116,9 @@ describe("calcularAnalisis", () => {
     const resultado = calcularAnalisis({
       gastos: [{ monto: 200, categorias: [] }],
     });
-    expect(resultado.gastosPorCategoria).toEqual([{ nombre: "Sin categoría", monto: 200, pct: 100 }]);
+    expect(resultado.gastosPorCategoria).toEqual([
+      { nombre: "Sin categoría", monto: 200, pct: 100 },
+    ]);
   });
 
   it("cuenta gastos sin comprobante", () => {
@@ -143,7 +147,10 @@ describe("calcularAnalisis", () => {
   it("un gasto con monto negativo (corrección) resta del total en vez de sumar", () => {
     const resultado = calcularAnalisis({
       cobros: [{ monto_neto: 1000 }],
-      gastos: [{ monto: 300, categorias: [] }, { monto: -100, categorias: [] }],
+      gastos: [
+        { monto: 300, categorias: [] },
+        { monto: -100, categorias: [] },
+      ],
     });
     expect(resultado.totales.gastos).toBe(200);
     expect(resultado.totales.disponible).toBe(800);
@@ -152,7 +159,11 @@ describe("calcularAnalisis", () => {
   it("una nota de crédito mayor al monto de la compra puede dejar el total de compras en negativo", () => {
     const resultado = calcularAnalisis({
       compras: [
-        { precio_neto: 100, impuestos_aplicados: [], notas: [{ tipo: "nota_credito", monto: 500 }] },
+        {
+          precio_neto: 100,
+          impuestos_aplicados: [],
+          notas: [{ tipo: "nota_credito", monto: 500 }],
+        },
       ],
     });
     expect(resultado.totales.compras).toBe(-400);
@@ -171,7 +182,9 @@ describe("calcularAnalisis", () => {
     const resultado = calcularAnalisis({
       fases: [{ id: 1, nombre: "Demolición" }],
       cobros: [{ monto_neto: 100 }],
-      compras: [{ fase_id: 1, precio_neto: 400, precio_total: 400, impuestos_aplicados: [], notas: [] }],
+      compras: [
+        { fase_id: 1, precio_neto: 400, precio_total: 400, impuestos_aplicados: [], notas: [] },
+      ],
     });
     expect(resultado.totales.disponible).toBeLessThan(0);
     expect(resultado.cobradoPorFase.find((f) => f.nombre === "Disponible")).toBeUndefined();
@@ -183,7 +196,9 @@ describe("calcularAnalisis", () => {
     const resultado = calcularAnalisis({
       fases: [{ id: 1, nombre: "Demolición" }],
       cobros: [{ monto_neto: 1000 }],
-      compras: [{ fase_id: 1, precio_neto: 300, precio_total: 300, impuestos_aplicados: [], notas: [] }],
+      compras: [
+        { fase_id: 1, precio_neto: 300, precio_total: 300, impuestos_aplicados: [], notas: [] },
+      ],
     });
     const disponibleFila = resultado.cobradoPorFase.find((f) => f.nombre === "Disponible");
     expect(disponibleFila.monto).toBe(700);

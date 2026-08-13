@@ -5,78 +5,78 @@
    que resuelve el mismo tratamiento visual con su propio desplegable. */
 
 .filtros-lista {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: var(--space-6);
-    margin-bottom: var(--space-4);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-6);
+  margin-bottom: var(--space-4);
 }
 
 .filtros-lista-campo {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    min-width: 140px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 140px;
 }
 
 .filtros-lista-campo .label-ficha {
-    position: absolute;
-    top: -6px;
-    left: 2px;
-    padding: 0 4px;
-    background-color: var(--color-superficie);
-    z-index: 1;
-    pointer-events: none;
+  position: absolute;
+  top: -6px;
+  left: 2px;
+  padding: 0 4px;
+  background-color: var(--color-superficie);
+  z-index: 1;
+  pointer-events: none;
 }
 
 .filtros-lista-campo input {
-    font-family: var(--font-ui);
-    font-size: 0.85rem;
-    border: none;
-    border-bottom: 1px solid var(--color-linea);
-    background-color: transparent;
-    color: var(--color-tinta);
-    padding: 12px 2px 7px;
-    transition: border-color 0.15s ease;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  border: none;
+  border-bottom: 1px solid var(--color-linea);
+  background-color: transparent;
+  color: var(--color-tinta);
+  padding: 12px 2px 7px;
+  transition: border-color 0.15s ease;
 }
 
 .filtros-lista-campo input:hover {
-    border-bottom-color: var(--color-tinta-muted);
+  border-bottom-color: var(--color-tinta-muted);
 }
 
 .filtros-lista-campo input:focus {
-    outline: none;
-    border-bottom-color: var(--color-terracota);
+  outline: none;
+  border-bottom-color: var(--color-terracota);
 }
 
 .filtros-lista-limpiar {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    background: transparent;
-    border: none;
-    border-bottom: 1px solid transparent;
-    padding: 7px 2px;
-    font-family: var(--font-ui);
-    font-size: 0.82rem;
-    font-weight: 600;
-    color: var(--color-terracota-dark);
-    cursor: pointer;
-    transition: border-color 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid transparent;
+  padding: 7px 2px;
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--color-terracota-dark);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
 }
 
 .filtros-lista-limpiar:hover {
-    border-bottom-color: var(--color-terracota);
+  border-bottom-color: var(--color-terracota);
 }
 
 @media (max-width: 700px) {
-    .filtros-lista {
-        flex-direction: column;
-        align-items: stretch;
-        gap: var(--space-4);
-    }
+  .filtros-lista {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-4);
+  }
 
-    .filtros-lista-campo input {
-        width: 100%;
-    }
+  .filtros-lista-campo input {
+    width: 100%;
+  }
 }

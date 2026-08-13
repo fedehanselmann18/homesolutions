@@ -33,7 +33,9 @@ function describirProductos(compra, productos) {
   const primero = productos.find((p) => p.id === detalle[0].producto_id);
   const nombre = primero ? `${primero.marca} ${primero.modelo}` : "Producto eliminado";
   const otros = detalle.length - 1;
-  return otros > 0 ? `${nombre} y ${otros} ${otros === 1 ? "producto más" : "productos más"}` : nombre;
+  return otros > 0
+    ? `${nombre} y ${otros} ${otros === 1 ? "producto más" : "productos más"}`
+    : nombre;
 }
 
 function nombreProveedor(compra, proveedores) {
@@ -120,7 +122,11 @@ export function calcularSeguimiento({
   // Cuánto se le debe a cada proveedor dentro de este proyecto.
   const deuda = new Map();
   comprasImpagas.forEach((compra) => {
-    const actual = deuda.get(compra.proveedor) ?? { proveedor: compra.proveedor, monto: 0, compras: 0 };
+    const actual = deuda.get(compra.proveedor) ?? {
+      proveedor: compra.proveedor,
+      monto: 0,
+      compras: 0,
+    };
     actual.monto += compra.monto;
     actual.compras += 1;
     deuda.set(compra.proveedor, actual);
@@ -147,7 +153,11 @@ export function calcularSeguimiento({
     pctCobrado: precioAcordado > 0 ? (cobrado / precioAcordado) * 100 : 0,
     cantidadCobros: cobros.length,
     ultimoCobro: ultimoCobro
-      ? { fecha: ultimoCobro.fecha, monto: ultimoCobro.monto_neto ?? ultimoCobro.monto, dias: diasDesde(ultimoCobro.fecha, hoy) }
+      ? {
+          fecha: ultimoCobro.fecha,
+          monto: ultimoCobro.monto_neto ?? ultimoCobro.monto,
+          dias: diasDesde(ultimoCobro.fecha, hoy),
+        }
       : null,
   };
 

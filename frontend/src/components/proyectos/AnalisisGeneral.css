@@ -4,339 +4,341 @@
    superior, igual que el resto de la app. */
 
 .analisis {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-8);
-    font-family: var(--font-ui);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  font-family: var(--font-ui);
 }
 
 .analisis-header {
-    display: flex;
-    justify-content: flex-end;
+  display: flex;
+  justify-content: flex-end;
 }
 
 .analisis-btn-reporte {
-    background-color: var(--color-terracota);
-    color: var(--color-superficie);
-    border: 1px solid var(--color-terracota);
-    padding: 9px 18px;
-    border-radius: var(--radius-sm);
-    font-family: var(--font-ui);
-    font-weight: 600;
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
+  background-color: var(--color-terracota);
+  color: var(--color-superficie);
+  border: 1px solid var(--color-terracota);
+  padding: 9px 18px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .analisis-btn-reporte:hover:not(:disabled) {
-    background-color: var(--color-terracota-dark);
-    border-color: var(--color-terracota-dark);
+  background-color: var(--color-terracota-dark);
+  border-color: var(--color-terracota-dark);
 }
 
 .analisis-btn-reporte:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Las tarjetas de KPI y la barra de progreso viven en
    components/shared/TarjetaKpi.css (las comparte con el Panel). */
 
 .analisis-kpis {
-    display: flex;
-    flex-wrap: wrap;
-    border-top: 1px solid var(--color-linea);
-    border-bottom: 1px solid var(--color-linea);
-    padding: var(--space-4) 0;
+  display: flex;
+  flex-wrap: wrap;
+  border-top: 1px solid var(--color-linea);
+  border-bottom: 1px solid var(--color-linea);
+  padding: var(--space-4) 0;
 }
 
 .analisis-kpis > * {
-    flex: 1 1 220px;
-    padding: 0 var(--space-6);
-    border-left: 1px solid var(--color-linea);
+  flex: 1 1 220px;
+  padding: 0 var(--space-6);
+  border-left: 1px solid var(--color-linea);
 }
 
 .analisis-kpis > *:first-child {
-    padding-left: 0;
-    border-left: none;
+  padding-left: 0;
+  border-left: none;
 }
 
 @media (max-width: 640px) {
-    .analisis-kpis {
-        flex-direction: column;
-        gap: var(--space-4);
-    }
+  .analisis-kpis {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
 
-    .analisis-kpis > * {
-        flex-basis: auto;
-        padding: 0;
-        border-left: none;
-    }
+  .analisis-kpis > * {
+    flex-basis: auto;
+    padding: 0;
+    border-left: none;
+  }
 }
 
 /* --- Secciones --- */
 
 .analisis-seccion {
-    padding-top: var(--space-6);
-    border-top: 1px solid var(--color-linea);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-linea);
 }
 
 .analisis-fila {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: var(--space-8);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: var(--space-8);
 }
 
 .analisis-kpis--notas {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--space-6);
-    border: none;
-    padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-6);
+  border: none;
+  padding: 0;
 }
 
 .analisis-kpis--notas > * {
-    padding: var(--space-4);
-    border: 1px solid var(--color-linea);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-base-1);
+  padding: var(--space-4);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-base-1);
 }
 
 .analisis-seccion-titulo {
-    font-family: var(--font-display);
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--color-tinta);
-    margin: 0 0 2px;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--color-tinta);
+  margin: 0 0 2px;
 }
 
 .analisis-subtitulo {
-    font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--color-tinta);
-    margin: var(--space-6) 0 var(--space-3);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-tinta);
+  margin: var(--space-6) 0 var(--space-3);
 }
 
 .analisis-seccion-descripcion {
-    font-size: 0.82rem;
-    color: var(--color-tinta-muted);
-    margin: 0 0 var(--space-4);
+  font-size: 0.82rem;
+  color: var(--color-tinta-muted);
+  margin: 0 0 var(--space-4);
 }
 
 .analisis-vacio {
-    font-size: 0.88rem;
-    color: var(--color-tinta-muted);
-    margin: 8px 0;
+  font-size: 0.88rem;
+  color: var(--color-tinta-muted);
+  margin: 8px 0;
 }
 
 /* --- Tooltip de los gráficos --- */
 
 .analisis-tooltip {
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    background-color: var(--color-superficie);
-    border: 1px solid var(--color-linea);
-    border-radius: var(--radius-sm);
-    padding: 8px 12px;
-    box-shadow: var(--shadow-overlay);
-    font-size: 0.82rem;
-    color: var(--color-tinta);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  box-shadow: var(--shadow-overlay);
+  font-size: 0.82rem;
+  color: var(--color-tinta);
 }
 
 .analisis-tooltip strong {
-    color: var(--color-tinta);
-    font-family: var(--font-display);
+  color: var(--color-tinta);
+  font-family: var(--font-display);
 }
 
 .analisis-tooltip-pct {
-    color: var(--color-tinta-muted);
+  color: var(--color-tinta-muted);
 }
 
 /* --- Tortas y leyendas --- */
 
 .analisis-torta {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .analisis-leyenda {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .analisis-leyenda--horizontal {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 4px 18px;
-    margin-top: 10px;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin-top: 10px;
 }
 
 .analisis-leyenda-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.82rem;
-    color: var(--color-tinta);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: var(--color-tinta);
 }
 
 .analisis-leyenda-punto {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    flex-shrink: 0;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .analisis-leyenda-nombre {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .analisis-leyenda-pct {
-    font-weight: 700;
-    color: var(--color-tinta);
-    font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--color-tinta);
+  font-variant-numeric: tabular-nums;
 }
 
 .analisis-leyenda-monto {
-    color: var(--color-tinta-muted);
-    font-variant-numeric: tabular-nums;
+  color: var(--color-tinta-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .analisis-leyenda-tipos {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 20px;
-    margin-bottom: var(--space-3);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  margin-bottom: var(--space-3);
 }
 
 .analisis-leyenda-tipo {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.82rem;
-    color: var(--color-tinta);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--color-tinta);
 }
 
 .analisis-leyenda-tipo strong {
-    color: var(--color-tinta);
-    font-variant-numeric: tabular-nums;
+  color: var(--color-tinta);
+  font-variant-numeric: tabular-nums;
 }
 
 /* --- Treemap --- */
 
 .analisis-treemap-nombre {
-    fill: var(--color-superficie);
-    font-size: 0.75rem;
-    font-weight: 600;
+  fill: var(--color-superficie);
+  font-size: 0.75rem;
+  font-weight: 600;
 }
 
 .analisis-treemap-monto {
-    fill: var(--color-superficie);
-    font-size: 0.72rem;
-    opacity: 0.85;
+  fill: var(--color-superficie);
+  font-size: 0.72rem;
+  opacity: 0.85;
 }
 
 /* --- Tabla --- */
 
 .analisis-tabla {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: var(--space-4);
-    font-size: 0.85rem;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: var(--space-4);
+  font-size: 0.85rem;
 }
 
 .analisis-tabla th,
 .analisis-tabla td {
-    text-align: left;
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--color-linea);
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--color-linea);
 }
 
 .analisis-tabla th {
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--color-tinta-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-tinta-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
 .analisis-tabla td {
-    color: var(--color-tinta);
-    font-variant-numeric: tabular-nums;
+  color: var(--color-tinta);
+  font-variant-numeric: tabular-nums;
 }
 
 .analisis-tabla td:last-child,
 .analisis-tabla th:last-child {
-    text-align: right;
+  text-align: right;
 }
 
 /* --- Avance de obra --- */
 
 .analisis-avance-barra {
-    display: flex;
-    height: 12px;
-    border-radius: var(--radius-pill);
-    overflow: hidden;
-    background-color: var(--color-base-2);
-    gap: 2px;
+  display: flex;
+  height: 12px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background-color: var(--color-base-2);
+  gap: 2px;
 }
 
 .analisis-avance-segmento {
-    height: 100%;
+  height: 100%;
 }
 
 /* --- Ranking de proveedores --- */
 
 .analisis-ranking {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .analisis-ranking-item {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 0.85rem;
-    color: var(--color-tinta);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--color-tinta);
 }
 
 .analisis-ranking-puesto {
-    width: 20px;
-    height: 20px;
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    background-color: var(--color-base-2);
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--color-musgo-dark);
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: var(--color-base-2);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-musgo-dark);
 }
 
 .analisis-ranking-nombre {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .analisis-ranking-monto {
-    font-weight: 600;
-    color: var(--color-tinta);
-    font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-tinta);
+  font-variant-numeric: tabular-nums;
 }

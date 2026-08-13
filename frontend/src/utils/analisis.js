@@ -63,7 +63,9 @@ function comprasPorTipoYProducto(compras, productos) {
     (compra.detalle ?? []).forEach((linea) => {
       const producto = productos.find((p) => p.id === linea.producto_id);
       const tipo = producto?.tipo ?? "otros";
-      const nombreProducto = producto ? `${producto.marca} ${producto.modelo}` : "Producto eliminado";
+      const nombreProducto = producto
+        ? `${producto.marca} ${producto.modelo}`
+        : "Producto eliminado";
       const monto = linea.cantidad * linea.precio_unitario;
 
       porTipo[tipo] = porTipo[tipo] ?? {};
@@ -121,8 +123,14 @@ function egresosPorFase(fases, gastos, compras) {
   const filas = fases.map((fase) => ({
     faseId: fase.id,
     nombre: fase.nombre,
-    gastos: sumar(gastos.filter((g) => g.fase_id === fase.id), (g) => g.monto),
-    compras: sumar(compras.filter((c) => c.fase_id === fase.id), (c) => c.precio_total),
+    gastos: sumar(
+      gastos.filter((g) => g.fase_id === fase.id),
+      (g) => g.monto
+    ),
+    compras: sumar(
+      compras.filter((c) => c.fase_id === fase.id),
+      (c) => c.precio_total
+    ),
   }));
 
   const gastosSinFase = gastos.filter((g) => !g.fase_id);
@@ -160,7 +168,10 @@ function cobradoPorFase(fases, compras, totalGastos, totalCobrado, totalEgresos)
   fases
     .map((fase) => ({
       nombre: `Comprado en ${fase.nombre}`,
-      monto: sumar(compras.filter((c) => c.fase_id === fase.id), (c) => c.precio_total),
+      monto: sumar(
+        compras.filter((c) => c.fase_id === fase.id),
+        (c) => c.precio_total
+      ),
     }))
     .filter((fila) => fila.monto > 0)
     .sort((a, b) => b.monto - a.monto)
@@ -176,7 +187,8 @@ function cobradoPorFase(fases, compras, totalGastos, totalCobrado, totalEgresos)
 function topProveedores(compras, proveedores, limite = 5) {
   const acumulado = {};
   compras.forEach((compra) => {
-    const nombre = proveedores.find((p) => p.id === compra.proveedor_id)?.nombre ?? "Proveedor eliminado";
+    const nombre =
+      proveedores.find((p) => p.id === compra.proveedor_id)?.nombre ?? "Proveedor eliminado";
     acumulado[nombre] = (acumulado[nombre] ?? 0) + compra.precio_total;
   });
   return aLista(acumulado)
@@ -280,12 +292,23 @@ export function calcularAnalisis({
     cobradoPorFase: cobradoPorFase(fases, compras, totalGastos, totalCobrado, totalEgresos),
     gastosSinComprobante: {
       cantidad: gastos.filter((g) => !g.comprobantes?.length).length,
-      monto: sumar(gastos.filter((g) => !g.comprobantes?.length), (g) => g.monto),
+      monto: sumar(
+        gastos.filter((g) => !g.comprobantes?.length),
+        (g) => g.monto
+      ),
     },
     topProveedores: topProveedores(compras, proveedores),
     notas: {
-      compras: { credito: notasCreditoCompras, debito: notasDebitoCompras, cantidad: notasCompra.length },
-      cobros: { credito: notasCreditoCobros, debito: notasDebitoCobros, cantidad: notasCobro.length },
+      compras: {
+        credito: notasCreditoCompras,
+        debito: notasDebitoCompras,
+        cantidad: notasCompra.length,
+      },
+      cobros: {
+        credito: notasCreditoCobros,
+        debito: notasDebitoCobros,
+        cantidad: notasCobro.length,
+      },
     },
   };
 }

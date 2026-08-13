@@ -7,12 +7,12 @@ import "./Cargando.css";
  * pantalla.
  */
 export function Cargando({ texto = "Cargando..." }) {
-    return (
-        <div className="cargando">
-            <div className="cargando-barra" />
-            <span className="cargando-texto">{texto}</span>
-        </div>
-    );
+  return (
+    <div className="cargando">
+      <div className="cargando-barra" />
+      <span className="cargando-texto">{texto}</span>
+    </div>
+  );
 }
 
 export default Cargando;

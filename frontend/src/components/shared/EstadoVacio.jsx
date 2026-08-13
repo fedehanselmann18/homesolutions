@@ -10,12 +10,12 @@ import "./EstadoVacio.css";
  * no hay proyectos cargados"). Default: fila chica dentro de una sección.
  */
 export function EstadoVacio({ mensaje, grande }) {
-    return (
-        <div className={`estado-vacio ${grande ? "estado-vacio--grande" : ""}`}>
-            <img src={isoOliva} alt="" className="estado-vacio-icono" />
-            <p className="estado-vacio-mensaje">{mensaje}</p>
-        </div>
-    );
+  return (
+    <div className={`estado-vacio ${grande ? "estado-vacio--grande" : ""}`}>
+      <img src={isoOliva} alt="" className="estado-vacio-icono" />
+      <p className="estado-vacio-mensaje">{mensaje}</p>
+    </div>
+  );
 }
 
 export default EstadoVacio;

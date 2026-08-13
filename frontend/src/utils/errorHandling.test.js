@@ -19,7 +19,9 @@ describe("obtenerMensajeError", () => {
 
   it("da el mensaje de sin conexión cuando no hay response (error de red)", () => {
     const error = { message: "Network Error" };
-    expect(obtenerMensajeError(error)).toBe("No se pudo conectar con el servidor. Revisá tu conexión.");
+    expect(obtenerMensajeError(error)).toBe(
+      "No se pudo conectar con el servidor. Revisá tu conexión."
+    );
   });
 
   it("usa el fallback de 401 cuando no hay detail usable", () => {
@@ -39,7 +41,9 @@ describe("obtenerMensajeError", () => {
 
   it("usa el fallback de 429 cuando no hay detail usable", () => {
     const error = { response: { status: 429, data: {} } };
-    expect(obtenerMensajeError(error)).toBe("Demasiados intentos. Esperá un momento y probá de nuevo.");
+    expect(obtenerMensajeError(error)).toBe(
+      "Demasiados intentos. Esperá un momento y probá de nuevo."
+    );
   });
 
   it("usa el fallback genérico para un 500 sin detail", () => {

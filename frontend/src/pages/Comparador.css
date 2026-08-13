@@ -1,218 +1,218 @@
 .comparador-container {
-    font-family: var(--font-ui);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-8);
+  font-family: var(--font-ui);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
 }
 
 .comparador-header {
-    padding-bottom: var(--space-6);
-    border-bottom: 1px solid var(--color-linea);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-linea);
 }
 
 .comparador-header__titulo {
-    font-family: var(--font-display);
-    font-size: 2rem;
-    font-weight: 600;
-    color: var(--color-tinta);
-    margin: 0;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--color-tinta);
+  margin: 0;
 }
 
 .comparador-header__subtitulo {
-    font-size: 0.9rem;
-    color: var(--color-tinta-muted);
-    margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: var(--color-tinta-muted);
+  margin: 4px 0 0;
 }
 
 .comparador-seccion-titulo {
-    margin: 0 0 var(--space-4);
-    font-family: var(--font-display);
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: var(--color-tinta);
+  margin: 0 0 var(--space-4);
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--color-tinta);
 }
 
 .comparador-feedback {
-    color: var(--color-tinta-muted);
-    font-size: 0.9rem;
-    margin: 0;
+  color: var(--color-tinta-muted);
+  font-size: 0.9rem;
+  margin: 0;
 }
 
 /* --- Grupos "mismo producto" --- */
 
 .comparador-grupos {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: var(--space-4);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-4);
 }
 
 .comparador-grupo {
-    border: 1px solid var(--color-linea);
-    border-radius: var(--radius-sm);
-    padding: var(--space-4);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
 }
 
 .comparador-grupo-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: var(--space-3);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .comparador-grupo-nombre {
-    margin: 0 0 6px;
-    font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--color-tinta);
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-tinta);
 }
 
 .comparador-grupo-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
 }
 
 .comparador-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: var(--radius-pill);
-    white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
 }
 
 .comparador-chip {
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--color-tinta-muted);
-    background-color: var(--color-base-2);
-    padding: 2px 8px;
-    border-radius: var(--radius-pill);
-    white-space: nowrap;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-tinta-muted);
+  background-color: var(--color-base-2);
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
 }
 
 .comparador-ahorro {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--color-musgo-dark);
-    background-color: var(--color-musgo-tint);
-    padding: 4px 10px;
-    border-radius: var(--radius-pill);
-    white-space: nowrap;
-    flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-musgo-dark);
+  background-color: var(--color-musgo-tint);
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .comparador-tabla {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem;
-    font-variant-numeric: tabular-nums;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
 }
 
 .comparador-tabla th {
-    text-align: left;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--color-tinta-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    padding-bottom: 6px;
-    border-bottom: 1px solid var(--color-linea);
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-tinta-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--color-linea);
 }
 
 .comparador-tabla td {
-    padding: 8px 8px 8px 0;
-    border-bottom: 1px solid var(--color-linea);
-    color: var(--color-tinta);
+  padding: 8px 8px 8px 0;
+  border-bottom: 1px solid var(--color-linea);
+  color: var(--color-tinta);
 }
 
 .comparador-tabla tr:last-child td {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .comparador-fila-mejor td {
-    color: var(--color-tinta);
-    font-weight: 700;
+  color: var(--color-tinta);
+  font-weight: 700;
 }
 
 .comparador-tag-mejor {
-    margin-left: 8px;
-    font-size: 0.66rem;
-    font-weight: 700;
-    color: var(--color-musgo-dark);
-    background-color: var(--color-musgo-tint);
-    padding: 2px 7px;
-    border-radius: var(--radius-pill);
-    vertical-align: middle;
+  margin-left: 8px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--color-musgo-dark);
+  background-color: var(--color-musgo-tint);
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  vertical-align: middle;
 }
 
 /* --- Explorar por categoría --- */
 
 .comparador-filtros {
-    display: flex;
-    gap: var(--space-3);
-    margin-bottom: var(--space-4);
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
 .comparador-buscador {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: var(--color-superficie);
-    border: 1px solid var(--color-linea);
-    border-radius: var(--radius-sm);
-    padding: 9px 14px;
-    color: var(--color-tinta-muted);
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  padding: 9px 14px;
+  color: var(--color-tinta-muted);
 }
 
 .comparador-buscador input {
-    flex: 1;
-    border: none;
-    outline: none;
-    font-family: var(--font-ui);
-    font-size: 0.9rem;
-    color: var(--color-tinta);
-    background: transparent;
+  flex: 1;
+  border: none;
+  outline: none;
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  color: var(--color-tinta);
+  background: transparent;
 }
 
 .comparador-filtros select {
-    font-family: var(--font-ui);
-    font-size: 0.9rem;
-    padding: 9px 12px;
-    border: 1px solid var(--color-linea);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-superficie);
-    color: var(--color-tinta);
-    min-width: 180px;
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  padding: 9px 12px;
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-superficie);
+  color: var(--color-tinta);
+  min-width: 180px;
 }
 
 .comparador-tabla-wrap {
-    overflow-x: auto;
+  overflow-x: auto;
 }
 
 .comparador-tabla--ancha th,
 .comparador-tabla--ancha td {
-    white-space: nowrap;
+  white-space: nowrap;
 }
 
 @media (max-width: 600px) {
-    .comparador-filtros {
-        flex-direction: column;
-    }
+  .comparador-filtros {
+    flex-direction: column;
+  }
 
-    .comparador-filtros select {
-        min-width: 0;
-    }
+  .comparador-filtros select {
+    min-width: 0;
+  }
 
-    .comparador-grupos {
-        grid-template-columns: 1fr;
-    }
+  .comparador-grupos {
+    grid-template-columns: 1fr;
+  }
 }

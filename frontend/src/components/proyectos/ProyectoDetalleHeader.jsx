@@ -1,6 +1,6 @@
 // components/ProyectoDetalleHeader.jsx
 import { MapPin, CalendarDays, Wallet } from "lucide-react";
-import './ProyectoDetalleHeader.css';
+import "./ProyectoDetalleHeader.css";
 import { formatearFechaLarga } from "../../utils/fechaUtils";
 import { formatearMoneda } from "../../utils/formatUtils";
 import { getEstado } from "../../constants/estados";
@@ -21,7 +21,9 @@ function ProyectoDetalleHeader({ proyecto }) {
             borderColor: `color-mix(in srgb, ${estado.color} 40%, white)`,
           }}
         >
-          {IconoEstado && <IconoEstado size={13} strokeWidth={2.25} className="proyecto-header__estado-icono" />}
+          {IconoEstado && (
+            <IconoEstado size={13} strokeWidth={2.25} className="proyecto-header__estado-icono" />
+          )}
           {estado.label}
         </span>
       </div>

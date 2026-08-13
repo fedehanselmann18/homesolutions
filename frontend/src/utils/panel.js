@@ -40,22 +40,57 @@ function armarActividad(resumenes) {
     const comun = { proyectoId: proyecto.id, proyectoNombre: proyecto.nombre };
     cobrosDelProyecto.forEach((c) =>
       // monto_neto (no el bruto): ya descuenta/suma las notas de crédito/débito del cobro.
-      movimientos.push({ ...comun, id: c.id, tipo: "cobro", descripcion: c.descripcion, monto: c.monto_neto ?? c.monto, fecha: c.fecha })
+      movimientos.push({
+        ...comun,
+        id: c.id,
+        tipo: "cobro",
+        descripcion: c.descripcion,
+        monto: c.monto_neto ?? c.monto,
+        fecha: c.fecha,
+      })
     );
     gastosDelProyecto.forEach((g) =>
-      movimientos.push({ ...comun, id: g.id, tipo: "gasto", descripcion: g.descripcion, monto: g.monto, fecha: g.fecha })
+      movimientos.push({
+        ...comun,
+        id: g.id,
+        tipo: "gasto",
+        descripcion: g.descripcion,
+        monto: g.monto,
+        fecha: g.fecha,
+      })
     );
     comprasDelProyecto.forEach((c) =>
-      movimientos.push({ ...comun, id: c.id, tipo: "compra", descripcion: c.descripcion, monto: c.precio_total, fecha: c.fecha })
+      movimientos.push({
+        ...comun,
+        id: c.id,
+        tipo: "compra",
+        descripcion: c.descripcion,
+        monto: c.precio_total,
+        fecha: c.fecha,
+      })
     );
     // Las notas de crédito/débito son movimientos de plata por sí mismas
     // (antes no aparecían acá aunque ya afectaban precio_total/monto_neto) --
     // tipo queda como "nota_credito"/"nota_debito" (ver Dashboard.jsx TIPOS_MOVIMIENTO).
     notasDeCompras(comprasDelProyecto).forEach((n) =>
-      movimientos.push({ ...comun, id: n.id, tipo: n.tipo, descripcion: n.descripcion, monto: n.monto, fecha: n.fecha })
+      movimientos.push({
+        ...comun,
+        id: n.id,
+        tipo: n.tipo,
+        descripcion: n.descripcion,
+        monto: n.monto,
+        fecha: n.fecha,
+      })
     );
     notasDeCobros(cobrosDelProyecto).forEach((n) =>
-      movimientos.push({ ...comun, id: n.id, tipo: n.tipo, descripcion: n.descripcion, monto: n.monto, fecha: n.fecha })
+      movimientos.push({
+        ...comun,
+        id: n.id,
+        tipo: n.tipo,
+        descripcion: n.descripcion,
+        monto: n.monto,
+        fecha: n.fecha,
+      })
     );
   });
 
@@ -176,7 +211,9 @@ export function calcularPanel({
     },
     proyectosActivos: enCurso
       .map(({ proyecto, analisis, fasesDelProyecto, comprasDelProyecto }) => {
-        const cerradas = fasesDelProyecto.filter((f) => ESTADOS_FASE_CERRADA.includes(f.estado)).length;
+        const cerradas = fasesDelProyecto.filter((f) =>
+          ESTADOS_FASE_CERRADA.includes(f.estado)
+        ).length;
         const impagas = comprasDelProyecto.filter(esCompraImpaga);
         return {
           id: proyecto.id,

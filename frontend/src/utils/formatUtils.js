@@ -1,6 +1,10 @@
 // utils/formatUtils.js
 export function formatearMoneda(valor) {
-  return valor.toLocaleString("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 0 });
+  return valor.toLocaleString("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    minimumFractionDigits: 0,
+  });
 }
 
 export function formatearEstado(estado) {

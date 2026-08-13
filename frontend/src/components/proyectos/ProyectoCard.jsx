@@ -72,7 +72,9 @@ export function ProyectoCard({ proyecto, onEditar, onEliminar }) {
             borderColor: `color-mix(in srgb, ${estado.color} 40%, white)`,
           }}
         >
-          {IconoEstado && <IconoEstado size={12} strokeWidth={2.25} className="proyecto-card__estado-icono" />}
+          {IconoEstado && (
+            <IconoEstado size={12} strokeWidth={2.25} className="proyecto-card__estado-icono" />
+          )}
           {estado.label}
         </div>
       </div>

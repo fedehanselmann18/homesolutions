@@ -3,175 +3,175 @@
    alerta viven en components/shared/TarjetaAlerta.css */
 
 .seguimiento {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-8);
-    font-family: var(--font-ui);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  font-family: var(--font-ui);
 }
 
 .seguimiento-resumen {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-3);
-    padding: var(--space-4) 0;
-    border-top: 1px solid var(--color-linea);
-    border-bottom: 1px solid var(--color-linea);
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding: var(--space-4) 0;
+  border-top: 1px solid var(--color-linea);
+  border-bottom: 1px solid var(--color-linea);
 }
 
 .seguimiento-resumen-valor {
-    font-family: var(--font-display);
-    font-size: 2rem;
-    font-weight: 600;
-    color: var(--color-tinta);
-    line-height: 1;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--color-tinta);
+  line-height: 1;
 }
 
 .seguimiento-resumen-texto {
-    font-size: 0.9rem;
-    color: var(--color-tinta-muted);
+  font-size: 0.9rem;
+  color: var(--color-tinta-muted);
 }
 
 .seguimiento-seccion {
-    padding-top: var(--space-6);
-    border-top: 1px solid var(--color-linea);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-linea);
 }
 
 .seguimiento-seccion-header {
-    margin-bottom: var(--space-3);
+  margin-bottom: var(--space-3);
 }
 
 .seguimiento-seccion-titulo {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    font-family: var(--font-display);
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: var(--color-oxido);
-    margin: 0 0 2px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-oxido);
+  margin: 0 0 2px;
 }
 
 .seguimiento-seccion-icono {
-    flex-shrink: 0;
-    color: var(--color-oxido);
+  flex-shrink: 0;
+  color: var(--color-oxido);
 }
 
 .seguimiento-contador {
-    font-family: var(--font-ui);
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--color-tinta-muted);
-    background-color: var(--color-base-2);
-    padding: 1px 8px;
-    border-radius: var(--radius-pill);
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--color-tinta-muted);
+  background-color: var(--color-base-2);
+  padding: 1px 8px;
+  border-radius: var(--radius-pill);
 }
 
 .seguimiento-seccion-descripcion {
-    font-size: 0.82rem;
-    color: var(--color-tinta-muted);
-    margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-tinta-muted);
+  margin: 0;
 }
 
 .seguimiento-cobranza {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: var(--space-6);
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-6);
 }
 
 .seguimiento-lista {
-    display: flex;
-    flex-direction: column;
-    border-top: 1px solid var(--color-linea);
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--color-linea);
 }
 
 .seguimiento-vacio {
-    font-size: 0.85rem;
-    color: var(--color-tinta-muted);
-    margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-tinta-muted);
+  margin: 0;
 }
 
 /* --- Tablero de compras: una columna por estado --- */
 
 .seguimiento-tablero {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-6);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-6);
 }
 
 .seguimiento-columna {
-    min-width: 0;
+  min-width: 0;
 }
 
 @media (max-width: 720px) {
-    .seguimiento-tablero {
-        grid-template-columns: 1fr;
-    }
+  .seguimiento-tablero {
+    grid-template-columns: 1fr;
+  }
 }
 
 .seguimiento-columna-titulo {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    font-family: var(--font-ui);
-    font-size: 0.78rem;
-    font-weight: 700;
-    color: var(--color-tinta-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    margin: 0 0 var(--space-3);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--color-tinta-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin: 0 0 var(--space-3);
 }
 
 .seguimiento-columna-lista {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
 }
 
 .seguimiento-alerta-columna {
-    font-size: 0.78rem;
-    font-weight: 600;
-    color: var(--color-oxido);
-    margin: var(--space-3) 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-oxido);
+  margin: var(--space-3) 0 0;
 }
 
 /* --- Tabla de deuda por proveedor --- */
 
 .seguimiento-tabla {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.85rem;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
 }
 
 .seguimiento-tabla th {
-    text-align: left;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--color-tinta-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    padding-bottom: 8px;
-    border-bottom: 1px solid var(--color-linea);
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-tinta-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--color-linea);
 }
 
 .seguimiento-tabla td {
-    padding: 9px 0;
-    border-bottom: 1px solid var(--color-linea);
-    color: var(--color-tinta);
+  padding: 9px 0;
+  border-bottom: 1px solid var(--color-linea);
+  color: var(--color-tinta);
 }
 
 .seguimiento-tabla th:last-child,
 .seguimiento-tabla td:last-child {
-    text-align: right;
+  text-align: right;
 }
 
 .seguimiento-tabla-monto {
-    font-variant-numeric: tabular-nums;
-    font-weight: 600;
-    color: var(--color-tinta);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  color: var(--color-tinta);
 }
 
 .seguimiento-tabla tfoot td {
-    border-bottom: none;
-    font-weight: 700;
-    color: var(--color-tinta);
+  border-bottom: none;
+  font-weight: 700;
+  color: var(--color-tinta);
 }

@@ -10,7 +10,12 @@ import {
 describe("notasDeCompras", () => {
   it("aplana las notas de varias compras y agrega la referencia de origen", () => {
     const compras = [
-      { id: "c1", descripcion: "Compra 1", fecha: "2026-01-01", notas: [{ tipo: "nota_credito", monto: 100 }] },
+      {
+        id: "c1",
+        descripcion: "Compra 1",
+        fecha: "2026-01-01",
+        notas: [{ tipo: "nota_credito", monto: 100 }],
+      },
       { id: "c2", descripcion: "Compra 2", fecha: "2026-02-01", notas: [] },
     ];
     const resultado = notasDeCompras(compras);
@@ -30,7 +35,14 @@ describe("notasDeCompras", () => {
 
 describe("notasDeCobros", () => {
   it("aplana notas de cobros con su origen", () => {
-    const cobros = [{ id: "co1", descripcion: "Cobro 1", fecha: "2026-01-01", notas: [{ tipo: "nota_debito", monto: 50 }] }];
+    const cobros = [
+      {
+        id: "co1",
+        descripcion: "Cobro 1",
+        fecha: "2026-01-01",
+        notas: [{ tipo: "nota_debito", monto: 50 }],
+      },
+    ];
     const resultado = notasDeCobros(cobros);
     expect(resultado[0]).toMatchObject({ origenTipo: "cobro", origenId: "co1" });
   });

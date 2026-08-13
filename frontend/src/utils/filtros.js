@@ -66,8 +66,18 @@ export function filtrarCompras(compras, filtros = FILTROS_VACIOS) {
     if (!coincideFecha(c.fecha, filtros.desde, filtros.hasta)) return false;
     if (filtros.tipoFactura && c.tipo_factura !== filtros.tipoFactura) return false;
     if (!coincideNotas(c.notas, filtros.notas)) return false;
-    if (filtros.estadoPago && filtros.estadoPago !== "todos" && c.estado_pago !== filtros.estadoPago) return false;
-    if (filtros.estadoEnvio && filtros.estadoEnvio !== "todos" && c.estado_envio !== filtros.estadoEnvio) return false;
+    if (
+      filtros.estadoPago &&
+      filtros.estadoPago !== "todos" &&
+      c.estado_pago !== filtros.estadoPago
+    )
+      return false;
+    if (
+      filtros.estadoEnvio &&
+      filtros.estadoEnvio !== "todos" &&
+      c.estado_envio !== filtros.estadoEnvio
+    )
+      return false;
     return true;
   });
 }
@@ -95,11 +105,11 @@ export function hayFiltrosActivos(filtros) {
   if (!filtros) return false;
   return Boolean(
     filtros.desde ||
-      filtros.hasta ||
-      filtros.tipoFactura ||
-      (filtros.notas && filtros.notas !== "todas") ||
-      (filtros.estadoPago && filtros.estadoPago !== "todos") ||
-      (filtros.estadoEnvio && filtros.estadoEnvio !== "todos") ||
-      (filtros.comprobante && filtros.comprobante !== "todos")
+    filtros.hasta ||
+    filtros.tipoFactura ||
+    (filtros.notas && filtros.notas !== "todas") ||
+    (filtros.estadoPago && filtros.estadoPago !== "todos") ||
+    (filtros.estadoEnvio && filtros.estadoEnvio !== "todos") ||
+    (filtros.comprobante && filtros.comprobante !== "todos")
   );
 }

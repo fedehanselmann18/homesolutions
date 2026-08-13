@@ -1,9 +1,14 @@
 // Cálculos derivados de Proveedor para el listado y el detalle. Se separa acá
 // para que el listado (tarjetas) y el detalle usen siempre el mismo criterio.
 import { esCompraImpaga } from "./seguimiento";
-import { notasDeCompras, totalNotasCredito as sumarNotasCredito, totalNotasDebito as sumarNotasDebito } from "./notas";
+import {
+  notasDeCompras,
+  totalNotasCredito as sumarNotasCredito,
+  totalNotasDebito as sumarNotasDebito,
+} from "./notas";
 
-const sumar = (items, obtenerMonto) => items.reduce((acc, item) => acc + (obtenerMonto(item) || 0), 0);
+const sumar = (items, obtenerMonto) =>
+  items.reduce((acc, item) => acc + (obtenerMonto(item) || 0), 0);
 
 /** Categoría más frecuente entre los productos del proveedor; si no tiene
  * categorías cargadas, cae al tipo (Equipo/Materiales/Mano de obra) más

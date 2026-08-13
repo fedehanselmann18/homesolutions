@@ -1,194 +1,199 @@
 /* ProveedorCard.css */
 
 .proveedor-card {
-    position: relative;
-    background-color: var(--color-superficie);
-    border: 1px solid var(--color-linea);
-    border-radius: var(--radius-sm);
-    padding: var(--space-4);
-    font-family: var(--font-ui);
-    cursor: pointer;
-    transition: border-color 0.15s ease, background-color 0.15s ease;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+  position: relative;
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .proveedor-card:hover {
-    border-color: var(--color-tinta);
-    background-color: var(--color-base-1);
+  border-color: var(--color-tinta);
+  background-color: var(--color-base-1);
 }
 
 .proveedor-card:focus-visible {
-    outline: 2px solid var(--color-terracota);
-    outline-offset: -2px;
+  outline: 2px solid var(--color-terracota);
+  outline-offset: -2px;
 }
 
 .proveedor-card__nombre {
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 1.05rem;
-    margin: 0;
-    color: var(--color-tinta);
-    padding-right: 60px;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  margin: 0;
+  color: var(--color-tinta);
+  padding-right: 60px;
 }
 
 .proveedor-card__chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .proveedor-card__rubro {
-    width: fit-content;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--color-musgo-dark);
-    background-color: var(--color-musgo-tint);
-    padding: 3px 10px;
-    border-radius: var(--radius-pill);
+  width: fit-content;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-musgo-dark);
+  background-color: var(--color-musgo-tint);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
 }
 
 .proveedor-card__badge-nc {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    width: fit-content;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--color-oxido);
-    background-color: var(--color-oxido-tint);
-    padding: 3px 10px;
-    border-radius: var(--radius-pill);
-    white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-oxido);
+  background-color: var(--color-oxido-tint);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
 }
 
 .proveedor-card__badge-nd {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    width: fit-content;
-    font-size: 0.72rem;
-    font-weight: 600;
-    color: var(--color-terracota);
-    background-color: var(--color-terracota-tint);
-    padding: 3px 10px;
-    border-radius: var(--radius-pill);
-    white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-terracota);
+  background-color: var(--color-terracota-tint);
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
 }
 
 .proveedor-card__contacto {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    font-size: 0.8rem;
-    color: var(--color-tinta-muted);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--color-tinta-muted);
 }
 
 .proveedor-card__contacto span {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .proveedor-card__contacto svg {
-    flex-shrink: 0;
-    color: var(--color-tinta-muted);
+  flex-shrink: 0;
+  color: var(--color-tinta-muted);
 }
 
 .proveedor-card__productos {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.8rem;
-    color: var(--color-tinta-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--color-tinta-muted);
 }
 
 .proveedor-card__productos svg {
-    color: var(--color-tinta-muted);
-    flex-shrink: 0;
+  color: var(--color-tinta-muted);
+  flex-shrink: 0;
 }
 
 .proveedor-card__footer {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-3);
-    border-top: 1px solid var(--color-linea);
-    padding-top: 10px;
-    margin-top: 2px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  border-top: 1px solid var(--color-linea);
+  padding-top: 10px;
+  margin-top: 2px;
 }
 
 .proveedor-card__metrica {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
 }
 
 .proveedor-card__metrica-label {
-    font-size: 0.68rem;
-    font-weight: 600;
-    color: var(--color-tinta-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--color-tinta-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .proveedor-card__metrica-valor {
-    font-size: 0.9rem;
-    font-weight: 700;
-    color: var(--color-tinta);
-    font-variant-numeric: tabular-nums;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--color-tinta);
+  font-variant-numeric: tabular-nums;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .proveedor-card__acciones-flotantes {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    display: flex;
-    gap: 4px;
-    opacity: 0;
-    transition: opacity 0.15s ease;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 .proveedor-card:hover .proveedor-card__acciones-flotantes,
 .proveedor-card:focus-within .proveedor-card__acciones-flotantes {
-    opacity: 1;
+  opacity: 1;
 }
 
 .proveedor-card__acciones-flotantes button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    border: 1px solid var(--color-linea);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-superficie);
-    color: var(--color-tinta-muted);
-    cursor: pointer;
-    transition: background-color 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-superficie);
+  color: var(--color-tinta-muted);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .proveedor-card__acciones-flotantes button:hover {
-    background-color: var(--color-base-2);
-    color: var(--color-tinta);
-    border-color: var(--color-tinta);
+  background-color: var(--color-base-2);
+  color: var(--color-tinta);
+  border-color: var(--color-tinta);
 }
 
 .proveedor-card__btn-eliminar {
-    color: var(--color-oxido) !important;
-    border-color: var(--color-oxido-tint) !important;
+  color: var(--color-oxido) !important;
+  border-color: var(--color-oxido-tint) !important;
 }
 
 .proveedor-card__btn-eliminar:hover {
-    background-color: var(--color-oxido-tint) !important;
-    border-color: var(--color-oxido) !important;
-    color: var(--color-oxido) !important;
+  background-color: var(--color-oxido-tint) !important;
+  border-color: var(--color-oxido) !important;
+  color: var(--color-oxido) !important;
 }

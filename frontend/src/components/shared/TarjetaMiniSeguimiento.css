@@ -1,104 +1,106 @@
 .mini-seg {
-    display: block;
-    width: 100%;
-    box-sizing: border-box;
-    text-align: left;
-    background-color: var(--color-superficie);
-    border: 1px solid var(--color-linea);
-    border-left: 3px solid transparent;
-    border-radius: var(--radius-sm);
-    padding: 10px 12px;
-    font-family: var(--font-ui);
-    cursor: pointer;
-    transition: border-color 0.15s ease, background-color 0.15s ease;
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: left;
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-linea);
+  border-left: 3px solid transparent;
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .mini-seg:hover {
-    border-color: var(--color-terracota);
-    background-color: var(--color-base-1);
+  border-color: var(--color-terracota);
+  background-color: var(--color-base-1);
 }
 
 .mini-seg-titulo {
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--color-tinta);
-    margin: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-tinta);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mini-seg-subtitulo {
-    font-size: 0.74rem;
-    color: var(--color-tinta-muted);
-    margin: 2px 0 8px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  font-size: 0.74rem;
+  color: var(--color-tinta-muted);
+  margin: 2px 0 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mini-seg-productos {
-    font-size: 0.74rem;
-    color: var(--color-tinta-muted);
-    margin: 2px 0 6px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  font-size: 0.74rem;
+  color: var(--color-tinta-muted);
+  margin: 2px 0 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .mini-seg-meta {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 8px;
 }
 
 .mini-seg-fecha {
-    font-size: 0.7rem;
-    color: var(--color-tinta-muted);
-    white-space: nowrap;
+  font-size: 0.7rem;
+  color: var(--color-tinta-muted);
+  white-space: nowrap;
 }
 
 .mini-seg-badges {
-    display: flex;
-    gap: 4px;
-    flex-wrap: wrap;
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 
 .mini-seg-badge {
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.62rem;
-    font-weight: 600;
-    padding: 1px 7px;
-    border-radius: var(--radius-pill);
-    background-color: var(--color-base-2);
-    color: var(--color-tinta-muted);
-    white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-base-2);
+  color: var(--color-tinta-muted);
+  white-space: nowrap;
 }
 
 .mini-seg-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
 }
 
 .mini-seg-etiqueta {
-    font-size: 0.72rem;
-    color: var(--color-tinta-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    min-width: 0;
+  font-size: 0.72rem;
+  color: var(--color-tinta-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .mini-seg-monto {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--color-tinta);
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-    flex-shrink: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-tinta);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex-shrink: 0;
 }

@@ -8,14 +8,14 @@ const VERDE = "#16a34a";
  * un proyecto que gastó más de lo acordado) — eso lo decide quien la usa.
  */
 export function BarraProgreso({ porcentaje, color = VERDE }) {
-    return (
-        <div className="kpi-progreso">
-            <div
-                className="kpi-progreso-relleno"
-                style={{ width: `${Math.min(Math.max(porcentaje, 0), 100)}%`, backgroundColor: color }}
-            />
-        </div>
-    );
+  return (
+    <div className="kpi-progreso">
+      <div
+        className="kpi-progreso-relleno"
+        style={{ width: `${Math.min(Math.max(porcentaje, 0), 100)}%`, backgroundColor: color }}
+      />
+    </div>
+  );
 }
 
 /**
@@ -26,20 +26,28 @@ export function BarraProgreso({ porcentaje, color = VERDE }) {
  * - `destacado`: pinta el valor con `color` (se usa para plata en verde/rojo).
  * - `plano`: sin borde ni fondo, para meterla adentro de otra tarjeta.
  */
-export function TarjetaKpi({ titulo, valor, detalle, porcentaje, color = VERDE, destacado, plano }) {
-    return (
-        <div className={`kpi ${plano ? "kpi--plano" : ""}`}>
-            {titulo && <span className="kpi-titulo">{titulo}</span>}
-            <span
-                className={`kpi-valor ${destacado ? "kpi-valor--destacado" : ""}`}
-                style={destacado ? { color } : undefined}
-            >
-                {valor}
-            </span>
-            {porcentaje !== undefined && <BarraProgreso porcentaje={porcentaje} color={color} />}
-            {detalle && <span className="kpi-detalle">{detalle}</span>}
-        </div>
-    );
+export function TarjetaKpi({
+  titulo,
+  valor,
+  detalle,
+  porcentaje,
+  color = VERDE,
+  destacado,
+  plano,
+}) {
+  return (
+    <div className={`kpi ${plano ? "kpi--plano" : ""}`}>
+      {titulo && <span className="kpi-titulo">{titulo}</span>}
+      <span
+        className={`kpi-valor ${destacado ? "kpi-valor--destacado" : ""}`}
+        style={destacado ? { color } : undefined}
+      >
+        {valor}
+      </span>
+      {porcentaje !== undefined && <BarraProgreso porcentaje={porcentaje} color={color} />}
+      {detalle && <span className="kpi-detalle">{detalle}</span>}
+    </div>
+  );
 }
 
 export default TarjetaKpi;

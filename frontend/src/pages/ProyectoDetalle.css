@@ -1,43 +1,46 @@
 .proyecto-detalle {
-    font-family: var(--font-ui);
+  font-family: var(--font-ui);
 }
 
 .proyecto-detalle-error {
-    display: flex;
-    justify-content: center;
-    padding-top: var(--space-12);
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-12);
 }
 
 /* Pestañas de carpeta: la activa "se despega" de la línea para leerse
    conectada al contenido de abajo, en vez de un grupo de botones pill. */
 .tabs {
-    display: flex;
-    gap: 2px;
-    margin: var(--space-6) 0 0;
-    border-bottom: 1px solid var(--color-linea);
+  display: flex;
+  gap: 2px;
+  margin: var(--space-6) 0 0;
+  border-bottom: 1px solid var(--color-linea);
 }
 
 .tabs button {
-    font-family: var(--font-ui);
-    font-size: var(--text-sm);
-    font-weight: 600;
-    padding: 10px 20px;
-    border: 1px solid transparent;
-    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-    background-color: transparent;
-    color: var(--color-tinta-muted);
-    cursor: pointer;
-    margin-bottom: -1px;
-    transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: 10px 20px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background-color: transparent;
+  color: var(--color-tinta-muted);
+  cursor: pointer;
+  margin-bottom: -1px;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .tabs button:hover {
-    color: var(--color-tinta);
+  color: var(--color-tinta);
 }
 
 .tabs button.active {
-    background-color: var(--color-base-1);
-    border-color: var(--color-linea);
-    border-bottom-color: var(--color-base-1);
-    color: var(--color-terracota-dark);
+  background-color: var(--color-base-1);
+  border-color: var(--color-linea);
+  border-bottom-color: var(--color-base-1);
+  color: var(--color-terracota-dark);
 }

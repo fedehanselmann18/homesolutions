@@ -42,10 +42,9 @@ export const subirComprobanteCobro = async (cobroId, archivo) => {
 };
 
 export const getComprobanteCobro = async (cobroId, comprobanteId) => {
-  const { data } = await axiosClient.get(
-    `/cobros/${cobroId}/comprobantes/${comprobanteId}`,
-    { responseType: "blob" }
-  );
+  const { data } = await axiosClient.get(`/cobros/${cobroId}/comprobantes/${comprobanteId}`, {
+    responseType: "blob",
+  });
   return data;
 };
 
@@ -56,7 +55,10 @@ export const eliminarComprobanteCobro = async (cobroId, comprobanteId) => {
 
 // --- Notas (cuenta corriente: nota de crédito / nota de débito) ---
 
-export const crearNotaCobro = async (cobroId, { archivo, tipo, tipo_factura, monto, descripcion, fecha, origen }) => {
+export const crearNotaCobro = async (
+  cobroId,
+  { archivo, tipo, tipo_factura, monto, descripcion, fecha, origen }
+) => {
   const formData = new FormData();
   formData.append("archivo", archivo);
   formData.append("tipo", tipo);
@@ -73,10 +75,9 @@ export const crearNotaCobro = async (cobroId, { archivo, tipo, tipo_factura, mon
 };
 
 export const getNotaCobro = async (cobroId, notaId) => {
-  const { data } = await axiosClient.get(
-    `/cobros/${cobroId}/notas/${notaId}`,
-    { responseType: "blob" }
-  );
+  const { data } = await axiosClient.get(`/cobros/${cobroId}/notas/${notaId}`, {
+    responseType: "blob",
+  });
   return data;
 };
 

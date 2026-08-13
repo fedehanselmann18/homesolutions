@@ -62,7 +62,11 @@ export function agruparPorProducto(productos = [], proveedores = []) {
  * y ordenado por precio ascendente. Para "qué hay en Aires" aunque no sea
  * exactamente el mismo modelo entre proveedores.
  */
-export function filtrarProductos(productos = [], proveedores = [], { categoriaId = "", tipo = "", texto = "" } = {}) {
+export function filtrarProductos(
+  productos = [],
+  proveedores = [],
+  { categoriaId = "", tipo = "", texto = "" } = {}
+) {
   const textoNormalizado = normalizar(texto);
 
   return productos

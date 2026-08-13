@@ -48,10 +48,9 @@ export const subirComprobanteGasto = async (gastoId, archivo) => {
 };
 
 export const getComprobanteGasto = async (gastoId, comprobanteId) => {
-  const { data } = await axiosClient.get(
-    `/gastos/${gastoId}/comprobantes/${comprobanteId}`,
-    { responseType: "blob" }
-  );
+  const { data } = await axiosClient.get(`/gastos/${gastoId}/comprobantes/${comprobanteId}`, {
+    responseType: "blob",
+  });
   return data;
 };
 

@@ -11,37 +11,37 @@ import "./TarjetaAlerta.css";
  *   clickeable, así no queda un botón que no lleva a ningún lado.
  */
 export function TarjetaAlerta({ icono: Icono, color, titulo, detalle, monto, extra, onClick }) {
-    const contenido = (
-        <>
-            <span className="alerta-icono" style={{ color, backgroundColor: `${color}1c` }}>
-                <Icono size={16} strokeWidth={2} />
+  const contenido = (
+    <>
+      <span className="alerta-icono" style={{ color, backgroundColor: `${color}1c` }}>
+        <Icono size={16} strokeWidth={2} />
+      </span>
+      <span className="alerta-texto">
+        <span className="alerta-titulo">{titulo}</span>
+        {detalle && <span className="alerta-detalle">{detalle}</span>}
+      </span>
+      {(monto || extra) && (
+        <span className="alerta-derecha">
+          {monto && (
+            <span className="alerta-monto" style={{ color }}>
+              {monto}
             </span>
-            <span className="alerta-texto">
-                <span className="alerta-titulo">{titulo}</span>
-                {detalle && <span className="alerta-detalle">{detalle}</span>}
-            </span>
-            {(monto || extra) && (
-                <span className="alerta-derecha">
-                    {monto && (
-                        <span className="alerta-monto" style={{ color }}>
-                            {monto}
-                        </span>
-                    )}
-                    {extra && <span className="alerta-extra">{extra}</span>}
-                </span>
-            )}
-        </>
-    );
+          )}
+          {extra && <span className="alerta-extra">{extra}</span>}
+        </span>
+      )}
+    </>
+  );
 
-    if (!onClick) {
-        return <div className="alerta alerta--estatica">{contenido}</div>;
-    }
+  if (!onClick) {
+    return <div className="alerta alerta--estatica">{contenido}</div>;
+  }
 
-    return (
-        <button type="button" className="alerta" onClick={onClick}>
-            {contenido}
-        </button>
-    );
+  return (
+    <button type="button" className="alerta" onClick={onClick}>
+      {contenido}
+    </button>
+  );
 }
 
 export default TarjetaAlerta;

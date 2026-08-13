@@ -28,7 +28,11 @@ describe("filtrarCompras", () => {
       compra({ fecha: "2026-03-15" }),
       compra({ fecha: "2026-06-01" }),
     ];
-    const resultado = filtrarCompras(compras, { ...FILTROS_VACIOS, desde: "2026-02-01", hasta: "2026-05-01" });
+    const resultado = filtrarCompras(compras, {
+      ...FILTROS_VACIOS,
+      desde: "2026-02-01",
+      hasta: "2026-05-01",
+    });
     expect(resultado).toHaveLength(1);
     expect(resultado[0].fecha).toBe("2026-03-15");
   });
@@ -41,10 +45,7 @@ describe("filtrarCompras", () => {
   });
 
   it("filtra 'con nota de crédito'", () => {
-    const compras = [
-      compra({ notas: [{ tipo: "nota_credito" }] }),
-      compra({ notas: [] }),
-    ];
+    const compras = [compra({ notas: [{ tipo: "nota_credito" }] }), compra({ notas: [] })];
     const resultado = filtrarCompras(compras, { ...FILTROS_VACIOS, notas: "con_credito" });
     expect(resultado).toHaveLength(1);
   });

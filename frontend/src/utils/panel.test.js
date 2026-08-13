@@ -42,7 +42,9 @@ describe("calcularPanel", () => {
     const resultado = calcularPanel({
       proyectos: [{ id: 1, estado: "en_curso", precio_acordado: 10000 }],
       fases: [{ id: 10, proyecto_id: 1 }],
-      compras: [{ fase_id: 10, precio_neto: 500, impuestos_aplicados: [], notas: [], fecha: "2026-08-01" }],
+      compras: [
+        { fase_id: 10, precio_neto: 500, impuestos_aplicados: [], notas: [], fecha: "2026-08-01" },
+      ],
       hoy: HOY,
     });
     expect(resultado.proyectosActivos[0].egresos).toBe(500);
@@ -52,7 +54,9 @@ describe("calcularPanel", () => {
     const resultado = calcularPanel({
       proyectos: [{ id: 1, estado: "en_curso", precio_acordado: 10000 }],
       fases: [{ id: 10, proyecto_id: 1 }],
-      compras: [{ fase_id: 999, precio_neto: 500, impuestos_aplicados: [], notas: [], fecha: "2026-08-01" }],
+      compras: [
+        { fase_id: 999, precio_neto: 500, impuestos_aplicados: [], notas: [], fecha: "2026-08-01" },
+      ],
       hoy: HOY,
     });
     expect(resultado.proyectosActivos[0].egresos).toBe(0);
@@ -130,8 +134,26 @@ describe("calcularPanel", () => {
       proyectos: [{ id: 1, estado: "en_curso" }],
       fases: [{ id: 10, proyecto_id: 1 }],
       compras: [
-        { fase_id: 10, precio_total: 300, precio_neto: 300, impuestos_aplicados: [], notas: [], estado_pago: "pendiente", estado_envio: "entregado", fecha: "2026-08-01" },
-        { fase_id: 10, precio_total: 200, precio_neto: 200, impuestos_aplicados: [], notas: [], estado_pago: "pagado", estado_envio: "entregado", fecha: "2026-08-01" },
+        {
+          fase_id: 10,
+          precio_total: 300,
+          precio_neto: 300,
+          impuestos_aplicados: [],
+          notas: [],
+          estado_pago: "pendiente",
+          estado_envio: "entregado",
+          fecha: "2026-08-01",
+        },
+        {
+          fase_id: 10,
+          precio_total: 200,
+          precio_neto: 200,
+          impuestos_aplicados: [],
+          notas: [],
+          estado_pago: "pagado",
+          estado_envio: "entregado",
+          fecha: "2026-08-01",
+        },
       ],
       hoy: HOY,
     });

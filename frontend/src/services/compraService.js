@@ -128,10 +128,9 @@ export const crearNotaCompra = async (
 };
 
 export const getNotaCompra = async (compraId, notaId) => {
-  const { data } = await axiosClient.get(
-    `/compras/${compraId}/notas/${notaId}`,
-    { responseType: "blob" }
-  );
+  const { data } = await axiosClient.get(`/compras/${compraId}/notas/${notaId}`, {
+    responseType: "blob",
+  });
   return data;
 };
 

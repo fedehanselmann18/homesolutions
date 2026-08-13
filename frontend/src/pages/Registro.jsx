@@ -21,9 +21,7 @@ export function Registro() {
   const [error, setError] = useState(null);
   const [enviando, setEnviando] = useState(false);
 
-  const rolSeleccionado = NOMBRES.find(
-    (n) => n.nombre_usuario === nombreUsuario
-  )?.rol;
+  const rolSeleccionado = NOMBRES.find((n) => n.nombre_usuario === nombreUsuario)?.rol;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -68,10 +66,7 @@ export function Registro() {
 
           <label className="login-field">
             <span>Nombre</span>
-            <select
-              value={nombreUsuario}
-              onChange={(e) => setNombreUsuario(e.target.value)}
-            >
+            <select value={nombreUsuario} onChange={(e) => setNombreUsuario(e.target.value)}>
               <option value="" disabled>
                 Seleccioná tu nombre
               </option>

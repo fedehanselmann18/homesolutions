@@ -1,166 +1,168 @@
 .comprobantes-uploader {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .comprobantes-dropzone {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    text-align: center;
-    padding: var(--space-4);
-    border: 1.5px dashed var(--color-linea);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-base-1);
-    cursor: pointer;
-    transition: border-color 0.15s ease, background-color 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+  padding: var(--space-4);
+  border: 1.5px dashed var(--color-linea);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-base-1);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .comprobantes-dropzone:hover {
-    border-color: var(--color-terracota);
-    background-color: var(--color-terracota-tint);
+  border-color: var(--color-terracota);
+  background-color: var(--color-terracota-tint);
 }
 
 .comprobantes-dropzone--activo {
-    border-color: var(--color-terracota);
-    background-color: var(--color-terracota-tint);
+  border-color: var(--color-terracota);
+  background-color: var(--color-terracota-tint);
 }
 
 .comprobantes-dropzone--disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .comprobantes-dropzone-icono {
-    color: var(--color-tinta-muted);
+  color: var(--color-tinta-muted);
 }
 
 .comprobantes-dropzone-texto {
-    font-size: 0.88rem;
-    font-weight: 600;
-    color: var(--color-tinta);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--color-tinta);
 }
 
 .comprobantes-dropzone-subtexto {
-    font-size: 0.76rem;
-    color: var(--color-tinta-muted);
+  font-size: 0.76rem;
+  color: var(--color-tinta-muted);
 }
 
 .comprobantes-errores {
-    margin: 0;
-    padding-left: 1.1rem;
-    font-size: 0.78rem;
-    color: var(--color-oxido);
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.78rem;
+  color: var(--color-oxido);
 }
 
 .comprobantes-vacio {
-    margin: 0;
-    font-size: 0.82rem;
-    color: var(--color-tinta-muted);
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-tinta-muted);
 }
 
 .comprobantes-lista {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .comprobantes-chip {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 7px 10px;
-    border: 1px solid var(--color-linea);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-superficie);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-superficie);
 }
 
 .comprobantes-chip--pendiente {
-    border-color: var(--color-musgo);
-    background-color: var(--color-musgo-tint);
+  border-color: var(--color-musgo);
+  background-color: var(--color-musgo-tint);
 }
 
 .comprobantes-chip-icono {
-    color: var(--color-tinta-muted);
-    flex-shrink: 0;
+  color: var(--color-tinta-muted);
+  flex-shrink: 0;
 }
 
 .comprobantes-chip-nombre {
-    flex: 1;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-size: 0.85rem;
-    color: var(--color-tinta);
-    text-align: left;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  color: var(--color-tinta);
+  text-align: left;
 }
 
 .comprobantes-chip-nombre--link {
-    background: none;
-    border: none;
-    padding: 0;
-    font-family: var(--font-ui);
-    cursor: pointer;
-    color: var(--color-musgo-dark);
-    text-decoration: underline;
-    text-decoration-color: transparent;
-    transition: text-decoration-color 0.15s ease;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-ui);
+  cursor: pointer;
+  color: var(--color-musgo-dark);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  transition: text-decoration-color 0.15s ease;
 }
 
 .comprobantes-chip-nombre--link:hover {
-    text-decoration-color: currentColor;
+  text-decoration-color: currentColor;
 }
 
 .comprobantes-chip-nombre--link:disabled {
-    cursor: default;
-    color: var(--color-tinta-muted);
+  cursor: default;
+  color: var(--color-tinta-muted);
 }
 
 .comprobantes-chip-tamanio {
-    font-size: 0.75rem;
-    color: var(--color-tinta-muted);
-    flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--color-tinta-muted);
+  flex-shrink: 0;
 }
 
 .comprobantes-chip-badge {
-    font-size: 0.66rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    color: var(--color-musgo-dark);
-    background-color: var(--color-musgo-tint);
-    padding: 2px 7px;
-    border-radius: var(--radius-pill);
-    flex-shrink: 0;
+  font-size: 0.66rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--color-musgo-dark);
+  background-color: var(--color-musgo-tint);
+  padding: 2px 7px;
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
 }
 
 .comprobantes-chip-quitar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 26px;
-    height: 26px;
-    flex-shrink: 0;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--color-oxido-tint);
-    background-color: transparent;
-    color: var(--color-oxido);
-    cursor: pointer;
-    transition: background-color 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-oxido-tint);
+  background-color: transparent;
+  color: var(--color-oxido);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
 .comprobantes-chip-quitar:hover {
-    background-color: var(--color-oxido-tint);
+  background-color: var(--color-oxido-tint);
 }
 
 .comprobantes-chip-quitar:disabled {
-    cursor: not-allowed;
-    opacity: 0.5;
+  cursor: not-allowed;
+  opacity: 0.5;
 }

@@ -17,14 +17,8 @@ export function Proyectos() {
   const { usuario } = useAuth();
   const toast = useToast();
 
-  const {
-    proyectos,
-    loading,
-    error,
-    agregarProyecto,
-    editarProyecto,
-    borrarProyecto,
-  } = useProyectos();
+  const { proyectos, loading, error, agregarProyecto, editarProyecto, borrarProyecto } =
+    useProyectos();
 
   const [modalAbierto, setModalAbierto] = useState(false);
   const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null);
@@ -93,9 +87,7 @@ export function Proyectos() {
       />
 
       {proyectos.length === 0 ? (
-        <p className="proyectos-feedback">
-          No hay proyectos todavía. ¡Creá el primero!
-        </p>
+        <p className="proyectos-feedback">No hay proyectos todavía. ¡Creá el primero!</p>
       ) : (
         ORDEN_SECCIONES.map((estadoKey) => {
           const proyectosDelEstado = proyectos.filter((p) => p.estado === estadoKey);
@@ -105,7 +97,10 @@ export function Proyectos() {
           return (
             <section key={estadoKey} className="proyectos-seccion" aria-label={estado.label}>
               <h2 className="proyectos-seccion-titulo">
-                <span className="proyectos-seccion-punto" style={{ backgroundColor: estado.color }} />
+                <span
+                  className="proyectos-seccion-punto"
+                  style={{ backgroundColor: estado.color }}
+                />
                 {estado.label}
                 <span className="proyectos-seccion-contador">{proyectosDelEstado.length}</span>
               </h2>

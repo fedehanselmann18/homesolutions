@@ -1,133 +1,137 @@
 .gasto-card {
-    background-color: var(--color-superficie);
-    border: 1px solid var(--color-linea);
-    border-radius: var(--radius-sm);
-    padding: var(--space-4);
-    font-family: var(--font-ui);
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    box-sizing: border-box;
-    transition: border-color 0.15s ease, background-color 0.15s ease;
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  font-family: var(--font-ui);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .gasto-card:hover {
-    border-color: var(--color-tinta);
-    background-color: var(--color-base-1);
+  border-color: var(--color-tinta);
+  background-color: var(--color-base-1);
 }
 
 .gasto-card-contenido {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: var(--space-3);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: var(--space-3);
 }
 
 .gasto-card-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .gasto-card-descripcion {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: 1.05rem;
-    font-weight: 600;
-    color: var(--color-tinta);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--color-tinta);
 }
 
 .gasto-card-monto {
-    flex-shrink: 0;
-    font-size: 1.05rem;
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-    color: var(--color-oxido);
-    white-space: nowrap;
+  flex-shrink: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-oxido);
+  white-space: nowrap;
 }
 
 .gasto-card-meta {
-    font-size: 0.85rem;
-    color: var(--color-tinta-muted);
+  font-size: 0.85rem;
+  color: var(--color-tinta-muted);
 }
 
 .gasto-card-separador {
-    margin: 0 6px;
-    color: var(--color-linea);
+  margin: 0 6px;
+  color: var(--color-linea);
 }
 
 .gasto-card-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
 .gasto-card-chip {
-    font-size: 0.72rem;
-    font-weight: 600;
-    padding: 3px 9px;
-    border-radius: var(--radius-pill);
-    background-color: var(--color-base-2);
-    color: var(--color-tinta-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  background-color: var(--color-base-2);
+  color: var(--color-tinta-muted);
 }
 
 .gasto-card-detalle-info {
-    margin: 0;
-    font-size: 0.8rem;
-    color: var(--color-tinta-muted);
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-tinta-muted);
 }
 
 .gasto-card-expandido {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding-top: 8px;
-    border-top: 1px solid var(--color-linea);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-linea);
 }
 
 .gasto-card-acciones {
-    display: flex;
-    gap: 8px;
-    margin-top: auto;
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
 }
 
 .gasto-card-btn {
-    flex: 1;
-    text-align: center;
-    font-family: var(--font-ui);
-    font-size: 0.8rem;
-    font-weight: 600;
-    padding: 7px 12px;
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--color-linea);
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
+  flex: 1;
+  text-align: center;
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-linea);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .gasto-card-btn--editar {
-    background-color: transparent;
-    color: var(--color-tinta);
+  background-color: transparent;
+  color: var(--color-tinta);
 }
 
 .gasto-card-btn--editar:hover {
-    background-color: var(--color-base-2);
+  background-color: var(--color-base-2);
 }
 
 .gasto-card-btn--eliminar {
-    background-color: transparent;
-    color: var(--color-oxido);
-    border-color: var(--color-oxido-tint);
+  background-color: transparent;
+  color: var(--color-oxido);
+  border-color: var(--color-oxido-tint);
 }
 
 .gasto-card-btn--eliminar:hover {
-    background-color: var(--color-oxido-tint);
-    border-color: var(--color-oxido);
+  background-color: var(--color-oxido-tint);
+  border-color: var(--color-oxido);
 }
 
 @media (max-width: 480px) {
-    .gasto-card {
-        padding: var(--space-3);
-    }
+  .gasto-card {
+    padding: var(--space-3);
+  }
 }

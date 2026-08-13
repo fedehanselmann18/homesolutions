@@ -1,104 +1,106 @@
 .proveedores-container {
-    font-family: var(--font-ui);
+  font-family: var(--font-ui);
 }
 
 .proveedores-header {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    padding-bottom: var(--space-6);
-    margin-bottom: var(--space-6);
-    border-bottom: 1px solid var(--color-linea);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: var(--space-6);
+  margin-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-linea);
 }
 
 .proveedores-header__titulo {
-    font-family: var(--font-display);
-    font-size: 2rem;
-    font-weight: 600;
-    color: var(--color-tinta);
-    margin: 0;
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--color-tinta);
+  margin: 0;
 }
 
 .proveedores-header__subtitulo {
-    font-size: 0.9rem;
-    color: var(--color-tinta-muted);
-    margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: var(--color-tinta-muted);
+  margin: 4px 0 0;
 }
 
 .proveedores-button {
-    background-color: var(--color-terracota);
-    color: var(--color-superficie);
-    border: 1px solid var(--color-terracota);
-    padding: 10px 20px;
-    border-radius: var(--radius-sm);
-    font-family: var(--font-ui);
-    font-weight: 600;
-    font-size: 0.88rem;
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
+  background-color: var(--color-terracota);
+  color: var(--color-superficie);
+  border: 1px solid var(--color-terracota);
+  padding: 10px 20px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .proveedores-button:hover {
-    background-color: var(--color-terracota-dark);
-    border-color: var(--color-terracota-dark);
+  background-color: var(--color-terracota-dark);
+  border-color: var(--color-terracota-dark);
 }
 
 .proveedores-filtros {
-    display: flex;
-    gap: var(--space-3);
-    margin-bottom: var(--space-6);
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
 }
 
 .proveedores-buscador {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: var(--color-superficie);
-    border: 1px solid var(--color-linea);
-    border-radius: var(--radius-sm);
-    padding: 9px 14px;
-    color: var(--color-tinta-muted);
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  padding: 9px 14px;
+  color: var(--color-tinta-muted);
 }
 
 .proveedores-buscador input {
-    flex: 1;
-    border: none;
-    outline: none;
-    font-family: var(--font-ui);
-    font-size: 0.9rem;
-    color: var(--color-tinta);
-    background: transparent;
+  flex: 1;
+  border: none;
+  outline: none;
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  color: var(--color-tinta);
+  background: transparent;
 }
 
 .proveedores-filtros select {
-    font-family: var(--font-ui);
-    font-size: 0.9rem;
-    padding: 9px 12px;
-    border: 1px solid var(--color-linea);
-    border-radius: var(--radius-sm);
-    background-color: var(--color-superficie);
-    color: var(--color-tinta);
-    min-width: 200px;
+  font-family: var(--font-ui);
+  font-size: 0.9rem;
+  padding: 9px 12px;
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-superficie);
+  color: var(--color-tinta);
+  min-width: 200px;
 }
 
 .proveedores-feedback {
-    color: var(--color-tinta-muted);
-    font-size: 0.9rem;
+  color: var(--color-tinta-muted);
+  font-size: 0.9rem;
 }
 
 .proveedores-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: var(--space-4);
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-4);
 }
 
 @media (max-width: 600px) {
-    .proveedores-filtros {
-        flex-direction: column;
-    }
+  .proveedores-filtros {
+    flex-direction: column;
+  }
 
-    .proveedores-filtros select {
-        min-width: 0;
-    }
+  .proveedores-filtros select {
+    min-width: 0;
+  }
 }

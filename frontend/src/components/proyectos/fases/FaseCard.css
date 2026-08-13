@@ -2,124 +2,126 @@
    la izquierda, nombre, acciones que aparecen recién al hover/foco. */
 
 .fase-card {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
-    background-color: var(--color-superficie);
-    border: 1px solid var(--color-linea);
-    border-radius: var(--radius-sm);
-    padding: var(--space-4);
-    font-family: var(--font-ui);
-    cursor: pointer;
-    transition: background-color 0.15s ease, border-color 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  background-color: var(--color-superficie);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  font-family: var(--font-ui);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .fase-card:hover {
-    background-color: var(--color-base-1);
-    border-color: var(--color-tinta);
+  background-color: var(--color-base-1);
+  border-color: var(--color-tinta);
 }
 
 .fase-card:hover .fase-card-acciones,
 .fase-card:focus-within .fase-card-acciones {
-    opacity: 1;
-    pointer-events: auto;
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .fase-card-indicador {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
 }
 
 .fase-card-punto {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    border: 2px solid transparent;
-    box-sizing: border-box;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  box-sizing: border-box;
 }
 
 .fase-card-contenido {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .fase-card-nombre {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: 1.02rem;
-    font-weight: 600;
-    color: var(--color-tinta);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--color-tinta);
 }
 
 .fase-card-nombre--terminada {
-    color: var(--color-tinta-muted);
-    font-weight: 500;
-    text-decoration: line-through;
+  color: var(--color-tinta-muted);
+  font-weight: 500;
+  text-decoration: line-through;
 }
 
 .fase-card-descripcion {
-    margin: 0;
-    font-size: 0.85rem;
-    color: var(--color-tinta-muted);
-    line-height: 1.4;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-tinta-muted);
+  line-height: 1.4;
 }
 
 /* Acciones: solo texto, mayúsculas chicas, visibles recién al hover/foco
    de la fila (en mobile, sin hover real, quedan siempre visibles). */
 
 .fase-card-acciones {
-    flex-shrink: 0;
-    display: flex;
-    gap: var(--space-4);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.15s ease;
+  flex-shrink: 0;
+  display: flex;
+  gap: var(--space-4);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
 }
 
 .fase-card-btn {
-    font-family: var(--font-ui);
-    font-size: 0.72rem;
-    font-weight: 600;
-    letter-spacing: 0.03em;
-    text-transform: uppercase;
-    padding: 2px 0;
-    border: none;
-    background: none;
-    cursor: pointer;
-    transition: color 0.15s ease;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 2px 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
 }
 
 .fase-card-btn--editar {
-    color: var(--color-terracota-dark);
+  color: var(--color-terracota-dark);
 }
 
 .fase-card-btn--editar:hover {
-    color: var(--color-terracota);
+  color: var(--color-terracota);
 }
 
 .fase-card-btn--eliminar {
-    color: var(--color-tinta-muted);
+  color: var(--color-tinta-muted);
 }
 
 .fase-card-btn--eliminar:hover {
-    color: var(--color-oxido);
+  color: var(--color-oxido);
 }
 
 /* Responsive */
 
 @media (max-width: 480px) {
-    .fase-card {
-        padding: var(--space-3);
-    }
+  .fase-card {
+    padding: var(--space-3);
+  }
 
-    .fase-card-acciones {
-        opacity: 1;
-        pointer-events: auto;
-    }
+  .fase-card-acciones {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }

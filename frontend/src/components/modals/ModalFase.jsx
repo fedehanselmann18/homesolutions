@@ -54,13 +54,7 @@ export function ModalFase({ fase, onGuardar, onCerrar }) {
         <form onSubmit={handleSubmit} className="modal-form">
           <label>
             Nombre
-            <input
-              type="text"
-              name="nombre"
-              value={form.nombre}
-              onChange={handleChange}
-              required
-            />
+            <input type="text" name="nombre" value={form.nombre} onChange={handleChange} required />
           </label>
 
           <label>
@@ -85,7 +79,12 @@ export function ModalFase({ fase, onGuardar, onCerrar }) {
           </label>
 
           <div className="modal-acciones">
-            <button type="button" onClick={onCerrar} className="modal-btn-cancelar" disabled={guardando}>
+            <button
+              type="button"
+              onClick={onCerrar}
+              className="modal-btn-cancelar"
+              disabled={guardando}
+            >
               Cancelar
             </button>
             <button type="submit" className="modal-btn-guardar" disabled={guardando}>
