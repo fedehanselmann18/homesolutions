@@ -1,4 +1,5 @@
 import mimetypes
+import shutil
 import uuid
 from functools import lru_cache
 from pathlib import Path
@@ -33,6 +34,10 @@ CONTENT_TYPE_POR_EXTENSION = {
     ".jpeg": "image/jpeg",
     ".png": "image/png",
 }
+
+# La firma más larga que validamos es la de PNG (8 bytes) -- alcanza para
+# todos los tipos permitidos, no hace falta leer más para chequear magic bytes.
+BYTES_FIRMA = 8
 
 
 def contenido_coincide_con_extension(contenido: bytes, ext: str) -> bool:
@@ -71,9 +76,13 @@ def _r2_client():
     )
 
 
-def _validar_y_leer(archivo: UploadFile) -> tuple[str, bytes]:
-    """Chequeos comunes a ambos backends: extensión, tamaño y contenido real.
-    Devuelve (extensión, contenido) o levanta HTTPException 400."""
+def _validar(archivo: UploadFile) -> str:
+    """Chequeos comunes a ambos backends: extensión, tamaño y contenido real
+    (magic bytes). Lee SOLO los primeros BYTES_FIRMA bytes para el chequeo de
+    firma (no el archivo entero) y deja el puntero al inicio del archivo, así
+    el caller puede streamear el contenido completo al destino sin
+    mantenerlo entero en memoria de Python. Devuelve la extensión o levanta
+    HTTPException 400."""
     ext = Path(archivo.filename).suffix.lower()
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail=f"Extensión no permitida: {ext}")
@@ -84,13 +93,14 @@ def _validar_y_leer(archivo: UploadFile) -> tuple[str, bytes]:
     if tamaño > MAX_SIZE_BYTES:
         raise HTTPException(status_code=400, detail="El archivo supera los 10MB")
 
-    contenido = archivo.file.read()
-    if not contenido_coincide_con_extension(contenido, ext):
+    firma = archivo.file.read(BYTES_FIRMA)
+    archivo.file.seek(0)
+    if not contenido_coincide_con_extension(firma, ext):
         raise HTTPException(
             status_code=400,
             detail="El contenido del archivo no coincide con su extensión",
         )
-    return ext, contenido
+    return ext
 
 
 def subir_comprobante(archivo: UploadFile, carpeta: str, entidad_id: str) -> str:
@@ -106,15 +116,17 @@ def subir_comprobante(archivo: UploadFile, carpeta: str, entidad_id: str) -> str
     carpeta: "comprobantes_compra" | "comprobantes_gasto" | "comprobantes_cobro"
     entidad_id: compra_id / gasto_id / cobro_id
     """
-    ext, contenido = _validar_y_leer(archivo)
+    ext = _validar(archivo)
 
     if settings.r2_configurado:
         key = f"{carpeta}/{entidad_id}/{uuid.uuid4()}{ext}"
         try:
+            # Body acepta un file-like (boto3 lo streamea solo): no hace
+            # falta juntar el archivo entero en un bytes de Python primero.
             _r2_client().put_object(
                 Bucket=settings.R2_BUCKET_NAME,
                 Key=key,
-                Body=contenido,
+                Body=archivo.file,
                 ContentType=CONTENT_TYPE_POR_EXTENSION.get(ext, "application/octet-stream"),
             )
         except (BotoCoreError, ClientError) as exc:
@@ -126,7 +138,7 @@ def subir_comprobante(archivo: UploadFile, carpeta: str, entidad_id: str) -> str
     ruta_completa.parent.mkdir(parents=True, exist_ok=True)
 
     with open(ruta_completa, "wb") as f:
-        f.write(contenido)
+        shutil.copyfileobj(archivo.file, f)
 
     # path relativo, no absoluto -> así no se rompe si movés el proyecto de carpeta
     return str(ruta_relativa)
