@@ -7,6 +7,7 @@ from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db.db import get_db
 from app.files.storage import subir_comprobante, eliminar_comprobante, ver_comprobante
 from app.limiter import limiter
+from app.pagination import ParametrosPaginacion
 from app.schemas import GastoCreate, GastoUpdate, GastoOut, ComprobanteGastoOut
 
 router = APIRouter(
@@ -16,9 +17,15 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[GastoOut], status_code=status.HTTP_200_OK)
-def get_all_gastos(db: Session = Depends(get_db),
+def get_all_gastos(paginacion: ParametrosPaginacion = Depends(),
+                    db: Session = Depends(get_db),
                     current_user: models.Usuario = Depends(get_current_user)):
-    return db.query(models.Gasto).options(joinedload(models.Gasto.categorias)).all()
+    query = db.query(models.Gasto).options(joinedload(models.Gasto.categorias)).order_by(
+        models.Gasto.fecha_creacion.desc()
+    ).offset(paginacion.offset)
+    if paginacion.limit is not None:
+        query = query.limit(paginacion.limit)
+    return query.all()
 
 
 @router.get("/{gasto_id}", response_model=GastoOut, status_code=status.HTTP_200_OK)

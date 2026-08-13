@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.db import models
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db.db import get_db
+from app.pagination import ParametrosPaginacion
 from app.schemas import ProductoCreate, ProductoUpdate, ProductoOut
 
 router = APIRouter(
@@ -13,9 +14,15 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[ProductoOut], status_code=status.HTTP_200_OK)
-def get_all_productos(db: Session = Depends(get_db),
+def get_all_productos(paginacion: ParametrosPaginacion = Depends(),
+                       db: Session = Depends(get_db),
                        current_user: models.Usuario = Depends(get_current_user)):
-    return db.query(models.Producto).options(joinedload(models.Producto.categorias)).all()
+    query = db.query(models.Producto).options(joinedload(models.Producto.categorias)).order_by(
+        models.Producto.fecha_creacion.desc()
+    ).offset(paginacion.offset)
+    if paginacion.limit is not None:
+        query = query.limit(paginacion.limit)
+    return query.all()
 
 
 @router.get("/{producto_id}", response_model=ProductoOut, status_code=status.HTTP_200_OK)

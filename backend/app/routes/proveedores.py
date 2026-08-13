@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from app.db import models
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db.db import get_db
+from app.pagination import ParametrosPaginacion
 from app.schemas import ProveedorCreate, ProveedorUpdate, ProveedorOut
 
 router = APIRouter(
@@ -27,9 +28,13 @@ router = APIRouter(
 
 
 @router.get("/", response_model=list[ProveedorOut], status_code=status.HTTP_200_OK)
-def get_all_proveedores(db: Session = Depends(get_db),
+def get_all_proveedores(paginacion: ParametrosPaginacion = Depends(),
+                         db: Session = Depends(get_db),
                          current_user: models.Usuario = Depends(get_current_user)):
-    return db.query(models.Proveedor).all()
+    query = db.query(models.Proveedor).order_by(models.Proveedor.fecha_creacion.desc()).offset(paginacion.offset)
+    if paginacion.limit is not None:
+        query = query.limit(paginacion.limit)
+    return query.all()
 
 
 @router.get("/{proveedor_id}", response_model=ProveedorOut, status_code=status.HTTP_200_OK)

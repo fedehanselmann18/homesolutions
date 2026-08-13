@@ -10,6 +10,7 @@ from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db.db import get_db
 from app.files.storage import subir_comprobante, eliminar_comprobante, ver_comprobante
 from app.limiter import limiter
+from app.pagination import ParametrosPaginacion
 from datetime import date
 from app.schemas import (
     CompraCreate, CompraUpdate, CompraOut,
@@ -29,6 +30,7 @@ router = APIRouter(
 
 @router.get("/", response_model=list[CompraOut], status_code=status.HTTP_200_OK)
 def get_all_compras(proveedor_id: str | None = None,
+                     paginacion: ParametrosPaginacion = Depends(),
                      db: Session = Depends(get_db),
                      current_user: models.Usuario = Depends(get_current_user)):
     query = db.query(models.Compra).options(
@@ -39,6 +41,11 @@ def get_all_compras(proveedor_id: str | None = None,
     )
     if proveedor_id:
         query = query.filter(models.Compra.proveedor_id == proveedor_id)
+    # order_by explícito: sin esto, limit/offset no tienen un orden estable
+    # entre llamadas (Postgres no garantiza nada sin ORDER BY).
+    query = query.order_by(models.Compra.fecha_creacion.desc()).offset(paginacion.offset)
+    if paginacion.limit is not None:
+        query = query.limit(paginacion.limit)
     return query.all()
 
 

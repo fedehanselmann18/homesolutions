@@ -7,6 +7,7 @@ from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db.db import get_db
 from app.files.storage import subir_comprobante, eliminar_comprobante, ver_comprobante
 from app.limiter import limiter
+from app.pagination import ParametrosPaginacion
 from datetime import date
 from app.schemas import CobroCreate, CobroUpdate, CobroOut, ComprobanteCobroOut, NotaCobroOut
 
@@ -18,11 +19,15 @@ router = APIRouter(
 
 @router.get("/", response_model=list[CobroOut], status_code=status.HTTP_200_OK)
 def get_all_cobros(proyecto_id: str | None = None,  # "cliente": Cobro cuelga de Proyecto, no hay entidad Cliente propia
+                    paginacion: ParametrosPaginacion = Depends(),
                     db: Session = Depends(get_db),
                     current_user: models.Usuario = Depends(get_current_user)):
     query = db.query(models.Cobro)
     if proyecto_id:
         query = query.filter(models.Cobro.proyecto_id == proyecto_id)
+    query = query.order_by(models.Cobro.fecha_creacion.desc()).offset(paginacion.offset)
+    if paginacion.limit is not None:
+        query = query.limit(paginacion.limit)
     return query.all()
 
 
