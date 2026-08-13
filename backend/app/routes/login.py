@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.auth.oAuth2 import create_access_token
 from app.auth.verification import verify_password
 from app.auth.exceptions import invalid_login_exception
-from app.schemas import RespuestaToken
+from app.schemas import RespuestaLogin
 from fastapi.security import OAuth2PasswordRequestForm
 from app.config import settings
 from app.limiter import limiter
@@ -33,7 +33,7 @@ ACCESS_TOKEN_MAX_AGE = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
 COOKIE_SAMESITE = "none" if settings.ENVIRONMENT == "production" else "lax"
 
 
-@router.post("/login", response_model=RespuestaToken, status_code=status.HTTP_200_OK)
+@router.post("/login", response_model=RespuestaLogin, status_code=status.HTTP_200_OK)
 @limiter.limit("5/minute")
 def login(request: Request, response: Response,
           user_credentials: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
@@ -76,11 +76,16 @@ def login(request: Request, response: Response,
         path="/",
     )
 
-    # Se sigue devolviendo el token en el body por compatibilidad: tests y
-    # posibles clientes API (Postman, un futuro mobile) que prefieran manejar
-    # el Authorization header en vez de cookies. El frontend web ignora este
-    # campo del body y confía solo en la cookie.
-    return {"access_token": access_token, "token_type": "bearer"}
+    # B-05: el JWT ya NO viaja en el body (antes sí, "por compatibilidad").
+    # Confirmado en frontend/src/services/authService.js que el front ignora
+    # el body y confía solo en la cookie -- devolverlo acá además solo suma
+    # otro lugar (logs de proxy, browser history de herramientas tipo
+    # Postman, etc.) donde el token puede quedar expuesto. Clientes tipo API
+    # que necesiten el token para mandarlo como header "Authorization:
+    # Bearer <token>" (en vez de depender de la cookie httpOnly, que igual
+    # les sirve si su cliente HTTP maneja cookies) tienen que leerlo de la
+    # cookie "access_token" de la respuesta, no del body.
+    return {"message": "Sesión iniciada"}
 
 
 @router.post("/logout", status_code=status.HTTP_200_OK)

@@ -44,9 +44,11 @@ class TimestampOut(BaseModel):
 # ---------------------------------------------------------------------------
 # Token schemas
 # ---------------------------------------------------------------------------
-class RespuestaToken(BaseModel):
-    access_token: str
-    token_type: str
+class RespuestaLogin(BaseModel):
+    """Body de POST /auth/login. El JWT en sí NO viaja acá -- ver comentario
+    en routes/login.py sobre por qué (B-05: evitar que el token quede
+    expuesto en logs/histories que sí capturan el body de la respuesta)."""
+    message: str
 
 class DatosToken(BaseModel):
     user_id: Optional[uuid.UUID] = None
