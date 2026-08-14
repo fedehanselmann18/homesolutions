@@ -218,6 +218,10 @@ export function calcularPanel({
         montoImpago: sumar(impagas, (c) => c.precio_total),
         comprasSinEntregar: comprasDelProyecto.filter(esCompraSinEntregar).length,
         fasesEstancadas: estancadas,
+        // Estado por fase, en el mismo orden que devuelve la API (igual que
+        // Fases.jsx) -- lo usa la barra de segmentos de la tabla de
+        // "Proyectos en curso" (dirección 1a) para pintar cada fase.
+        fasesResumen: fasesDelProyecto.map((f) => ({ id: f.id, estado: f.estado })),
       };
     })
     .sort((a, b) => b.pctPresupuesto - a.pctPresupuesto);
@@ -227,10 +231,11 @@ export function calcularPanel({
   // calcularSeguimiento.pendientes (comprasImpagas/comprasSinEntregar/
   // fasesEstancadas), sin deduplicar entre sí: una compra que está impaga Y
   // sin entregar son 2 acciones distintas (pagarla, reclamar el envío), no 1.
-  const requiereAccion = proyectosActivos.reduce(
-    (acc, p) => acc + p.comprasImpagas + p.comprasSinEntregar + p.fasesEstancadas,
-    0
-  );
+  // Los 3 subtotales se exponen aparte para el detalle del KPI en Dashboard.jsx.
+  const comprasImpagasEnCurso = sumar(proyectosActivos, (p) => p.comprasImpagas);
+  const comprasSinEntregarEnCurso = sumar(proyectosActivos, (p) => p.comprasSinEntregar);
+  const fasesEstancadasEnCurso = sumar(proyectosActivos, (p) => p.fasesEstancadas);
+  const requiereAccion = comprasImpagasEnCurso + comprasSinEntregarEnCurso + fasesEstancadasEnCurso;
 
   return {
     kpis: {
@@ -250,6 +255,9 @@ export function calcularPanel({
       notasCreditoCobros: sumar(enCurso, (r) => r.analisis.totales.notasCreditoCobros),
       notasDebitoCobros: sumar(enCurso, (r) => r.analisis.totales.notasDebitoCobros),
       requiereAccion,
+      comprasImpagasEnCurso,
+      comprasSinEntregarEnCurso,
+      fasesEstancadasEnCurso,
     },
     proyectosActivos,
     actividad: armarActividad(resumenes),

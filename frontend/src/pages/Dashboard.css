@@ -121,79 +121,107 @@
   margin: 0 0 var(--space-4);
 }
 
-/* --- Proyectos activos: filas de planilla, no grid de cards --- */
+/* --- KPI destacado: mismo TarjetaKpi de siempre, con un fondo que ocupa
+   toda la celda (dirección 1a) en vez de agrandar el número. La celda de
+   .panel-kpis ya trae padding horizontal + separador vertical -- acá sólo se
+   extiende el fondo al padding vertical de la franja (--space-4), que vive
+   en el contenedor .panel-kpis, no en cada celda. --- */
 
-.panel-proyectos-grid {
-  display: flex;
-  flex-direction: column;
-  border-top: 1px solid var(--color-linea);
+.panel-kpi-realce {
+  margin: calc(var(--space-4) * -1) 0;
+  padding: var(--space-4) 0;
+  background-color: var(--color-terracota-tint-fila);
 }
 
-.panel-proyecto {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: var(--space-4) var(--space-4);
+/* --- Proyectos en curso: tabla real (dirección 1a "Planilla"), no grid de
+   cards -- una fila por proyecto con sus columnas alineadas, en vez de
+   repetir el label de cada dato adentro de cada tarjeta. --- */
+
+.panel-tabla {
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.panel-tabla-header,
+.panel-tabla-fila {
+  display: grid;
+  grid-template-columns: 1.8fr 1fr 1.6fr 1fr 1.3fr 28px;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.panel-tabla-header {
+  padding: 10px var(--space-4);
+  background-color: var(--color-base-1);
+  border-bottom: 1px solid var(--color-linea);
+}
+
+.panel-tabla-fila {
+  padding: var(--space-3) var(--space-4);
   border-bottom: 1px solid var(--color-linea);
   border-left: 3px solid transparent;
   cursor: pointer;
   transition: background-color 0.15s ease;
 }
 
-.panel-proyecto:hover {
-  background-color: var(--color-base-1);
+.panel-tabla-fila:last-child {
+  border-bottom: none;
 }
 
-.panel-proyecto-header {
+.panel-tabla-fila:hover {
+  background-color: var(--fila-hover);
+}
+
+.panel-tabla-col {
+  min-width: 0;
+}
+
+.panel-tabla-col--proyecto {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
+  flex-direction: column;
+  gap: 1px;
 }
 
-.panel-proyecto-nombre {
+.panel-tabla-nombre {
   font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-tinta);
-  margin: 0;
-  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.panel-proyecto-disponible {
-  font-size: var(--text-base);
+.panel-tabla-direccion {
+  font-size: var(--text-xs);
+  color: var(--color-tinta-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panel-tabla-col--disponible {
+  font-size: var(--text-sm);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
 }
 
-.panel-proyecto-direccion {
-  font-size: var(--text-sm);
-  color: var(--color-tinta-muted);
-  margin: -4px 0 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.panel-proyecto-barra {
+.panel-tabla-col--presupuesto {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.panel-proyecto-barra-header {
+.panel-tabla-presupuesto-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   font-size: var(--text-sm);
   color: var(--color-tinta-muted);
   font-weight: 600;
 }
 
-.panel-proyecto-barra-detalle {
+.panel-tabla-presupuesto-detalle {
   font-size: var(--text-xs);
   color: var(--color-tinta-muted);
   font-variant-numeric: tabular-nums;
@@ -203,14 +231,44 @@
   color: var(--color-oxido);
 }
 
+.panel-tabla-col--fases {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.panel-fases-segmentos {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.panel-fases-segmento {
+  height: 5px;
+  flex: 1;
+  border-radius: 2px;
+  min-width: 3px;
+}
+
+.panel-tabla-fases-contador {
+  font-size: var(--text-xs);
+  color: var(--color-tinta-muted);
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.panel-tabla-fases-vacio {
+  font-size: var(--text-xs);
+  color: var(--color-tinta-muted);
+}
+
 /* Pendientes de compra del proyecto (el detalle está en su pestaña Seguimiento) */
 
-.panel-proyecto-compras {
+.panel-tabla-col--pendientes {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
-  margin-top: 2px;
-  padding-top: var(--space-2);
 }
 
 .panel-proyecto-chip {
@@ -224,6 +282,34 @@
 .panel-proyecto-compras-ok {
   font-size: var(--text-xs);
   color: var(--color-tinta-muted);
+}
+
+.panel-tabla-col--accion {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.panel-tabla-chevron {
+  color: var(--color-tinta-muted);
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+}
+
+.panel-tabla-fila:hover .panel-tabla-chevron {
+  opacity: 1;
+}
+
+@media (max-width: 900px) {
+  .panel-tabla {
+    overflow-x: auto;
+  }
+
+  .panel-tabla-header,
+  .panel-tabla-fila {
+    grid-template-columns: 220px 110px 180px 110px 160px 28px;
+    width: max-content;
+    min-width: 100%;
+  }
 }
 
 /* --- Tooltip del gráfico --- */
@@ -372,8 +458,14 @@
   margin-bottom: var(--space-4);
 }
 
-.skeleton--proyecto-card {
-  height: 148px;
+.skeleton--proyecto-fila {
+  height: 64px;
+  border-radius: 0;
+  border-bottom: 1px solid var(--color-linea);
+}
+
+.skeleton--proyecto-fila:last-child {
+  border-bottom: none;
 }
 
 .skeleton--grafico {
