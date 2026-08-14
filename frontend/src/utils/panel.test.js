@@ -186,4 +186,68 @@ describe("calcularPanel", () => {
       expect(m.gastado).toBe(0);
     });
   });
+
+  describe("kpis.requiereAccion", () => {
+    it("suma compras impagas + sin entregar + fases estancadas de todos los proyectos en curso", () => {
+      const resultado = calcularPanel({
+        proyectos: [
+          { id: 1, estado: "en_curso" },
+          { id: 2, estado: "en_curso" },
+        ],
+        fases: [
+          // fase estancada: en_curso hace más de 30 días sin tocarse.
+          { id: 10, proyecto_id: 1, estado: "en_curso", fecha_actualizacion: "2026-06-01" },
+          { id: 20, proyecto_id: 2, estado: "en_curso", fecha_actualizacion: "2026-08-10" },
+        ],
+        compras: [
+          // proyecto 1: una compra impaga y sin entregar a la vez -> cuenta como 2 acciones.
+          {
+            fase_id: 10,
+            precio_total: 100,
+            precio_neto: 100,
+            impuestos_aplicados: [],
+            notas: [],
+            estado_pago: "pendiente",
+            estado_envio: "pedido",
+            fecha: "2026-08-01",
+          },
+          // proyecto 2: una compra pagada y entregada -> no suma nada.
+          {
+            fase_id: 20,
+            precio_total: 50,
+            precio_neto: 50,
+            impuestos_aplicados: [],
+            notas: [],
+            estado_pago: "pagado",
+            estado_envio: "entregado",
+            fecha: "2026-08-01",
+          },
+        ],
+        hoy: HOY,
+      });
+
+      // proyecto 1: 1 impaga + 1 sin entregar + 1 fase estancada = 3
+      // proyecto 2: 0 + 0 + 0 (fase tocada hace 3 días, no estancada) = 0
+      expect(resultado.kpis.requiereAccion).toBe(3);
+      expect(resultado.proyectosActivos.find((p) => p.id === 1).fasesEstancadas).toBe(1);
+      expect(resultado.proyectosActivos.find((p) => p.id === 2).fasesEstancadas).toBe(0);
+    });
+
+    it("una fase por_empezar o terminada nunca cuenta como estancada, sin importar la antigüedad", () => {
+      const resultado = calcularPanel({
+        proyectos: [{ id: 1, estado: "en_curso" }],
+        fases: [
+          { id: 10, proyecto_id: 1, estado: "por_empezar", fecha_actualizacion: "2026-01-01" },
+          { id: 11, proyecto_id: 1, estado: "terminada", fecha_actualizacion: "2026-01-01" },
+        ],
+        hoy: HOY,
+      });
+      expect(resultado.kpis.requiereAccion).toBe(0);
+    });
+
+    it("con todo vacío, requiereAccion es 0", () => {
+      const resultado = calcularPanel({});
+      expect(resultado.kpis.requiereAccion).toBe(0);
+    });
+  });
 });

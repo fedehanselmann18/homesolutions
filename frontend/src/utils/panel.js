@@ -1,5 +1,5 @@
 import { calcularAnalisis } from "./analisis";
-import { esCompraImpaga, esCompraSinEntregar } from "./seguimiento";
+import { esCompraImpaga, esCompraSinEntregar, diasDesde, DIAS_FASE_ESTANCADA } from "./seguimiento";
 import { notasDeCompras, notasDeCobros } from "./notas";
 
 // Cuántos movimientos y cuántos meses se muestran en los bloques de abajo.
@@ -191,6 +191,47 @@ export function calcularPanel({
     0
   );
 
+  const proyectosActivos = enCurso
+    .map(({ proyecto, analisis, fasesDelProyecto, comprasDelProyecto }) => {
+      const cerradas = fasesDelProyecto.filter((f) => ESTADOS_FASE_CERRADA.includes(f.estado)).length;
+      const impagas = comprasDelProyecto.filter(esCompraImpaga);
+      // Mismo criterio que "fasesEstancadas" en calcularSeguimiento: una fase
+      // en_curso que hace DIAS_FASE_ESTANCADA días o más que no se toca.
+      const estancadas = fasesDelProyecto.filter(
+        (f) => f.estado === "en_curso" && diasDesde(f.fecha_actualizacion, hoy) >= DIAS_FASE_ESTANCADA
+      ).length;
+      return {
+        id: proyecto.id,
+        nombre: proyecto.nombre,
+        direccion: proyecto.direccion,
+        precioAcordado: analisis.totales.precioAcordado,
+        egresos: analisis.totales.egresos,
+        disponible: analisis.totales.disponible,
+        pctPresupuesto: analisis.totales.pctGastado,
+        pctCobrado: analisis.totales.pctCobrado,
+        fasesCerradas: cerradas,
+        fasesTotales: fasesDelProyecto.length,
+        pctFases: fasesDelProyecto.length ? (cerradas / fasesDelProyecto.length) * 100 : 0,
+        // Pendientes de compra del proyecto: mismo criterio que la pestaña
+        // Seguimiento, que es donde se ve el detalle de cada una.
+        comprasImpagas: impagas.length,
+        montoImpago: sumar(impagas, (c) => c.precio_total),
+        comprasSinEntregar: comprasDelProyecto.filter(esCompraSinEntregar).length,
+        fasesEstancadas: estancadas,
+      };
+    })
+    .sort((a, b) => b.pctPresupuesto - a.pctPresupuesto);
+
+  // "Requiere acción": todo lo que un proyecto en curso tiene pendiente de
+  // resolver, sumado en los 3 proyectos -- mismos 3 criterios que
+  // calcularSeguimiento.pendientes (comprasImpagas/comprasSinEntregar/
+  // fasesEstancadas), sin deduplicar entre sí: una compra que está impaga Y
+  // sin entregar son 2 acciones distintas (pagarla, reclamar el envío), no 1.
+  const requiereAccion = proyectosActivos.reduce(
+    (acc, p) => acc + p.comprasImpagas + p.comprasSinEntregar + p.fasesEstancadas,
+    0
+  );
+
   return {
     kpis: {
       enCurso: enCurso.length,
@@ -208,33 +249,9 @@ export function calcularPanel({
       notasDebitoCompras: sumar(enCurso, (r) => r.analisis.totales.notasDebitoCompras),
       notasCreditoCobros: sumar(enCurso, (r) => r.analisis.totales.notasCreditoCobros),
       notasDebitoCobros: sumar(enCurso, (r) => r.analisis.totales.notasDebitoCobros),
+      requiereAccion,
     },
-    proyectosActivos: enCurso
-      .map(({ proyecto, analisis, fasesDelProyecto, comprasDelProyecto }) => {
-        const cerradas = fasesDelProyecto.filter((f) =>
-          ESTADOS_FASE_CERRADA.includes(f.estado)
-        ).length;
-        const impagas = comprasDelProyecto.filter(esCompraImpaga);
-        return {
-          id: proyecto.id,
-          nombre: proyecto.nombre,
-          direccion: proyecto.direccion,
-          precioAcordado: analisis.totales.precioAcordado,
-          egresos: analisis.totales.egresos,
-          disponible: analisis.totales.disponible,
-          pctPresupuesto: analisis.totales.pctGastado,
-          pctCobrado: analisis.totales.pctCobrado,
-          fasesCerradas: cerradas,
-          fasesTotales: fasesDelProyecto.length,
-          pctFases: fasesDelProyecto.length ? (cerradas / fasesDelProyecto.length) * 100 : 0,
-          // Pendientes de compra del proyecto: mismo criterio que la pestaña
-          // Seguimiento, que es donde se ve el detalle de cada una.
-          comprasImpagas: impagas.length,
-          montoImpago: sumar(impagas, (c) => c.precio_total),
-          comprasSinEntregar: comprasDelProyecto.filter(esCompraSinEntregar).length,
-        };
-      })
-      .sort((a, b) => b.pctPresupuesto - a.pctPresupuesto),
+    proyectosActivos,
     actividad: armarActividad(resumenes),
     evolucion: armarEvolucion(gastos, cobros, compras, hoy),
   };
