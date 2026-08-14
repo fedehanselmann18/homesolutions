@@ -298,4 +298,108 @@ describe("calcularPanel", () => {
       expect(resultado.proyectosResumen[0]).toMatchObject({ id: 1, estado: "terminado" });
     });
   });
+
+  describe("paraResolverHoy", () => {
+    it("junta compras impagas, sin entregar y fases estancadas de todos los proyectos en curso", () => {
+      const resultado = calcularPanel({
+        proyectos: [{ id: 1, estado: "en_curso", nombre: "Casa Miramar", precio_acordado: 1000 }],
+        fases: [{ id: 10, proyecto_id: 1, estado: "en_curso", fecha_actualizacion: "2026-06-01" }],
+        compras: [
+          {
+            id: 1,
+            fase_id: 10,
+            precio_total: 500,
+            precio_neto: 500,
+            impuestos_aplicados: [],
+            notas: [],
+            estado_pago: "pendiente",
+            estado_envio: "entregado",
+            fecha: "2026-08-01",
+            descripcion: "Caños",
+            detalle: [],
+            proveedor_id: "prov-1",
+          },
+        ],
+        proveedores: [{ id: "prov-1", nombre: "Corralón del Sur" }],
+        hoy: HOY,
+      });
+
+      const tipos = resultado.paraResolverHoy.map((i) => i.tipo).sort();
+      expect(tipos).toEqual(["compra_impaga", "fase_estancada"]);
+
+      const compra = resultado.paraResolverHoy.find((i) => i.tipo === "compra_impaga");
+      expect(compra.proyectoNombre).toBe("Casa Miramar");
+      expect(compra.detalle).toBe("Corralón del Sur");
+      expect(compra.monto).toBe(500);
+    });
+
+    it("ordena por antigüedad (más días primero), sin importar de qué proyecto venga", () => {
+      const resultado = calcularPanel({
+        proyectos: [
+          { id: 1, estado: "en_curso", nombre: "Proyecto A" },
+          { id: 2, estado: "en_curso", nombre: "Proyecto B" },
+        ],
+        fases: [
+          { id: 10, proyecto_id: 1 },
+          { id: 20, proyecto_id: 2 },
+        ],
+        compras: [
+          // proyecto A: compra reciente (poco urgente).
+          {
+            id: 1,
+            fase_id: 10,
+            precio_total: 100,
+            precio_neto: 100,
+            impuestos_aplicados: [],
+            notas: [],
+            estado_pago: "pendiente",
+            estado_envio: "entregado",
+            fecha: "2026-08-12",
+          },
+          // proyecto B: compra vieja (más urgente) -> debe ir primero.
+          {
+            id: 2,
+            fase_id: 20,
+            precio_total: 200,
+            precio_neto: 200,
+            impuestos_aplicados: [],
+            notas: [],
+            estado_pago: "pendiente",
+            estado_envio: "entregado",
+            fecha: "2026-07-01",
+          },
+        ],
+        hoy: HOY,
+      });
+
+      expect(resultado.paraResolverHoy[0].proyectoNombre).toBe("Proyecto B");
+      expect(resultado.paraResolverHoy[1].proyectoNombre).toBe("Proyecto A");
+    });
+
+    it("nunca devuelve más de 6 ítems, aunque haya más pendientes", () => {
+      const compras = Array.from({ length: 10 }, (_, i) => ({
+        id: i,
+        fase_id: 10,
+        precio_total: 10,
+        precio_neto: 10,
+        impuestos_aplicados: [],
+        notas: [],
+        estado_pago: "pendiente",
+        estado_envio: "entregado",
+        fecha: "2026-08-01",
+      }));
+      const resultado = calcularPanel({
+        proyectos: [{ id: 1, estado: "en_curso", nombre: "Casa Miramar" }],
+        fases: [{ id: 10, proyecto_id: 1 }],
+        compras,
+        hoy: HOY,
+      });
+      expect(resultado.paraResolverHoy).toHaveLength(6);
+    });
+
+    it("con todo vacío, paraResolverHoy es un array vacío", () => {
+      const resultado = calcularPanel({});
+      expect(resultado.paraResolverHoy).toEqual([]);
+    });
+  });
 });
