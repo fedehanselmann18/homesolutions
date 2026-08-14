@@ -39,6 +39,13 @@
   --color-gris-claro-marca: #d9d7d2;
   --color-gris-oscuro-marca: #5a5a58;
 
+  /* tints suaves para hover de fila en tablas (ver claudedesign/, dirección
+     1a "Planilla" del rediseño del Panel) -- más tenues que --color-terracota-tint
+     y --color-oxido-tint, pensados para pintar la fila entera sin competir
+     con el semáforo de color (borde/texto) que ya lleva cada fila. */
+  --color-terracota-tint-fila: #f7f9f3;
+  --color-oxido-tint-fila: #fdf7f7;
+
   /* color — superficies oscuras de marca (sidebar/header/login, negro puro) */
   --color-oscuro: #000000;
   --color-oscuro-hover: #141414;
