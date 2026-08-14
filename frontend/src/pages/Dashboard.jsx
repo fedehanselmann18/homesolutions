@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import {
@@ -27,6 +27,31 @@ const TIPOS_MOVIMIENTO = {
   nota_credito: { label: "Nota de crédito", color: "#dc2626", signo: "−" },
   nota_debito: { label: "Nota de débito", color: NARANJA, signo: "+" },
 };
+
+// Filtro de estado de la tabla "Proyectos en curso" (dirección 1a) -- client
+// side, sobre los datos que ya trajo el Panel (sin pedir nada nuevo al
+// backend). "titulo"/"descripcion" cambian el encabezado de la sección para
+// que no diga "Proyectos en curso" mientras se está mirando Terminados.
+const FILTROS_PROYECTO = [
+  {
+    key: "en_curso",
+    label: "En curso",
+    titulo: "Proyectos en curso",
+    vacio: "No hay proyectos en curso.",
+  },
+  {
+    key: "a_iniciar",
+    label: "A iniciar",
+    titulo: "Proyectos a iniciar",
+    vacio: "No hay proyectos a iniciar.",
+  },
+  {
+    key: "terminado",
+    label: "Terminados",
+    titulo: "Proyectos terminados",
+    vacio: "No hay proyectos terminados.",
+  },
+];
 
 // Color de cada segmento de la barra de fases (dirección 1a "Planilla" del
 // rediseño): mismo criterio de "cerrada" que ESTADOS_FASE_CERRADA en
@@ -85,11 +110,19 @@ function DashboardSkeleton() {
   );
 }
 
-function Seccion({ titulo, descripcion, children }) {
+// `accion` es opcional: contenido a la derecha del título (ver los filtros
+// En curso/A iniciar/Terminados de "Proyectos en curso" más abajo). Sin
+// `accion` se ve exactamente igual que antes.
+function Seccion({ titulo, descripcion, accion, children }) {
   return (
     <section className="panel-seccion">
-      <h2 className="panel-seccion-titulo">{titulo}</h2>
-      {descripcion && <p className="panel-seccion-descripcion">{descripcion}</p>}
+      <div className="panel-seccion-header">
+        <div>
+          <h2 className="panel-seccion-titulo">{titulo}</h2>
+          {descripcion && <p className="panel-seccion-descripcion">{descripcion}</p>}
+        </div>
+        {accion}
+      </div>
       {children}
     </section>
   );
@@ -210,6 +243,7 @@ function FilaProyecto({ proyecto, onClick }) {
 
 export function Dashboard() {
   const navigate = useNavigate();
+  const [filtroEstado, setFiltroEstado] = useState("en_curso");
 
   // Los endpoints globales traen todo de una: el Panel agrupa por proyecto
   // en el front, así no hacen falta N requests por proyecto.
@@ -260,8 +294,12 @@ export function Dashboard() {
   if (error || !panel)
     return <p className="panel-vacio">No se pudieron cargar los datos del panel.</p>;
 
-  const { kpis, proyectosActivos, actividad, evolucion } = panel;
+  const { kpis, proyectosResumen, actividad, evolucion } = panel;
   const totalProyectos = kpis.enCurso + kpis.terminados + kpis.aIniciar;
+
+  const filtro = FILTROS_PROYECTO.find((f) => f.key === filtroEstado);
+  const contadorPorFiltro = { en_curso: kpis.enCurso, a_iniciar: kpis.aIniciar, terminado: kpis.terminados };
+  const proyectosFiltrados = proyectosResumen.filter((p) => p.estado === filtroEstado);
 
   // Detalle del KPI "Requiere acción": junta los 3 subtotales que vengan en
   // > 0, en vez de mostrar siempre los 3 (la mayoría de los meses alguno da
@@ -338,9 +376,32 @@ export function Dashboard() {
         />
       </div>
 
-      <Seccion titulo="Proyectos en curso" descripcion="Tocá una fila para ir al detalle del proyecto">
-        {proyectosActivos.length === 0 ? (
-          <p className="panel-vacio">No hay proyectos en curso.</p>
+      <Seccion
+        titulo={filtro.titulo}
+        descripcion="Tocá una fila para ir al detalle del proyecto"
+        accion={
+          <div className="panel-filtro-estado" role="tablist" aria-label="Filtrar proyectos por estado">
+            {FILTROS_PROYECTO.map((f) => (
+              <button
+                key={f.key}
+                type="button"
+                role="tab"
+                aria-selected={f.key === filtroEstado}
+                className={
+                  f.key === filtroEstado
+                    ? "panel-filtro-estado-btn panel-filtro-estado-btn--activo"
+                    : "panel-filtro-estado-btn"
+                }
+                onClick={() => setFiltroEstado(f.key)}
+              >
+                {f.label} <span className="panel-filtro-estado-contador">{contadorPorFiltro[f.key]}</span>
+              </button>
+            ))}
+          </div>
+        }
+      >
+        {proyectosFiltrados.length === 0 ? (
+          <p className="panel-vacio">{filtro.vacio}</p>
         ) : (
           <div className="panel-tabla">
             <div className="panel-tabla-header">
@@ -351,7 +412,7 @@ export function Dashboard() {
               <span className="label-ficha">Pendientes</span>
               <span />
             </div>
-            {proyectosActivos.map((proyecto) => (
+            {proyectosFiltrados.map((proyecto) => (
               <FilaProyecto
                 key={proyecto.id}
                 proyecto={proyecto}

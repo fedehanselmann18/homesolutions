@@ -191,40 +191,52 @@ export function calcularPanel({
     0
   );
 
-  const proyectosActivos = enCurso
-    .map(({ proyecto, analisis, fasesDelProyecto, comprasDelProyecto }) => {
-      const cerradas = fasesDelProyecto.filter((f) => ESTADOS_FASE_CERRADA.includes(f.estado)).length;
-      const impagas = comprasDelProyecto.filter(esCompraImpaga);
-      // Mismo criterio que "fasesEstancadas" en calcularSeguimiento: una fase
-      // en_curso que hace DIAS_FASE_ESTANCADA días o más que no se toca.
-      const estancadas = fasesDelProyecto.filter(
-        (f) => f.estado === "en_curso" && diasDesde(f.fecha_actualizacion, hoy) >= DIAS_FASE_ESTANCADA
-      ).length;
-      return {
-        id: proyecto.id,
-        nombre: proyecto.nombre,
-        direccion: proyecto.direccion,
-        precioAcordado: analisis.totales.precioAcordado,
-        egresos: analisis.totales.egresos,
-        disponible: analisis.totales.disponible,
-        pctPresupuesto: analisis.totales.pctGastado,
-        pctCobrado: analisis.totales.pctCobrado,
-        fasesCerradas: cerradas,
-        fasesTotales: fasesDelProyecto.length,
-        pctFases: fasesDelProyecto.length ? (cerradas / fasesDelProyecto.length) * 100 : 0,
-        // Pendientes de compra del proyecto: mismo criterio que la pestaña
-        // Seguimiento, que es donde se ve el detalle de cada una.
-        comprasImpagas: impagas.length,
-        montoImpago: sumar(impagas, (c) => c.precio_total),
-        comprasSinEntregar: comprasDelProyecto.filter(esCompraSinEntregar).length,
-        fasesEstancadas: estancadas,
-        // Estado por fase, en el mismo orden que devuelve la API (igual que
-        // Fases.jsx) -- lo usa la barra de segmentos de la tabla de
-        // "Proyectos en curso" (dirección 1a) para pintar cada fase.
-        fasesResumen: fasesDelProyecto.map((f) => ({ id: f.id, estado: f.estado })),
-      };
-    })
+  // Fila de tabla para UN proyecto, sea cual sea su estado -- se usa tanto
+  // para "proyectosActivos" (compat, sólo en_curso) como para
+  // "proyectosResumen" (los 3 estados, para los filtros En curso/A
+  // iniciar/Terminados de la dirección 1a).
+  function construirFilaProyecto({ proyecto, analisis, fasesDelProyecto, comprasDelProyecto }) {
+    const cerradas = fasesDelProyecto.filter((f) => ESTADOS_FASE_CERRADA.includes(f.estado)).length;
+    const impagas = comprasDelProyecto.filter(esCompraImpaga);
+    // Mismo criterio que "fasesEstancadas" en calcularSeguimiento: una fase
+    // en_curso que hace DIAS_FASE_ESTANCADA días o más que no se toca.
+    const estancadas = fasesDelProyecto.filter(
+      (f) => f.estado === "en_curso" && diasDesde(f.fecha_actualizacion, hoy) >= DIAS_FASE_ESTANCADA
+    ).length;
+    return {
+      id: proyecto.id,
+      estado: proyecto.estado,
+      nombre: proyecto.nombre,
+      direccion: proyecto.direccion,
+      precioAcordado: analisis.totales.precioAcordado,
+      egresos: analisis.totales.egresos,
+      disponible: analisis.totales.disponible,
+      pctPresupuesto: analisis.totales.pctGastado,
+      pctCobrado: analisis.totales.pctCobrado,
+      fasesCerradas: cerradas,
+      fasesTotales: fasesDelProyecto.length,
+      pctFases: fasesDelProyecto.length ? (cerradas / fasesDelProyecto.length) * 100 : 0,
+      // Pendientes de compra del proyecto: mismo criterio que la pestaña
+      // Seguimiento, que es donde se ve el detalle de cada una.
+      comprasImpagas: impagas.length,
+      montoImpago: sumar(impagas, (c) => c.precio_total),
+      comprasSinEntregar: comprasDelProyecto.filter(esCompraSinEntregar).length,
+      fasesEstancadas: estancadas,
+      // Estado por fase, en el mismo orden que devuelve la API (igual que
+      // Fases.jsx) -- lo usa la barra de segmentos de la tabla de
+      // "Proyectos en curso" (dirección 1a) para pintar cada fase.
+      fasesResumen: fasesDelProyecto.map((f) => ({ id: f.id, estado: f.estado })),
+    };
+  }
+
+  // Todos los proyectos, cualquier estado -- alimenta los filtros En
+  // curso/A iniciar/Terminados de la tabla del Panel.
+  const proyectosResumen = resumenes
+    .map(construirFilaProyecto)
     .sort((a, b) => b.pctPresupuesto - a.pctPresupuesto);
+
+  // Compat: sólo en_curso, mismo criterio que siempre tuvo esta clave.
+  const proyectosActivos = proyectosResumen.filter((p) => p.estado === "en_curso");
 
   // "Requiere acción": todo lo que un proyecto en curso tiene pendiente de
   // resolver, sumado en los 3 proyectos -- mismos 3 criterios que
@@ -260,6 +272,7 @@ export function calcularPanel({
       fasesEstancadasEnCurso,
     },
     proyectosActivos,
+    proyectosResumen,
     actividad: armarActividad(resumenes),
     evolucion: armarEvolucion(gastos, cobros, compras, hoy),
   };

@@ -268,4 +268,34 @@ describe("calcularPanel", () => {
       { id: 11, estado: "en_curso" },
     ]);
   });
+
+  describe("proyectosResumen", () => {
+    it("incluye proyectos de los 3 estados (no sólo en_curso, a diferencia de proyectosActivos)", () => {
+      const resultado = calcularPanel({
+        proyectos: [
+          { id: 1, estado: "en_curso", nombre: "En curso" },
+          { id: 2, estado: "a_iniciar", nombre: "A iniciar" },
+          { id: 3, estado: "terminado", nombre: "Terminado" },
+        ],
+        hoy: HOY,
+      });
+      expect(resultado.proyectosResumen).toHaveLength(3);
+      expect(resultado.proyectosResumen.map((p) => p.estado).sort()).toEqual([
+        "a_iniciar",
+        "en_curso",
+        "terminado",
+      ]);
+      // proyectosActivos sigue filtrando sólo en_curso, como siempre.
+      expect(resultado.proyectosActivos).toHaveLength(1);
+      expect(resultado.proyectosActivos[0].estado).toBe("en_curso");
+    });
+
+    it("cada fila de proyectosResumen trae su propio estado", () => {
+      const resultado = calcularPanel({
+        proyectos: [{ id: 1, estado: "terminado", nombre: "Loft Palermo" }],
+        hoy: HOY,
+      });
+      expect(resultado.proyectosResumen[0]).toMatchObject({ id: 1, estado: "terminado" });
+    });
+  });
 });
