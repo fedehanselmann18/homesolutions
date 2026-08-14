@@ -2,24 +2,15 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
-import {
-  useProyectos,
-  useFases,
-  useGastos,
-  useCobros,
-  useCompras,
-  useProductos,
-  useProveedores,
-} from "../hooks/queries";
+import { useProyectos, useFases, useGastos, useCobros, useCompras } from "../hooks/queries";
 
-// Dashboard usa 7 hooks de TanStack Query independientes (useProyectos,
-// useFases, etc. + useProductos/useProveedores para describir "Para resolver
-// hoy") combinados en un único "cargando" -- calcularPanel necesita las 7
-// fuentes juntas para calcular cualquier KPI, así que no hay una sección que
-// pueda resolver antes que las demás. Estos tests mockean los hooks
-// directamente (sin QueryClientProvider) para verificar que el skeleton
-// reemplaza al spinner viejo mientras cargando=true, y que desaparece por
-// completo una vez que las 7 queries resuelven.
+// Dashboard usa 5 hooks de TanStack Query independientes (useProyectos,
+// useFases, etc.) combinados en un único "cargando" -- calcularPanel
+// necesita las 5 fuentes juntas para calcular cualquier KPI, así que no hay
+// una sección que pueda resolver antes que las demás. Estos tests mockean
+// los hooks directamente (sin QueryClientProvider) para verificar que el
+// skeleton reemplaza al spinner viejo mientras cargando=true, y que
+// desaparece por completo una vez que las 5 queries resuelven.
 vi.mock("../hooks/queries");
 
 const renderDashboard = () =>
@@ -31,15 +22,21 @@ const renderDashboard = () =>
 
 const mockQueries = ({ isLoading, data }) => {
   const estado = { isLoading, error: null, data };
-  const conDato = (clave, porDefecto) =>
-    estado.data?.[clave] !== undefined ? { ...estado, data: estado.data[clave] } : { ...estado, data: porDefecto };
-  useProyectos.mockReturnValue(conDato("proyectos", []));
-  useFases.mockReturnValue(conDato("fases", []));
-  useGastos.mockReturnValue(conDato("gastos", []));
-  useCobros.mockReturnValue(conDato("cobros", []));
-  useCompras.mockReturnValue(conDato("compras", []));
-  useProductos.mockReturnValue(conDato("productos", []));
-  useProveedores.mockReturnValue(conDato("proveedores", []));
+  useProyectos.mockReturnValue(
+    estado.data?.proyectos !== undefined ? { ...estado, data: estado.data.proyectos } : estado
+  );
+  useFases.mockReturnValue(
+    estado.data?.fases !== undefined ? { ...estado, data: estado.data.fases } : estado
+  );
+  useGastos.mockReturnValue(
+    estado.data?.gastos !== undefined ? { ...estado, data: estado.data.gastos } : estado
+  );
+  useCobros.mockReturnValue(
+    estado.data?.cobros !== undefined ? { ...estado, data: estado.data.cobros } : estado
+  );
+  useCompras.mockReturnValue(
+    estado.data?.compras !== undefined ? { ...estado, data: estado.data.compras } : estado
+  );
 };
 
 describe("Dashboard", () => {

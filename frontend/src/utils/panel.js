@@ -1,19 +1,10 @@
 import { calcularAnalisis } from "./analisis";
-import {
-  esCompraImpaga,
-  esCompraSinEntregar,
-  diasDesde,
-  DIAS_FASE_ESTANCADA,
-  calcularSeguimiento,
-} from "./seguimiento";
+import { esCompraImpaga, esCompraSinEntregar, diasDesde, DIAS_FASE_ESTANCADA } from "./seguimiento";
 import { notasDeCompras, notasDeCobros } from "./notas";
 
 // Cuántos movimientos y cuántos meses se muestran en los bloques de abajo.
 const MOVIMIENTOS_RECIENTES = 8;
 const MESES_EVOLUCION = 6;
-// "Para resolver hoy" (dirección 1c, injertada en el Panel de 1a): cuántos
-// ítems como máximo, de todos los proyectos en curso juntos.
-const MAX_PARA_RESOLVER = 6;
 
 // Una fase "auditada" ya está cerrada: cuenta como terminada para el avance,
 // mismo criterio que usa la pestaña de Fases del proyecto.
@@ -139,51 +130,12 @@ function armarEvolucion(gastos, cobros, compras, hoy) {
   return meses;
 }
 
-// Aplana comprasImpagas/comprasSinEntregar/fasesEstancadas de UN
-// calcularSeguimiento (que ya vienen ordenados por antigüedad) a la forma
-// común que usa "Para resolver hoy" -- mismos 3 criterios que kpis.requiereAccion,
-// pero acá con la descripción de cada ítem en vez de sólo el conteo.
-function itemsParaResolver(seguimiento, proyecto) {
-  const comun = { proyectoId: proyecto.id, proyectoNombre: proyecto.nombre };
-  return [
-    ...seguimiento.comprasImpagas.map((c) => ({
-      ...comun,
-      id: `compra-impaga-${c.id}`,
-      tipo: "compra_impaga",
-      titulo: c.productos,
-      detalle: c.proveedor,
-      monto: c.monto,
-      dias: c.dias,
-    })),
-    ...seguimiento.comprasSinEntregar.map((c) => ({
-      ...comun,
-      id: `compra-sin-entregar-${c.id}`,
-      tipo: "compra_sin_entregar",
-      titulo: c.productos,
-      detalle: c.proveedor,
-      monto: c.monto,
-      dias: c.dias,
-    })),
-    ...seguimiento.fasesEstancadas.map((f) => ({
-      ...comun,
-      id: `fase-estancada-${f.id}`,
-      tipo: "fase_estancada",
-      titulo: f.nombre,
-      detalle: "Sin movimiento",
-      monto: null,
-      dias: f.dias,
-    })),
-  ];
-}
-
 /**
  * Resumen de TODOS los proyectos para el Panel.
  *
  * Cada proyecto se pasa por `calcularAnalisis` (el mismo cálculo que usa la
  * pestaña Análisis General) para que los números del Panel y los del detalle
- * de un proyecto no puedan divergir nunca. Los pendientes de "Para resolver
- * hoy" pasan por `calcularSeguimiento`, el mismo cálculo que usa la pestaña
- * Seguimiento de cada proyecto, por la misma razón.
+ * de un proyecto no puedan divergir nunca.
  */
 export function calcularPanel({
   proyectos = [],
@@ -191,8 +143,6 @@ export function calcularPanel({
   gastos = [],
   cobros = [],
   compras = [],
-  productos = [],
-  proveedores = [],
   hoy = new Date(),
 }) {
   const proyectoDeFase = new Map(fases.map((f) => [f.id, f.proyecto_id]));
@@ -299,30 +249,6 @@ export function calcularPanel({
   const fasesEstancadasEnCurso = sumar(proyectosActivos, (p) => p.fasesEstancadas);
   const requiereAccion = comprasImpagasEnCurso + comprasSinEntregarEnCurso + fasesEstancadasEnCurso;
 
-  // "Para resolver hoy" (dirección 1c, injertada arriba del Panel de 1a):
-  // los MAX_PARA_RESOLVER ítems más urgentes (más días) de todos los
-  // proyectos en curso, resueltos con el mismo calcularSeguimiento que usa
-  // la pestaña Seguimiento de cada proyecto -- no hay lógica nueva acá,
-  // sólo se junta y se ordena entre proyectos.
-  const paraResolverHoy = enCurso
-    .flatMap(({ proyecto, fasesDelProyecto, gastosDelProyecto, cobrosDelProyecto, comprasDelProyecto }) =>
-      itemsParaResolver(
-        calcularSeguimiento({
-          proyecto,
-          fases: fasesDelProyecto,
-          gastos: gastosDelProyecto,
-          cobros: cobrosDelProyecto,
-          compras: comprasDelProyecto,
-          productos,
-          proveedores,
-          hoy,
-        }),
-        proyecto
-      )
-    )
-    .sort((a, b) => b.dias - a.dias)
-    .slice(0, MAX_PARA_RESOLVER);
-
   return {
     kpis: {
       enCurso: enCurso.length,
@@ -347,7 +273,6 @@ export function calcularPanel({
     },
     proyectosActivos,
     proyectosResumen,
-    paraResolverHoy,
     actividad: armarActividad(resumenes),
     evolucion: armarEvolucion(gastos, cobros, compras, hoy),
   };

@@ -386,15 +386,6 @@
   font-family: var(--font-display);
 }
 
-/* --- Para resolver hoy (dirección 1c, injertada en el Panel de 1a): lista
-   de TarjetaAlerta -- mismo componente que ya usa la pestaña Seguimiento de
-   cada proyecto, acá con ítems de todos los proyectos en curso juntos. --- */
-
-.panel-resolver-lista {
-  display: flex;
-  flex-direction: column;
-}
-
 /* --- Actividad reciente --- */
 
 .panel-actividad {

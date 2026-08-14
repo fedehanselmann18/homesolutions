@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight, CircleDollarSign, Truck, ClockAlert } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -11,30 +11,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import {
-  useProyectos,
-  useFases,
-  useGastos,
-  useCobros,
-  useCompras,
-  useProductos,
-  useProveedores,
-} from "../hooks/queries";
+import { useProyectos, useFases, useGastos, useCobros, useCompras } from "../hooks/queries";
 
 import { TarjetaKpi, BarraProgreso } from "../components/shared/TarjetaKpi";
-import { TarjetaAlerta } from "../components/shared/TarjetaAlerta";
 import { calcularPanel } from "../utils/panel";
 import { formatMoneda, formatMonedaCorta, formatFecha } from "../utils/formato";
 import { VERDE, ROJO, NARANJA, AZUL } from "../constants/colores";
 import "./Dashboard.css";
-
-// Ícono + color por tipo de ítem de "Para resolver hoy" (dirección 1c,
-// injertada en el Panel de 1a) -- mismos 3 criterios que kpis.requiereAccion.
-const TIPOS_RESOLVER = {
-  compra_impaga: { icono: CircleDollarSign, color: ROJO },
-  compra_sin_entregar: { icono: Truck, color: NARANJA },
-  fase_estancada: { icono: ClockAlert, color: AZUL },
-};
 
 const TIPOS_MOVIMIENTO = {
   cobro: { label: "Cobro", color: VERDE, signo: "+" },
@@ -263,34 +246,25 @@ export function Dashboard() {
   const [filtroEstado, setFiltroEstado] = useState("en_curso");
 
   // Los endpoints globales traen todo de una: el Panel agrupa por proyecto
-  // en el front, así no hacen falta N requests por proyecto. productos/
-  // proveedores se suman para poder describir los ítems de "Para resolver
-  // hoy" (nombre de producto + proveedor de cada compra impaga/sin
-  // entregar) -- son catálogos livianos, ya los pide el resto de la app.
+  // en el front, así no hacen falta N requests por proyecto.
   const proyectosQuery = useProyectos();
   const fasesQuery = useFases();
   const gastosQuery = useGastos();
   const cobrosQuery = useCobros();
   const comprasQuery = useCompras();
-  const productosQuery = useProductos();
-  const proveedoresQuery = useProveedores();
 
   const cargando =
     proyectosQuery.isLoading ||
     fasesQuery.isLoading ||
     gastosQuery.isLoading ||
     cobrosQuery.isLoading ||
-    comprasQuery.isLoading ||
-    productosQuery.isLoading ||
-    proveedoresQuery.isLoading;
+    comprasQuery.isLoading;
   const error =
     proyectosQuery.error ||
     fasesQuery.error ||
     gastosQuery.error ||
     cobrosQuery.error ||
-    comprasQuery.error ||
-    productosQuery.error ||
-    proveedoresQuery.error;
+    comprasQuery.error;
 
   const datos = useMemo(
     () =>
@@ -302,8 +276,6 @@ export function Dashboard() {
             gastos: gastosQuery.data,
             cobros: cobrosQuery.data,
             compras: comprasQuery.data,
-            productos: productosQuery.data,
-            proveedores: proveedoresQuery.data,
           },
     [
       cargando,
@@ -313,8 +285,6 @@ export function Dashboard() {
       gastosQuery.data,
       cobrosQuery.data,
       comprasQuery.data,
-      productosQuery.data,
-      proveedoresQuery.data,
     ]
   );
 
@@ -324,7 +294,7 @@ export function Dashboard() {
   if (error || !panel)
     return <p className="panel-vacio">No se pudieron cargar los datos del panel.</p>;
 
-  const { kpis, proyectosResumen, paraResolverHoy, actividad, evolucion } = panel;
+  const { kpis, proyectosResumen, actividad, evolucion } = panel;
   const totalProyectos = kpis.enCurso + kpis.terminados + kpis.aIniciar;
 
   const filtro = FILTROS_PROYECTO.find((f) => f.key === filtroEstado);
@@ -405,31 +375,6 @@ export function Dashboard() {
           destacado
         />
       </div>
-
-      {paraResolverHoy.length > 0 && (
-        <Seccion
-          titulo="Para resolver hoy"
-          descripcion="Compras sin pagar, envíos pendientes y fases sin movimiento, de todos los proyectos en curso"
-        >
-          <div className="panel-resolver-lista">
-            {paraResolverHoy.map((item) => {
-              const tipo = TIPOS_RESOLVER[item.tipo];
-              return (
-                <TarjetaAlerta
-                  key={item.id}
-                  icono={tipo.icono}
-                  color={tipo.color}
-                  titulo={item.titulo}
-                  detalle={`${item.proyectoNombre} · ${item.detalle}`}
-                  monto={item.monto ? formatMoneda(item.monto) : undefined}
-                  extra={`hace ${item.dias} ${item.dias === 1 ? "día" : "días"}`}
-                  onClick={() => navigate(`/proyectos/${item.proyectoId}`)}
-                />
-              );
-            })}
-          </div>
-        </Seccion>
-      )}
 
       <Seccion
         titulo={filtro.titulo}
