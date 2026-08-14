@@ -1,0 +1,161 @@
+import { ChevronRight } from "lucide-react";
+import { BarraProgreso } from "../shared/TarjetaKpi";
+import { formatMoneda, formatMonedaCorta } from "../../utils/formato";
+import { VERDE, ROJO, NARANJA } from "../../constants/colores";
+import "./TablaProyectos.css";
+
+// Color de cada segmento de la barra de fases (dirección 1a "Planilla" del
+// rediseño, ver claudedesign/): mismo criterio de "cerrada" que
+// ESTADOS_FASE_CERRADA en utils/panel.js, más "en_curso" en naranja y el
+// resto (por_empezar) en gris de línea.
+function colorSegmentoFase(estado) {
+  if (estado === "terminada" || estado === "auditada") return VERDE;
+  if (estado === "en_curso") return NARANJA;
+  return "#e4e4e7"; // --color-linea (hex plano: los segmentos van por style inline, no CSS var)
+}
+
+// Barra de segmentos de fases: un rectángulo por fase en vez de la barra de
+// progreso continua de antes -- se ve de un vistazo cuál fase puntual está
+// trabada, no sólo "cuántas" van.
+function SegmentosFases({ fases }) {
+  if (fases.length === 0) {
+    return <span className="panel-tabla-fases-vacio">Sin fases</span>;
+  }
+  return (
+    <div className="panel-fases-segmentos">
+      {fases.map((fase) => (
+        <span
+          key={fase.id}
+          className="panel-fases-segmento"
+          style={{ backgroundColor: colorSegmentoFase(fase.estado) }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Fila de la tabla de proyectos, formato "planilla" (dirección 1a, ver
+ * claudedesign/): reemplaza tanto la tarjeta de antes (página Proyectos)
+ * como la lista simple del Panel por una fila real con sus columnas
+ * alineadas. La usan `TablaProyectos` de acá abajo y por lo tanto tanto el
+ * Panel ("Proyectos en curso") como la página Proyectos, para que las dos
+ * pantallas lean exactamente igual.
+ *
+ * `renderAcciones`, si viene, se pinta al lado del chevron (ej. editar/
+ * eliminar en la página Proyectos, que el Panel no necesita) -- el llamador
+ * es responsable de hacer `stopPropagation` en esos botones para que no
+ * disparen el click de la fila entera.
+ */
+export function FilaProyecto({ proyecto, onClick, renderAcciones }) {
+  const excedido = proyecto.pctPresupuesto > 100;
+  const positivo = proyecto.disponible >= 0;
+
+  return (
+    <div
+      className="panel-tabla-fila"
+      style={{
+        borderLeftColor: positivo ? VERDE : ROJO,
+        "--fila-hover": positivo
+          ? "var(--color-terracota-tint-fila)"
+          : "var(--color-oxido-tint-fila)",
+      }}
+      onClick={onClick}
+      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onClick()}
+      role="button"
+      tabIndex={0}
+    >
+      <div className="panel-tabla-col panel-tabla-col--proyecto">
+        <span className="panel-tabla-nombre">{proyecto.nombre}</span>
+        <span className="panel-tabla-direccion">{proyecto.direccion}</span>
+      </div>
+
+      <div className="panel-tabla-col panel-tabla-col--disponible">
+        <span style={{ color: positivo ? VERDE : ROJO }}>{formatMoneda(proyecto.disponible)}</span>
+      </div>
+
+      <div className="panel-tabla-col panel-tabla-col--presupuesto">
+        <div className="panel-tabla-presupuesto-header">
+          <span className={excedido ? "panel-proyecto-excedido" : ""}>
+            {proyecto.pctPresupuesto.toFixed(0)}%
+          </span>
+        </div>
+        <BarraProgreso porcentaje={proyecto.pctPresupuesto} color={excedido ? ROJO : NARANJA} />
+        <span className="panel-tabla-presupuesto-detalle">
+          {formatMonedaCorta(proyecto.egresos)} / {formatMonedaCorta(proyecto.precioAcordado)}
+        </span>
+      </div>
+
+      <div className="panel-tabla-col panel-tabla-col--fases">
+        <SegmentosFases fases={proyecto.fasesResumen} />
+        <span className="panel-tabla-fases-contador">
+          {proyecto.fasesCerradas}/{proyecto.fasesTotales}
+        </span>
+      </div>
+
+      <div className="panel-tabla-col panel-tabla-col--pendientes">
+        {proyecto.comprasImpagas === 0 && proyecto.comprasSinEntregar === 0 ? (
+          <span className="panel-proyecto-compras-ok">
+            {proyecto.estado === "terminado" ? "Cerrado" : "Sin pendientes"}
+          </span>
+        ) : (
+          <>
+            {proyecto.comprasImpagas > 0 && (
+              <span
+                className="panel-proyecto-chip"
+                style={{ color: ROJO, backgroundColor: `${ROJO}14` }}
+              >
+                {proyecto.comprasImpagas} sin pagar
+              </span>
+            )}
+            {proyecto.comprasSinEntregar > 0 && (
+              <span
+                className="panel-proyecto-chip"
+                style={{ color: NARANJA, backgroundColor: `${NARANJA}14` }}
+              >
+                {proyecto.comprasSinEntregar} {proyecto.comprasSinEntregar === 1 ? "envío" : "envíos"}
+              </span>
+            )}
+          </>
+        )}
+      </div>
+
+      <div className="panel-tabla-col panel-tabla-col--accion">
+        {renderAcciones?.(proyecto)}
+        <ChevronRight size={18} strokeWidth={2} className="panel-tabla-chevron" aria-hidden="true" />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Tabla de proyectos completa: cabecera + una `FilaProyecto` por proyecto.
+ * `proyectos` ya viene resuelto (filtrado/ordenado) por el llamador --
+ * ver `calcularPanel(...).proyectosResumen` en utils/panel.js, la misma
+ * fuente que usan el Panel y la página Proyectos para que los números
+ * nunca diverjan entre pantallas.
+ */
+export function TablaProyectos({ proyectos, onFilaClick, renderAcciones }) {
+  return (
+    <div className="panel-tabla">
+      <div className="panel-tabla-header">
+        <span className="label-ficha">Proyecto</span>
+        <span className="label-ficha">Disponible</span>
+        <span className="label-ficha">Presupuesto ejecutado</span>
+        <span className="label-ficha">Fases</span>
+        <span className="label-ficha">Pendientes</span>
+        <span />
+      </div>
+      {proyectos.map((proyecto) => (
+        <FilaProyecto
+          key={proyecto.id}
+          proyecto={proyecto}
+          onClick={() => onFilaClick(proyecto)}
+          renderAcciones={renderAcciones}
+        />
+      ))}
+    </div>
+  );
+}
+
+export default TablaProyectos;

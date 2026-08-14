@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronRight } from "lucide-react";
 import {
   Bar,
   BarChart,
@@ -13,7 +12,8 @@ import {
 } from "recharts";
 import { useProyectos, useFases, useGastos, useCobros, useCompras } from "../hooks/queries";
 
-import { TarjetaKpi, BarraProgreso } from "../components/shared/TarjetaKpi";
+import { TarjetaKpi } from "../components/shared/TarjetaKpi";
+import { TablaProyectos } from "../components/proyectos/TablaProyectos";
 import { calcularPanel } from "../utils/panel";
 import { formatMoneda, formatMonedaCorta, formatFecha } from "../utils/formato";
 import { VERDE, ROJO, NARANJA, AZUL } from "../constants/colores";
@@ -52,16 +52,6 @@ const FILTROS_PROYECTO = [
     vacio: "No hay proyectos terminados.",
   },
 ];
-
-// Color de cada segmento de la barra de fases (dirección 1a "Planilla" del
-// rediseño): mismo criterio de "cerrada" que ESTADOS_FASE_CERRADA en
-// utils/panel.js, más "en_curso" en naranja y el resto (por_empezar) en gris
-// de línea.
-function colorSegmentoFase(estado) {
-  if (estado === "terminada" || estado === "auditada") return VERDE;
-  if (estado === "en_curso") return NARANJA;
-  return "#e4e4e7"; // --color-linea (hex plano: los segmentos van por style inline, no CSS var)
-}
 
 // Reproduce la estructura real del panel (header, KPIs, proyectos, gráfico)
 // con bloques placeholder, en vez de tapar todo con un spinner monolítico.
@@ -136,107 +126,6 @@ function TooltipEvolucion({ active, payload }) {
       <strong>{mes.etiquetaCompleta}</strong>
       <span style={{ color: VERDE }}>Cobrado: {formatMoneda(mes.cobrado)}</span>
       <span style={{ color: NARANJA }}>Gastado: {formatMoneda(mes.gastado)}</span>
-    </div>
-  );
-}
-
-// Barra de segmentos de fases: un rectángulo por fase (dirección 1a) en vez
-// de la barra de progreso continua de antes -- se ve de un vistazo cuál fase
-// puntual está trabada, no sólo "cuántas" van.
-function SegmentosFases({ fases }) {
-  if (fases.length === 0) {
-    return <span className="panel-tabla-fases-vacio">Sin fases</span>;
-  }
-  return (
-    <div className="panel-fases-segmentos">
-      {fases.map((fase) => (
-        <span
-          key={fase.id}
-          className="panel-fases-segmento"
-          style={{ backgroundColor: colorSegmentoFase(fase.estado) }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// Fila de la tabla de "Proyectos en curso" (reemplaza la tarjeta de antes):
-// mismos datos, pero como planilla real -- ver claudedesign/, dirección 1a.
-function FilaProyecto({ proyecto, onClick }) {
-  const excedido = proyecto.pctPresupuesto > 100;
-  const positivo = proyecto.disponible >= 0;
-
-  return (
-    <div
-      className="panel-tabla-fila"
-      style={{
-        borderLeftColor: positivo ? VERDE : ROJO,
-        "--fila-hover": positivo
-          ? "var(--color-terracota-tint-fila)"
-          : "var(--color-oxido-tint-fila)",
-      }}
-      onClick={onClick}
-      onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && onClick()}
-      role="button"
-      tabIndex={0}
-    >
-      <div className="panel-tabla-col panel-tabla-col--proyecto">
-        <span className="panel-tabla-nombre">{proyecto.nombre}</span>
-        <span className="panel-tabla-direccion">{proyecto.direccion}</span>
-      </div>
-
-      <div className="panel-tabla-col panel-tabla-col--disponible">
-        <span style={{ color: positivo ? VERDE : ROJO }}>{formatMoneda(proyecto.disponible)}</span>
-      </div>
-
-      <div className="panel-tabla-col panel-tabla-col--presupuesto">
-        <div className="panel-tabla-presupuesto-header">
-          <span className={excedido ? "panel-proyecto-excedido" : ""}>
-            {proyecto.pctPresupuesto.toFixed(0)}%
-          </span>
-        </div>
-        <BarraProgreso porcentaje={proyecto.pctPresupuesto} color={excedido ? ROJO : NARANJA} />
-        <span className="panel-tabla-presupuesto-detalle">
-          {formatMonedaCorta(proyecto.egresos)} / {formatMonedaCorta(proyecto.precioAcordado)}
-        </span>
-      </div>
-
-      <div className="panel-tabla-col panel-tabla-col--fases">
-        <SegmentosFases fases={proyecto.fasesResumen} />
-        <span className="panel-tabla-fases-contador">
-          {proyecto.fasesCerradas}/{proyecto.fasesTotales}
-        </span>
-      </div>
-
-      <div className="panel-tabla-col panel-tabla-col--pendientes">
-        {proyecto.comprasImpagas === 0 && proyecto.comprasSinEntregar === 0 ? (
-          <span className="panel-proyecto-compras-ok">Sin pendientes</span>
-        ) : (
-          <>
-            {proyecto.comprasImpagas > 0 && (
-              <span
-                className="panel-proyecto-chip"
-                style={{ color: ROJO, backgroundColor: `${ROJO}14` }}
-              >
-                {proyecto.comprasImpagas} {proyecto.comprasImpagas === 1 ? "sin pagar" : "sin pagar"}
-              </span>
-            )}
-            {proyecto.comprasSinEntregar > 0 && (
-              <span
-                className="panel-proyecto-chip"
-                style={{ color: NARANJA, backgroundColor: `${NARANJA}14` }}
-              >
-                {proyecto.comprasSinEntregar}{" "}
-                {proyecto.comprasSinEntregar === 1 ? "envío" : "envíos"}
-              </span>
-            )}
-          </>
-        )}
-      </div>
-
-      <div className="panel-tabla-col panel-tabla-col--accion">
-        <ChevronRight size={18} strokeWidth={2} className="panel-tabla-chevron" aria-hidden="true" />
-      </div>
     </div>
   );
 }
@@ -403,23 +292,10 @@ export function Dashboard() {
         {proyectosFiltrados.length === 0 ? (
           <p className="panel-vacio">{filtro.vacio}</p>
         ) : (
-          <div className="panel-tabla">
-            <div className="panel-tabla-header">
-              <span className="label-ficha">Proyecto</span>
-              <span className="label-ficha">Disponible</span>
-              <span className="label-ficha">Presupuesto ejecutado</span>
-              <span className="label-ficha">Fases</span>
-              <span className="label-ficha">Pendientes</span>
-              <span />
-            </div>
-            {proyectosFiltrados.map((proyecto) => (
-              <FilaProyecto
-                key={proyecto.id}
-                proyecto={proyecto}
-                onClick={() => navigate(`/proyectos/${proyecto.id}`)}
-              />
-            ))}
-          </div>
+          <TablaProyectos
+            proyectos={proyectosFiltrados}
+            onFilaClick={(proyecto) => navigate(`/proyectos/${proyecto.id}`)}
+          />
         )}
       </Seccion>
 
