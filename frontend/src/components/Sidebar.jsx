@@ -1,24 +1,70 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Building2, Truck, GitCompare } from "lucide-react";
+import { LayoutDashboard, Building2, Truck, GitCompare, LogOut } from "lucide-react";
 import { useAuth } from "../context/useAuth";
+import { useProyectos, useProveedores, useFases, useGastos, useCobros, useCompras } from "../hooks/queries";
+import { calcularPanel } from "../utils/panel";
 import logo from "../assets/HS_logo_blanco.png";
 import "./Sidebar.css";
 
 const ITEMS_NAV = [
-  { to: "/", label: "Panel", icono: LayoutDashboard, soloAdmin: false },
-  { to: "/proyectos", label: "Proyectos", icono: Building2, soloAdmin: false },
-  { to: "/proveedores", label: "Proveedores", icono: Truck, soloAdmin: false },
-  { to: "/comparador", label: "Comparador", icono: GitCompare, soloAdmin: false },
+  { to: "/", label: "Panel", icono: LayoutDashboard, contador: null },
+  { to: "/proyectos", label: "Proyectos", icono: Building2, contador: (c) => c.proyectos },
+  { to: "/proveedores", label: "Proveedores", icono: Truck, contador: (c) => c.proveedores },
+  { to: "/comparador", label: "Comparador", icono: GitCompare, contador: null },
 ];
 
+// "mlopez" -> "ML", "Agustin" -> "AG" (sin separador, se usan las primeras 2
+// letras). nombre_usuario es lo único que tiene el usuario -- no hay nombre
+// real por separado (ver backend/app/schemas.py Usuario).
+function iniciales(nombreUsuario = "") {
+  const partes = nombreUsuario.split(/[.\s_-]+/).filter(Boolean);
+  if (partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase();
+  return nombreUsuario.slice(0, 2).toUpperCase();
+}
+
 export function Sidebar() {
-  const { usuario, isAdmin, logout } = useAuth();
+  const { usuario, logout } = useAuth();
   const navigate = useNavigate();
+
+  const proyectosQuery = useProyectos();
+  const proveedoresQuery = useProveedores();
+
+  // Grupo "EN CURSO" (dirección 1a): necesita el mismo "disponible" por
+  // proyecto que calcula el Panel, que a su vez necesita fases/gastos/
+  // cobros/compras completos. El Sidebar se monta en TODAS las páginas
+  // protegidas, así que estas 4 queries pueden disparar su primer fetch acá
+  // si el usuario entra directo a una página que no las pide por su cuenta
+  // (Proveedores, Comparador) -- se aceptan porque React Query las cachea
+  // por queryKey (ver queryKeys.js) y quedan calientes para el Panel/
+  // Proyectos, pero si en el futuro esto pesa, la alternativa es sacar el
+  // punto verde/rojo y dejar sólo el nombre de la obra.
+  const fasesQuery = useFases();
+  const gastosQuery = useGastos();
+  const cobrosQuery = useCobros();
+  const comprasQuery = useCompras();
 
   const handleLogout = async () => {
     await logout();
     navigate("/login", { replace: true });
   };
+
+  const contadores = {
+    proyectos: proyectosQuery.data?.length,
+    proveedores: proveedoresQuery.data?.length,
+  };
+
+  const datosListos =
+    proyectosQuery.data && fasesQuery.data && gastosQuery.data && cobrosQuery.data && comprasQuery.data;
+
+  const obrasEnCurso = datosListos
+    ? calcularPanel({
+        proyectos: proyectosQuery.data,
+        fases: fasesQuery.data,
+        gastos: gastosQuery.data,
+        cobros: cobrosQuery.data,
+        compras: comprasQuery.data,
+      }).proyectosActivos
+    : [];
 
   return (
     <aside className="sidebar">
@@ -27,27 +73,56 @@ export function Sidebar() {
       </div>
 
       <nav className="sidebar-nav">
-        {ITEMS_NAV.filter((item) => !item.soloAdmin || isAdmin).map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === "/"}
-            className={({ isActive }) =>
-              isActive ? "sidebar-link sidebar-link-active" : "sidebar-link"
-            }
-          >
-            <item.icono size={17} strokeWidth={2} className="sidebar-link-icono" />
-            {item.label}
-          </NavLink>
-        ))}
+        {ITEMS_NAV.map((item) => {
+          const cantidad = item.contador?.(contadores);
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === "/"}
+              className={({ isActive }) =>
+                isActive ? "sidebar-link sidebar-link-active" : "sidebar-link"
+              }
+            >
+              <item.icono size={16} strokeWidth={2} className="sidebar-link-icono" />
+              {item.label}
+              {cantidad != null && <span className="sidebar-link-contador">{cantidad}</span>}
+            </NavLink>
+          );
+        })}
+
+        {obrasEnCurso.length > 0 && (
+          <>
+            <div className="sidebar-grupo-titulo">En curso</div>
+            {obrasEnCurso.map((proyecto) => (
+              <NavLink key={proyecto.id} to={`/proyectos/${proyecto.id}`} className="sidebar-obra">
+                <span
+                  className={
+                    proyecto.disponible >= 0
+                      ? "sidebar-obra-punto sidebar-obra-punto--ok"
+                      : "sidebar-obra-punto sidebar-obra-punto--alerta"
+                  }
+                />
+                {proyecto.nombre}
+              </NavLink>
+            ))}
+          </>
+        )}
       </nav>
 
       <div className="sidebar-footer">
-        <div className="sidebar-user">
+        <span className="sidebar-avatar">{iniciales(usuario?.nombre_usuario)}</span>
+        <span className="sidebar-user">
           <span className="sidebar-user-name">{usuario?.nombre_usuario}</span>
-        </div>
-        <button className="sidebar-logout" onClick={handleLogout}>
-          Cerrar sesión
+          <span className="sidebar-user-role">{usuario?.rol}</span>
+        </span>
+        <button
+          className="sidebar-logout"
+          onClick={handleLogout}
+          title="Cerrar sesión"
+          aria-label="Cerrar sesión"
+        >
+          <LogOut size={15} strokeWidth={2} />
         </button>
       </div>
     </aside>

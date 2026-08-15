@@ -137,7 +137,7 @@ export function FilaProyecto({ proyecto, onClick, renderAcciones }) {
  */
 export function TablaProyectos({ proyectos, onFilaClick, renderAcciones }) {
   return (
-    <div className="panel-tabla">
+    <div className={renderAcciones ? "panel-tabla panel-tabla--acciones" : "panel-tabla"}>
       <div className="panel-tabla-header">
         <span className="label-ficha">Proyecto</span>
         <span className="label-ficha">Disponible</span>

@@ -52,6 +52,11 @@
   --color-oscuro-borde: #242424;
   --color-oscuro-texto: #f7f7f7;
   --color-oscuro-texto-muted: #999999;
+  /* Sidebar dirección 1a: label de grupo ("EN CURSO") más apagado que
+     --color-oscuro-texto-muted, y texto de los items de obra dentro del
+     grupo -- dos tonos de gris extra que no tenían token todavía. */
+  --color-oscuro-texto-tenue: #4a4a48;
+  --color-oscuro-item-texto: #b8b8b6;
 
   /* tipografía — Public Sans es la fuente oficial de marca (ver manual §4) */
   --font-display: "Public Sans", -apple-system, BlinkMacSystemFont, sans-serif;

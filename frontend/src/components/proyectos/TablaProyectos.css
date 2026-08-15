@@ -203,6 +203,16 @@
   color: var(--color-oxido);
 }
 
+/* Variante con acciones (Editar/Eliminar, página Proyectos): la última
+   columna necesita lugar para 2 botones de 26px + el chevron, no sólo el
+   chevron -- ver `renderAcciones` en TablaProyectos/FilaProyecto de acá
+   arriba. Dashboard no pasa `renderAcciones`, así que su tabla ("Proyectos
+   en curso") no se ve afectada. */
+.panel-tabla--acciones .panel-tabla-header,
+.panel-tabla--acciones .panel-tabla-fila {
+  grid-template-columns: 1.8fr 1fr 1.6fr 1fr 1.3fr 104px;
+}
+
 @media (max-width: 900px) {
   .panel-tabla {
     overflow-x: auto;
@@ -214,4 +224,127 @@
     width: max-content;
     min-width: 100%;
   }
+
+  .panel-tabla--acciones .panel-tabla-header,
+  .panel-tabla--acciones .panel-tabla-fila {
+    grid-template-columns: 220px 110px 180px 110px 160px 96px;
+  }
+}
+
+/* --- Filtro de estado (Todos / En curso / A iniciar / Terminados) --- Vive
+   acá (no en Dashboard.css) porque tanto el Panel como Proyectos lo usan y
+   cada página se carga con React.lazy por separado: si viviera en
+   Dashboard.css, entrar directo a /proyectos sin haber pasado por el Panel
+   dejaría estas clases sin estilos. */
+
+.panel-filtro-estado {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.panel-filtro-estado-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-tinta-muted);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.panel-filtro-estado-btn:hover {
+  border-color: var(--color-tinta);
+  color: var(--color-tinta);
+}
+
+.panel-filtro-estado-btn--activo,
+.panel-filtro-estado-btn--activo:hover {
+  background: var(--color-oscuro);
+  border-color: var(--color-oscuro);
+  color: var(--color-oscuro-texto);
+}
+
+.panel-filtro-estado-contador {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
+}
+
+/* --- Cabecera de grupo (vista "Todos" de Proyectos, dirección 1a): separa
+   las 3 secciones (en curso / a iniciar / terminado) dentro de una sola
+   planilla, en vez de 3 tablas sueltas -- ver Proyectos.jsx, que compone
+   estas filas con `FilaProyecto` suelto. El primer grupo (en_curso, fijo en
+   ORDEN_SECCIONES) no lleva borde superior para no duplicar el borde
+   inferior de la cabecera de columnas que queda justo arriba. */
+
+.panel-tabla-grupo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px var(--space-4);
+  background-color: var(--color-base-1);
+  border-top: 1px solid var(--color-linea);
+  border-bottom: 1px solid var(--color-linea);
+}
+
+.panel-tabla-grupo--en_curso {
+  border-top: none;
+  background-color: var(--color-terracota-tint-fila);
+}
+
+.panel-tabla-grupo-punto {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+}
+
+.panel-tabla-grupo--en_curso .panel-tabla-grupo-punto {
+  background-color: var(--color-musgo);
+}
+
+.panel-tabla-grupo--a_iniciar .panel-tabla-grupo-punto {
+  background-color: var(--color-arcilla);
+}
+
+.panel-tabla-grupo--terminado .panel-tabla-grupo-punto {
+  background-color: var(--color-acero);
+}
+
+.panel-tabla-grupo-label {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* Mismo verde/naranja/gris oscurecido que usa el mock para que el label se
+   lea sobre el tinte de fondo del grupo -- no son tokens porque sólo se
+   usan acá, como variante "oscura" puntual de --color-musgo/arcilla/acero. */
+.panel-tabla-grupo--en_curso .panel-tabla-grupo-label {
+  color: #3f5122;
+}
+
+.panel-tabla-grupo--a_iniciar .panel-tabla-grupo-label {
+  color: #a35a05;
+}
+
+.panel-tabla-grupo--terminado .panel-tabla-grupo-label {
+  color: #475569;
+}
+
+.panel-tabla-grupo-contador {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--color-tinta-muted);
+  font-variant-numeric: tabular-nums;
 }

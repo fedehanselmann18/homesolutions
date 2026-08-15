@@ -131,48 +131,10 @@
   margin: 0 0 var(--space-4);
 }
 
-/* --- Filtro de estado (En curso / A iniciar / Terminados) --- */
-
-.panel-filtro-estado {
-  display: flex;
-  gap: var(--space-2);
-}
-
-.panel-filtro-estado-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-ui);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-tinta-muted);
-  background: var(--color-superficie);
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-  padding: 6px 12px;
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-}
-
-.panel-filtro-estado-btn:hover {
-  border-color: var(--color-tinta);
-  color: var(--color-tinta);
-}
-
-.panel-filtro-estado-btn--activo,
-.panel-filtro-estado-btn--activo:hover {
-  background: var(--color-oscuro);
-  border-color: var(--color-oscuro);
-  color: var(--color-oscuro-texto);
-}
-
-.panel-filtro-estado-contador {
-  font-variant-numeric: tabular-nums;
-  opacity: 0.7;
-}
+/* --- Filtro de estado (En curso / A iniciar / Terminados): clases
+   .panel-filtro-estado* -- viven en components/proyectos/TablaProyectos.css,
+   no acá, porque Proyectos.jsx también las usa y cada página se carga por
+   separado con React.lazy. --- */
 
 /* --- KPI destacado: mismo TarjetaKpi de siempre, con un fondo que ocupa
    toda la celda (dirección 1a) en vez de agrandar el número. La celda de
