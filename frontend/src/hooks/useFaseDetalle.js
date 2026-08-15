@@ -20,7 +20,6 @@ import {
   subirComprobanteCompra,
   eliminarComprobanteCompra,
   crearNotaCompra,
-  eliminarNotaCompra,
 } from "../services/compraService";
 import { notasDeCompras, totalNotasCredito, totalNotasDebito } from "../utils/notas";
 import { useToast } from "../context/useToast";
@@ -147,16 +146,6 @@ export function useFaseDetalle(faseId) {
     }
   };
 
-  const agregarComprobantesGasto = async (gastoId, files) => {
-    await Promise.all(Array.from(files).map((archivo) => subirComprobanteGasto(gastoId, archivo)));
-    invalidar("gastos");
-  };
-
-  const eliminarComprobanteGastoAccion = async (gastoId, comprobanteId) => {
-    await eliminarComprobanteGasto(gastoId, comprobanteId);
-    invalidar("gastos");
-  };
-
   // --- Compras ---
   const guardarCompra = async (
     compraEditando,
@@ -217,26 +206,12 @@ export function useFaseDetalle(faseId) {
     }
   };
 
-  const agregarComprobantesCompra = async (compraId, files) => {
-    await Promise.all(
-      Array.from(files).map((archivo) => subirComprobanteCompra(compraId, archivo))
-    );
-    invalidar("compras");
-  };
-
-  const eliminarComprobanteCompraAccion = async (compraId, comprobanteId) => {
-    await eliminarComprobanteCompra(compraId, comprobanteId);
-    invalidar("compras");
-  };
-
   // --- Notas (cuenta corriente: nota de crédito / débito de compras) ---
+  // Sólo alta -- borrar una nota existente se sigue haciendo desde la
+  // pestaña Acciones a nivel proyecto (components/proyectos/Acciones.jsx),
+  // que conserva la card completa con la lista de notas.
   const guardarNota = async (compra, payload) => {
     await crearNotaCompra(compra.id, payload);
-    invalidar("compras");
-  };
-
-  const eliminarNotaCompraAccion = async (compraId, notaId) => {
-    await eliminarNotaCompra(compraId, notaId);
     invalidar("compras");
   };
 
@@ -259,16 +234,11 @@ export function useFaseDetalle(faseId) {
     marcarTerminada,
     guardarGasto,
     eliminarGasto: eliminarGastoAccion,
-    agregarComprobantesGasto,
-    eliminarComprobanteGasto: eliminarComprobanteGastoAccion,
     guardarCompra,
     eliminarCompra: eliminarCompraAccion,
     toggleEstadoPagoCompra,
     toggleEstadoEnvioCompra,
-    agregarComprobantesCompra,
-    eliminarComprobanteCompra: eliminarComprobanteCompraAccion,
     guardarNota,
-    eliminarNotaCompra: eliminarNotaCompraAccion,
   };
 }
 

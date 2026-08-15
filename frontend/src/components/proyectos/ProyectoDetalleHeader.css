@@ -1,10 +1,11 @@
-/* components/ProyectoDetalleHeader.css — carátula de legajo: sin card
-   flotante ni sombra, la identidad viene de la tipografía y la regla
-   izquierda de color de estado. */
+/* components/ProyectoDetalleHeader.css — carátula de legajo compacta
+   (dirección 1a "Planilla", mock 2b): sin card flotante ni sombra, la
+   identidad viene de la tipografía y la regla izquierda de color de
+   estado. Breadcrumb + título + meta arriba, cinta de 5 KPIs abajo. */
 
 .proyecto-header {
   border-left: 4px solid #6b7280;
-  padding: var(--space-2) 0 var(--space-6) var(--space-4);
+  padding: var(--space-2) 0 0 var(--space-4);
   font-family: var(--font-ui);
 }
 
@@ -13,45 +14,29 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  margin-bottom: 6px;
+  margin-bottom: 4px;
 }
 
 .proyecto-header__nombre {
   font-family: var(--font-display);
-  font-size: 1.85rem;
+  font-size: 1.6rem;
   font-weight: 600;
   color: var(--color-tinta);
   margin: 0;
   letter-spacing: -0.01em;
 }
 
-.proyecto-header__descripcion {
-  font-size: 0.9rem;
+.proyecto-header__meta {
+  font-size: var(--text-sm);
   color: var(--color-tinta-muted);
-  margin: 0 0 var(--space-3);
-  max-width: 60ch;
-}
-
-.proyecto-header__datos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-8);
-  margin-top: var(--space-2);
-}
-
-.proyecto-header__dato {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--color-tinta);
   margin: 0;
 }
 
-.proyecto-header__dato-icono {
-  flex-shrink: 0;
+.proyecto-header__descripcion {
+  font-size: 0.9rem;
   color: var(--color-tinta-muted);
+  margin: 4px 0 0;
+  max-width: 60ch;
 }
 
 .proyecto-header__estado {
@@ -64,6 +49,41 @@
   padding: 4px 12px;
   border-radius: var(--radius-pill);
   border: 1px solid transparent;
+}
+
+/* Cinta de 5 KPIs: mismo patrón que .panel-kpis de Dashboard.css (franja
+   de números sin cards, separados por reglas verticales) -- acá vive
+   aparte porque Dashboard.css es específico de la página Panel. */
+.proyecto-header__kpis {
+  display: flex;
+  flex-wrap: wrap;
+  margin: var(--space-4) 0 0;
+  padding: var(--space-4) var(--space-4) var(--space-4) 0;
+  border-top: 1px solid var(--color-linea);
+}
+
+.proyecto-header__kpis > * {
+  flex: 1 1 180px;
+  padding: 0 var(--space-6);
+  border-left: 1px solid var(--color-linea);
+}
+
+.proyecto-header__kpis > *:first-child {
+  padding-left: 0;
+  border-left: none;
+}
+
+@media (max-width: 640px) {
+  .proyecto-header__kpis {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .proyecto-header__kpis > * {
+    flex-basis: auto;
+    padding: 0;
+    border-left: none;
+  }
 }
 
 @media (max-width: 480px) {

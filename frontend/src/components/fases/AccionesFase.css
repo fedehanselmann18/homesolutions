@@ -1,0 +1,304 @@
+/* components/fases/AccionesFase.css -- planilla unificada de compras +
+   gastos de una fase (dirección 1a "Planilla", mock 2c): antes vivían en
+   sub-tabs separadas con tarjetas, ahora comparten una sola tabla con
+   filtro rápido por tipo. Mismo criterio visual que Fases.css/
+   TablaProyectos.css (borde izquierdo de color, acciones que aparecen en
+   hover). */
+
+.acciones-fase-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.acciones-fase-filtro {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-linea);
+  background-color: var(--color-superficie);
+  color: var(--color-tinta-muted);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.acciones-fase-filtro:hover {
+  border-color: var(--color-tinta);
+  color: var(--color-tinta);
+}
+
+.acciones-fase-filtro--activo,
+.acciones-fase-filtro--activo:hover {
+  background-color: var(--color-oscuro);
+  border-color: var(--color-oscuro);
+  color: var(--color-oscuro-texto);
+}
+
+.acciones-fase-filtro--alerta {
+  border-color: color-mix(in srgb, var(--color-oxido) 35%, transparent);
+  color: var(--color-oxido);
+}
+
+.acciones-fase-filtro--alerta:hover {
+  border-color: var(--color-oxido);
+  background-color: color-mix(in srgb, var(--color-oxido) 6%, white);
+}
+
+.acciones-fase-filtro-contador {
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+
+.acciones-fase-tabla {
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.acciones-fase-tabla-header,
+.acciones-fase-fila,
+.acciones-fase-total {
+  display: grid;
+  grid-template-columns: 76px 1.7fr 1.25fr 1fr 0.85fr 0.8fr 110px;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.acciones-fase-tabla-header {
+  padding: 10px var(--space-4);
+  background-color: var(--color-base-1);
+  border-bottom: 1px solid var(--color-linea);
+}
+
+.acciones-fase-col--num {
+  text-align: right;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.acciones-fase-fila {
+  padding: 10px var(--space-4);
+  border-bottom: 1px solid var(--color-linea);
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.acciones-fase-fila:last-of-type {
+  border-bottom: none;
+}
+
+.acciones-fase-fila:hover {
+  background-color: var(--color-base-1);
+}
+
+.acciones-fase-fila--impaga {
+  border-left-color: var(--color-oxido);
+  background-color: var(--color-oxido-tint-fila);
+}
+
+.acciones-fase-fila--impaga:hover {
+  background-color: color-mix(in srgb, var(--color-oxido-tint-fila) 60%, var(--color-base-1));
+}
+
+.acciones-fase-tipo {
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+  padding: 2px 0;
+  border-radius: 4px;
+  border: 1px solid;
+}
+
+.acciones-fase-tipo--compra {
+  color: var(--color-tinta-muted);
+  border-color: color-mix(in srgb, var(--color-tinta-muted) 35%, transparent);
+}
+
+/* #d97706 == NARANJA (constants/colores.js), plano porque este archivo no
+   puede leer las constantes de JS. */
+.acciones-fase-tipo--gasto {
+  color: #d97706;
+  border-color: color-mix(in srgb, #d97706 35%, transparent);
+}
+
+.acciones-fase-col--detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.acciones-fase-descripcion {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-tinta);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.acciones-fase-proveedor {
+  font-size: var(--text-sm);
+  color: var(--color-tinta);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.acciones-fase-subtexto {
+  font-size: var(--text-xs);
+  color: var(--color-tinta-muted);
+}
+
+.acciones-fase-subtexto--alerta {
+  color: var(--color-oxido);
+  font-weight: 600;
+}
+
+.acciones-fase-chip {
+  justify-self: start;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  border: 1px solid;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.acciones-fase-chip:hover {
+  opacity: 0.75;
+}
+
+.acciones-fase-sin-dato {
+  font-size: var(--text-xs);
+  color: var(--color-tinta-muted);
+}
+
+.acciones-fase-col--accion {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.acciones-fase-comprobantes {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-family: var(--font-ui);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-tinta-muted);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.acciones-fase-comprobantes:hover:not(:disabled) {
+  color: var(--color-terracota-dark);
+}
+
+.acciones-fase-comprobantes--vacio {
+  color: var(--color-linea);
+  cursor: default;
+}
+
+.acciones-fase-nota {
+  font-family: var(--font-ui);
+  font-size: 0.66rem;
+  font-weight: 700;
+  color: var(--color-oxido);
+}
+
+.acciones-fase-acciones {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.acciones-fase-fila:hover .acciones-fase-acciones {
+  opacity: 1;
+}
+
+.acciones-fase-accion-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  background: var(--color-superficie);
+  color: var(--color-tinta-muted);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.acciones-fase-accion-btn:hover {
+  border-color: var(--color-tinta);
+  color: var(--color-tinta);
+}
+
+.acciones-fase-accion-btn--eliminar:hover {
+  border-color: var(--color-oxido);
+  color: var(--color-oxido);
+  background-color: color-mix(in srgb, var(--color-oxido) 12%, white);
+}
+
+.acciones-fase-total {
+  padding: 11px var(--space-4);
+  background-color: var(--color-base-1);
+  border-top: 1px solid var(--color-linea);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-tinta-muted);
+}
+
+.acciones-fase-total .acciones-fase-col--num {
+  font-size: var(--text-base);
+  color: var(--color-tinta);
+}
+
+.acciones-fase-total-sinpagar {
+  font-size: var(--text-xs);
+  color: var(--color-oxido);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+@media (max-width: 960px) {
+  .acciones-fase-tabla {
+    overflow-x: auto;
+  }
+
+  .acciones-fase-tabla-header,
+  .acciones-fase-fila,
+  .acciones-fase-total {
+    grid-template-columns: 76px 240px 180px 120px 100px 100px 110px;
+    width: max-content;
+    min-width: 100%;
+  }
+}

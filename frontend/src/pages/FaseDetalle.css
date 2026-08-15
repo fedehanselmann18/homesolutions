@@ -37,6 +37,21 @@
   margin-bottom: 6px;
 }
 
+.fase-detalle-header-titulo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.fase-detalle-header-acciones {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 .fase-detalle-nombre {
   font-family: var(--font-display);
   font-size: var(--text-2xl);
@@ -88,8 +103,6 @@
 }
 
 .fase-detalle-btn-terminar {
-  margin-top: var(--space-4);
-  margin-bottom: var(--space-4);
   font-family: var(--font-ui);
   font-size: var(--text-base);
   font-weight: 600;
