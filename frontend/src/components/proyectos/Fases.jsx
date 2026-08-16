@@ -133,7 +133,10 @@ export function Fases({ proyectoId }) {
           </div>
 
           {fases.map((fase, i) => {
-            const estadoInfo = ESTADO_LABELS[fase.estado] ?? { color: "#6b7280", label: fase.estado };
+            const estadoInfo = ESTADO_LABELS[fase.estado] ?? {
+              color: "#6b7280",
+              label: fase.estado,
+            };
             const gastado = gastadoPorFase?.porFase.get(fase.id) ?? 0;
             const pct = precioAcordado > 0 ? (gastado / precioAcordado) * 100 : 0;
             const enCurso = fase.estado === "en_curso";
@@ -157,7 +160,9 @@ export function Fases({ proyectoId }) {
                 <span className="fases-tabla-col--fase">
                   <span
                     className={
-                      fase.estado === "por_empezar" ? "fases-tabla-nombre fases-tabla-nombre--pendiente" : "fases-tabla-nombre"
+                      fase.estado === "por_empezar"
+                        ? "fases-tabla-nombre fases-tabla-nombre--pendiente"
+                        : "fases-tabla-nombre"
                     }
                   >
                     {fase.nombre}
@@ -176,7 +181,9 @@ export function Fases({ proyectoId }) {
                   {estadoInfo.label}
                 </span>
 
-                <span className="fases-tabla-col--num">{sinDatos || gastado === 0 ? "—" : formatMoneda(gastado)}</span>
+                <span className="fases-tabla-col--num">
+                  {sinDatos || gastado === 0 ? "—" : formatMoneda(gastado)}
+                </span>
 
                 <span className="fases-tabla-col--pct">
                   <BarraProgreso porcentaje={pct} color={pct > 100 ? ROJO : NARANJA} />
@@ -206,7 +213,12 @@ export function Fases({ proyectoId }) {
                       </button>
                     </span>
                   )}
-                  <ChevronRight size={18} strokeWidth={2} className="fases-tabla-chevron" aria-hidden="true" />
+                  <ChevronRight
+                    size={18}
+                    strokeWidth={2}
+                    className="fases-tabla-chevron"
+                    aria-hidden="true"
+                  />
                 </span>
               </div>
             );
@@ -214,13 +226,17 @@ export function Fases({ proyectoId }) {
 
           <div className="fases-tabla-total">
             <span />
-            <span>TOTAL {fases.length} {fases.length === 1 ? "FASE" : "FASES"}</span>
+            <span>
+              TOTAL {fases.length} {fases.length === 1 ? "FASE" : "FASES"}
+            </span>
             <span />
             <span className="fases-tabla-col--num">
               {gastadoPorFase ? formatMoneda(gastadoPorFase.totales.egresos) : "—"}
             </span>
             <span className="fases-tabla-total-pct">
-              {gastadoPorFase ? `${gastadoPorFase.totales.pctGastado.toFixed(0)}% del presupuesto` : "—"}
+              {gastadoPorFase
+                ? `${gastadoPorFase.totales.pctGastado.toFixed(0)}% del presupuesto`
+                : "—"}
             </span>
             <span />
           </div>

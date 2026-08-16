@@ -1,0 +1,522 @@
+/* Modales de detalle (lectura) de Compra / Gasto / Cobro — lenguaje visual de
+   la dirección 3a del rediseño (ver claudedesign/): header negro con el tipo
+   de movimiento, título y total en grande, y una barra que descompone el
+   total en neto / impuestos / notas. El desglose numérico va debajo de la
+   barra a propósito: la barra da la proporción de un vistazo, pero los
+   importes exactos (impuestos uno por uno, notas de crédito y débito) tienen
+   que poder leerse sin abrir la compra para editarla. */
+
+.detalle {
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  max-height: 88vh;
+}
+
+/* --- header negro --- */
+
+.detalle__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 11px var(--space-4);
+  background: var(--color-oscuro);
+}
+
+.detalle__tipo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-oscuro-texto);
+  white-space: nowrap;
+}
+
+.detalle__separador {
+  width: 1px;
+  height: 14px;
+  background: var(--color-oscuro-borde);
+  flex-shrink: 0;
+}
+
+.detalle__contexto {
+  font-size: var(--text-sm);
+  color: var(--color-oscuro-texto-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detalle__espaciador {
+  flex: 1;
+}
+
+.detalle__fecha {
+  font-size: var(--text-sm);
+  color: var(--color-oscuro-texto-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.detalle__cerrar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-oscuro-texto-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.detalle__cerrar:hover {
+  background: var(--color-oscuro-hover);
+  color: var(--color-oscuro-texto);
+}
+
+/* --- cuerpo --- */
+
+.detalle__cuerpo {
+  flex: 1;
+  overflow-y: auto;
+  padding: 18px var(--space-4) var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.detalle__titular {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+
+.detalle__titular-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.detalle__titular-texto h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-tinta);
+}
+
+.detalle__subtitulo {
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+.detalle__total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.detalle__total-label {
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-tinta-muted);
+}
+
+.detalle__total-monto {
+  font-size: var(--text-3xl);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  color: var(--color-tinta);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- barra de composición del total --- */
+
+.detalle__composicion {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.detalle__barra {
+  display: flex;
+  height: 8px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  background: var(--color-base-2);
+}
+
+.detalle__leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  font-size: 0.76rem;
+  color: var(--color-tinta-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.detalle__leyenda-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.detalle__leyenda-punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+.detalle__leyenda-monto {
+  color: var(--color-tinta);
+  font-weight: 600;
+}
+
+.detalle__leyenda-monto--resta {
+  color: var(--color-oxido);
+}
+
+.detalle__leyenda-monto--suma {
+  color: var(--color-arcilla);
+}
+
+/* --- secciones --- */
+
+.detalle__seccion {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detalle__seccion-titulo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.detalle__seccion-titulo span:first-child {
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-tinta-muted);
+}
+
+.detalle__seccion-linea {
+  flex: 1;
+  height: 1px;
+  background: var(--color-linea);
+}
+
+/* --- desglose numérico --- */
+
+.detalle__desglose {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  background: var(--color-base-1);
+  font-variant-numeric: tabular-nums;
+}
+
+.detalle__desglose-fila {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+.detalle__desglose-fila--credito {
+  color: var(--color-oxido);
+  font-weight: 600;
+}
+
+.detalle__desglose-fila--debito {
+  color: var(--color-arcilla);
+  font-weight: 600;
+}
+
+.detalle__desglose-fila--total {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-tinta);
+  border-top: 1px solid var(--color-linea);
+  padding-top: 4px;
+  margin-top: 1px;
+}
+
+/* --- tiles de estado (pago / envío) --- */
+
+.detalle__estados {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.detalle__estado {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  background: var(--color-base-1);
+}
+
+.detalle__estado-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-pill);
+  flex-shrink: 0;
+}
+
+.detalle__estado-texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.detalle__estado-label {
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-tinta-muted);
+}
+
+.detalle__estado-valor {
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+/* El tile "resuelto" (pagado / entregado) se pinta en verde: el estado se lee
+   de un vistazo sin tener que leer la palabra. */
+.detalle__estado--activo {
+  border-color: var(--color-musgo-tint);
+  background: var(--color-musgo-tint);
+}
+
+.detalle__estado-espaciador {
+  flex: 1;
+}
+
+.detalle__switch {
+  width: 38px;
+  height: 22px;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-linea);
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.detalle__switch--on {
+  background: var(--color-musgo);
+}
+
+.detalle__switch-perilla {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-pill);
+  background: var(--color-superficie);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.detalle__switch--on .detalle__switch-perilla {
+  transform: translateX(16px);
+}
+
+/* --- productos --- */
+
+.detalle__producto {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 52px 110px;
+  gap: var(--space-2);
+  align-items: center;
+  font-size: var(--text-sm);
+  padding: var(--space-2) 10px;
+  border-radius: var(--radius-sm);
+  background: var(--color-base-1);
+}
+
+.detalle__producto-nombre {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detalle__producto-cantidad {
+  color: var(--color-tinta-muted);
+  font-weight: 600;
+}
+
+.detalle__producto-subtotal {
+  text-align: right;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- chips de comprobantes y notas --- */
+
+.detalle__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.detalle__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 11px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-linea);
+  background: var(--color-superficie);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--color-tinta);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.detalle__chip:hover:not(:disabled) {
+  border-color: var(--color-tinta);
+}
+
+.detalle__chip:disabled {
+  cursor: default;
+}
+
+.detalle__chip-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.detalle__chip-boton:disabled {
+  cursor: default;
+}
+
+.detalle__chip svg {
+  color: var(--color-tinta-muted);
+}
+
+.detalle__chip--nota-credito {
+  border-color: var(--color-oxido-tint);
+  background: var(--color-oxido-tint);
+  font-weight: 600;
+  color: var(--color-oxido);
+}
+
+.detalle__chip--nota-credito svg {
+  color: inherit;
+}
+
+.detalle__chip--nota-debito {
+  border-color: var(--color-arcilla-tint);
+  background: var(--color-arcilla-tint);
+  font-weight: 600;
+  color: var(--color-arcilla);
+}
+
+.detalle__chip--nota-debito svg {
+  color: inherit;
+}
+
+.detalle__chip--agregar {
+  border-style: dashed;
+  border-color: var(--color-gris-claro-marca);
+  background: transparent;
+  font-weight: 600;
+  color: var(--color-tinta-muted);
+}
+
+.detalle__chip--agregar:hover {
+  border-color: var(--color-terracota);
+  color: var(--color-terracota-dark);
+}
+
+.detalle__chip-quitar {
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin-left: 2px;
+  color: var(--color-oxido);
+  cursor: pointer;
+}
+
+.detalle__cargado-por {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+.detalle__error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-oxido);
+}
+
+/* --- footer --- */
+
+.detalle__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-top: 1px solid var(--color-linea);
+  background: var(--color-superficie);
+}
+
+@media (max-width: 560px) {
+  .detalle__titular {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .detalle__total {
+    align-items: flex-start;
+  }
+
+  .detalle__estados {
+    grid-template-columns: 1fr;
+  }
+}

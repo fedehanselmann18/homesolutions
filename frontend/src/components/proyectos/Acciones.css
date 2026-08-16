@@ -1,43 +1,9 @@
-.acciones-subtabs {
-  display: flex;
-  gap: 4px;
-  margin-bottom: var(--space-6);
-  border-bottom: 1px solid var(--color-linea);
-}
-
-.acciones-subtab {
-  font-family: var(--font-ui);
-  font-size: 0.85rem;
-  font-weight: 600;
-  padding: 9px 16px;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  border: 1px solid transparent;
-  background-color: transparent;
-  color: var(--color-tinta-muted);
-  cursor: pointer;
-  margin-bottom: -1px;
-  transition:
-    color 0.15s ease,
-    background-color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.acciones-subtab:hover {
-  color: var(--color-tinta);
-}
-
-.acciones-subtab.active {
-  background-color: var(--color-base-1);
-  border-color: var(--color-linea);
-  border-bottom-color: var(--color-base-1);
-  color: var(--color-terracota-dark);
-}
-
 .acciones-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-6);
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
 }
 
 .acciones-header h2 {
@@ -46,39 +12,66 @@
   margin: 0;
 }
 
-.acciones-header button {
+.acciones-header-botones {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Chips de tipo de movimiento: reemplazan a las sub-tabs Compras/Gastos/Cobros
+   ahora que los tres comparten una sola planilla (ver LibroDeObra). */
+.acciones-filtros-tipo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.acciones-filtro-tipo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
   font-family: var(--font-ui);
-  font-size: 0.88rem;
+  font-size: var(--text-sm);
   font-weight: 600;
-  padding: 9px 18px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-musgo);
-  background-color: var(--color-musgo);
-  color: var(--color-superficie);
+  padding: 7px 14px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-linea);
+  background: var(--color-superficie);
+  color: var(--color-tinta-muted);
   cursor: pointer;
   transition:
+    color 0.15s ease,
     background-color 0.15s ease,
     border-color 0.15s ease;
 }
 
-.acciones-header button:hover {
-  background-color: var(--color-musgo-dark);
-  border-color: var(--color-musgo-dark);
+.acciones-filtro-tipo:hover {
+  border-color: var(--color-tinta);
+  color: var(--color-tinta);
 }
 
-.acciones-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  align-items: stretch;
-  gap: var(--space-4);
+.acciones-filtro-tipo--activo {
+  background: var(--color-terracota-tint);
+  border-color: var(--color-terracota);
+  color: var(--color-terracota-dark);
 }
 
-.acciones-grid--compras {
-  grid-template-columns: repeat(2, 1fr);
+.acciones-filtro-tipo--alerta.acciones-filtro-tipo--activo {
+  background: var(--color-oxido-tint);
+  border-color: var(--color-oxido);
+  color: var(--color-oxido);
 }
 
-@media (max-width: 860px) {
-  .acciones-grid--compras {
-    grid-template-columns: 1fr;
-  }
+.acciones-filtro-tipo-contador {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-base-2);
+  color: var(--color-tinta-muted);
+}
+
+.acciones-filtro-tipo--activo .acciones-filtro-tipo-contador {
+  background: var(--color-superficie);
+  color: inherit;
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import "./ModalFase.css";
+import ModalShell from "./ModalShell";
 
 const ESTADOS_OPCIONES = [
   { value: "por_empezar", label: "Por empezar" },
@@ -47,53 +48,48 @@ export function ModalFase({ fase, onGuardar, onCerrar }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onCerrar}>
-      <div className="modal-contenido" onClick={(e) => e.stopPropagation()}>
-        <h2>{esEdicion ? "Editar fase" : "Nueva fase"}</h2>
+    <ModalShell
+      titulo={esEdicion ? "Editar fase" : "Nueva fase"}
+      onCerrar={onCerrar}
+      onSubmit={handleSubmit}
+      cerrarDeshabilitado={guardando}
+      acciones={
+        <>
+          <button
+            type="button"
+            onClick={onCerrar}
+            className="btn btn-secondary"
+            disabled={guardando}
+          >
+            Cancelar
+          </button>
+          <button type="submit" className="btn btn-primary" disabled={guardando}>
+            {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Crear fase"}
+          </button>
+        </>
+      }
+    >
+      <label>
+        Nombre
+        <input type="text" name="nombre" value={form.nombre} onChange={handleChange} required />
+      </label>
 
-        <form onSubmit={handleSubmit} className="modal-form">
-          <label>
-            Nombre
-            <input type="text" name="nombre" value={form.nombre} onChange={handleChange} required />
-          </label>
+      <label>
+        Descripción
+        <textarea name="descripcion" value={form.descripcion} onChange={handleChange} rows={3} />
+      </label>
 
-          <label>
-            Descripción
-            <textarea
-              name="descripcion"
-              value={form.descripcion}
-              onChange={handleChange}
-              rows={3}
-            />
-          </label>
-
-          <label>
-            Estado
-            <select name="estado" value={form.estado} onChange={handleChange}>
-              {ESTADOS_OPCIONES.map((op) => (
-                <option key={op.value} value={op.value}>
-                  {op.label}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <div className="modal-acciones">
-            <button
-              type="button"
-              onClick={onCerrar}
-              className="modal-btn-cancelar"
-              disabled={guardando}
-            >
-              Cancelar
-            </button>
-            <button type="submit" className="modal-btn-guardar" disabled={guardando}>
-              {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Crear fase"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      <label>
+        Estado
+        <select name="estado" value={form.estado} onChange={handleChange}>
+          {ESTADOS_OPCIONES.map((op) => (
+            <option key={op.value} value={op.value}>
+              {op.label}
+            </option>
+          ))}
+        </select>
+      </label>
+    </ModalShell>
   );
 }
 

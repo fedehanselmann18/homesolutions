@@ -70,13 +70,20 @@ export function FaseDetalle() {
   const [modalNotaAbierto, setModalNotaAbierto] = useState(false);
   const [notaCompra, setNotaCompra] = useState(null); // la Compra sobre la que se carga la nota
 
-  const [detalle, setDetalle] = useState(null); // { tipo: "gasto" | "compra", entidad }
+  // Se guarda el id y no la entidad: togglear pago/envío desde el modal
+  // recarga la colección del hook, y una copia congelada seguiría mostrando
+  // el estado viejo.
+  const [detalle, setDetalle] = useState(null); // { tipo: "gasto" | "compra", id }
   const cerrarDetalle = () => setDetalle(null);
 
   const [confirmarEliminar, setConfirmarEliminar] = useState(null); // { tipo: "gasto" | "compra", id, nombre }
   const cerrarConfirmarEliminar = () => setConfirmarEliminar(null);
 
   const nombreProveedor = (proveedorId) => proveedores.find((p) => p.id === proveedorId)?.nombre;
+
+  const entidadDetalle = detalle
+    ? (detalle.tipo === "compra" ? comprasFase : gastosFase).find((e) => e.id === detalle.id)
+    : null;
 
   // --- Gastos ---
   const handleNuevoGasto = () => {
@@ -340,9 +347,9 @@ export function FaseDetalle() {
 
       {tabActiva === "acciones" && (
         <AccionesFase
+          faseNombre={fase.nombre}
           canManage={canManage}
           nombreProveedor={nombreProveedor}
-          productos={productos}
           compras={comprasFase}
           onEditarCompra={handleEditarCompra}
           onEliminarCompra={handleSolicitarEliminarCompra}
@@ -350,12 +357,12 @@ export function FaseDetalle() {
           onToggleEnvioCompra={handleToggleEstadoEnvioCompra}
           onVerComprobanteCompra={getComprobanteCompra}
           onAgregarNotaCompra={handleAgregarNotaCompra}
-          onAbrirDetalleCompra={(c) => setDetalle({ tipo: "compra", entidad: c })}
+          onAbrirDetalleCompra={(c) => setDetalle({ tipo: "compra", id: c.id })}
           gastos={gastosFase}
           onEditarGasto={handleEditarGasto}
           onEliminarGasto={handleSolicitarEliminarGasto}
           onVerComprobanteGasto={getComprobanteGasto}
-          onAbrirDetalleGasto={(g) => setDetalle({ tipo: "gasto", entidad: g })}
+          onAbrirDetalleGasto={(g) => setDetalle({ tipo: "gasto", id: g.id })}
         />
       )}
 
@@ -423,24 +430,28 @@ export function FaseDetalle() {
         />
       )}
 
-      {detalle?.tipo === "gasto" && (
+      {entidadDetalle && detalle.tipo === "gasto" && (
         <ModalDetalleGasto
-          gasto={detalle.entidad}
+          gasto={entidadDetalle}
           faseNombre={fase.nombre}
           onCerrar={cerrarDetalle}
-          onVerComprobante={(c) => getComprobanteGasto(detalle.entidad.id, c.id)}
+          onVerComprobante={(c) => getComprobanteGasto(entidadDetalle.id, c.id)}
         />
       )}
 
-      {detalle?.tipo === "compra" && (
+      {entidadDetalle && detalle.tipo === "compra" && (
         <ModalDetalleCompra
-          compra={detalle.entidad}
+          compra={entidadDetalle}
           faseNombre={fase.nombre}
-          proveedorNombre={nombreProveedor(detalle.entidad.proveedor_id)}
+          proveedorNombre={nombreProveedor(entidadDetalle.proveedor_id)}
           productos={productos}
           onCerrar={cerrarDetalle}
-          onVerComprobante={(c) => getComprobanteCompra(detalle.entidad.id, c.id)}
-          onVerNota={(n) => getNotaCompra(detalle.entidad.id, n.id)}
+          onVerComprobante={(c) => getComprobanteCompra(entidadDetalle.id, c.id)}
+          onVerNota={(n) => getNotaCompra(entidadDetalle.id, n.id)}
+          onAgregarNota={canManage ? () => handleAgregarNotaCompra(entidadDetalle) : undefined}
+          onTogglePago={() => handleToggleEstadoPagoCompra(entidadDetalle)}
+          onToggleEnvio={() => handleToggleEstadoEnvioCompra(entidadDetalle)}
+          canManage={canManage}
         />
       )}
 

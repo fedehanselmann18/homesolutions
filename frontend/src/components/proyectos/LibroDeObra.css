@@ -1,0 +1,361 @@
+/* Libro de obra — dirección 3b del rediseño (ver claudedesign/). */
+
+.libro {
+  --libro-cols: 104px minmax(0, 1fr) 108px 92px 128px 128px;
+
+  background: var(--color-superficie);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.libro--admin {
+  --libro-cols: 104px minmax(0, 1fr) 108px 92px 128px 128px 84px;
+}
+
+.libro-vacio {
+  color: var(--color-tinta-muted);
+  font-size: var(--text-base);
+}
+
+/* --- cabecera con la leyenda de totales por tipo --- */
+
+.libro__cabecera {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-linea);
+}
+
+.libro__titulo {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-tinta);
+  letter-spacing: -0.015em;
+}
+
+.libro__espaciador {
+  flex: 1;
+}
+
+.libro__leyenda {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-tinta-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.libro__punto {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-pill);
+}
+
+.libro__error {
+  margin: 0;
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-oxido);
+  background: var(--color-oxido-tint);
+}
+
+/* --- encabezado de columnas --- */
+
+.libro__columnas {
+  display: grid;
+  grid-template-columns: var(--libro-cols);
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-base-1);
+  border-bottom: 1px solid var(--color-linea);
+}
+
+.libro__num {
+  text-align: right;
+}
+
+/* --- separador de día con subtotal --- */
+
+.libro__dia {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 7px var(--space-4);
+  background: var(--color-terracota-tint-fila);
+  border-bottom: 1px solid var(--color-linea);
+}
+
+.libro__dia-fecha {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-terracota-dark);
+}
+
+.libro__dia-linea {
+  flex: 1;
+  height: 1px;
+  background: var(--color-linea);
+}
+
+.libro__dia-subtotal {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-tinta-muted);
+  white-space: nowrap;
+}
+
+/* --- fila de movimiento --- */
+
+.libro__fila {
+  display: grid;
+  grid-template-columns: var(--libro-cols);
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-linea);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.libro__fila:hover {
+  background: var(--color-base-1);
+}
+
+/* Columna Tipo: mismo icono y mismo tratamiento en mayúsculas que el header
+   del modal de detalle, para que "esto es una compra" se lea igual en los dos
+   lados. Reemplazó a una barra de flujo que sólo repetía, peor, el signo y el
+   tamaño que ya están en las columnas Importe y Saldo. */
+.libro__tipo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.libro__movimiento {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.libro__movimiento-titulo,
+.libro__movimiento-contexto {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.libro__movimiento-titulo {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-tinta);
+}
+
+.libro__movimiento-contexto {
+  font-size: 0.75rem;
+  color: var(--color-tinta-muted);
+}
+
+.libro__alerta {
+  font-weight: 700;
+  color: var(--color-oxido);
+}
+
+/* --- comprobantes y notas --- */
+
+.libro__comprobantes {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-tinta-muted);
+}
+
+.libro__comprobante {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.libro__comprobante:hover {
+  color: var(--color-terracota-dark);
+  background: var(--color-terracota-tint);
+}
+
+.libro__comprobantes-mas {
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.libro__nota {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.libro__nota--credito {
+  color: var(--color-oxido);
+}
+
+.libro__nota--debito {
+  color: var(--color-arcilla);
+}
+
+.libro__sin-dato {
+  font-size: 0.75rem;
+  color: var(--color-gris-claro-marca);
+}
+
+/* --- estados de pago / envío --- */
+
+.libro__estados {
+  display: flex;
+  gap: 5px;
+}
+
+.libro__estado {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.libro__estado:disabled {
+  cursor: default;
+}
+
+/* El hover invierte el chip (color de fondo pleno, icono blanco) para dejar
+   claro que el estado se cambia desde acá y no sólo se está mostrando. */
+.libro__estado:hover:not(:disabled) {
+  background-color: currentColor !important;
+}
+
+.libro__estado:hover:not(:disabled) svg {
+  color: var(--color-superficie);
+}
+
+/* --- importes --- */
+
+.libro__importe {
+  font-size: 0.92rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.libro__saldo-fila {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-tinta-muted);
+  white-space: nowrap;
+}
+
+/* --- acciones de admin, visibles al pasar el mouse por la fila --- */
+
+.libro__acciones {
+  display: flex;
+  gap: var(--space-1);
+  justify-content: flex-end;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.libro__fila:hover .libro__acciones,
+.libro__acciones:focus-within {
+  opacity: 1;
+}
+
+.libro__accion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  background: var(--color-superficie);
+  color: var(--color-tinta-muted);
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.libro__accion:hover {
+  border-color: var(--color-tinta);
+  color: var(--color-tinta);
+}
+
+.libro__accion--eliminar:hover {
+  border-color: var(--color-oxido);
+  color: var(--color-oxido);
+}
+
+/* --- fila final con el saldo --- */
+
+.libro__saldo {
+  display: grid;
+  grid-template-columns: var(--libro-cols);
+  gap: var(--space-3);
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-oscuro);
+}
+
+.libro__saldo-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-oscuro-texto-muted);
+}
+
+.libro__saldo-monto {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-oscuro-texto);
+  white-space: nowrap;
+}
+
+/* En pantallas angostas la planilla no entra: se scrollea en horizontal en
+   vez de aplastar las columnas de importes. */
+@media (max-width: 1100px) {
+  .libro {
+    overflow-x: auto;
+  }
+
+  .libro__columnas,
+  .libro__fila,
+  .libro__saldo,
+  .libro__dia,
+  .libro__cabecera {
+    min-width: 900px;
+  }
+}

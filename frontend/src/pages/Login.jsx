@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { ChevronDown } from "lucide-react";
 import { useAuth } from "../context/useAuth";
 import { getOpcionesLogin } from "../services/usuarioService";
 import { obtenerMensajeError } from "../utils/errorHandling";
 import logoHS from "../assets/HS_logo_blanco.png";
-import "./Login.css";
+import "./Auth.css";
 
 export function Login() {
   const navigate = useNavigate();
@@ -59,34 +60,45 @@ export function Login() {
   };
 
   return (
-    <div className="login-page">
-      <form className="login-card" onSubmit={handleSubmit}>
-        <div className="login-card-header">
-          <img src={logoHS} alt="HomeSolutions" className="login-logo" />
+    <div className="auth-page">
+      <div className="auth-panel">
+        <div className="auth-panel__marca">
+          <img src={logoHS} alt="HomeSolutions" className="auth-panel__logo" />
+          <div className="auth-panel__mensaje">
+            <span className="auth-panel__barra" />
+            <p>Obras, fases, compras y cobros de HomeSolutions en un solo lugar.</p>
+          </div>
+          <span className="auth-panel__pie">Uso interno</span>
         </div>
 
-        <div className="login-card-body">
-          <h1>Iniciar sesión</h1>
+        <form className="auth-panel__form" onSubmit={handleSubmit}>
+          <div className="auth-panel__titulo">
+            <h1>Iniciar sesión</h1>
+            <p>Elegí tu usuario para continuar</p>
+          </div>
 
-          <label className="login-field">
+          <label className="auth-campo">
             <span>Usuario</span>
-            <select
-              value={nombreUsuario}
-              onChange={(e) => setNombreUsuario(e.target.value)}
-              disabled={cargandoUsuarios}
-            >
-              <option value="" disabled>
-                {cargandoUsuarios ? "Cargando..." : "Seleccioná tu usuario"}
-              </option>
-              {nombresUsuario.map((nombre) => (
-                <option key={nombre} value={nombre}>
-                  {nombre}
+            <span className="auth-campo__select">
+              <select
+                value={nombreUsuario}
+                onChange={(e) => setNombreUsuario(e.target.value)}
+                disabled={cargandoUsuarios}
+              >
+                <option value="" disabled>
+                  {cargandoUsuarios ? "Cargando..." : "Seleccioná tu usuario"}
                 </option>
-              ))}
-            </select>
+                {nombresUsuario.map((nombre) => (
+                  <option key={nombre} value={nombre}>
+                    {nombre}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={16} />
+            </span>
           </label>
 
-          <label className="login-field">
+          <label className="auth-campo">
             <span>Contraseña</span>
             <input
               type="password"
@@ -96,17 +108,17 @@ export function Login() {
             />
           </label>
 
-          {error && <p className="login-error">{error}</p>}
+          {error && <p className="auth-panel__error">{error}</p>}
 
-          <button type="submit" disabled={enviando}>
+          <button type="submit" className="auth-panel__submit" disabled={enviando}>
             {enviando ? "Ingresando..." : "Ingresar"}
           </button>
 
-          <Link to="/registro" className="login-link">
+          <Link to="/registro" className="auth-panel__link">
             ¿Todavía no tenés cuenta? Registrate
           </Link>
-        </div>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }

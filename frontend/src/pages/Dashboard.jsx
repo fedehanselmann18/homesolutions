@@ -357,46 +357,6 @@ export function Dashboard() {
           )}
         </Seccion>
       </div>
-
-      <Seccion
-        titulo="Notas de crédito / débito"
-        descripcion="Ajustes de cuenta corriente de todos los proyectos en curso, con proveedores (compras) y con clientes (cobros)"
-      >
-        <div className="panel-kpis--notas">
-          <TarjetaKpi
-            titulo="Notas de crédito (compras)"
-            valor={formatMoneda(kpis.notasCreditoCompras)}
-            detalle="A favor nuestro"
-            color={ROJO}
-            destacado
-            plano
-          />
-          <TarjetaKpi
-            titulo="Notas de débito (compras)"
-            valor={formatMoneda(kpis.notasDebitoCompras)}
-            detalle="En contra nuestro"
-            color={NARANJA}
-            destacado
-            plano
-          />
-          <TarjetaKpi
-            titulo="Notas de crédito (cobros)"
-            valor={formatMoneda(kpis.notasCreditoCobros)}
-            detalle="A favor del cliente"
-            color={ROJO}
-            destacado
-            plano
-          />
-          <TarjetaKpi
-            titulo="Notas de débito (cobros)"
-            valor={formatMoneda(kpis.notasDebitoCobros)}
-            detalle="En contra del cliente"
-            color={NARANJA}
-            destacado
-            plano
-          />
-        </div>
-      </Seccion>
     </div>
   );
 }

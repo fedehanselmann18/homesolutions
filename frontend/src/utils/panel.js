@@ -259,13 +259,6 @@ export function calcularPanel({
       pendienteDeCobrar,
       gananciaNetaMes: cobradoMes - gastosMes - comprasTotalMes,
       contratadoEnCurso: sumar(enCurso, (r) => r.analisis.totales.precioAcordado),
-      // Notas de crédito/débito de los proyectos en curso (todo lo cargado
-      // hasta ahora, mismo alcance que disponibleTotal) -- ver "Notas de
-      // crédito / débito" en Dashboard.jsx.
-      notasCreditoCompras: sumar(enCurso, (r) => r.analisis.totales.notasCreditoCompras),
-      notasDebitoCompras: sumar(enCurso, (r) => r.analisis.totales.notasDebitoCompras),
-      notasCreditoCobros: sumar(enCurso, (r) => r.analisis.totales.notasCreditoCobros),
-      notasDebitoCobros: sumar(enCurso, (r) => r.analisis.totales.notasDebitoCobros),
       requiereAccion,
       comprasImpagasEnCurso,
       comprasSinEntregarEnCurso,

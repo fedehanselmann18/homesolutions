@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import "./ModalProveedor.css";
+import ModalShell from "./ModalShell";
 
 export function ModalProveedor({ proveedor, onGuardar, onCerrar }) {
   const esEdicion = Boolean(proveedor);
@@ -47,54 +48,54 @@ export function ModalProveedor({ proveedor, onGuardar, onCerrar }) {
   };
 
   return (
-    <div className="modal-overlay" onClick={onCerrar}>
-      <div className="modal-contenido" onClick={(e) => e.stopPropagation()}>
-        <h2>{esEdicion ? "Editar proveedor" : "Nuevo proveedor"}</h2>
+    <ModalShell
+      titulo={esEdicion ? "Editar proveedor" : "Nuevo proveedor"}
+      onCerrar={onCerrar}
+      onSubmit={handleSubmit}
+      cerrarDeshabilitado={guardando}
+      acciones={
+        <>
+          <button
+            type="button"
+            onClick={onCerrar}
+            className="btn btn-secondary"
+            disabled={guardando}
+          >
+            Cancelar
+          </button>
+          <button type="submit" className="btn btn-primary" disabled={guardando}>
+            {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Crear proveedor"}
+          </button>
+        </>
+      }
+    >
+      <label>
+        Nombre
+        <input type="text" name="nombre" value={form.nombre} onChange={handleChange} required />
+      </label>
 
-        <form onSubmit={handleSubmit} className="modal-form">
-          <label>
-            Nombre
-            <input type="text" name="nombre" value={form.nombre} onChange={handleChange} required />
-          </label>
+      <label>
+        CUIT
+        <input type="text" name="cuit" value={form.cuit} onChange={handleChange} required />
+      </label>
 
-          <label>
-            CUIT
-            <input type="text" name="cuit" value={form.cuit} onChange={handleChange} required />
-          </label>
+      <label>
+        Dirección
+        <input type="text" name="direccion" value={form.direccion} onChange={handleChange} />
+      </label>
 
-          <label>
-            Dirección
-            <input type="text" name="direccion" value={form.direccion} onChange={handleChange} />
-          </label>
+      <div className="modal-form-fila">
+        <label>
+          Teléfono
+          <input type="text" name="telefono" value={form.telefono} onChange={handleChange} />
+        </label>
 
-          <div className="modal-form-fila">
-            <label>
-              Teléfono
-              <input type="text" name="telefono" value={form.telefono} onChange={handleChange} />
-            </label>
-
-            <label>
-              Email
-              <input type="email" name="email" value={form.email} onChange={handleChange} />
-            </label>
-          </div>
-
-          <div className="modal-acciones">
-            <button
-              type="button"
-              onClick={onCerrar}
-              className="modal-btn-cancelar"
-              disabled={guardando}
-            >
-              Cancelar
-            </button>
-            <button type="submit" className="modal-btn-guardar" disabled={guardando}>
-              {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Crear proveedor"}
-            </button>
-          </div>
-        </form>
+        <label>
+          Email
+          <input type="email" name="email" value={form.email} onChange={handleChange} />
+        </label>
       </div>
-    </div>
+    </ModalShell>
   );
 }
 

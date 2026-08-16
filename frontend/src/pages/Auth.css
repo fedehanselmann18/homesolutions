@@ -1,0 +1,292 @@
+/* Pantallas de entrada (login, registro, no autorizado) — dirección 4c del
+   rediseño: panel partido, mitad negra de marca con el logo y una línea de
+   contexto, mitad clara con el formulario. En pantallas angostas colapsa a
+   una banda negra arriba de la tarjeta (dirección 4a). */
+
+.auth-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-base-2);
+  font-family: var(--font-ui);
+  padding: var(--space-4);
+}
+
+.auth-panel {
+  width: 100%;
+  max-width: 780px;
+  min-height: 520px;
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+/* --- mitad negra de marca --- */
+
+.auth-panel__marca {
+  background: var(--color-oscuro);
+  padding: 36px var(--space-8);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+
+.auth-panel__logo {
+  width: 120px;
+  height: auto;
+  display: block;
+}
+
+.auth-panel__mensaje {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.auth-panel__barra {
+  width: 40px;
+  height: 3px;
+  background: var(--color-terracota);
+  border-radius: var(--radius-pill);
+}
+
+.auth-panel__mensaje p {
+  margin: 0;
+  font-size: var(--text-lg);
+  line-height: 1.45;
+  color: var(--color-oscuro-texto);
+  text-wrap: pretty;
+}
+
+.auth-panel__pie {
+  font-size: var(--text-xs);
+  color: var(--color-oscuro-texto-muted);
+}
+
+.auth-panel__restringido {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 5px var(--space-3);
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(220, 38, 38, 0.45);
+  background: rgba(220, 38, 38, 0.12);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-oxido-tint);
+}
+
+/* --- mitad clara con el formulario --- */
+
+.auth-panel__form {
+  padding: 44px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.auth-panel__titulo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.auth-panel__titulo h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 600;
+  color: var(--color-tinta);
+}
+
+.auth-panel__titulo p {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+.auth-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-tinta-muted);
+}
+
+.auth-campo input,
+.auth-campo select {
+  width: 100%;
+  font-family: var(--font-ui);
+  font-size: 0.95rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-linea);
+  background: var(--color-base-1);
+  color: var(--color-tinta);
+}
+
+/* El chevron propio reemplaza la flecha nativa del <select>, que cambia de
+   forma según el sistema operativo y desentona con el resto de los campos. */
+.auth-campo__select {
+  position: relative;
+  display: block;
+}
+
+.auth-campo__select select {
+  appearance: none;
+  padding-right: 36px;
+}
+
+.auth-campo__select svg {
+  position: absolute;
+  right: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--color-tinta-muted);
+}
+
+.auth-campo--error input,
+.auth-campo--error select {
+  border-color: var(--color-oxido);
+  background: var(--color-superficie);
+}
+
+.auth-campo .campo-error {
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.auth-panel__error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-oxido);
+  background: var(--color-oxido-tint);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+.auth-panel__submit {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: var(--text-base);
+  color: var(--color-superficie);
+  background: var(--color-terracota);
+  border: 1px solid var(--color-terracota);
+  border-radius: var(--radius-sm);
+  padding: 13px;
+  cursor: pointer;
+  margin-top: var(--space-1);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.auth-panel__submit:hover:not(:disabled) {
+  background: var(--color-terracota-dark);
+  border-color: var(--color-terracota-dark);
+}
+
+.auth-panel__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.auth-panel__link {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-musgo-dark);
+  text-decoration: none;
+}
+
+.auth-panel__link:hover {
+  text-decoration: underline;
+}
+
+/* --- no autorizado: mismo panel, contenido alineado a la izquierda --- */
+
+.auth-panel__aviso {
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.auth-panel__aviso h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--color-tinta);
+  text-wrap: pretty;
+}
+
+.auth-panel__aviso p {
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--color-tinta-muted);
+}
+
+.auth-panel__aviso button {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: var(--text-base);
+  color: var(--color-superficie);
+  background: var(--color-terracota);
+  border: 1px solid var(--color-terracota);
+  border-radius: var(--radius-sm);
+  padding: 12px 22px;
+  cursor: pointer;
+  margin-top: var(--space-2);
+  transition: background-color 0.15s ease;
+}
+
+.auth-panel__aviso button:hover {
+  background: var(--color-terracota-dark);
+}
+
+/* --- angosto: la mitad negra pasa a ser una banda arriba (dirección 4a) --- */
+
+@media (max-width: 720px) {
+  .auth-panel {
+    grid-template-columns: 1fr;
+    max-width: 420px;
+    min-height: 0;
+  }
+
+  .auth-panel__marca {
+    padding: var(--space-6) var(--space-8);
+    align-items: center;
+    text-align: center;
+  }
+
+  /* La línea de contexto y el pie sostienen la composición de la columna
+     alta; en la banda angosta solo agregan ruido arriba del formulario. */
+  .auth-panel__mensaje,
+  .auth-panel__pie {
+    display: none;
+  }
+
+  .auth-panel__logo {
+    width: 96px;
+  }
+
+  .auth-panel__form {
+    padding: var(--space-8) var(--space-8) var(--space-6);
+  }
+}

@@ -38,7 +38,9 @@ describe("Login", () => {
 
     await user.click(screen.getByRole("button", { name: /ingresar/i }));
 
-    expect(await screen.findByText(/eleg[ií].*usuario/i)).toBeInTheDocument();
+    // El regex apunta a la frase completa del error: el subtítulo de la
+    // pantalla ("Elegí tu usuario para continuar") también empieza igual.
+    expect(await screen.findByText(/eleg[ií] tu usuario y escrib/i)).toBeInTheDocument();
   });
 
   it("llama a login con el usuario y contraseña ingresados", async () => {

@@ -39,8 +39,7 @@ function detalleRequiereAccion(seguimiento) {
     seguimiento.comprasSinEntregar.length +
     seguimiento.fasesEstancadas.length;
   const detalle = [
-    seguimiento.comprasImpagas.length > 0 &&
-      `${seguimiento.comprasImpagas.length} sin pagar`,
+    seguimiento.comprasImpagas.length > 0 && `${seguimiento.comprasImpagas.length} sin pagar`,
     seguimiento.comprasSinEntregar.length > 0 &&
       `${seguimiento.comprasSinEntregar.length} ${seguimiento.comprasSinEntregar.length === 1 ? "envío" : "envíos"}`,
     seguimiento.fasesEstancadas.length > 0 &&
@@ -60,7 +59,10 @@ function ProyectoDetalleHeader({ proyecto, breadcrumb }) {
   const comprasQuery = useComprasPorProyecto(proyecto.id);
 
   const cargando =
-    fasesQuery.isLoading || gastosQuery.isLoading || cobrosQuery.isLoading || comprasQuery.isLoading;
+    fasesQuery.isLoading ||
+    gastosQuery.isLoading ||
+    cobrosQuery.isLoading ||
+    comprasQuery.isLoading;
 
   const datos = useMemo(
     () =>
@@ -103,7 +105,9 @@ function ProyectoDetalleHeader({ proyecto, breadcrumb }) {
         {proyecto.direccion} · Iniciado el {formatFecha(proyecto.fecha_inicio)}
       </p>
 
-      {proyecto.descripcion && <p className="proyecto-header__descripcion">{proyecto.descripcion}</p>}
+      {proyecto.descripcion && (
+        <p className="proyecto-header__descripcion">{proyecto.descripcion}</p>
+      )}
 
       {analisis && seguimiento && (
         <div className="proyecto-header__kpis">

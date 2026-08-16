@@ -1,7 +1,13 @@
 import { Plus, Search } from "lucide-react";
 import "./ProyectoHeader.css";
 
-export function ProyectosHeader({ canManage, onCrearProyecto, cantidad, busqueda, onBuscarChange }) {
+export function ProyectosHeader({
+  canManage,
+  onCrearProyecto,
+  cantidad,
+  busqueda,
+  onBuscarChange,
+}) {
   return (
     <header className="proyectos-header">
       <div className="proyectos-header__titulo-grupo">

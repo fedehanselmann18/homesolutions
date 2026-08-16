@@ -98,6 +98,15 @@
   transition: border-color 0.15s ease;
 }
 
+/* `:user-invalid` y no `:invalid`: sólo pinta de rojo después de que el
+   usuario tocó el campo. Antes esto era `input:invalid:not(:placeholder-shown)`
+   duplicado en ModalProyecto.css y ModalFase.css, pero como el guard depende
+   de tener placeholder, los campos que no lo declaran (y todos los
+   `type="date"`) arrancaban en rojo con el formulario recién abierto. */
+.modal-form input:user-invalid {
+  border-color: var(--color-oxido);
+}
+
 .modal-form input:focus,
 .modal-form select:focus {
   outline: none;

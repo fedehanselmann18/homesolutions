@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { TIPOS_PRODUCTO } from "../../constants/tipoProducto";
 import "./ModalProducto.css";
+import ModalShell from "./ModalShell";
 
 export function ModalProducto({
   producto,
@@ -73,100 +74,91 @@ export function ModalProducto({
   };
 
   return (
-    <div className="modal-overlay" onClick={onCerrar}>
-      <div className="modal-contenido" onClick={(e) => e.stopPropagation()}>
-        <h2>{esEdicion ? "Editar producto" : "Nuevo producto"}</h2>
+    <ModalShell
+      titulo={esEdicion ? "Editar producto" : "Nuevo producto"}
+      contexto={proveedor ? `Proveedor: ${proveedor.nombre}` : undefined}
+      onCerrar={onCerrar}
+      onSubmit={handleSubmit}
+      cerrarDeshabilitado={guardando}
+      acciones={
+        <>
+          <button
+            type="button"
+            onClick={onCerrar}
+            className="btn btn-secondary"
+            disabled={guardando}
+          >
+            Cancelar
+          </button>
+          <button type="submit" className="btn btn-primary" disabled={guardando}>
+            {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Crear producto"}
+          </button>
+        </>
+      }
+    >
+      <div className="modal-form-fila">
+        <label>
+          Marca
+          <input type="text" name="marca" value={form.marca} onChange={handleChange} required />
+        </label>
 
-        {proveedor && <p className="modal-form-seccion-vacio">Proveedor: {proveedor.nombre}</p>}
+        <label>
+          Modelo
+          <input type="text" name="modelo" value={form.modelo} onChange={handleChange} required />
+        </label>
+      </div>
 
-        <form onSubmit={handleSubmit} className="modal-form">
-          <div className="modal-form-fila">
-            <label>
-              Marca
-              <input type="text" name="marca" value={form.marca} onChange={handleChange} required />
-            </label>
+      <div className="modal-form-fila">
+        <label>
+          Tipo
+          <select name="tipo" value={form.tipo} onChange={handleChange} required>
+            <option value="" disabled>
+              Seleccioná un tipo
+            </option>
+            {Object.entries(TIPOS_PRODUCTO).map(([valor, info]) => (
+              <option key={valor} value={valor}>
+                {info.label}
+              </option>
+            ))}
+          </select>
+        </label>
 
-            <label>
-              Modelo
-              <input
-                type="text"
-                name="modelo"
-                value={form.modelo}
-                onChange={handleChange}
-                required
-              />
-            </label>
-          </div>
+        <label>
+          Precio de catálogo
+          <input
+            type="number"
+            name="precio"
+            value={form.precio}
+            onChange={handleChange}
+            min="0"
+            step="0.01"
+            required
+          />
+        </label>
+      </div>
 
-          <div className="modal-form-fila">
-            <label>
-              Tipo
-              <select name="tipo" value={form.tipo} onChange={handleChange} required>
-                <option value="" disabled>
-                  Seleccioná un tipo
-                </option>
-                {Object.entries(TIPOS_PRODUCTO).map(([valor, info]) => (
-                  <option key={valor} value={valor}>
-                    {info.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              Precio de catálogo
-              <input
-                type="number"
-                name="precio"
-                value={form.precio}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-                required
-              />
-            </label>
-          </div>
-
-          {form.tipo && (
-            <div className="modal-form-checkboxes">
-              <span className="modal-form-checkboxes-label">Categorías</span>
-              {categoriasDelTipo.length === 0 ? (
-                <p className="modal-form-seccion-vacio">
-                  No hay categorías cargadas para este tipo.
-                </p>
-              ) : (
-                <div className="modal-form-checkboxes-grid">
-                  {categoriasDelTipo.map((cat) => (
-                    <label key={cat.id} className="modal-checkbox">
-                      <input
-                        type="checkbox"
-                        checked={form.categoria_ids.includes(cat.id)}
-                        onChange={() => toggleCategoria(cat.id)}
-                      />
-                      {cat.nombre}
-                    </label>
-                  ))}
-                </div>
-              )}
+      {form.tipo && (
+        <div className="modal-form-checkboxes">
+          <span className="modal-form-checkboxes-label">Categorías</span>
+          {categoriasDelTipo.length === 0 ? (
+            <p className="modal-form-seccion-vacio">No hay categorías cargadas para este tipo.</p>
+          ) : (
+            <div className="modal-form-checkboxes-grid">
+              {categoriasDelTipo.map((cat) => (
+                <label key={cat.id} className="modal-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={form.categoria_ids.includes(cat.id)}
+                    onChange={() => toggleCategoria(cat.id)}
+                  />
+                  {cat.nombre}
+                </label>
+              ))}
             </div>
           )}
-
-          <div className="modal-acciones">
-            <button
-              type="button"
-              onClick={onCerrar}
-              className="modal-btn-cancelar"
-              disabled={guardando}
-            >
-              Cancelar
-            </button>
-            <button type="submit" className="modal-btn-guardar" disabled={guardando}>
-              {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Crear producto"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+      )}
+    </ModalShell>
   );
 }
 

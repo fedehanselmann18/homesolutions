@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Sparkles } from "lucide-react";
+import { X } from "lucide-react";
 import { ComprobantesUploader } from "../shared/ComprobantesUploader";
 import { formatMoneda } from "../../utils/formato";
 import { TIPOS_FACTURA } from "../../constants/tipoFactura";
@@ -8,6 +8,8 @@ import { getCondicionPagoLabel } from "../../constants/estadoCompra";
 import { useExtraccionIA } from "../../hooks/useExtraccionIA";
 import { useToast } from "../../context/useToast";
 import { validarRequerido, validarFecha } from "../../utils/formValidation";
+import ModalShell from "./ModalShell";
+import { PasoComprobante, BannerIA, ResumenValidacion, MarcaIA } from "./PiezasIA";
 import "./ModalCompra.css";
 
 const validarCampo = (name, value) => {
@@ -60,6 +62,15 @@ export function ModalCompra({
   const [errores, setErrores] = useState({});
   const { extraer, extrayendo } = useExtraccionIA();
   const toast = useToast();
+
+  // Flujo "IA primero" (dirección 5c): una compra nueva arranca mostrando sólo
+  // la zona de carga del comprobante; el formulario aparece cuando la IA lo
+  // leyó o cuando se elige cargar los datos a mano. Editar salta directo al
+  // formulario, que para eso ya hay datos.
+  const [mostrarFormulario, setMostrarFormulario] = useState(esEdicion);
+  const [lecturaIA, setLecturaIA] = useState(null); // { archivo, campos, productos }
+  const [camposIA, setCamposIA] = useState(new Set());
+  const claseIA = (campo) => (camposIA.has(campo) ? "campo-ia" : "");
 
   useEffect(() => {
     if (compra) {
@@ -130,6 +141,7 @@ export function ModalCompra({
     const archivo = comprobantesCambios.archivos[0];
     if (!archivo) return;
 
+    let productosReconocidos = 0;
     try {
       const resultado = await extraer(archivo, "compra", {
         fases: fasesDisponibles.map((f) => ({ id: f.id, nombre: f.nombre })),
@@ -144,6 +156,15 @@ export function ModalCompra({
       });
 
       const proveedorResuelto = proveedorFijo?.id ?? resultado.proveedor_id ?? form.proveedor_id;
+
+      // Qué campos vinieron del comprobante, para marcarlos en el formulario.
+      const leidos = new Set();
+      if (resultado.descripcion) leidos.add("descripcion");
+      if (resultado.fecha) leidos.add("fecha");
+      if (resultado.tipo_factura) leidos.add("tipo_factura");
+      if (!faseFija && resultado.fase_id) leidos.add("fase_id");
+      if (!proveedorFijo && resultado.proveedor_id) leidos.add("proveedor_id");
+      setCamposIA(leidos);
 
       setForm((prev) => ({
         ...prev,
@@ -174,6 +195,7 @@ export function ModalCompra({
           .filter(Boolean);
         if (filasNuevas.length) {
           setDetalle((prev) => [...prev, ...filasNuevas]);
+          productosReconocidos = filasNuevas.length;
         }
       }
 
@@ -185,6 +207,13 @@ export function ModalCompra({
         }));
         setImpuestos((prev) => [...prev, ...filasImpuestos]);
       }
+
+      setLecturaIA({
+        archivo: archivo.name,
+        campos: leidos.size,
+        productos: productosReconocidos,
+      });
+      setMostrarFormulario(true);
 
       if (resultado.advertencias?.length) {
         resultado.advertencias.forEach((a) => toast.error(a));
@@ -282,38 +311,109 @@ export function ModalCompra({
     }
   };
 
+  const faltantes = [
+    !faseFija && !form.fase_id ? "Fase" : null,
+    !proveedorFijo && !form.proveedor_id ? "Proveedor" : null,
+    !form.descripcion ? "Descripción" : null,
+    !form.fecha ? "Fecha" : null,
+    !form.tipo_factura ? "Tipo de factura" : null,
+    !form.condicion_pago ? "Condición de pago" : null,
+  ].filter(Boolean);
+
+  const contexto = [faseFija?.nombre, proveedorFijo?.nombre].filter(Boolean).join(" · ");
+
+  const uploader = (
+    <ComprobantesUploader
+      key="comprobantes"
+      existentes={compra?.comprobantes ?? []}
+      onVerExistente={onVerComprobante}
+      onCambio={setComprobantesCambios}
+      disabled={guardando}
+      prominente={!mostrarFormulario}
+    />
+  );
+
   return (
-    <div className="modal-overlay" onClick={onCerrar}>
-      <div className="modal-contenido modal-contenido--ancho" onClick={(e) => e.stopPropagation()}>
-        <h2>{esEdicion ? "Editar compra" : "Nueva compra"}</h2>
+    <ModalShell
+      titulo={esEdicion ? "Editar compra" : "Nueva compra"}
+      contexto={contexto}
+      ancho
+      onCerrar={onCerrar}
+      onSubmit={handleSubmit}
+      cerrarDeshabilitado={guardando}
+      total={precioTotal}
+      aviso={
+        mostrarFormulario && faltantes.length > 0
+          ? `Revisá ${faltantes.length} ${faltantes.length === 1 ? "campo" : "campos"}`
+          : null
+      }
+      acciones={
+        <>
+          <button
+            type="button"
+            onClick={onCerrar}
+            className="btn btn-secondary"
+            disabled={guardando}
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={guardando || !mostrarFormulario}
+          >
+            {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Crear compra"}
+          </button>
+        </>
+      }
+    >
+      {mostrarFormulario && lecturaIA && (
+        <BannerIA
+          nombreArchivo={lecturaIA.archivo}
+          resumen={`Leído con IA · ${lecturaIA.campos} ${lecturaIA.campos === 1 ? "campo" : "campos"}${lecturaIA.productos > 0 ? ` y ${lecturaIA.productos} ${lecturaIA.productos === 1 ? "producto" : "productos"}` : ""} completados`}
+          onVolverALeer={handleAutocompletarIA}
+          leyendo={extrayendo}
+          disabled={guardando}
+        />
+      )}
 
-        <form onSubmit={handleSubmit} className="modal-form">
-          <div className="modal-form-seccion modal-form-seccion--ia">
-            <div className="modal-form-seccion-header">
-              <span>Comprobantes</span>
-            </div>
-            <ComprobantesUploader
-              existentes={compra?.comprobantes ?? []}
-              onVerExistente={onVerComprobante}
-              onCambio={setComprobantesCambios}
-              disabled={guardando}
-            />
-            <button
-              type="button"
-              className="modal-btn-ia"
-              onClick={handleAutocompletarIA}
-              disabled={guardando || extrayendo || comprobantesCambios.archivos.length === 0}
-              title={
-                comprobantesCambios.archivos.length === 0
-                  ? "Primero arrastrá o elegí un comprobante"
-                  : "Leer el comprobante y prellenar proveedor/fase/fecha/tipo de factura/productos"
-              }
-            >
-              <Sparkles size={16} strokeWidth={2.25} />
-              {extrayendo ? "Leyendo comprobante..." : "Autocompletar con IA"}
-            </button>
+      {mostrarFormulario && <ResumenValidacion faltantes={faltantes} />}
+
+      {mostrarFormulario ? (
+        <div className="modal-form-seccion">
+          <div className="modal-form-seccion-header">
+            <span>Comprobantes</span>
+            {!lecturaIA && (
+              <button
+                type="button"
+                className="modal-btn-agregar-fila"
+                onClick={handleAutocompletarIA}
+                disabled={guardando || extrayendo || comprobantesCambios.archivos.length === 0}
+                title={
+                  comprobantesCambios.archivos.length === 0
+                    ? "Primero arrastrá o elegí un comprobante"
+                    : "Leer el comprobante y prellenar los campos"
+                }
+              >
+                {extrayendo ? "Leyendo..." : "Autocompletar con IA"}
+              </button>
+            )}
           </div>
+          {uploader}
+        </div>
+      ) : (
+        <PasoComprobante
+          hayArchivo={comprobantesCambios.archivos.length > 0}
+          leyendo={extrayendo}
+          onLeer={handleAutocompletarIA}
+          onCargarAMano={() => setMostrarFormulario(true)}
+        >
+          {uploader}
+        </PasoComprobante>
+      )}
 
+      {mostrarFormulario && (
+        <>
           <div className="modal-form-seccion">
             <div className="modal-form-seccion-header">
               <span>Datos generales</span>
@@ -326,7 +426,7 @@ export function ModalCompra({
                   <input type="text" value={faseFija.nombre} disabled readOnly />
                 </label>
               ) : (
-                <label>
+                <label className={claseIA("fase_id")}>
                   Fase
                   <select name="fase_id" value={form.fase_id} onChange={handleChange} required>
                     <option value="">Seleccionar fase...</option>
@@ -336,6 +436,7 @@ export function ModalCompra({
                       </option>
                     ))}
                   </select>
+                  {camposIA.has("fase_id") && <MarcaIA />}
                 </label>
               )}
 
@@ -345,7 +446,7 @@ export function ModalCompra({
                   <input type="text" value={proveedorFijo.nombre} disabled readOnly />
                 </label>
               ) : (
-                <label>
+                <label className={claseIA("proveedor_id")}>
                   Proveedor
                   <select
                     name="proveedor_id"
@@ -360,11 +461,12 @@ export function ModalCompra({
                       </option>
                     ))}
                   </select>
+                  {camposIA.has("proveedor_id") && <MarcaIA />}
                 </label>
               )}
             </div>
 
-            <label>
+            <label className={claseIA("descripcion")}>
               Descripción
               <input
                 type="text"
@@ -374,12 +476,14 @@ export function ModalCompra({
                 required
               />
               {errores.descripcion && <p className="campo-error">{errores.descripcion}</p>}
+              {camposIA.has("descripcion") && !errores.descripcion && <MarcaIA />}
             </label>
 
-            <label>
+            <label className={claseIA("fecha")}>
               Fecha
               <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required />
               {errores.fecha && <p className="campo-error">{errores.fecha}</p>}
+              {camposIA.has("fecha") && !errores.fecha && <MarcaIA />}
             </label>
           </div>
 
@@ -394,7 +498,7 @@ export function ModalCompra({
                 <span className="modal-form-calculado-valor">{formatMoneda(precioNeto)}</span>
               </div>
 
-              <label>
+              <label className={claseIA("tipo_factura")}>
                 Tipo de factura
                 <select
                   name="tipo_factura"
@@ -622,23 +726,9 @@ export function ModalCompra({
               <span>{formatMoneda(precioTotal)}</span>
             </div>
           </div>
-
-          <div className="modal-acciones">
-            <button
-              type="button"
-              onClick={onCerrar}
-              className="modal-btn-cancelar"
-              disabled={guardando}
-            >
-              Cancelar
-            </button>
-            <button type="submit" className="modal-btn-guardar" disabled={guardando}>
-              {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Crear compra"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </>
+      )}
+    </ModalShell>
   );
 }
 

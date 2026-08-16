@@ -113,7 +113,8 @@ export function FilaProyecto({ proyecto, onClick, renderAcciones }) {
                 className="panel-proyecto-chip"
                 style={{ color: NARANJA, backgroundColor: `${NARANJA}14` }}
               >
-                {proyecto.comprasSinEntregar} {proyecto.comprasSinEntregar === 1 ? "envío" : "envíos"}
+                {proyecto.comprasSinEntregar}{" "}
+                {proyecto.comprasSinEntregar === 1 ? "envío" : "envíos"}
               </span>
             )}
           </>
@@ -122,7 +123,12 @@ export function FilaProyecto({ proyecto, onClick, renderAcciones }) {
 
       <div className="panel-tabla-col panel-tabla-col--accion">
         {renderAcciones?.(proyecto)}
-        <ChevronRight size={18} strokeWidth={2} className="panel-tabla-chevron" aria-hidden="true" />
+        <ChevronRight
+          size={18}
+          strokeWidth={2}
+          className="panel-tabla-chevron"
+          aria-hidden="true"
+        />
       </div>
     </div>
   );

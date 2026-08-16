@@ -24,6 +24,8 @@ const OPCIONES_TIPO_FACTURA = [{ value: "", label: "Todos" }, ...TIPOS_FACTURA];
  * `mostrarNotas` sólo aplica a Compras/Cobros (Gasto no tiene notas).
  * `mostrarEstadoPago`/`mostrarEstadoEnvio` sólo aplican a Compras.
  * `mostrarComprobante` aplica a Cobros/Gastos.
+ * `mostrarFechas` se apaga donde la lista ya está ordenada y agrupada por día
+ * (el libro de obra), que es donde el rango de fechas no agrega nada.
  */
 export function FiltrosLista({
   filtros,
@@ -32,6 +34,7 @@ export function FiltrosLista({
   mostrarEstadoPago = false,
   mostrarEstadoEnvio = false,
   mostrarComprobante = false,
+  mostrarFechas = true,
 }) {
   const cambiarCampo = (campo, valor) => onCambiar({ ...filtros, [campo]: valor });
   const limpiar = () => onCambiar(FILTROS_VACIOS);
@@ -81,23 +84,27 @@ export function FiltrosLista({
         />
       )}
 
-      <div className="filtros-lista-campo">
-        <label className="label-ficha">Desde</label>
-        <input
-          type="date"
-          value={filtros.desde}
-          onChange={(e) => cambiarCampo("desde", e.target.value)}
-        />
-      </div>
+      {mostrarFechas && (
+        <>
+          <div className="filtros-lista-campo">
+            <label className="label-ficha">Desde</label>
+            <input
+              type="date"
+              value={filtros.desde}
+              onChange={(e) => cambiarCampo("desde", e.target.value)}
+            />
+          </div>
 
-      <div className="filtros-lista-campo">
-        <label className="label-ficha">Hasta</label>
-        <input
-          type="date"
-          value={filtros.hasta}
-          onChange={(e) => cambiarCampo("hasta", e.target.value)}
-        />
-      </div>
+          <div className="filtros-lista-campo">
+            <label className="label-ficha">Hasta</label>
+            <input
+              type="date"
+              value={filtros.hasta}
+              onChange={(e) => cambiarCampo("hasta", e.target.value)}
+            />
+          </div>
+        </>
+      )}
 
       {hayFiltrosActivos(filtros) && (
         <button type="button" className="filtros-lista-limpiar" onClick={limpiar}>

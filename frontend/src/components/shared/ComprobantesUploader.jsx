@@ -37,6 +37,7 @@ export function ComprobantesUploader({
   onVerExistente,
   onCambio,
   disabled = false,
+  prominente = false,
 }) {
   const inputRef = useRef(null);
   const [pendientes, setPendientes] = useState([]);
@@ -126,7 +127,7 @@ export function ComprobantesUploader({
   return (
     <div className="comprobantes-uploader">
       <div
-        className={`comprobantes-dropzone ${arrastrando ? "comprobantes-dropzone--activo" : ""} ${disabled ? "comprobantes-dropzone--disabled" : ""}`}
+        className={`comprobantes-dropzone ${prominente ? "comprobantes-dropzone--prominente" : ""} ${arrastrando ? "comprobantes-dropzone--activo" : ""} ${disabled ? "comprobantes-dropzone--disabled" : ""}`}
         onDragOver={(e) => {
           e.preventDefault();
           if (!disabled) setArrastrando(true);
@@ -137,12 +138,18 @@ export function ComprobantesUploader({
         role="button"
         tabIndex={0}
       >
-        <Paperclip size={20} strokeWidth={1.75} className="comprobantes-dropzone-icono" />
+        <Paperclip
+          size={prominente ? 26 : 20}
+          strokeWidth={1.75}
+          className="comprobantes-dropzone-icono"
+        />
         <span className="comprobantes-dropzone-texto">
-          Arrastrá tus comprobantes acá o hacé click para elegir archivos
+          {prominente
+            ? "Arrastrá la factura o el remito acá"
+            : "Arrastrá tus comprobantes acá o hacé click para elegir archivos"}
         </span>
         <span className="comprobantes-dropzone-subtexto">
-          PDF, JPG o PNG · máx. 10MB por archivo
+          {prominente ? "PDF, JPG o PNG · máx. 10MB" : "PDF, JPG o PNG · máx. 10MB por archivo"}
         </span>
         <input
           ref={inputRef}

@@ -8,6 +8,11 @@
   gap: 6px;
   padding: 0;
   font-family: var(--font-ui);
+  /* El importe se dimensiona contra el ancho de ESTA celda (unidades cqi, ver
+     .kpi-valor). No sirve medirlo contra el viewport: las celdas de la franja
+     de KPIs son flex con wrap, así que su ancho depende de cuántas entraron
+     en la fila y no del ancho de la ventana. */
+  container-type: inline-size;
 }
 
 /* Variante sin caja, para usarla adentro de otro bloque (idéntica al
@@ -25,9 +30,14 @@
   letter-spacing: 0.03em;
 }
 
+/* El importe es un token largo y sin espacios ("$ 17.487.467"), así que no
+   puede partirse en dos líneas: en una celda angosta se salía por el costado y
+   se montaba sobre el KPI de al lado. El tamaño se ata al ancho de la celda
+   (cqi) con un techo, así conserva la presencia cuando hay lugar y achica
+   sólo cuando de verdad no entra. */
 .kpi-valor {
   font-family: var(--font-display);
-  font-size: 1.7rem;
+  font-size: clamp(1rem, 11cqi, 1.7rem);
   font-weight: 600;
   color: var(--color-tinta);
   line-height: 1.15;
@@ -35,7 +45,7 @@
 }
 
 .kpi-valor--destacado {
-  font-size: 2rem;
+  font-size: clamp(1.05rem, 12.5cqi, 2rem);
 }
 
 .kpi-detalle {

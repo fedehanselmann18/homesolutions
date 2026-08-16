@@ -46,6 +46,9 @@
 
 .panel-kpis > * {
   flex: 1 1 200px;
+  /* Sin esto un ítem flex no baja de su ancho de contenido (min-width:auto),
+     así que el importe más largo empujaba la celda y se salía del box. */
+  min-width: 0;
   padding: 0 var(--space-6);
   border-left: 1px solid var(--color-linea);
 }
@@ -66,19 +69,6 @@
     padding: 0;
     border-left: none;
   }
-}
-
-.panel-kpis--notas {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space-6);
-}
-
-.panel-kpis--notas > * {
-  padding: var(--space-4);
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-superficie);
 }
 
 /* --- Secciones: separadas por línea, no por caja --- */
@@ -144,7 +134,10 @@
 
 .panel-kpi-realce {
   margin: calc(var(--space-4) * -1) 0;
-  padding: var(--space-4) 0;
+  /* Sólo se agrega el padding vertical de la franja: el horizontal lo pone
+     `.panel-kpis > *` y redeclarar `padding` entero se lo comía. */
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-4);
   background-color: var(--color-terracota-tint-fila);
 }
 

@@ -102,8 +102,7 @@
      (ver ProyectoCard.jsx, ProyectoDetalleHeader.jsx).
    - Modificador (bloque--modificador o bloque__elemento--modificador): una
      variante del bloque o elemento. Ej.: `.modal-contenido--ancho` (modal más
-     ancho para formularios con más campos), `.panel-kpis--notas` (variante en
-     grid de la franja de KPIs, ver Dashboard.jsx).
+     ancho para formularios con más campos).
 
    No es estricto: hay clases utilitarias sin bloque (`.btn`, `.badge`,
    `.campo-error` acá mismo) que son intencionalmente globales, no parte de

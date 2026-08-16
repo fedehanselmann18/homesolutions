@@ -6,6 +6,7 @@ import { restanteDetalleCompra } from "../../utils/notas";
 import { formatMoneda } from "../../utils/formato";
 import { obtenerMensajeError } from "../../utils/errorHandling";
 import "./ModalNota.css";
+import ModalShell from "./ModalShell";
 
 const EXTENSIONES_PERMITIDAS = ".pdf,.jpg,.jpeg,.png";
 
@@ -223,303 +224,281 @@ export function ModalNota({
   };
 
   return (
-    <div className="modal-overlay" onClick={onCerrar}>
-      <div
-        className={`modal-contenido ${usaSelectorProducto ? "modal-contenido--ancho" : ""}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <h2>{form.tipo === "nota_debito" ? "Nueva nota de débito" : "Nueva nota de crédito"}</h2>
+    <ModalShell
+      titulo={form.tipo === "nota_debito" ? "Nueva nota de débito" : "Nueva nota de crédito"}
+      contexto={entidad?.descripcion ? `Sobre: ${entidad.descripcion}` : undefined}
+      ancho={usaSelectorProducto}
+      clase="modal-contenido--peligro"
+      capaSuperior
+      onCerrar={onCerrar}
+      onSubmit={handleSubmit}
+      cerrarDeshabilitado={guardando}
+      acciones={
+        <>
+          <button
+            type="button"
+            onClick={onCerrar}
+            className="btn btn-secondary"
+            disabled={guardando}
+          >
+            Cancelar
+          </button>
+          <button type="submit" className="btn btn-primary" disabled={guardando}>
+            {guardando ? "Guardando..." : "Guardar nota"}
+          </button>
+        </>
+      }
+    >
+      <div className="modal-form-fila">
+        <label>
+          Tipo
+          <select name="tipo" value={form.tipo} onChange={handleChange}>
+            {TIPOS_NOTA.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </label>
 
-        {entidad?.descripcion && (
-          <p className="modal-nota-referencia">
-            Sobre: <strong>{entidad.descripcion}</strong>
-          </p>
-        )}
+        <label>
+          Tipo de factura
+          <select name="tipo_factura" value={form.tipo_factura} onChange={handleChange} required>
+            <option value="" disabled>
+              Seleccioná un tipo
+            </option>
+            {TIPOS_FACTURA.map((t) => (
+              <option key={t.value} value={t.value}>
+                {t.label}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
 
-        <form onSubmit={handleSubmit} className="modal-form">
-          <div className="modal-form-fila">
-            <label>
-              Tipo
-              <select name="tipo" value={form.tipo} onChange={handleChange}>
-                {TIPOS_NOTA.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+      <div className="modal-form-fila">
+        <label>
+          Origen
+          <select name="origen" value={form.origen} onChange={handleChange}>
+            <option value="">Sin especificar</option>
+            {origenes.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </label>
 
-            <label>
-              Tipo de factura
-              <select
-                name="tipo_factura"
-                value={form.tipo_factura}
-                onChange={handleChange}
-                required
-              >
-                <option value="" disabled>
-                  Seleccioná un tipo
-                </option>
-                {TIPOS_FACTURA.map((t) => (
-                  <option key={t.value} value={t.value}>
-                    {t.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
+        <label>
+          Fecha
+          <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required />
+        </label>
+      </div>
 
-          <div className="modal-form-fila">
-            <label>
-              Origen
-              <select name="origen" value={form.origen} onChange={handleChange}>
-                <option value="">Sin especificar</option>
-                {origenes.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+      {usaSelectorProducto ? (
+        <>
+          <div className="modal-form-seccion">
+            <div className="modal-form-seccion-header">
+              <span>{esDevolucion ? "Productos devueltos" : "Productos de reposición"}</span>
+              <button type="button" className="modal-btn-agregar-fila" onClick={agregarFilaDetalle}>
+                + Agregar producto
+              </button>
+            </div>
 
-            <label>
-              Fecha
-              <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required />
-            </label>
-          </div>
-
-          {usaSelectorProducto ? (
-            <>
-              <div className="modal-form-seccion">
-                <div className="modal-form-seccion-header">
-                  <span>{esDevolucion ? "Productos devueltos" : "Productos de reposición"}</span>
-                  <button
-                    type="button"
-                    className="modal-btn-agregar-fila"
-                    onClick={agregarFilaDetalle}
-                  >
-                    + Agregar producto
-                  </button>
-                </div>
-
-                {detalles.length > 0 && (
-                  <div className="modal-form-fila-dinamica modal-form-fila-dinamica--detalle modal-form-fila-dinamica--headers">
-                    <span>Producto</span>
-                    <span>Cantidad</span>
-                    <span>Precio unit.</span>
-                    <span>Subtotal</span>
-                    <span />
-                  </div>
-                )}
-
-                {detalles.map((fila) => {
-                  const linea = (entidad?.detalle ?? []).find(
-                    (d) => d.id === fila.detalle_compra_id
-                  );
-                  const restante = restanteParaFila(fila);
-                  return (
-                    <div
-                      key={fila._id}
-                      className="modal-form-fila-dinamica modal-form-fila-dinamica--detalle"
-                    >
-                      <div className="modal-form-fila-dinamica-producto">
-                        <select
-                          value={fila.detalle_compra_id}
-                          onChange={(e) =>
-                            actualizarFilaDetalle(fila._id, "detalle_compra_id", e.target.value)
-                          }
-                          required
-                        >
-                          <option value="">Producto...</option>
-                          {(entidad?.detalle ?? []).map((d) => {
-                            const p = productos.find((pr) => pr.id === d.producto_id);
-                            const restanteLinea = esDevolucion
-                              ? restanteDetalleCompra(entidad, d.id)
-                              : Infinity;
-                            const sinSaldo =
-                              esDevolucion && restanteLinea <= 0 && d.id !== fila.detalle_compra_id;
-                            return (
-                              <option key={d.id} value={d.id} disabled={sinSaldo}>
-                                {p ? `${p.marca} ${p.modelo}` : "Producto"} · comprado x{d.cantidad}
-                                {sinSaldo ? " (sin saldo)" : ""}
-                              </option>
-                            );
-                          })}
-                        </select>
-                        {fila.detalle_compra_id && esDevolucion && (
-                          <span
-                            className="modal-form-fila-dinamica-tipo"
-                            style={{ color: "#6f7f45", backgroundColor: "#eef0e9" }}
-                          >
-                            Disponible: {restante}
-                          </span>
-                        )}
-                      </div>
-                      <input
-                        type="number"
-                        placeholder="Cantidad"
-                        value={fila.cantidad}
-                        onChange={(e) =>
-                          actualizarFilaDetalle(fila._id, "cantidad", e.target.value)
-                        }
-                        min="0"
-                        max={fila.detalle_compra_id && esDevolucion ? restante : undefined}
-                        step="0.01"
-                        required
-                        disabled={!fila.detalle_compra_id}
-                      />
-                      <span
-                        className="modal-form-fila-dinamica-precio"
-                        title="Precio de catálogo de la compra original"
-                      >
-                        {linea ? formatMoneda(Number(linea.precio_unitario)) : "—"}
-                      </span>
-                      <span className="modal-form-fila-dinamica-subtotal">
-                        {linea
-                          ? formatMoneda(
-                              (Number(fila.cantidad) || 0) * Number(linea.precio_unitario)
-                            )
-                          : "—"}
-                      </span>
-                      <button
-                        type="button"
-                        className="modal-btn-quitar-fila"
-                        onClick={() => eliminarFilaDetalle(fila._id)}
-                      >
-                        <X size={14} strokeWidth={2.25} />
-                      </button>
-                    </div>
-                  );
-                })}
-                {detalles.length === 0 && (
-                  <p className="modal-form-seccion-vacio">Todavía no agregaste ningún producto.</p>
-                )}
+            {detalles.length > 0 && (
+              <div className="modal-form-fila-dinamica modal-form-fila-dinamica--detalle modal-form-fila-dinamica--headers">
+                <span>Producto</span>
+                <span>Cantidad</span>
+                <span>Precio unit.</span>
+                <span>Subtotal</span>
+                <span />
               </div>
+            )}
 
-              <div className="modal-form-seccion">
-                <div className="modal-form-seccion-header">
-                  <span>Impuestos (opcional)</span>
-                  <button
-                    type="button"
-                    className="modal-btn-agregar-fila"
-                    onClick={agregarFilaImpuesto}
-                  >
-                    + Agregar impuesto
-                  </button>
-                </div>
-
-                {impuestos.map((fila) => (
-                  <div
-                    key={fila._id}
-                    className="modal-form-fila-dinamica modal-form-fila-dinamica--2col"
-                  >
+            {detalles.map((fila) => {
+              const linea = (entidad?.detalle ?? []).find((d) => d.id === fila.detalle_compra_id);
+              const restante = restanteParaFila(fila);
+              return (
+                <div
+                  key={fila._id}
+                  className="modal-form-fila-dinamica modal-form-fila-dinamica--detalle"
+                >
+                  <div className="modal-form-fila-dinamica-producto">
                     <select
-                      value={fila.impuesto_id}
+                      value={fila.detalle_compra_id}
                       onChange={(e) =>
-                        actualizarFilaImpuesto(fila._id, "impuesto_id", e.target.value)
+                        actualizarFilaDetalle(fila._id, "detalle_compra_id", e.target.value)
                       }
                       required
                     >
-                      <option value="">Impuesto...</option>
-                      {impuestosDisponibles.map((imp) => (
-                        <option key={imp.id} value={imp.id}>
-                          {imp.nombre}
-                        </option>
-                      ))}
+                      <option value="">Producto...</option>
+                      {(entidad?.detalle ?? []).map((d) => {
+                        const p = productos.find((pr) => pr.id === d.producto_id);
+                        const restanteLinea = esDevolucion
+                          ? restanteDetalleCompra(entidad, d.id)
+                          : Infinity;
+                        const sinSaldo =
+                          esDevolucion && restanteLinea <= 0 && d.id !== fila.detalle_compra_id;
+                        return (
+                          <option key={d.id} value={d.id} disabled={sinSaldo}>
+                            {p ? `${p.marca} ${p.modelo}` : "Producto"} · comprado x{d.cantidad}
+                            {sinSaldo ? " (sin saldo)" : ""}
+                          </option>
+                        );
+                      })}
                     </select>
-                    <input
-                      type="number"
-                      placeholder="Monto"
-                      value={fila.monto}
-                      onChange={(e) => actualizarFilaImpuesto(fila._id, "monto", e.target.value)}
-                      min="0"
-                      step="0.01"
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="modal-btn-quitar-fila"
-                      onClick={() => eliminarFilaImpuesto(fila._id)}
-                    >
-                      <X size={14} strokeWidth={2.25} />
-                    </button>
+                    {fila.detalle_compra_id && esDevolucion && (
+                      <span
+                        className="modal-form-fila-dinamica-tipo"
+                        style={{ color: "#6f7f45", backgroundColor: "#eef0e9" }}
+                      >
+                        Disponible: {restante}
+                      </span>
+                    )}
                   </div>
-                ))}
-                {impuestos.length === 0 && (
-                  <p className="modal-form-seccion-vacio">Sin impuestos cargados todavía.</p>
-                )}
-              </div>
-
-              <div className="modal-form-resumen">
-                <div className="modal-form-resumen-fila">
-                  <span>Productos</span>
-                  <span>{formatMoneda(totalLineas)}</span>
+                  <input
+                    type="number"
+                    placeholder="Cantidad"
+                    value={fila.cantidad}
+                    onChange={(e) => actualizarFilaDetalle(fila._id, "cantidad", e.target.value)}
+                    min="0"
+                    max={fila.detalle_compra_id && esDevolucion ? restante : undefined}
+                    step="0.01"
+                    required
+                    disabled={!fila.detalle_compra_id}
+                  />
+                  <span
+                    className="modal-form-fila-dinamica-precio"
+                    title="Precio de catálogo de la compra original"
+                  >
+                    {linea ? formatMoneda(Number(linea.precio_unitario)) : "—"}
+                  </span>
+                  <span className="modal-form-fila-dinamica-subtotal">
+                    {linea
+                      ? formatMoneda((Number(fila.cantidad) || 0) * Number(linea.precio_unitario))
+                      : "—"}
+                  </span>
+                  <button
+                    type="button"
+                    className="modal-btn-quitar-fila"
+                    onClick={() => eliminarFilaDetalle(fila._id)}
+                  >
+                    <X size={14} strokeWidth={2.25} />
+                  </button>
                 </div>
-                <div className="modal-form-resumen-fila">
-                  <span>Impuestos</span>
-                  <span>{formatMoneda(totalImpuestosDevolucion)}</span>
-                </div>
-                <div className="modal-form-resumen-fila modal-form-resumen-fila--total">
-                  <span>Total nota</span>
-                  <span>{formatMoneda(montoDevolucion)}</span>
-                </div>
-              </div>
-            </>
-          ) : (
-            <label>
-              Monto
-              <input
-                type="number"
-                name="monto"
-                value={form.monto}
-                onChange={handleChange}
-                min="0"
-                step="0.01"
-                required
-              />
-            </label>
-          )}
-
-          <label>
-            Motivo
-            <input
-              type="text"
-              name="descripcion"
-              value={form.descripcion}
-              onChange={handleChange}
-              placeholder="Ej: devolución de 2 unidades dañadas"
-              required
-            />
-          </label>
-
-          <label>
-            Comprobante
-            <input
-              type="file"
-              accept={EXTENSIONES_PERMITIDAS}
-              onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
-              required
-            />
-          </label>
-
-          {error && <p className="modal-nota-error">{error}</p>}
-
-          <div className="modal-acciones">
-            <button
-              type="button"
-              onClick={onCerrar}
-              className="modal-btn-cancelar"
-              disabled={guardando}
-            >
-              Cancelar
-            </button>
-            <button type="submit" className="modal-btn-guardar" disabled={guardando}>
-              {guardando ? "Guardando..." : "Guardar nota"}
-            </button>
+              );
+            })}
+            {detalles.length === 0 && (
+              <p className="modal-form-seccion-vacio">Todavía no agregaste ningún producto.</p>
+            )}
           </div>
-        </form>
-      </div>
-    </div>
+
+          <div className="modal-form-seccion">
+            <div className="modal-form-seccion-header">
+              <span>Impuestos (opcional)</span>
+              <button
+                type="button"
+                className="modal-btn-agregar-fila"
+                onClick={agregarFilaImpuesto}
+              >
+                + Agregar impuesto
+              </button>
+            </div>
+
+            {impuestos.map((fila) => (
+              <div
+                key={fila._id}
+                className="modal-form-fila-dinamica modal-form-fila-dinamica--2col"
+              >
+                <select
+                  value={fila.impuesto_id}
+                  onChange={(e) => actualizarFilaImpuesto(fila._id, "impuesto_id", e.target.value)}
+                  required
+                >
+                  <option value="">Impuesto...</option>
+                  {impuestosDisponibles.map((imp) => (
+                    <option key={imp.id} value={imp.id}>
+                      {imp.nombre}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  type="number"
+                  placeholder="Monto"
+                  value={fila.monto}
+                  onChange={(e) => actualizarFilaImpuesto(fila._id, "monto", e.target.value)}
+                  min="0"
+                  step="0.01"
+                  required
+                />
+                <button
+                  type="button"
+                  className="modal-btn-quitar-fila"
+                  onClick={() => eliminarFilaImpuesto(fila._id)}
+                >
+                  <X size={14} strokeWidth={2.25} />
+                </button>
+              </div>
+            ))}
+            {impuestos.length === 0 && (
+              <p className="modal-form-seccion-vacio">Sin impuestos cargados todavía.</p>
+            )}
+          </div>
+
+          <div className="modal-form-resumen">
+            <div className="modal-form-resumen-fila">
+              <span>Productos</span>
+              <span>{formatMoneda(totalLineas)}</span>
+            </div>
+            <div className="modal-form-resumen-fila">
+              <span>Impuestos</span>
+              <span>{formatMoneda(totalImpuestosDevolucion)}</span>
+            </div>
+            <div className="modal-form-resumen-fila modal-form-resumen-fila--total">
+              <span>Total nota</span>
+              <span>{formatMoneda(montoDevolucion)}</span>
+            </div>
+          </div>
+        </>
+      ) : (
+        <label>
+          Monto
+          <input
+            type="number"
+            name="monto"
+            value={form.monto}
+            onChange={handleChange}
+            min="0"
+            step="0.01"
+            required
+          />
+        </label>
+      )}
+
+      <label>
+        Motivo
+        <input
+          type="text"
+          name="descripcion"
+          value={form.descripcion}
+          onChange={handleChange}
+          placeholder="Ej: devolución de 2 unidades dañadas"
+          required
+        />
+      </label>
+
+      <label>
+        Comprobante
+        <input
+          type="file"
+          accept={EXTENSIONES_PERMITIDAS}
+          onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
+          required
+        />
+      </label>
+
+      {error && <p className="modal-nota-error">{error}</p>}
+    </ModalShell>
   );
 }
 

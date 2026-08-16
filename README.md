@@ -14,7 +14,7 @@ de cada uno. Backend en FastAPI + SQLAlchemy + PostgreSQL, frontend en React
 
 ## Backend
 
-```bash
+```bashsigo aca
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate

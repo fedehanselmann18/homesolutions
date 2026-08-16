@@ -1,16 +1,24 @@
 import { useNavigate } from "react-router-dom";
-import "./NoAutorizado.css";
+import { Lock } from "lucide-react";
+import logoHS from "../assets/HS_logo_blanco.png";
+import "./Auth.css";
 
 export function NoAutorizado() {
   const navigate = useNavigate();
 
   return (
-    <div className="no-autorizado">
-      <div className="no-autorizado-card">
-        <div className="no-autorizado-header">
-          <span className="no-autorizado-eyebrow">Acceso restringido</span>
+    <div className="auth-page">
+      <div className="auth-panel">
+        <div className="auth-panel__marca">
+          <img src={logoHS} alt="HomeSolutions" className="auth-panel__logo" />
+          <span className="auth-panel__restringido">
+            <Lock size={13} />
+            Acceso restringido
+          </span>
+          <span className="auth-panel__pie">Uso interno</span>
         </div>
-        <div className="no-autorizado-body">
+
+        <div className="auth-panel__form auth-panel__aviso">
           <h1>No estás autorizado para ver esta página</h1>
           <p>Iniciá sesión con tu cuenta para continuar.</p>
           <button onClick={() => navigate("/login")}>Ir al login</button>

@@ -1,84 +1,103 @@
+import { HandCoins } from "lucide-react";
+
 import { formatMoneda, formatFecha } from "../../utils/formato";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
-import { SeccionComprobantes } from "../shared/SeccionComprobantes";
+import { VERDE, ROJO, NARANJA } from "../../constants/colores";
 import { SeccionNotas } from "../shared/SeccionNotas";
-import "./ModalCompra.css";
-import "../proyectos/cards/CobroCard.css";
+import { DetalleShell, BarraComposicion, SeccionDetalle, ChipsComprobantes } from "./PiezasDetalle";
 
 /**
- * Vista de solo lectura de un Cobro puntual (desde Seguimiento). Mismo
- * contenido que CobroCard en su estado expandido, sin acciones de edición.
+ * Vista de solo lectura de un Cobro, con el lenguaje visual de la dirección 3a
+ * del rediseño (ver claudedesign/). El bruto y las notas de crédito/débito que
+ * lo llevan al neto quedan a la vista, no sólo el número final.
  */
-export function ModalDetalleCobro({ cobro, usuarioNombre, onCerrar, onVerComprobante, onVerNota }) {
+export function ModalDetalleCobro({
+  cobro,
+  usuarioNombre,
+  onCerrar,
+  onVerComprobante,
+  onVerNota,
+  onAgregarComprobante,
+  onEliminarComprobante,
+  onAgregarNota,
+  onEliminarNota,
+  canManage = false,
+}) {
   const notas = cobro.notas ?? [];
   const notasCredito = totalNotasCredito(notas);
   const notasDebito = totalNotasDebito(notas);
-  // monto_neto lo calcula el backend; si no vino en la respuesta, se
-  // calcula acá con el mismo criterio que CobroCard.
+  // monto_neto lo calcula el backend (Cobro.monto_neto); si no vino en la
+  // respuesta, se calcula acá con el mismo criterio.
   const montoNeto = cobro.monto_neto ?? Number(cobro.monto) - notasCredito + notasDebito;
+  const hayNotas = notasCredito > 0 || notasDebito > 0;
 
   return (
-    <div className="modal-overlay" onClick={onCerrar}>
-      <div className="modal-contenido" onClick={(e) => e.stopPropagation()}>
-        <div className="cobro-card-header">
-          <h2>{cobro.descripcion}</h2>
-          <span className="cobro-card-monto">{formatMoneda(montoNeto)}</span>
-        </div>
+    <DetalleShell
+      tipo="Cobro"
+      icono={HandCoins}
+      contexto={getTipoFacturaLabel(cobro.tipo_factura)}
+      fecha={formatFecha(cobro.fecha)}
+      titulo={cobro.descripcion}
+      subtitulo={usuarioNombre ? `Cargado por ${usuarioNombre}` : null}
+      totalLabel="Neto"
+      total={montoNeto}
+      totalColor={VERDE}
+      onCerrar={onCerrar}
+    >
+      <BarraComposicion
+        segmentos={[
+          { label: "Bruto", monto: cobro.monto, color: VERDE },
+          { label: "Nota de crédito", monto: notasCredito, color: ROJO, signo: -1 },
+          { label: "Nota de débito", monto: notasDebito, color: NARANJA, signo: 1 },
+        ]}
+      />
 
-        <div className="cobro-card-contenido">
-          <div className="cobro-card-meta">
-            <span>{formatFecha(cobro.fecha)}</span>
-            <span className="cobro-card-separador">•</span>
-            <span>{getTipoFacturaLabel(cobro.tipo_factura)}</span>
-          </div>
-
-          {(notasCredito > 0 || notasDebito > 0) && (
-            <div className="cobro-card-resumen">
-              <div className="cobro-card-resumen-fila">
-                <span>Bruto</span>
-                <span>{formatMoneda(cobro.monto)}</span>
-              </div>
-              {notasCredito > 0 && (
-                <div className="cobro-card-resumen-fila cobro-card-resumen-fila--nota-credito">
-                  <span>Notas de crédito</span>
-                  <span>-{formatMoneda(notasCredito)}</span>
-                </div>
-              )}
-              {notasDebito > 0 && (
-                <div className="cobro-card-resumen-fila cobro-card-resumen-fila--nota-debito">
-                  <span>Notas de débito</span>
-                  <span>+{formatMoneda(notasDebito)}</span>
-                </div>
-              )}
-              <div className="cobro-card-resumen-fila cobro-card-resumen-fila--total">
-                <span>Neto</span>
-                <span>{formatMoneda(montoNeto)}</span>
-              </div>
+      {hayNotas && (
+        <SeccionDetalle titulo="Desglose">
+          <div className="detalle__desglose">
+            <div className="detalle__desglose-fila">
+              <span>Bruto</span>
+              <span>{formatMoneda(cobro.monto)}</span>
             </div>
-          )}
+            {notasCredito > 0 && (
+              <div className="detalle__desglose-fila detalle__desglose-fila--credito">
+                <span>Notas de crédito</span>
+                <span>-{formatMoneda(notasCredito)}</span>
+              </div>
+            )}
+            {notasDebito > 0 && (
+              <div className="detalle__desglose-fila detalle__desglose-fila--debito">
+                <span>Notas de débito</span>
+                <span>+{formatMoneda(notasDebito)}</span>
+              </div>
+            )}
+            <div className="detalle__desglose-fila detalle__desglose-fila--total">
+              <span>Neto</span>
+              <span>{formatMoneda(montoNeto)}</span>
+            </div>
+          </div>
+        </SeccionDetalle>
+      )}
 
-          {usuarioNombre && <p className="cobro-card-detalle-info">Cargado por {usuarioNombre}</p>}
+      <SeccionDetalle titulo="Comprobantes">
+        <ChipsComprobantes
+          comprobantes={cobro.comprobantes ?? []}
+          onVer={onVerComprobante}
+          onAgregar={onAgregarComprobante}
+          onEliminar={onEliminarComprobante}
+        />
+      </SeccionDetalle>
 
-          <SeccionComprobantes
-            comprobantes={cobro.comprobantes ?? []}
-            onVer={onVerComprobante ? (c) => onVerComprobante(cobro.id, c.id) : undefined}
-          />
-
-          <SeccionNotas
-            notas={notas}
-            contexto="cobro"
-            onVer={onVerNota ? (n) => onVerNota(cobro.id, n.id) : undefined}
-          />
-        </div>
-
-        <div className="modal-acciones">
-          <button type="button" onClick={onCerrar} className="modal-btn-cancelar">
-            Cerrar
-          </button>
-        </div>
-      </div>
-    </div>
+      <SeccionNotas
+        notas={notas}
+        contexto="cobro"
+        onVer={onVerNota}
+        onAgregar={onAgregarNota}
+        onEliminar={onEliminarNota}
+        canManage={canManage}
+      />
+    </DetalleShell>
   );
 }
 

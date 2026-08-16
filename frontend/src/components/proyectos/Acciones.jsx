@@ -6,9 +6,7 @@ import useAuth from "../../context/useAuth";
 import { formatMoneda, formatFecha } from "../../utils/formato";
 import { useAccionesProyecto } from "../../hooks/useAccionesProyecto";
 
-import GastoCard from "./cards/GastoCard";
-import CobroCard from "./cards/CobroCard";
-import CompraCard from "./cards/CompraCard";
+import LibroDeObra from "./LibroDeObra";
 import ModalGasto from "../modals/ModalGasto";
 import ModalCobro from "../modals/ModalCobro";
 import ModalCompra from "../modals/ModalCompra";
@@ -22,11 +20,18 @@ import { FILTROS_VACIOS, filtrarCompras, filtrarCobros, filtrarGastos } from "..
 
 import "./Acciones.css";
 
+const FILTROS_TIPO = [
+  { key: "todo", label: "Todo" },
+  { key: "compras", label: "Compras" },
+  { key: "gastos", label: "Gastos" },
+  { key: "cobros", label: "Cobros" },
+];
+
 export function Acciones({ proyectoId, proyectoNombre }) {
   const { usuario } = useAuth();
   const canManage = usuario?.rol === "admin";
 
-  const [subTab, setSubTab] = useState("compras");
+  const [filtroTipo, setFiltroTipo] = useState("todo");
 
   const {
     compras,
@@ -56,22 +61,18 @@ export function Acciones({ proyectoId, proyectoNombre }) {
     eliminarNotaCobro,
   } = useAccionesProyecto(proyectoId);
 
-  const [filtrosGastos, setFiltrosGastos] = useState(FILTROS_VACIOS);
-  const [filtrosCobros, setFiltrosCobros] = useState(FILTROS_VACIOS);
-  const [filtrosCompras, setFiltrosCompras] = useState(FILTROS_VACIOS);
+  // Una sola barra de filtros para toda la planilla: compras, gastos y cobros
+  // comparten fecha/tipo de factura, y cada colección ignora los campos que no
+  // le aplican (un gasto no tiene notas ni estado de pago).
+  const [filtros, setFiltros] = useState(FILTROS_VACIOS);
 
-  const gastosFiltrados = useMemo(
-    () => filtrarGastos(gastos, filtrosGastos),
-    [gastos, filtrosGastos]
-  );
-  const cobrosFiltrados = useMemo(
-    () => filtrarCobros(cobros, filtrosCobros),
-    [cobros, filtrosCobros]
-  );
-  const comprasFiltradas = useMemo(
-    () => filtrarCompras(compras, filtrosCompras),
-    [compras, filtrosCompras]
-  );
+  const gastosFiltrados = useMemo(() => filtrarGastos(gastos, filtros), [gastos, filtros]);
+  const cobrosFiltrados = useMemo(() => filtrarCobros(cobros, filtros), [cobros, filtros]);
+  const comprasFiltradas = useMemo(() => filtrarCompras(compras, filtros), [compras, filtros]);
+
+  const comprasVisibles = filtroTipo === "todo" || filtroTipo === "compras" ? comprasFiltradas : [];
+  const gastosVisibles = filtroTipo === "todo" || filtroTipo === "gastos" ? gastosFiltrados : [];
+  const cobrosVisibles = filtroTipo === "todo" || filtroTipo === "cobros" ? cobrosFiltrados : [];
 
   const [modalGastoAbierto, setModalGastoAbierto] = useState(false);
   const [gastoEditando, setGastoEditando] = useState(null);
@@ -86,8 +87,16 @@ export function Acciones({ proyectoId, proyectoNombre }) {
   const [notaContexto, setNotaContexto] = useState(null); // "compra" | "cobro"
   const [notaEntidad, setNotaEntidad] = useState(null); // la Compra o el Cobro sobre el que se carga la nota
 
-  const [detalle, setDetalle] = useState(null); // { tipo: "gasto" | "cobro" | "compra", entidad }
+  // Se guarda el id y no la entidad: agregar o borrar un comprobante desde el
+  // modal de detalle recarga la colección del hook, y una copia congelada del
+  // objeto seguiría mostrando la lista vieja.
+  const [detalle, setDetalle] = useState(null); // { tipo: "gasto" | "cobro" | "compra", id }
   const cerrarDetalle = () => setDetalle(null);
+
+  const coleccionPorTipo = { compra: compras, gasto: gastos, cobro: cobros };
+  const entidadDetalle = detalle
+    ? coleccionPorTipo[detalle.tipo].find((e) => e.id === detalle.id)
+    : null;
 
   const [confirmarEliminar, setConfirmarEliminar] = useState(null); // { tipo: "gasto" | "cobro" | "compra", id, nombre }
   const cerrarConfirmarEliminar = () => setConfirmarEliminar(null);
@@ -251,154 +260,93 @@ export function Acciones({ proyectoId, proyectoNombre }) {
     else if (tipo === "compra") await handleEliminarCompra(id);
   };
 
+  const contadorPorFiltro = {
+    todo: comprasFiltradas.length + gastosFiltrados.length + cobrosFiltrados.length,
+    compras: comprasFiltradas.length,
+    gastos: gastosFiltrados.length,
+    cobros: cobrosFiltrados.length,
+  };
+
   return (
     <div>
-      <div className="acciones-subtabs">
-        <button
-          className={`acciones-subtab ${subTab === "compras" ? "active" : ""}`}
-          onClick={() => setSubTab("compras")}
-        >
-          Compras
-        </button>
-        <button
-          className={`acciones-subtab ${subTab === "gastos" ? "active" : ""}`}
-          onClick={() => setSubTab("gastos")}
-        >
-          Gastos
-        </button>
-        <button
-          className={`acciones-subtab ${subTab === "cobros" ? "active" : ""}`}
-          onClick={() => setSubTab("cobros")}
-        >
-          Cobros
-        </button>
+      <div className="acciones-header">
+        <h2>Movimientos del proyecto</h2>
+        {canManage && (
+          <div className="acciones-header-botones">
+            <button type="button" className="btn btn-secondary" onClick={handleNuevoGasto}>
+              + Gasto
+            </button>
+            <button type="button" className="btn btn-secondary" onClick={handleNuevoCobro}>
+              + Cobro
+            </button>
+            <button type="button" className="btn btn-primary" onClick={handleNuevaCompra}>
+              Nueva compra
+            </button>
+          </div>
+        )}
       </div>
 
-      {subTab === "compras" && (
-        <div className="acciones-seccion">
-          <div className="acciones-header">
-            <h2>Compras del Proyecto</h2>
-            {canManage && <button onClick={handleNuevaCompra}>Nueva compra</button>}
-          </div>
+      <div className="acciones-filtros-tipo">
+        {FILTROS_TIPO.map((f) => (
+          <button
+            key={f.key}
+            type="button"
+            className={`acciones-filtro-tipo${filtroTipo === f.key ? " acciones-filtro-tipo--activo" : ""}`}
+            onClick={() => {
+              setFiltroTipo(f.key);
+              // La barra fina sólo existe en Compras; si se sale de ahí con
+              // filtros puestos, seguirían filtrando sin estar a la vista.
+              if (f.key !== "compras") setFiltros(FILTROS_VACIOS);
+            }}
+          >
+            {f.label}
+            <span className="acciones-filtro-tipo-contador">{contadorPorFiltro[f.key]}</span>
+          </button>
+        ))}
+      </div>
 
-          {compras.length > 0 && (
-            <FiltrosLista
-              filtros={filtrosCompras}
-              onCambiar={setFiltrosCompras}
-              mostrarNotas
-              mostrarEstadoPago
-              mostrarEstadoEnvio
-            />
-          )}
-
-          {compras.length === 0 ? (
-            <p>No hay compras registradas para este proyecto.</p>
-          ) : comprasFiltradas.length === 0 ? (
-            <p>Ninguna compra coincide con los filtros.</p>
-          ) : (
-            <div className="acciones-grid acciones-grid--compras">
-              {comprasFiltradas.map((compra) => (
-                <CompraCard
-                  key={compra.id}
-                  compra={compra}
-                  faseNombre={nombreFase(compra.fase_id)}
-                  proveedorNombre={nombreProveedor(compra.proveedor_id)}
-                  productos={productos}
-                  onEditar={handleEditarCompra}
-                  onEliminar={handleSolicitarEliminarCompra}
-                  onTogglePago={handleToggleEstadoPagoCompra}
-                  onToggleEnvio={handleToggleEstadoEnvioCompra}
-                  onVerComprobante={getComprobanteCompra}
-                  onAgregarComprobante={agregarComprobantesCompra}
-                  onEliminarComprobante={eliminarComprobanteCompra}
-                  onAgregarNota={handleAgregarNotaCompra}
-                  onVerNota={getNotaCompra}
-                  onEliminarNota={eliminarNotaCompra}
-                  onAbrirDetalle={(c) => setDetalle({ tipo: "compra", entidad: c })}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+      {filtroTipo === "compras" && (
+        <FiltrosLista
+          filtros={filtros}
+          onCambiar={setFiltros}
+          mostrarNotas
+          mostrarEstadoPago
+          mostrarEstadoEnvio
+          mostrarFechas={false}
+        />
       )}
 
-      {subTab === "gastos" && (
-        <div className="acciones-seccion">
-          <div className="acciones-header">
-            <h2>Gastos del Proyecto</h2>
-            {canManage && <button onClick={handleNuevoGasto}>Nuevo gasto</button>}
-          </div>
-
-          {gastos.length > 0 && (
-            <FiltrosLista filtros={filtrosGastos} onCambiar={setFiltrosGastos} mostrarComprobante />
-          )}
-
-          {gastos.length === 0 ? (
-            <p>No hay gastos registrados para este proyecto.</p>
-          ) : gastosFiltrados.length === 0 ? (
-            <p>Ningún gasto coincide con los filtros.</p>
-          ) : (
-            <div className="acciones-grid">
-              {gastosFiltrados.map((gasto) => (
-                <GastoCard
-                  key={gasto.id}
-                  gasto={gasto}
-                  faseNombre={gasto.fase_id ? nombreFase(gasto.fase_id) : null}
-                  onEditar={handleEditarGasto}
-                  onEliminar={handleSolicitarEliminarGasto}
-                  onVerComprobante={getComprobanteGasto}
-                  onAgregarComprobante={agregarComprobantesGasto}
-                  onEliminarComprobante={eliminarComprobanteGasto}
-                  onAbrirDetalle={(g) => setDetalle({ tipo: "gasto", entidad: g })}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {subTab === "cobros" && (
-        <div className="acciones-seccion">
-          <div className="acciones-header">
-            <h2>Cobros del Proyecto</h2>
-            {canManage && <button onClick={handleNuevoCobro}>Nuevo cobro</button>}
-          </div>
-
-          {cobros.length > 0 && (
-            <FiltrosLista
-              filtros={filtrosCobros}
-              onCambiar={setFiltrosCobros}
-              mostrarNotas
-              mostrarComprobante
-            />
-          )}
-
-          {cobros.length === 0 ? (
-            <p>No hay cobros registrados para este proyecto.</p>
-          ) : cobrosFiltrados.length === 0 ? (
-            <p>Ningún cobro coincide con los filtros.</p>
-          ) : (
-            <div className="acciones-grid">
-              {cobrosFiltrados.map((cobro) => (
-                <CobroCard
-                  key={cobro.id}
-                  cobro={cobro}
-                  onEditar={handleEditarCobro}
-                  onEliminar={handleSolicitarEliminarCobro}
-                  onVerComprobante={getComprobanteCobro}
-                  onAgregarComprobante={agregarComprobantesCobro}
-                  onEliminarComprobante={eliminarComprobanteCobro}
-                  onAgregarNota={handleAgregarNotaCobro}
-                  onVerNota={getNotaCobro}
-                  onEliminarNota={eliminarNotaCobro}
-                  onAbrirDetalle={(c) => setDetalle({ tipo: "cobro", entidad: c })}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
+      <LibroDeObra
+        titulo={`Movimientos — ${proyectoNombre}`}
+        compras={comprasVisibles}
+        gastos={gastosVisibles}
+        cobros={cobrosVisibles}
+        nombreFase={nombreFase}
+        nombreProveedor={nombreProveedor}
+        canManage={canManage}
+        onAbrirDetalle={(tipo, entidad) => setDetalle({ tipo, id: entidad.id })}
+        onTogglePagoCompra={handleToggleEstadoPagoCompra}
+        onToggleEnvioCompra={handleToggleEstadoEnvioCompra}
+        onEditar={(tipo, entidad) => {
+          if (tipo === "compra") handleEditarCompra(entidad);
+          else if (tipo === "gasto") handleEditarGasto(entidad);
+          else handleEditarCobro(entidad);
+        }}
+        onEliminar={(tipo, id) => {
+          if (tipo === "compra") handleSolicitarEliminarCompra(id);
+          else if (tipo === "gasto") handleSolicitarEliminarGasto(id);
+          else handleSolicitarEliminarCobro(id);
+        }}
+        onAgregarNota={(tipo, entidad) => {
+          if (tipo === "compra") handleAgregarNotaCompra(entidad);
+          else handleAgregarNotaCobro(entidad);
+        }}
+        onVerComprobante={(tipo, entidadId, comprobanteId) => {
+          if (tipo === "compra") return getComprobanteCompra(entidadId, comprobanteId);
+          if (tipo === "gasto") return getComprobanteGasto(entidadId, comprobanteId);
+          return getComprobanteCobro(entidadId, comprobanteId);
+        }}
+      />
       {modalGastoAbierto && (
         <ModalGasto
           gasto={gastoEditando}
@@ -450,33 +398,59 @@ export function Acciones({ proyectoId, proyectoNombre }) {
         />
       )}
 
-      {detalle?.tipo === "gasto" && (
+      {entidadDetalle && detalle.tipo === "gasto" && (
         <ModalDetalleGasto
-          gasto={detalle.entidad}
-          faseNombre={detalle.entidad.fase_id ? nombreFase(detalle.entidad.fase_id) : null}
+          gasto={entidadDetalle}
+          faseNombre={entidadDetalle.fase_id ? nombreFase(entidadDetalle.fase_id) : null}
           onCerrar={cerrarDetalle}
-          onVerComprobante={(c) => getComprobanteGasto(detalle.entidad.id, c.id)}
+          onVerComprobante={(c) => getComprobanteGasto(entidadDetalle.id, c.id)}
+          onAgregarComprobante={
+            canManage ? (files) => agregarComprobantesGasto(entidadDetalle.id, files) : undefined
+          }
+          onEliminarComprobante={
+            canManage ? (id) => eliminarComprobanteGasto(entidadDetalle.id, id) : undefined
+          }
         />
       )}
 
-      {detalle?.tipo === "cobro" && (
+      {entidadDetalle && detalle.tipo === "cobro" && (
         <ModalDetalleCobro
-          cobro={detalle.entidad}
+          cobro={entidadDetalle}
           onCerrar={cerrarDetalle}
-          onVerComprobante={(c) => getComprobanteCobro(detalle.entidad.id, c.id)}
-          onVerNota={(n) => getNotaCobro(detalle.entidad.id, n.id)}
+          onVerComprobante={(c) => getComprobanteCobro(entidadDetalle.id, c.id)}
+          onVerNota={(n) => getNotaCobro(entidadDetalle.id, n.id)}
+          onAgregarComprobante={
+            canManage ? (files) => agregarComprobantesCobro(entidadDetalle.id, files) : undefined
+          }
+          onEliminarComprobante={
+            canManage ? (id) => eliminarComprobanteCobro(entidadDetalle.id, id) : undefined
+          }
+          onAgregarNota={canManage ? () => handleAgregarNotaCobro(entidadDetalle) : undefined}
+          onEliminarNota={canManage ? (id) => eliminarNotaCobro(entidadDetalle.id, id) : undefined}
+          canManage={canManage}
         />
       )}
 
-      {detalle?.tipo === "compra" && (
+      {entidadDetalle && detalle.tipo === "compra" && (
         <ModalDetalleCompra
-          compra={detalle.entidad}
-          faseNombre={nombreFase(detalle.entidad.fase_id)}
-          proveedorNombre={nombreProveedor(detalle.entidad.proveedor_id)}
+          compra={entidadDetalle}
+          faseNombre={nombreFase(entidadDetalle.fase_id)}
+          proveedorNombre={nombreProveedor(entidadDetalle.proveedor_id)}
           productos={productos}
           onCerrar={cerrarDetalle}
-          onVerComprobante={(c) => getComprobanteCompra(detalle.entidad.id, c.id)}
-          onVerNota={(n) => getNotaCompra(detalle.entidad.id, n.id)}
+          onVerComprobante={(c) => getComprobanteCompra(entidadDetalle.id, c.id)}
+          onVerNota={(n) => getNotaCompra(entidadDetalle.id, n.id)}
+          onAgregarComprobante={
+            canManage ? (files) => agregarComprobantesCompra(entidadDetalle.id, files) : undefined
+          }
+          onEliminarComprobante={
+            canManage ? (id) => eliminarComprobanteCompra(entidadDetalle.id, id) : undefined
+          }
+          onAgregarNota={canManage ? () => handleAgregarNotaCompra(entidadDetalle) : undefined}
+          onEliminarNota={canManage ? (id) => eliminarNotaCompra(entidadDetalle.id, id) : undefined}
+          onTogglePago={() => handleToggleEstadoPagoCompra(entidadDetalle)}
+          onToggleEnvio={() => handleToggleEstadoEnvioCompra(entidadDetalle)}
+          canManage={canManage}
         />
       )}
 
