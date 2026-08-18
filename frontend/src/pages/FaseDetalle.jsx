@@ -204,8 +204,13 @@ export function FaseDetalle() {
   const IconoEstado = estadoInfo.icono;
   // Mismo criterio que las fases estancadas del Panel: solo tiene sentido
   // contar "días en curso" mientras la fase sigue en curso.
+  // fecha_en_curso_desde (no fecha_actualizacion): ese campo se pisa con
+  // cualquier edición de la fase, no solo al entrar en curso -- ver
+  // comentario en el modelo Fase (backend).
   const diasEnCurso =
-    fase.estado === "en_curso" ? diasDesde(fase.fecha_actualizacion, new Date()) : null;
+    fase.estado === "en_curso" && fase.fecha_en_curso_desde
+      ? diasDesde(fase.fecha_en_curso_desde, new Date())
+      : null;
   const puedeMarcarTerminada =
     canManage && fase.estado !== "terminada" && fase.estado !== "auditada";
 
@@ -218,7 +223,7 @@ export function FaseDetalle() {
         items={[
           { label: "Proyectos", to: "/proyectos" },
           { label: proyecto.nombre, to: `/proyectos/${proyectoId}` },
-          { label: fase.nombre },
+          { label: `${fase.orden}. ${fase.nombre}` },
         ]}
       />
 
@@ -234,6 +239,7 @@ export function FaseDetalle() {
       <div className="fase-detalle-header" style={{ borderLeftColor: estadoInfo.color }}>
         <div className="fase-detalle-header-top">
           <div className="fase-detalle-header-titulo">
+            <span className="fase-detalle-numero">Fase {fase.orden}</span>
             <h1 className="fase-detalle-nombre">{fase.nombre}</h1>
             <span
               className="fase-detalle-estado"

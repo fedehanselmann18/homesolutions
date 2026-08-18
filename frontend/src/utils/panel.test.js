@@ -195,9 +195,9 @@ describe("calcularPanel", () => {
           { id: 2, estado: "en_curso" },
         ],
         fases: [
-          // fase estancada: en_curso hace más de 30 días sin tocarse.
-          { id: 10, proyecto_id: 1, estado: "en_curso", fecha_actualizacion: "2026-06-01" },
-          { id: 20, proyecto_id: 2, estado: "en_curso", fecha_actualizacion: "2026-08-10" },
+          // fase estancada: entró en_curso hace más de 30 días.
+          { id: 10, proyecto_id: 1, estado: "en_curso", fecha_en_curso_desde: "2026-06-01" },
+          { id: 20, proyecto_id: 2, estado: "en_curso", fecha_en_curso_desde: "2026-08-10" },
         ],
         compras: [
           // proyecto 1: una compra impaga y sin entregar a la vez -> cuenta como 2 acciones.
@@ -240,8 +240,8 @@ describe("calcularPanel", () => {
       const resultado = calcularPanel({
         proyectos: [{ id: 1, estado: "en_curso" }],
         fases: [
-          { id: 10, proyecto_id: 1, estado: "por_empezar", fecha_actualizacion: "2026-01-01" },
-          { id: 11, proyecto_id: 1, estado: "terminada", fecha_actualizacion: "2026-01-01" },
+          { id: 10, proyecto_id: 1, estado: "por_empezar", fecha_en_curso_desde: null },
+          { id: 11, proyecto_id: 1, estado: "terminada", fecha_en_curso_desde: null },
         ],
         hoy: HOY,
       });

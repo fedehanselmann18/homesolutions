@@ -52,6 +52,21 @@
   flex-shrink: 0;
 }
 
+.fase-detalle-numero {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-tinta-muted);
+  background-color: var(--color-base-1);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-pill);
+  padding: 3px 10px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
 .fase-detalle-nombre {
   font-family: var(--font-display);
   font-size: var(--text-2xl);

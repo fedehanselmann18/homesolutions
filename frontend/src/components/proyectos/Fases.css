@@ -46,7 +46,7 @@
 .fases-tabla-fila,
 .fases-tabla-total {
   display: grid;
-  grid-template-columns: 34px 2fr 1fr 1.1fr 1.6fr 76px;
+  grid-template-columns: 34px 2fr 1fr 1.1fr 1.6fr 116px;
   gap: var(--space-4);
   align-items: center;
 }
@@ -96,9 +96,27 @@
   color: var(--color-tinta-muted);
 }
 
+.fases-tabla-nombre--terminada {
+  color: var(--color-tinta-muted);
+  font-weight: 500;
+  text-decoration: line-through;
+}
+
 .fases-tabla-subtexto {
   font-size: var(--text-xs);
   color: var(--color-tinta-muted);
+}
+
+/* Una sola línea, cortada con "..." si no entra -- la fila de la planilla
+   es compacta (a diferencia de la fase-card vieja, que tenía lugar para
+   varios renglones). El texto completo queda en el title="" para el hover. */
+.fases-tabla-descripcion {
+  font-size: var(--text-xs);
+  color: var(--color-tinta-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .fases-tabla-estado {
@@ -151,6 +169,39 @@
 
 .fases-tabla-fila:hover .fases-tabla-acciones {
   opacity: 1;
+}
+
+.fases-tabla-orden-btns {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.fases-tabla-orden-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 12px;
+  border: 1px solid var(--color-linea);
+  border-radius: 2px;
+  background: var(--color-superficie);
+  color: var(--color-tinta-muted);
+  cursor: pointer;
+  padding: 0;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.fases-tabla-orden-btn:hover:not(:disabled) {
+  border-color: var(--color-tinta);
+  color: var(--color-tinta);
+}
+
+.fases-tabla-orden-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 
 .fases-tabla-accion-btn {
@@ -222,7 +273,7 @@
   .fases-tabla-header,
   .fases-tabla-fila,
   .fases-tabla-total {
-    grid-template-columns: 34px 220px 100px 120px 180px 76px;
+    grid-template-columns: 34px 220px 100px 120px 180px 116px;
     width: max-content;
     min-width: 100%;
   }

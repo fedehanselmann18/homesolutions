@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Pencil, Trash2, ChevronRight } from "lucide-react";
-import { crearFase, actualizarFase, eliminarFase } from "../../services/faseService";
+import { Pencil, Trash2, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
+import { crearFase, actualizarFase, eliminarFase, moverFase } from "../../services/faseService";
 import {
   useProyecto,
   useFasesPorProyecto,
@@ -82,6 +82,17 @@ export function Fases({ proyectoId }) {
     setFaseAEliminar(fase);
   };
 
+  const handleMoverFase = async (e, fase, direccion) => {
+    e.stopPropagation();
+    try {
+      await moverFase(fase.id, direccion);
+      invalidarFases();
+    } catch (error) {
+      console.error("Error moviendo fase:", error);
+      toast.error(obtenerDetalleBackend(error) ?? "No se pudo mover la fase.");
+    }
+  };
+
   const handleConfirmarEliminarFase = async () => {
     const faseId = faseAEliminar.id;
     setFaseAEliminar(null);
@@ -140,7 +151,14 @@ export function Fases({ proyectoId }) {
             const gastado = gastadoPorFase?.porFase.get(fase.id) ?? 0;
             const pct = precioAcordado > 0 ? (gastado / precioAcordado) * 100 : 0;
             const enCurso = fase.estado === "en_curso";
+            const terminada = fase.estado === "terminada" || fase.estado === "auditada";
             const sinDatos = !gastadoPorFase;
+            // fecha_en_curso_desde (no fecha_actualizacion): ese campo se
+            // pisa con cualquier edición de la fase, no solo al entrar en
+            // curso -- ver comentario en el modelo Fase (backend).
+            const diasEnCurso = fase.fecha_en_curso_desde
+              ? diasDesde(fase.fecha_en_curso_desde, new Date())
+              : null;
 
             return (
               <div
@@ -155,22 +173,27 @@ export function Fases({ proyectoId }) {
                   navigate(`/proyectos/${proyectoId}/fases/${fase.id}`)
                 }
               >
-                <span className="fases-tabla-num">{String(i + 1).padStart(2, "0")}</span>
+                <span className="fases-tabla-num">{String(fase.orden).padStart(2, "0")}</span>
 
                 <span className="fases-tabla-col--fase">
                   <span
-                    className={
-                      fase.estado === "por_empezar"
-                        ? "fases-tabla-nombre fases-tabla-nombre--pendiente"
-                        : "fases-tabla-nombre"
-                    }
+                    className={[
+                      "fases-tabla-nombre",
+                      fase.estado === "por_empezar" && "fases-tabla-nombre--pendiente",
+                      terminada && "fases-tabla-nombre--terminada",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
                   >
                     {fase.nombre}
                   </span>
-                  {enCurso && (
-                    <span className="fases-tabla-subtexto">
-                      En curso hace {diasDesde(fase.fecha_actualizacion, new Date())} días
+                  {fase.descripcion && (
+                    <span className="fases-tabla-descripcion" title={fase.descripcion}>
+                      {fase.descripcion}
                     </span>
+                  )}
+                  {enCurso && diasEnCurso !== null && (
+                    <span className="fases-tabla-subtexto">En curso hace {diasEnCurso} días</span>
                   )}
                 </span>
 
@@ -195,6 +218,26 @@ export function Fases({ proyectoId }) {
                 <span className="fases-tabla-col--accion">
                   {canManage && (
                     <span className="fases-tabla-acciones">
+                      <span className="fases-tabla-orden-btns">
+                        <button
+                          type="button"
+                          className="fases-tabla-orden-btn"
+                          onClick={(e) => handleMoverFase(e, fase, "arriba")}
+                          disabled={i === 0}
+                          title="Subir fase"
+                        >
+                          <ChevronUp size={12} strokeWidth={2.5} />
+                        </button>
+                        <button
+                          type="button"
+                          className="fases-tabla-orden-btn"
+                          onClick={(e) => handleMoverFase(e, fase, "abajo")}
+                          disabled={i === fases.length - 1}
+                          title="Bajar fase"
+                        >
+                          <ChevronDown size={12} strokeWidth={2.5} />
+                        </button>
+                      </span>
                       <button
                         type="button"
                         className="fases-tabla-accion-btn"

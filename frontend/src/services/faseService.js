@@ -30,3 +30,11 @@ export const eliminarFase = async (faseId) => {
   const { data } = await axiosClient.delete(`/fases/${faseId}`);
   return data;
 };
+
+// direccion: "arriba" | "abajo". Intercambia el número de esta fase con el
+// de su vecina en esa dirección (dentro del mismo proyecto). Devuelve la
+// lista completa de fases del proyecto ya reordenada.
+export const moverFase = async (faseId, direccion) => {
+  const { data } = await axiosClient.patch(`/fases/${faseId}/mover`, { direccion });
+  return data;
+};

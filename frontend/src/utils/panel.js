@@ -199,9 +199,14 @@ export function calcularPanel({
     const cerradas = fasesDelProyecto.filter((f) => ESTADOS_FASE_CERRADA.includes(f.estado)).length;
     const impagas = comprasDelProyecto.filter(esCompraImpaga);
     // Mismo criterio que "fasesEstancadas" en calcularSeguimiento: una fase
-    // en_curso que hace DIAS_FASE_ESTANCADA días o más que no se toca.
+    // en_curso que hace DIAS_FASE_ESTANCADA días o más que entró en curso.
+    // fecha_en_curso_desde (no fecha_actualizacion): ver comentario en el
+    // modelo Fase (backend) -- ese campo se pisa con cualquier edición.
     const estancadas = fasesDelProyecto.filter(
-      (f) => f.estado === "en_curso" && diasDesde(f.fecha_actualizacion, hoy) >= DIAS_FASE_ESTANCADA
+      (f) =>
+        f.estado === "en_curso" &&
+        f.fecha_en_curso_desde &&
+        diasDesde(f.fecha_en_curso_desde, hoy) >= DIAS_FASE_ESTANCADA
     ).length;
     return {
       id: proyecto.id,

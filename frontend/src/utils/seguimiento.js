@@ -113,9 +113,12 @@ export function calcularSeguimiento({
     }))
     .sort((a, b) => b.monto - a.monto);
 
+  // fecha_en_curso_desde (no fecha_actualizacion): ese campo se pisa con
+  // cualquier edición de la fase, no solo al entrar en curso -- ver
+  // comentario en el modelo Fase (backend).
   const fasesEstancadas = fases
-    .filter((f) => f.estado === "en_curso")
-    .map((f) => ({ id: f.id, nombre: f.nombre, dias: diasDesde(f.fecha_actualizacion, hoy) }))
+    .filter((f) => f.estado === "en_curso" && f.fecha_en_curso_desde)
+    .map((f) => ({ id: f.id, nombre: f.nombre, dias: diasDesde(f.fecha_en_curso_desde, hoy) }))
     .filter((f) => f.dias >= DIAS_FASE_ESTANCADA)
     .sort((a, b) => b.dias - a.dias);
 

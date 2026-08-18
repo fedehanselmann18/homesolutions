@@ -32,6 +32,7 @@ from sqlalchemy import (  # CORREGIDO: + UniqueConstraint
     Column,
     DateTime,
     ForeignKey,
+    Integer,
     Numeric,
     String,
     Table,
@@ -102,6 +103,18 @@ class Fase(TimestampMixin, Base):
     nombre: Mapped[str] = mapped_column(String(150), nullable=False)
     descripcion: Mapped[str | None] = mapped_column(String(500))
     estado: Mapped[str] = mapped_column(String(20), nullable=False)  # por_empezar/en_curso/terminada/auditada
+    # Número de orden de la fase dentro de SU proyecto (1, 2, 3...) -- lo
+    # asigna solo el backend al crear (siguiente número libre para ese
+    # proyecto) y se reacomoda para no dejar huecos al borrar una fase del
+    # medio. No es global: cada proyecto tiene su propia numeración 1..N.
+    orden: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    # Desde cuándo está "en_curso" esta fase, para poder mostrar "hace X
+    # días" de forma correcta. A propósito NO se usa fecha_actualizacion
+    # para esto: ese campo se pisa con CUALQUIER edición de la fase (nombre,
+    # descripción, etc.), no solo con el cambio de estado, así que "en curso
+    # hace 0 días" aparecía cada vez que se tocaba algo de una fase que ya
+    # estaba en curso. Se pone en None cuando la fase sale de en_curso.
+    fecha_en_curso_desde: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     proyecto: Mapped["Proyecto"] = relationship(back_populates="fases")
     # Compra NO puede existir sin Fase -> se borra en cascada junto con ella (ver Compra.fase_id).

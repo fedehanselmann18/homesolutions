@@ -33,7 +33,7 @@ CORREGIDO (respecto a la versión anterior):
 import re
 import uuid
 from datetime import date, datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -176,11 +176,21 @@ class FaseUpdate(BaseModel):
     estado: str | None = None
 
 
+class FaseReordenar(BaseModel):
+    direccion: Literal["arriba", "abajo"]
+
+
 class FaseOut(FaseBase, TimestampOut):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     proyecto_id: uuid.UUID
+    # Número de fase dentro del proyecto (1, 2, 3...). Lo asigna el backend
+    # solo, no se manda en Create/Update -- ver FaseReordenar para cambiarlo.
+    orden: int
+    # Desde cuándo está en curso (None si nunca lo estuvo o ya no lo está).
+    # El front lo usa para "en curso hace X días" en vez de fecha_actualizacion.
+    fecha_en_curso_desde: datetime | None = None
 
 
 # ---------------------------------------------------------------------------
