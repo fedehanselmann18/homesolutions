@@ -171,9 +171,7 @@ def test_pasar_a_en_curso_asigna_fecha_en_curso_desde(client, db_session, header
     fase = _crear_fase_via_api(client, headers_admin, proyecto.id, "Reunión cliente")
     assert fase["fecha_en_curso_desde"] is None
 
-    respuesta = client.put(
-        f"/fases/{fase['id']}", json={"estado": "en_curso"}, headers=headers_admin
-    )
+    respuesta = client.put(f"/fases/{fase['id']}", json={"estado": "en_curso"}, headers=headers_admin)
     assert respuesta.status_code == 200
     assert respuesta.json()["fecha_en_curso_desde"] is not None
 
@@ -185,9 +183,7 @@ def test_editar_otro_campo_no_pisa_fecha_en_curso_desde(client, db_session, head
     proyecto = _crear_proyecto(db_session)
     fase = _crear_fase_via_api(client, headers_admin, proyecto.id, "Montaje")
 
-    respuesta = client.put(
-        f"/fases/{fase['id']}", json={"estado": "en_curso"}, headers=headers_admin
-    )
+    respuesta = client.put(f"/fases/{fase['id']}", json={"estado": "en_curso"}, headers=headers_admin)
     fecha_original = respuesta.json()["fecha_en_curso_desde"]
     assert fecha_original is not None
 
@@ -209,9 +205,7 @@ def test_editar_otro_campo_no_pisa_fecha_en_curso_desde(client, db_session, head
     assert cuerpo["descripcion"] == "Instalación de equipos"
     # La fecha de "entró en curso" no se movió por editar la descripción.
     assert cuerpo["fecha_en_curso_desde"] is not None
-    assert abs(
-        (datetime.fromisoformat(cuerpo["fecha_en_curso_desde"]) - fecha_vieja).total_seconds()
-    ) < 1
+    assert abs((datetime.fromisoformat(cuerpo["fecha_en_curso_desde"]) - fecha_vieja).total_seconds()) < 1
 
 
 def test_salir_de_en_curso_limpia_fecha_en_curso_desde(client, db_session, headers_admin):
@@ -219,8 +213,6 @@ def test_salir_de_en_curso_limpia_fecha_en_curso_desde(client, db_session, heade
     fase = _crear_fase_via_api(client, headers_admin, proyecto.id, "Reunión cliente")
     client.put(f"/fases/{fase['id']}", json={"estado": "en_curso"}, headers=headers_admin)
 
-    respuesta = client.put(
-        f"/fases/{fase['id']}", json={"estado": "terminada"}, headers=headers_admin
-    )
+    respuesta = client.put(f"/fases/{fase['id']}", json={"estado": "terminada"}, headers=headers_admin)
     assert respuesta.status_code == 200
     assert respuesta.json()["fecha_en_curso_desde"] is None

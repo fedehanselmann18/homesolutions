@@ -38,10 +38,7 @@ def get_fases_by_proyecto(
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
 
     return (
-        db.query(models.Fase)
-        .filter(models.Fase.proyecto_id == proyecto_id)
-        .order_by(models.Fase.orden)
-        .all()
+        db.query(models.Fase).filter(models.Fase.proyecto_id == proyecto_id).order_by(models.Fase.orden).all()
     )
 
 
@@ -182,10 +179,7 @@ def delete_fase(
     # Si se borró una fase del medio (ej. la 2 de 4), las que quedan no
     # pueden dejar un hueco en la numeración -> se reacomodan a 1..N.
     restantes = (
-        db.query(models.Fase)
-        .filter(models.Fase.proyecto_id == proyecto_id)
-        .order_by(models.Fase.orden)
-        .all()
+        db.query(models.Fase).filter(models.Fase.proyecto_id == proyecto_id).order_by(models.Fase.orden).all()
     )
     for i, f in enumerate(restantes, start=1):
         if f.orden != i:
