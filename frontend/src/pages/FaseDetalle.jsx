@@ -11,6 +11,7 @@ import { diasDesde, esCompraImpaga } from "../utils/seguimiento";
 import { formatMoneda, formatFecha } from "../utils/formato";
 import { ROJO } from "../constants/colores";
 import { useFaseDetalle } from "../hooks/useFaseDetalle";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 import { TarjetaKpi } from "../components/shared/TarjetaKpi";
 import ModalGasto from "../components/modals/ModalGasto";
@@ -61,6 +62,11 @@ export function FaseDetalle() {
     toggleEstadoEnvioCompra,
     guardarNota,
   } = useFaseDetalle(faseId);
+
+  // proyecto llega por una query aparte, encadenada a la de fase (ver
+  // useFaseDetalle) -- puede tardar un instante más, así que el título
+  // arranca solo con el nombre de la fase y suma el proyecto cuando llega.
+  usePageTitle(fase && (proyecto ? `${fase.nombre} · ${proyecto.nombre}` : fase.nombre));
 
   const [modalGastoAbierto, setModalGastoAbierto] = useState(false);
   const [gastoEditando, setGastoEditando] = useState(null);

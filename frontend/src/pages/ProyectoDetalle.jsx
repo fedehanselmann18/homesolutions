@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useProyecto } from "../hooks/queries";
+import { usePageTitle } from "../hooks/usePageTitle";
 import ProyectoDetalleHeader from "../components/proyectos/ProyectoDetalleHeader";
 import Fases from "../components/proyectos/Fases";
 import Acciones from "../components/proyectos/Acciones";
@@ -15,6 +16,8 @@ function ProyectoDetalle() {
   const { id } = useParams();
   const { data: proyecto, error } = useProyecto(id);
   const [tabActiva, setTabActiva] = useState("fases");
+
+  usePageTitle(proyecto?.nombre);
 
   if (error) {
     return (

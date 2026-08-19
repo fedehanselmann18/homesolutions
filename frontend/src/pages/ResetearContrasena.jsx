@@ -14,6 +14,7 @@ import {
 } from "../services/usuarioService";
 import { NOMBRE_USUARIO_MANAGER } from "../constants/manager";
 import { obtenerMensajeError } from "../utils/errorHandling";
+import { usePageTitle } from "../hooks/usePageTitle";
 import { useToast } from "../context/useToast";
 import { Cargando } from "../components/shared/Cargando";
 import ModalConfirmar from "../components/modals/ModalConfirmar";
@@ -30,6 +31,7 @@ import "./ResetearContrasena.css";
 // Todas estas acciones son exclusivas de "Manager" en el backend
 // (requiere_manager), no de rol == "admin".
 export function ResetearContrasena() {
+  usePageTitle("Gestión de cuentas");
   const toast = useToast();
 
   const [usuarios, setUsuarios] = useState([]);

@@ -11,6 +11,7 @@ import {
   YAxis,
 } from "recharts";
 import { useProyectos, useFases, useGastos, useCobros, useCompras } from "../hooks/queries";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 import { TarjetaKpi } from "../components/shared/TarjetaKpi";
 import { TablaProyectos } from "../components/proyectos/TablaProyectos";
@@ -131,6 +132,7 @@ function TooltipEvolucion({ active, payload }) {
 }
 
 export function Dashboard() {
+  usePageTitle("Panel");
   const navigate = useNavigate();
   const [filtroEstado, setFiltroEstado] = useState("en_curso");
 

@@ -11,6 +11,7 @@ import useAuth from "../context/useAuth";
 import ProyectosHeader from "../components/proyectos/ProyectoHeader";
 import { Cargando } from "../components/shared/Cargando";
 import { useToast } from "../context/useToast";
+import { usePageTitle } from "../hooks/usePageTitle";
 import "./Proyectos.css";
 
 // Orden fijo pedido: en curso primero, después a iniciar, después terminados.
@@ -38,6 +39,7 @@ const COMPARADORES = {
 const normalizar = (valor) => (valor ?? "").toString().toLowerCase();
 
 export function Proyectos() {
+  usePageTitle("Proyectos");
   const navigate = useNavigate();
   const { usuario } = useAuth();
   const toast = useToast();

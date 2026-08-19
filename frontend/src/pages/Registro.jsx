@@ -4,10 +4,12 @@ import { ChevronDown } from "lucide-react";
 import { crearUsuario, getOpcionesRegistro } from "../services/usuarioService";
 import { validarPassword } from "../utils/formValidation";
 import { obtenerMensajeError } from "../utils/errorHandling";
+import { usePageTitle } from "../hooks/usePageTitle";
 import logoHS from "../assets/HS_logo_blanco.png";
 import "./Auth.css"; // reusa el mismo panel partido que el login
 
 export function Registro() {
+  usePageTitle("Registro");
   const navigate = useNavigate();
 
   // Sin sesión todavía, así que se usa el endpoint público que solo

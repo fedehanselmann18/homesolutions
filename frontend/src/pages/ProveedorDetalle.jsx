@@ -47,6 +47,7 @@ import { Cargando } from "../components/shared/Cargando";
 import { TarjetaAlerta } from "../components/shared/TarjetaAlerta";
 import FiltrosLista from "../components/shared/FiltrosLista";
 import { useToast } from "../context/useToast";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 import "../components/proyectos/Acciones.css";
 import "../components/proyectos/Seguimiento.css";
@@ -60,6 +61,7 @@ export function ProveedorDetalle() {
   const toast = useToast();
 
   const [proveedor, setProveedor] = useState(null);
+  usePageTitle(proveedor?.nombre);
   const [productos, setProductos] = useState([]);
   const [compras, setCompras] = useState([]);
   const [fases, setFases] = useState([]);

@@ -8,6 +8,7 @@ import { TIPOS_PRODUCTO, getTipoProducto } from "../constants/tipoProducto";
 import { formatMoneda } from "../utils/formato";
 import { agruparPorProducto, filtrarProductos } from "../utils/comparador";
 import { Cargando } from "../components/shared/Cargando";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 import "./Comparador.css";
 
@@ -17,6 +18,7 @@ import "./Comparador.css";
 // 2) "Explorar por categoría" -> todo el catálogo filtrable, para cuando no
 //    hay match exacto pero igual querés ver precios de la zona/categoría.
 export function Comparador() {
+  usePageTitle("Comparador de precios");
   const { proveedores, loading: cargandoProveedores } = useProveedores();
   const [productos, setProductos] = useState([]);
   const [categorias, setCategorias] = useState([]);

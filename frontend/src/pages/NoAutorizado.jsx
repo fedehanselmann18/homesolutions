@@ -1,9 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { Lock } from "lucide-react";
+import { usePageTitle } from "../hooks/usePageTitle";
 import logoHS from "../assets/HS_logo_blanco.png";
 import "./Auth.css";
 
 export function NoAutorizado() {
+  usePageTitle("Acceso restringido");
   const navigate = useNavigate();
 
   return (

@@ -9,6 +9,7 @@ import { getTipoProducto } from "../constants/tipoProducto";
 import { calcularResumenProveedor, rubroPrincipal } from "../utils/proveedores";
 import useAuth from "../context/useAuth";
 import { useToast } from "../context/useToast";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 import ProveedorCard from "../components/proveedores/ProveedorCard";
 import ModalProveedor from "../components/modals/ModalProveedor";
@@ -17,6 +18,7 @@ import { Cargando } from "../components/shared/Cargando";
 import "./Proveedores.css";
 
 export function Proveedores() {
+  usePageTitle("Proveedores");
   const { usuario } = useAuth();
   const canManage = usuario?.rol === "admin";
   const toast = useToast();

@@ -4,10 +4,12 @@ import { ChevronDown } from "lucide-react";
 import { useAuth } from "../context/useAuth";
 import { getOpcionesLogin } from "../services/usuarioService";
 import { obtenerMensajeError } from "../utils/errorHandling";
+import { usePageTitle } from "../hooks/usePageTitle";
 import logoHS from "../assets/HS_logo_blanco.png";
 import "./Auth.css";
 
 export function Login() {
+  usePageTitle("Iniciar sesión");
   const navigate = useNavigate();
   const { login } = useAuth();
 
