@@ -57,6 +57,24 @@ describe("Login", () => {
     await waitFor(() => expect(loginMock).toHaveBeenCalledWith("Agustin", "clave-super-segura"));
   });
 
+  it("permite escribir el nombre de usuario a mano (cuentas fuera del combo público)", async () => {
+    const loginMock = vi.fn().mockResolvedValue();
+    useAuth.mockReturnValue({ login: loginMock });
+    renderLogin();
+    const user = userEvent.setup();
+
+    await screen.findByRole("option", { name: "Agustin" });
+    await user.click(screen.getByRole("button", { name: /ingresalo manualmente/i }));
+
+    // El combo desaparece y queda un input de texto en su lugar.
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
+    await user.type(screen.getByPlaceholderText("Nombre de usuario"), "Manager");
+    await user.type(screen.getByPlaceholderText("••••••••"), "clave-del-manager");
+    await user.click(screen.getByRole("button", { name: /^ingresar$/i }));
+
+    await waitFor(() => expect(loginMock).toHaveBeenCalledWith("Manager", "clave-del-manager"));
+  });
+
   it("muestra un mensaje de error genérico si login falla (401), sin el detail crudo del backend", async () => {
     // Shape real de un error de axios: err.message es un texto técnico en
     // inglés ("Request failed with status code 401"), nunca lo que hay que

@@ -1,6 +1,12 @@
-"""Tests de app/config.py: ROLES_PERMITIDOS_JSON (B-11) es la única pieza
-de config con parsing/validación propia además de SECRET_KEY, así que vale
-la pena cubrirla directo (sin pegarle a un endpoint)."""
+"""
+Tests de app/config.py. Desde que la whitelist de autoregistro pasó a la
+tabla usuarios_autorizados (ver models.UsuarioAutorizado), SECRET_KEY es la
+única pieza de config con validación propia, así que es lo que queda para
+cubrir directo, sin pegarle a un endpoint.
+
+Los tests de la whitelist en sí viven ahora en test_equipo_autorizado.py
+(pegan contra los endpoints, porque la fuente de verdad es la base).
+"""
 
 import pytest
 from pydantic import ValidationError
@@ -13,26 +19,27 @@ _BASE_KWARGS = dict(
     database_user="postgres",
     database_password="x",
     database_name="db",
-    SECRET_KEY="x" * 32,
     ALGORITHM="HS256",
 )
 
 
-def test_roles_permitidos_default_trae_el_equipo_actual():
-    settings = Settings(_env_file=None, **_BASE_KWARGS)
-    assert settings.roles_permitidos == {"Agustin": "admin", "Aldana": "admin", "Alejandro": "lectura"}
+def test_secret_key_valida_pasa():
+    settings = Settings(_env_file=None, SECRET_KEY="x" * 32, **_BASE_KWARGS)
+    assert settings.SECRET_KEY == "x" * 32
 
 
-def test_roles_permitidos_se_puede_override_por_env():
-    settings = Settings(_env_file=None, ROLES_PERMITIDOS_JSON='{"Nuevo": "lectura"}', **_BASE_KWARGS)
-    assert settings.roles_permitidos == {"Nuevo": "lectura"}
+def test_secret_key_corta_falla_al_arrancar():
+    # Mejor un crash claro en el deploy que firmar JWTs con una clave débil.
+    with pytest.raises(ValidationError, match="al menos 32 caracteres"):
+        Settings(_env_file=None, SECRET_KEY="corta", **_BASE_KWARGS)
 
 
-def test_roles_permitidos_json_invalido_falla_al_arrancar():
-    with pytest.raises(ValidationError, match="JSON válido"):
-        Settings(_env_file=None, ROLES_PERMITIDOS_JSON="esto no es json", **_BASE_KWARGS)
-
-
-def test_roles_permitidos_json_que_no_es_objeto_falla_al_arrancar():
-    with pytest.raises(ValidationError, match="objeto JSON"):
-        Settings(_env_file=None, ROLES_PERMITIDOS_JSON="[1, 2, 3]", **_BASE_KWARGS)
+def test_config_ya_no_expone_la_whitelist_de_autoregistro():
+    """
+    Guard contra volver atrás: si alguien reintroduce ROLES_PERMITIDOS_JSON
+    en config, la whitelist quedaría en dos lugares (env var y tabla) y
+    create_user leería solo uno de los dos.
+    """
+    settings = Settings(_env_file=None, SECRET_KEY="x" * 32, **_BASE_KWARGS)
+    assert not hasattr(settings, "roles_permitidos")
+    assert not hasattr(settings, "ROLES_PERMITIDOS_JSON")

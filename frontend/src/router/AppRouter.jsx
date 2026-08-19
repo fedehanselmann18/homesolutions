@@ -6,6 +6,7 @@ import { Login } from "../pages/Login";
 import { Registro } from "../pages/Registro";
 import { NoAutorizado } from "../pages/NoAutorizado";
 import { Cargando } from "../components/shared/Cargando";
+import { RUTA_RESETEO } from "../constants/manager";
 
 // Comparador (varios gráficos) y Dashboard (Recharts) son las páginas más
 // pesadas del bundle: van primero en la lista de lazy imports.
@@ -16,6 +17,7 @@ const ProyectoDetalle = lazy(() => import("../pages/ProyectoDetalle"));
 const FaseDetalle = lazy(() => import("../pages/FaseDetalle"));
 const Proveedores = lazy(() => import("../pages/Proveedores"));
 const ProveedorDetalle = lazy(() => import("../pages/ProveedorDetalle"));
+const ResetearContrasena = lazy(() => import("../pages/ResetearContrasena"));
 
 // Rutas internas: agregá acá cada página nueva a medida que la vayas armando
 // (Proyectos, Proveedores, Productos, etc.), todas anidadas dentro de
@@ -41,6 +43,9 @@ export function AppRouter() {
             <Route path="/proveedores" element={<Proveedores />} />
             <Route path="/proveedores/:id" element={<ProveedorDetalle />} />
             <Route path="/comparador" element={<Comparador />} />
+            {/* Solo la cuenta "Manager" llega acá: ProtectedRoute saca de esta
+                ruta a cualquier otro usuario (y encierra a Manager en ella). */}
+            <Route path={RUTA_RESETEO} element={<ResetearContrasena />} />
           </Route>
         </Route>
       </Routes>

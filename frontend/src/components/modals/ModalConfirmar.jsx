@@ -7,6 +7,11 @@ export function ModalConfirmar({
   titulo = "Confirmar eliminación",
   mensaje,
   nombreRecurso,
+  // Texto del botón que confirma. El default cubre el caso original (borrar
+  // algo), pero el modal también se usa para acciones que no son un borrado
+  // -- ver la página de Manager, donde confirma cambios de rol, cierres de
+  // sesión y bajas de cuenta.
+  textoConfirmar = "Eliminar",
   onConfirmar,
   onCancelar,
 }) {
@@ -21,7 +26,7 @@ export function ModalConfirmar({
             Cancelar
           </button>
           <button type="button" className="btn btn-peligro" onClick={onConfirmar}>
-            Eliminar
+            {textoConfirmar}
           </button>
         </>
       }

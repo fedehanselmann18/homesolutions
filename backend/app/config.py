@@ -1,4 +1,3 @@
-import json
 from typing import Optional
 
 from pydantic import field_validator
@@ -32,33 +31,21 @@ class Settings(BaseSettings):
             raise ValueError("SECRET_KEY tiene que tener al menos 32 caracteres")
         return valor
 
-    # B-11: usuarios autorizados a autoregistrarse (ver routes/usuarios.py)
-    # y su rol fijo -- antes hardcodeado en ROLES_PERMITIDOS en el código.
-    # JSON: {"nombre_usuario": "rol", ...} (rol es "admin" o "lectura").
-    # Sumar/sacar gente del equipo es ahora cambiar el .env, no un deploy de
-    # código nuevo. Default: el equipo actual, para que nada cambie si no se
-    # define la env var.
-    ROLES_PERMITIDOS_JSON: str = '{"Agustin": "admin", "Aldana": "admin", "Alejandro": "lectura"}'
-
-    @field_validator("ROLES_PERMITIDOS_JSON")
-    @classmethod
-    def roles_permitidos_json_valido(cls, valor: str) -> str:
-        # Mismo criterio que secret_key_fuerte: falla al arrancar si el JSON
-        # está mal tipeado en el .env, en vez de recién explotar cuando
-        # alguien intente registrarse.
-        try:
-            parsed = json.loads(valor)
-        except json.JSONDecodeError as exc:
-            raise ValueError(f"ROLES_PERMITIDOS_JSON no es JSON válido: {exc}")
-        if not isinstance(parsed, dict) or not all(
-            isinstance(k, str) and isinstance(v, str) for k, v in parsed.items()
-        ):
-            raise ValueError('ROLES_PERMITIDOS_JSON tiene que ser un objeto JSON {"usuario": "rol", ...}')
-        return valor
-
-    @property
-    def roles_permitidos(self) -> dict[str, str]:
-        return json.loads(self.ROLES_PERMITIDOS_JSON)
+    # B-11 (histórico): la whitelist de quién puede autoregistrarse vivía acá
+    # como ROLES_PERMITIDOS_JSON. Ahora es la tabla usuarios_autorizados (ver
+    # models.UsuarioAutorizado y routes/usuarios.py), para que la cuenta
+    # "Manager" pueda sumar y sacar gente del equipo desde la app, sin editar
+    # el .env ni redeployar. La migración d5a3c1e88f42 sembró esa tabla con
+    # el equipo que estaba en el default de esta variable.
+    #
+    # "Manager" también está en esa whitelist (migración e7b2f4c19a83), o
+    # sea que se registra desde /registro como cualquier otro. Es una
+    # decisión tomada con el riesgo a la vista: POST /usuarios/crear es
+    # público, así que mientras la cuenta esté autorizada y todavía sin
+    # crear, cualquiera puede quedársela. Se banca porque la ventana dura lo
+    # que tarda el dueño del proyecto en registrarse después del deploy y se
+    # cierra sola (ver get_opciones_registro). scripts/crear_usuario_manager.py
+    # sigue existiendo como alternativa por consola.
 
     # Lectura automática de comprobantes con IA (ver app/ia/extractor.py).
     # Sacar la key en https://aistudio.google.com/apikey. Sin esto configurado,

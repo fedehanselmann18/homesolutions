@@ -102,12 +102,79 @@ class UsuarioBase(BaseModel):
 class UsuarioCreate(UsuarioBase):
     password: str  # se hashea en el service, nunca se guarda en texto plano
 
+    # Opcional: el rol REAL sale siempre de la whitelist (tabla
+    # usuarios_autorizados, ver create_user), nunca de acá. El front ya no
+    # lo manda -- no puede saberlo, porque /usuarios/opciones-registro
+    # devuelve solo nombres para no filtrar quién es admin a cualquiera sin
+    # sesión. Si un cliente igual lo manda y no coincide, se rechaza (400)
+    # en vez de ignorarlo en silencio.
+    rol: Optional[str] = None
+
     @field_validator("password")
     @classmethod
     def password_minima(cls, valor: str) -> str:
         if len(valor) < 8:
             raise ValueError("La contraseña tiene que tener al menos 8 caracteres")
         return valor
+
+
+class UsuarioResetPassword(BaseModel):
+    """
+    Body de POST /usuarios/{user_id}/resetear-password: solo la contraseña
+    nueva, que escribe a mano la cuenta "Manager" (ver requiere_manager en
+    auth/oAuth2.py). Mismo mínimo de 8 caracteres que al crear la cuenta.
+    """
+
+    password: str
+
+    @field_validator("password")
+    @classmethod
+    def password_minima(cls, valor: str) -> str:
+        if len(valor) < 8:
+            raise ValueError("La contraseña tiene que tener al menos 8 caracteres")
+        return valor
+
+
+class UsuarioCambioRol(BaseModel):
+    """
+    Body de PATCH /usuarios/{user_id}/rol (solo la cuenta "Manager").
+
+    Literal en vez de str: Pydantic rechaza cualquier otro valor con un 422
+    sin que haga falta un validator a mano, y de paso el rol inválido nunca
+    llega a la capa de ruta.
+    """
+
+    rol: Literal["admin", "lectura"]
+
+
+class UsuarioAutorizadoCreate(BaseModel):
+    """
+    Body de POST /usuarios/autorizados: sumar a alguien a la whitelist de
+    autoregistro (ver models.UsuarioAutorizado).
+    """
+
+    nombre_usuario: str
+    rol: Literal["admin", "lectura"]
+
+    @field_validator("nombre_usuario")
+    @classmethod
+    def nombre_no_vacio(cls, valor: str) -> str:
+        limpio = valor.strip()
+        if not limpio:
+            raise ValueError("El nombre de usuario no puede estar vacío")
+        return limpio
+
+
+class UsuarioAutorizadoOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    nombre_usuario: str
+    rol: str
+    # No es una columna: lo calcula el endpoint cruzando contra la tabla
+    # usuarios, para que Manager vea de un vistazo quién ya se registró y
+    # quién sigue pendiente (ver GET /usuarios/autorizados).
+    ya_registrado: bool = False
 
 
 class UsuarioUpdate(BaseModel):
@@ -120,6 +187,9 @@ class UsuarioOut(UsuarioBase, TimestampOut):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
+    # Cuenta dada de baja temporalmente por "Manager" (ver models.Usuario).
+    # El front lo usa para mostrar el estado en la lista de usuarios.
+    activo: bool = True
     # Solo se completa en GET /usuarios/me (ver routes/usuarios.py). En el
     # resto de los endpoints que devuelven UsuarioOut queda None. Existe
     # porque en producción front (Vercel) y back (Railway) son dominios

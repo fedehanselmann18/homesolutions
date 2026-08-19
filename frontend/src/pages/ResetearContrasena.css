@@ -1,0 +1,74 @@
+/* Shell de la única página de la cuenta "Manager" (ver constants/manager.js):
+   header + secciones. Vive adentro del MainLayout, así que usa el header de
+   página del resto de la app (Proveedores/Proyectos) y no el panel partido
+   de Auth.css. Lo de adentro de cada sección (planilla de cuentas, alta de
+   autorizados, modal de contraseña) está en components/manager/Manager.css. */
+
+.reseteo-container {
+  font-family: var(--font-ui);
+}
+
+.reseteo-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding-bottom: var(--space-6);
+  margin-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-linea);
+}
+
+.reseteo-header__titulo {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--color-tinta);
+  margin: 0;
+}
+
+.reseteo-header__subtitulo {
+  font-size: 0.9rem;
+  color: var(--color-tinta-muted);
+  margin: 4px 0 0;
+}
+
+.reseteo-header__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--color-terracota-tint);
+  color: var(--color-terracota-dark);
+}
+
+.reseteo-seccion {
+  margin-bottom: var(--space-6);
+  padding: var(--space-6);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+}
+
+.reseteo-seccion__titulo {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--color-tinta);
+  margin: 0;
+}
+
+.reseteo-seccion__ayuda {
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+  margin: 4px 0 var(--space-4);
+}
+
+.reseteo-error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-oxido);
+  background: var(--color-oxido-tint);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}

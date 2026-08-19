@@ -29,6 +29,7 @@ import uuid
 from datetime import date, datetime
 
 from sqlalchemy import (  # CORREGIDO: + UniqueConstraint
+    Boolean,
     Column,
     DateTime,
     ForeignKey,
@@ -71,6 +72,37 @@ class Usuario(TimestampMixin, Base):
     nombre_usuario: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
     hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
     rol: Mapped[str] = mapped_column(String(20), nullable=False, default="admin")  # "admin" | "lectura"
+    # Baja temporal sin borrar la cuenta (la borraría de verdad rompería el
+    # historial: RESTRICT en todo lo que referencia usuario). Una cuenta
+    # inactiva no puede loguearse ni sostener una sesión ya abierta -- ver
+    # login() en routes/login.py y resolver_usuario_vigente en auth/oAuth2.py.
+    # Solo la cuenta "Manager" la puede prender/apagar.
+    activo: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
+
+
+class UsuarioAutorizado(TimestampMixin, Base):
+    """
+    Whitelist de quién puede autoregistrarse en /registro y con qué rol
+    (antes era la env var ROLES_PERMITIDOS_JSON, ver config.py): pasarlo a
+    la base permite que la cuenta "Manager" sume o saque gente del equipo
+    desde la app, sin editar el .env ni redeployar.
+
+    Una fila acá es una invitación pendiente, no una cuenta: la cuenta
+    (Usuario) recién existe cuando la persona se registra. Por eso la fila
+    NO se borra al registrarse -- se sigue usando para saber con qué rol se
+    autorizó a cada quien.
+
+    "Manager" está en esta tabla (la sembró la migración e7b2f4c19a83) y su
+    fila no se puede revocar: es lo que permite recrear la cuenta de
+    mantenimiento desde /registro si se pierde la contraseña (ver
+    revocar_autorizacion en routes/usuarios.py).
+    """
+
+    __tablename__ = "usuarios_autorizados"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    nombre_usuario: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    rol: Mapped[str] = mapped_column(String(20), nullable=False)  # "admin" | "lectura"
 
 
 # ---------------------------------------------------------------------------

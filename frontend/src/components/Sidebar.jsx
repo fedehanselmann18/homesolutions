@@ -1,8 +1,9 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Building2, Truck, GitCompare, LogOut } from "lucide-react";
+import { LayoutDashboard, Building2, Truck, GitCompare, UserCog, LogOut } from "lucide-react";
 import { useAuth } from "../context/useAuth";
 import { useProyectos, useProveedores, useFases, useGastos, useCobros, useCompras } from "../hooks/queries";
 import { calcularPanel } from "../utils/panel";
+import { RUTA_RESETEO, esManager } from "../constants/manager";
 import logo from "../assets/HS_logo_blanco.png";
 import "./Sidebar.css";
 
@@ -22,10 +23,10 @@ function iniciales(nombreUsuario = "") {
   return nombreUsuario.slice(0, 2).toUpperCase();
 }
 
-export function Sidebar() {
-  const { usuario, logout } = useAuth();
-  const navigate = useNavigate();
-
+// El nav "normal" vive en su propio componente porque monta 6 queries: así
+// no se disparan para la cuenta "Manager", que no ve ninguna de estas
+// páginas (ver constants/manager.js) ni tiene permiso para pedir esos datos.
+function NavEquipo() {
   const proyectosQuery = useProyectos();
   const proveedoresQuery = useProveedores();
 
@@ -42,11 +43,6 @@ export function Sidebar() {
   const gastosQuery = useGastos();
   const cobrosQuery = useCobros();
   const comprasQuery = useCompras();
-
-  const handleLogout = async () => {
-    await logout();
-    navigate("/login", { replace: true });
-  };
 
   const contadores = {
     proyectos: proyectosQuery.data?.length,
@@ -67,46 +63,74 @@ export function Sidebar() {
     : [];
 
   return (
+    <>
+      {ITEMS_NAV.map((item) => {
+        const cantidad = item.contador?.(contadores);
+        return (
+          <NavLink
+            key={item.to}
+            to={item.to}
+            end={item.to === "/"}
+            className={({ isActive }) =>
+              isActive ? "sidebar-link sidebar-link-active" : "sidebar-link"
+            }
+          >
+            <item.icono size={16} strokeWidth={2} className="sidebar-link-icono" />
+            {item.label}
+            {cantidad != null && <span className="sidebar-link-contador">{cantidad}</span>}
+          </NavLink>
+        );
+      })}
+
+      {obrasEnCurso.length > 0 && (
+        <>
+          <div className="sidebar-grupo-titulo">En curso</div>
+          {obrasEnCurso.map((proyecto) => (
+            <NavLink key={proyecto.id} to={`/proyectos/${proyecto.id}`} className="sidebar-obra">
+              <span
+                className={
+                  proyecto.disponible >= 0
+                    ? "sidebar-obra-punto sidebar-obra-punto--ok"
+                    : "sidebar-obra-punto sidebar-obra-punto--alerta"
+                }
+              />
+              {proyecto.nombre}
+            </NavLink>
+          ))}
+        </>
+      )}
+    </>
+  );
+}
+
+export function Sidebar() {
+  const { usuario, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login", { replace: true });
+  };
+
+  return (
     <aside className="sidebar">
       <div className="sidebar-header">
         <img src={logo} alt="HomeSolutions" className="sidebar-brand" />
       </div>
 
       <nav className="sidebar-nav">
-        {ITEMS_NAV.map((item) => {
-          const cantidad = item.contador?.(contadores);
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === "/"}
-              className={({ isActive }) =>
-                isActive ? "sidebar-link sidebar-link-active" : "sidebar-link"
-              }
-            >
-              <item.icono size={16} strokeWidth={2} className="sidebar-link-icono" />
-              {item.label}
-              {cantidad != null && <span className="sidebar-link-contador">{cantidad}</span>}
-            </NavLink>
-          );
-        })}
-
-        {obrasEnCurso.length > 0 && (
-          <>
-            <div className="sidebar-grupo-titulo">En curso</div>
-            {obrasEnCurso.map((proyecto) => (
-              <NavLink key={proyecto.id} to={`/proyectos/${proyecto.id}`} className="sidebar-obra">
-                <span
-                  className={
-                    proyecto.disponible >= 0
-                      ? "sidebar-obra-punto sidebar-obra-punto--ok"
-                      : "sidebar-obra-punto sidebar-obra-punto--alerta"
-                  }
-                />
-                {proyecto.nombre}
-              </NavLink>
-            ))}
-          </>
+        {esManager(usuario) ? (
+          <NavLink
+            to={RUTA_RESETEO}
+            className={({ isActive }) =>
+              isActive ? "sidebar-link sidebar-link-active" : "sidebar-link"
+            }
+          >
+            <UserCog size={16} strokeWidth={2} className="sidebar-link-icono" />
+            Gestión de cuentas
+          </NavLink>
+        ) : (
+          <NavEquipo />
         )}
       </nav>
 

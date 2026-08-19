@@ -37,7 +37,7 @@ def test_lista_completa_de_usuarios_con_auth_funciona(client, headers_admin):
 # ---------------------------------------------------------------------------
 
 
-def test_crear_usuario_con_nombre_no_autorizado_es_rechazado(client):
+def test_crear_usuario_con_nombre_no_autorizado_es_rechazado(client, equipo_autorizado):
     respuesta = client.post(
         "/usuarios/crear",
         json={"nombre_usuario": "Intruso", "rol": "admin", "password": "clave-segura"},
@@ -45,8 +45,8 @@ def test_crear_usuario_con_nombre_no_autorizado_es_rechazado(client):
     assert respuesta.status_code == 403
 
 
-def test_crear_usuario_con_rol_que_no_coincide_es_rechazado(client):
-    # Alejandro es "lectura" según ROLES_PERMITIDOS (app/routes/usuarios.py);
+def test_crear_usuario_con_rol_que_no_coincide_es_rechazado(client, equipo_autorizado):
+    # Alejandro es "lectura" en la whitelist (tabla usuarios_autorizados);
     # pedir "admin" para ese nombre tiene que rechazarse, no ignorarse en silencio.
     respuesta = client.post(
         "/usuarios/crear",
@@ -55,7 +55,7 @@ def test_crear_usuario_con_rol_que_no_coincide_es_rechazado(client):
     assert respuesta.status_code == 400
 
 
-def test_crear_usuario_con_rol_correcto_usa_el_rol_del_servidor(client):
+def test_crear_usuario_con_rol_correcto_usa_el_rol_del_servidor(client, equipo_autorizado):
     respuesta = client.post(
         "/usuarios/crear",
         json={"nombre_usuario": "Alejandro", "rol": "lectura", "password": "clave-segura"},

@@ -83,7 +83,18 @@ def login(
     if not user:
         raise invalid_login_exception
 
-    if not verify_password(user_credentials.password, user.hashed_password):
+    # OJO con el orden: verify_password se llama SIEMPRE, incluso si la
+    # cuenta está desactivada, y recién después se combinan los dos
+    # resultados. Cortar antes para una cuenta inactiva haría que su
+    # respuesta sea notoriamente más rápida que la de una cuenta activa con
+    # contraseña incorrecta (bcrypt tarda ~100ms a propósito), y esa
+    # diferencia de tiempo sola alcanza para averiguar qué cuentas están
+    # desactivadas sin conocer ninguna contraseña.
+    password_ok = verify_password(user_credentials.password, user.hashed_password)
+
+    if not password_ok or not user.activo:
+        # Mismo error genérico de siempre: no se revela si falló por la
+        # contraseña o porque la cuenta está desactivada.
         raise invalid_login_exception
 
     access_token = create_access_token(data={"user_id": str(user.id)})

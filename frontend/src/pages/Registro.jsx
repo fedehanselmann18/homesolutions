@@ -1,20 +1,33 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ChevronDown } from "lucide-react";
-import { crearUsuario } from "../services/usuarioService";
+import { crearUsuario, getOpcionesRegistro } from "../services/usuarioService";
+import { validarPassword } from "../utils/formValidation";
+import { obtenerMensajeError } from "../utils/errorHandling";
 import logoHS from "../assets/HS_logo_blanco.png";
 import "./Auth.css"; // reusa el mismo panel partido que el login
 
-// Mapeo fijo: quién es admin y quién es lectura. Si en algún momento cambia
-// el rol de alguien, se edita acá.
-const NOMBRES = [
-  { nombre_usuario: "Agustin", rol: "admin" },
-  { nombre_usuario: "Aldana", rol: "admin" },
-  { nombre_usuario: "Alejandro", rol: "lectura" },
-];
-
 export function Registro() {
   const navigate = useNavigate();
+
+  // Sin sesión todavía, así que se usa el endpoint público que solo
+  // devuelve los nombres autorizados que aún no tienen cuenta (ver
+  // /usuarios/opciones-registro). La lista la gestiona la cuenta "Manager"
+  // desde la app -- antes estaba hardcodeada acá y había que tocar código
+  // para sumar a alguien al equipo.
+  //
+  // "Manager" nunca puede aparecer en este combo: no está en la whitelist
+  // (el backend rechaza autorizarla) y el endpoint la filtra igual. Esa
+  // cuenta se crea solo con backend/scripts/crear_usuario_manager.py.
+  const [nombresUsuario, setNombresUsuario] = useState([]);
+  const [cargandoNombres, setCargandoNombres] = useState(true);
+
+  useEffect(() => {
+    getOpcionesRegistro()
+      .then(setNombresUsuario)
+      .catch(() => setNombresUsuario([]))
+      .finally(() => setCargandoNombres(false));
+  }, []);
 
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [password, setPassword] = useState("");
@@ -22,7 +35,9 @@ export function Registro() {
   const [error, setError] = useState(null);
   const [enviando, setEnviando] = useState(false);
 
-  const rolSeleccionado = NOMBRES.find((n) => n.nombre_usuario === nombreUsuario)?.rol;
+  // Se muestra mientras se escribe (no recién al enviar), igual que el de
+  // "no coinciden": el mínimo es el mismo que valida el backend.
+  const errorPassword = password !== "" ? validarPassword(password) : null;
   const passwordsNoCoinciden = confirmarPassword !== "" && password !== confirmarPassword;
 
   const handleSubmit = async (e) => {
@@ -34,22 +49,32 @@ export function Registro() {
       return;
     }
 
-    // El error de coincidencia ya se muestra debajo del campo mientras se
-    // escribe, así que acá solo hay que frenar el envío.
-    if (passwordsNoCoinciden) return;
+    // Los errores de largo y de coincidencia ya se muestran debajo de cada
+    // campo mientras se escribe, así que acá solo hay que frenar el envío.
+    if (errorPassword || passwordsNoCoinciden) return;
 
     try {
       setEnviando(true);
+      // Sin "rol": lo decide el servidor con la whitelist (ver
+      // UsuarioCreate.rol y create_user en el backend). El front no lo sabe
+      // y no tiene que saberlo.
       await crearUsuario({
         nombre_usuario: nombreUsuario,
-        rol: rolSeleccionado,
         password,
       });
       navigate("/login");
     } catch (err) {
       console.error("Error al crear el usuario:", err);
-      // El backend devuelve 400 si ese usuario ya tiene cuenta creada
-      setError("No se pudo crear la cuenta. Puede que ya exista.");
+      // 403: el nombre no está en la whitelist (equipo cerrado).
+      // El resto usa el detail real del backend (400 "Ese usuario ya tiene
+      // cuenta creada", 422 con el campo que falló, etc.): antes todo caía
+      // en un "puede que ya exista" que mentía, por ejemplo cuando el 422
+      // era en realidad una contraseña demasiado corta.
+      if (err?.response?.status === 403) {
+        setError("Ese nombre de usuario no está autorizado a crear cuenta.");
+      } else {
+        setError(obtenerMensajeError(err));
+      }
     } finally {
       setEnviando(false);
     }
@@ -75,13 +100,17 @@ export function Registro() {
           <label className="auth-campo">
             <span>Nombre</span>
             <span className="auth-campo__select">
-              <select value={nombreUsuario} onChange={(e) => setNombreUsuario(e.target.value)}>
+              <select
+                value={nombreUsuario}
+                onChange={(e) => setNombreUsuario(e.target.value)}
+                disabled={cargandoNombres}
+              >
                 <option value="" disabled>
-                  Seleccioná tu nombre
+                  {cargandoNombres ? "Cargando..." : "Seleccioná tu nombre"}
                 </option>
-                {NOMBRES.map((n) => (
-                  <option key={n.nombre_usuario} value={n.nombre_usuario}>
-                    {n.nombre_usuario}
+                {nombresUsuario.map((nombre) => (
+                  <option key={nombre} value={nombre}>
+                    {nombre}
                   </option>
                 ))}
               </select>
@@ -89,7 +118,13 @@ export function Registro() {
             </span>
           </label>
 
-          <label className="auth-campo">
+          {!cargandoNombres && nombresUsuario.length === 0 && (
+            <p className="auth-panel__error">
+              No hay nombres pendientes de registro. Pedile al administrador que te autorice.
+            </p>
+          )}
+
+          <label className={`auth-campo${errorPassword ? " auth-campo--error" : ""}`}>
             <span>Contraseña</span>
             <input
               type="password"
@@ -97,6 +132,7 @@ export function Registro() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
             />
+            {errorPassword && <span className="campo-error">{errorPassword}</span>}
           </label>
 
           <label className={`auth-campo${passwordsNoCoinciden ? " auth-campo--error" : ""}`}>

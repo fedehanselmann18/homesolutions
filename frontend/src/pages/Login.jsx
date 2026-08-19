@@ -25,6 +25,10 @@ export function Login() {
 
   const [nombreUsuario, setNombreUsuario] = useState("");
   const [password, setPassword] = useState("");
+  // La cuenta "Manager" (mantenimiento, ver constants/manager.js) queda
+  // fuera del combo a propósito -- /usuarios/login-options no la devuelve --
+  // así que necesita poder escribir el nombre a mano.
+  const [nombreManual, setNombreManual] = useState(false);
   const [error, setError] = useState(null);
   const [enviando, setEnviando] = useState(false);
 
@@ -79,24 +83,46 @@ export function Login() {
 
           <label className="auth-campo">
             <span>Usuario</span>
-            <span className="auth-campo__select">
-              <select
+            {nombreManual ? (
+              <input
+                type="text"
                 value={nombreUsuario}
                 onChange={(e) => setNombreUsuario(e.target.value)}
-                disabled={cargandoUsuarios}
-              >
-                <option value="" disabled>
-                  {cargandoUsuarios ? "Cargando..." : "Seleccioná tu usuario"}
-                </option>
-                {nombresUsuario.map((nombre) => (
-                  <option key={nombre} value={nombre}>
-                    {nombre}
+                placeholder="Nombre de usuario"
+              />
+            ) : (
+              <span className="auth-campo__select">
+                <select
+                  value={nombreUsuario}
+                  onChange={(e) => setNombreUsuario(e.target.value)}
+                  disabled={cargandoUsuarios}
+                >
+                  <option value="" disabled>
+                    {cargandoUsuarios ? "Cargando..." : "Seleccioná tu usuario"}
                   </option>
-                ))}
-              </select>
-              <ChevronDown size={16} />
-            </span>
+                  {nombresUsuario.map((nombre) => (
+                    <option key={nombre} value={nombre}>
+                      {nombre}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={16} />
+              </span>
+            )}
           </label>
+
+          <button
+            type="button"
+            className="auth-panel__toggle"
+            onClick={() => {
+              setNombreManual((valor) => !valor);
+              setNombreUsuario("");
+            }}
+          >
+            {nombreManual
+              ? "Elegir un usuario de la lista"
+              : "¿Sos otro usuario? Ingresalo manualmente"}
+          </button>
 
           <label className="auth-campo">
             <span>Contraseña</span>

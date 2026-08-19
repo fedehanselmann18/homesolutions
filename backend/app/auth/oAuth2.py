@@ -127,6 +127,13 @@ def resolver_usuario_vigente(token_data: DatosToken, db: Session, credentials_ex
     if token_data.iat < user.fecha_actualizacion - TOLERANCIA_REVOCACION:
         raise credentials_exception
 
+    # Cuenta desactivada por "Manager" (ver POST /usuarios/{id}/desactivar):
+    # se chequea acá, en cada request, y no solo en el login, para que una
+    # sesión YA abierta se corte al toque en vez de sobrevivir hasta que
+    # venza el token.
+    if not user.activo:
+        raise credentials_exception
+
     return user
 
 
@@ -137,5 +144,22 @@ def get_current_user(token: str = Depends(get_token), db: Session = Depends(get_
 
 def requiere_admin(current_user: models.Usuario = Depends(get_current_user)):
     if current_user.rol != "admin":
+        raise HTTPException(status_code=403, detail="No tienes permisos para realizar esta acción")
+    return current_user
+
+
+# El único poder especial de la cuenta "Manager" (resetear contraseñas
+# ajenas, ver routes/usuarios.py) va gateado por nombre de usuario y NO por
+# rol: es a propósito que los admins del equipo (rol == "admin") no puedan
+# resetearle la contraseña a nadie. La cuenta se registra una sola vez
+# desde /registro (está en la whitelist, ver migración e7b2f4c19a83) o por
+# consola con scripts/crear_usuario_manager.py, y tiene rol "lectura",
+# justamente para no arrastrar permisos de admin en el resto de los
+# endpoints.
+NOMBRE_USUARIO_MANAGER = "Manager"
+
+
+def requiere_manager(current_user: models.Usuario = Depends(get_current_user)):
+    if current_user.nombre_usuario != NOMBRE_USUARIO_MANAGER:
         raise HTTPException(status_code=403, detail="No tienes permisos para realizar esta acción")
     return current_user

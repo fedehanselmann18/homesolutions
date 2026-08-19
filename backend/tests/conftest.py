@@ -20,7 +20,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker
 
-from app.auth.oAuth2 import create_access_token
+from app.auth.oAuth2 import NOMBRE_USUARIO_MANAGER, create_access_token
 from app.auth.verification import hash_password
 from app.config import settings
 from app.db import models
@@ -114,6 +114,27 @@ def _crear_usuario(db_session, rol):
     db_session.commit()
     db_session.refresh(usuario)
     return usuario
+
+
+@pytest.fixture()
+def equipo_autorizado(db_session):
+    """
+    Siembra la whitelist de autoregistro (usuarios_autorizados) con lo mismo
+    que dejan las migraciones en cualquier base real: el equipo
+    (d5a3c1e88f42) y "Manager" (e7b2f4c19a83). Las tablas de test se crean
+    con Base.metadata.create_all, que arma el esquema pero no corre las
+    migraciones, así que esta tabla arranca vacía -- sin esto, cualquier
+    test de POST /usuarios/crear daría 403.
+    """
+    autorizados = [
+        models.UsuarioAutorizado(nombre_usuario="Agustin", rol="admin"),
+        models.UsuarioAutorizado(nombre_usuario="Aldana", rol="admin"),
+        models.UsuarioAutorizado(nombre_usuario="Alejandro", rol="lectura"),
+        models.UsuarioAutorizado(nombre_usuario=NOMBRE_USUARIO_MANAGER, rol="lectura"),
+    ]
+    db_session.add_all(autorizados)
+    db_session.commit()
+    return autorizados
 
 
 @pytest.fixture()
