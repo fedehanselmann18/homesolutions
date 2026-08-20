@@ -1,8 +1,9 @@
 import { ChevronRight } from "lucide-react";
 import { BarraProgreso } from "../shared/TarjetaKpi";
 import { formatMoneda, formatMonedaCorta } from "../../utils/formato";
-import { VERDE, ROJO, NARANJA } from "../../constants/colores";
+import { VERDE, ROJO, NARANJA, LINEA } from "../../constants/colores";
 import "./TablaProyectos.css";
+import { TINTE_PASTILLA } from "../../constants/tipoMovimiento";
 
 // Color de cada segmento de la barra de fases (dirección 1a "Planilla" del
 // rediseño, ver claudedesign/): mismo criterio de "cerrada" que
@@ -11,7 +12,7 @@ import "./TablaProyectos.css";
 function colorSegmentoFase(estado) {
   if (estado === "terminada" || estado === "auditada") return VERDE;
   if (estado === "en_curso") return NARANJA;
-  return "#e4e4e7"; // --color-linea (hex plano: los segmentos van por style inline, no CSS var)
+  return LINEA; // hex plano: los segmentos van por style inline, no CSS var
 }
 
 // Barra de segmentos de fases: un rectángulo por fase en vez de la barra de
@@ -102,16 +103,16 @@ export function FilaProyecto({ proyecto, onClick, renderAcciones }) {
           <>
             {proyecto.comprasImpagas > 0 && (
               <span
-                className="panel-proyecto-chip"
-                style={{ color: ROJO, backgroundColor: `${ROJO}14` }}
+                className="badge"
+                style={{ color: ROJO, backgroundColor: `${ROJO}${TINTE_PASTILLA}` }}
               >
                 {proyecto.comprasImpagas} sin pagar
               </span>
             )}
             {proyecto.comprasSinEntregar > 0 && (
               <span
-                className="panel-proyecto-chip"
-                style={{ color: NARANJA, backgroundColor: `${NARANJA}14` }}
+                className="badge"
+                style={{ color: NARANJA, backgroundColor: `${NARANJA}${TINTE_PASTILLA}` }}
               >
                 {proyecto.comprasSinEntregar}{" "}
                 {proyecto.comprasSinEntregar === 1 ? "envío" : "envíos"}

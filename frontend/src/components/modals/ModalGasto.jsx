@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { ComprobantesUploader } from "../shared/ComprobantesUploader";
-import { TIPOS_FACTURA } from "../../constants/tipoFactura";
+import { formatFecha } from "../../utils/formato";
+import { TIPOS_FACTURA, getTipoFacturaLabel } from "../../constants/tipoFactura";
+import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { useExtraccionIA } from "../../hooks/useExtraccionIA";
 import { useToast } from "../../context/useToast";
 import { validarRequerido, validarMonto, validarFecha } from "../../utils/formValidation";
-import ModalShell from "./ModalShell";
+import { EditarShell, SeccionForm } from "./PiezasEditar";
 import { PasoComprobante, BannerIA, ResumenValidacion, MarcaIA } from "./PiezasIA";
-import "./ModalGasto.css";
 
 const validarCampo = (name, value) => {
   if (name === "descripcion") return validarRequerido(value, "La descripción es obligatoria.");
@@ -168,94 +169,87 @@ export function ModalGasto({
     />
   );
 
+  // El contexto del header acompaña lo elegido, igual que en Compra.
+  const nombreFaseElegida =
+    faseFija?.nombre ?? fasesDisponibles.find((f) => f.id === form.fase_id)?.nombre;
+  const contexto = [getTipoFacturaLabel(form.tipo_factura), nombreFaseElegida ?? "Gasto general"]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <ModalShell
-      titulo={esEdicion ? "Editar gasto" : "Nuevo gasto"}
-      contexto={faseFija?.nombre}
-      ancho
+    <EditarShell
+      tipo={TIPOS_MOVIMIENTO.gasto.singular}
+      icono={TIPOS_MOVIMIENTO.gasto.icono}
+      esEdicion={esEdicion}
+      contexto={contexto}
+      fecha={form.fecha ? formatFecha(form.fecha) : null}
+      guardando={guardando}
       onCerrar={onCerrar}
       onSubmit={handleSubmit}
-      cerrarDeshabilitado={guardando}
-      total={Number(form.monto) || 0}
-      totalLabel="Monto"
       aviso={
         mostrarFormulario && faltantes.length > 0
           ? `Revisá ${faltantes.length} ${faltantes.length === 1 ? "campo" : "campos"}`
           : null
       }
-      acciones={
-        <>
-          <button
-            type="button"
-            onClick={onCerrar}
-            className="btn btn-secondary"
-            disabled={guardando}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={guardando || !mostrarFormulario}
-          >
-            {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Crear gasto"}
-          </button>
-        </>
-      }
+      // Gasto no lleva riel: su monto se tipea a mano, así que el total va
+      // en el footer (un riel que repita el número que estás escribiendo no
+      // agrega nada, a diferencia de Compra/Cobro donde el total es derivado).
+      totalLabel="Monto"
+      total={Number(form.monto) || 0}
+      totalColor={TIPOS_MOVIMIENTO.gasto.color}
+      textoGuardar={esEdicion ? "Guardar cambios" : "Crear gasto"}
+      guardarDeshabilitado={!mostrarFormulario}
     >
-      {mostrarFormulario && lecturaIA && (
-        <BannerIA
-          nombreArchivo={lecturaIA.archivo}
-          resumen={`Leído con IA · ${lecturaIA.campos} ${lecturaIA.campos === 1 ? "campo" : "campos"} completados`}
-          onVolverALeer={handleAutocompletarIA}
-          leyendo={extrayendo}
-          disabled={guardando}
-        />
-      )}
-
-      {mostrarFormulario && <ResumenValidacion faltantes={faltantes} />}
-
-      {mostrarFormulario ? (
-        <div className="modal-form-seccion">
-          <div className="modal-form-seccion-header">
-            <span>Comprobantes</span>
-            {!lecturaIA && (
-              <button
-                type="button"
-                className="modal-btn-agregar-fila"
-                onClick={handleAutocompletarIA}
-                disabled={guardando || extrayendo || comprobantesCambios.archivos.length === 0}
-                title={
-                  comprobantesCambios.archivos.length === 0
-                    ? "Primero arrastrá o elegí un comprobante"
-                    : "Leer el comprobante y prellenar el formulario"
-                }
-              >
-                {extrayendo ? "Leyendo..." : "Autocompletar con IA"}
-              </button>
-            )}
-          </div>
-          {uploader}
+      {!mostrarFormulario ? (
+        <div className="mov-edit__paso">
+          <PasoComprobante
+            hayArchivo={comprobantesCambios.archivos.length > 0}
+            leyendo={extrayendo}
+            onLeer={handleAutocompletarIA}
+            onCargarAMano={() => setMostrarFormulario(true)}
+          >
+            {uploader}
+          </PasoComprobante>
         </div>
       ) : (
-        <PasoComprobante
-          hayArchivo={comprobantesCambios.archivos.length > 0}
-          leyendo={extrayendo}
-          onLeer={handleAutocompletarIA}
-          onCargarAMano={() => setMostrarFormulario(true)}
-        >
-          {uploader}
-        </PasoComprobante>
-      )}
+        <div className="mov-edit__solo-form">
+          {lecturaIA && (
+            <BannerIA
+              nombreArchivo={lecturaIA.archivo}
+              resumen={`Leído con IA · ${lecturaIA.campos} ${lecturaIA.campos === 1 ? "campo" : "campos"} completados`}
+              onVolverALeer={handleAutocompletarIA}
+              leyendo={extrayendo}
+              disabled={guardando}
+            />
+          )}
 
-      {mostrarFormulario && (
-        <>
-          <div className="modal-form-seccion">
-            <div className="modal-form-seccion-header">
-              <span>Datos generales</span>
-            </div>
+          <ResumenValidacion faltantes={faltantes} />
 
-            <label className={claseIA("descripcion")}>
+          <SeccionForm
+            titulo="Comprobantes"
+            accion={
+              !lecturaIA && (
+                <button
+                  type="button"
+                  className="mov-edit__seccion-accion"
+                  onClick={handleAutocompletarIA}
+                  disabled={guardando || extrayendo || comprobantesCambios.archivos.length === 0}
+                  title={
+                    comprobantesCambios.archivos.length === 0
+                      ? "Primero arrastrá o elegí un comprobante"
+                      : "Leer el comprobante y prellenar el formulario"
+                  }
+                >
+                  {extrayendo ? "Leyendo..." : "Autocompletar con IA"}
+                </button>
+              )
+            }
+          >
+            {uploader}
+          </SeccionForm>
+
+          <SeccionForm titulo="Datos generales">
+            <label className={`mov-edit__campo mov-edit__campo--titulo ${claseIA("descripcion")}`}>
               Descripción
               <input
                 type="text"
@@ -268,8 +262,8 @@ export function ModalGasto({
               {camposIA.has("descripcion") && !errores.descripcion && <MarcaIA />}
             </label>
 
-            <div className="modal-form-fila">
-              <label className={claseIA("monto")}>
+            <div className="mov-edit__campos">
+              <label className={`mov-edit__campo ${claseIA("monto")}`}>
                 Monto
                 <input
                   type="number"
@@ -284,7 +278,7 @@ export function ModalGasto({
                 {camposIA.has("monto") && !errores.monto && <MarcaIA />}
               </label>
 
-              <label className={claseIA("fecha")}>
+              <label className={`mov-edit__campo ${claseIA("fecha")}`}>
                 Fecha
                 <input
                   type="date"
@@ -297,9 +291,11 @@ export function ModalGasto({
                 {camposIA.has("fecha") && !errores.fecha && <MarcaIA />}
               </label>
             </div>
+          </SeccionForm>
 
-            <div className="modal-form-fila">
-              <label className={claseIA("tipo_factura")}>
+          <SeccionForm titulo="Clasificación">
+            <div className="mov-edit__campos">
+              <label className={`mov-edit__campo ${claseIA("tipo_factura")}`}>
                 Tipo de factura
                 <select
                   name="tipo_factura"
@@ -319,13 +315,13 @@ export function ModalGasto({
               </label>
 
               {faseFija ? (
-                <label>
+                <label className="mov-edit__campo">
                   Fase
                   <input type="text" value={faseFija.nombre} disabled readOnly />
                 </label>
               ) : (
                 fasesDisponibles.length > 0 && (
-                  <label>
+                  <label className="mov-edit__campo">
                     Fase (opcional)
                     <select name="fase_id" value={form.fase_id} onChange={handleChange}>
                       <option value="">Sin fase (gasto general)</option>
@@ -341,7 +337,7 @@ export function ModalGasto({
             </div>
 
             {categoriasDisponibles.length > 0 && (
-              <label>
+              <label className="mov-edit__campo">
                 Categoría
                 <select
                   name="categoria_gasto_ids"
@@ -357,10 +353,10 @@ export function ModalGasto({
                 </select>
               </label>
             )}
-          </div>
-        </>
+          </SeccionForm>
+        </div>
       )}
-    </ModalShell>
+    </EditarShell>
   );
 }
 

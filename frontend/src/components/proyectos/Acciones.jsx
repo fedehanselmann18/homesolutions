@@ -16,6 +16,7 @@ import ModalDetalleGasto from "../modals/ModalDetalleGasto";
 import ModalDetalleCobro from "../modals/ModalDetalleCobro";
 import ModalDetalleCompra from "../modals/ModalDetalleCompra";
 import FiltrosLista from "../shared/FiltrosLista";
+import { FiltrosSegmentados } from "../shared/FiltrosSegmentados";
 import { FILTROS_VACIOS, filtrarCompras, filtrarCobros, filtrarGastos } from "../../utils/filtros";
 
 import "./Acciones.css";
@@ -286,24 +287,18 @@ export function Acciones({ proyectoId, proyectoNombre }) {
         )}
       </div>
 
-      <div className="acciones-filtros-tipo">
-        {FILTROS_TIPO.map((f) => (
-          <button
-            key={f.key}
-            type="button"
-            className={`acciones-filtro-tipo${filtroTipo === f.key ? " acciones-filtro-tipo--activo" : ""}`}
-            onClick={() => {
-              setFiltroTipo(f.key);
-              // La barra fina sólo existe en Compras; si se sale de ahí con
-              // filtros puestos, seguirían filtrando sin estar a la vista.
-              if (f.key !== "compras") setFiltros(FILTROS_VACIOS);
-            }}
-          >
-            {f.label}
-            <span className="acciones-filtro-tipo-contador">{contadorPorFiltro[f.key]}</span>
-          </button>
-        ))}
-      </div>
+      <FiltrosSegmentados
+        opciones={FILTROS_TIPO}
+        activa={filtroTipo}
+        contadores={contadorPorFiltro}
+        etiqueta="Filtrar movimientos por tipo"
+        onCambiar={(key) => {
+          setFiltroTipo(key);
+          // La barra fina sólo existe en Compras; si se sale de ahí con
+          // filtros puestos, seguirían filtrando sin estar a la vista.
+          if (key !== "compras") setFiltros(FILTROS_VACIOS);
+        }}
+      />
 
       {filtroTipo === "compras" && (
         <FiltrosLista
@@ -369,6 +364,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
           onVerComprobante={
             cobroEditando ? (c) => getComprobanteCobro(cobroEditando.id, c.id) : undefined
           }
+          onVerNota={cobroEditando ? (n) => getNotaCobro(cobroEditando.id, n.id) : undefined}
         />
       )}
 
@@ -410,6 +406,14 @@ export function Acciones({ proyectoId, proyectoNombre }) {
           onEliminarComprobante={
             canManage ? (id) => eliminarComprobanteGasto(entidadDetalle.id, id) : undefined
           }
+          onEditar={
+            canManage
+              ? () => {
+                  cerrarDetalle();
+                  handleEditarGasto(entidadDetalle);
+                }
+              : undefined
+          }
         />
       )}
 
@@ -427,6 +431,10 @@ export function Acciones({ proyectoId, proyectoNombre }) {
           }
           onAgregarNota={canManage ? () => handleAgregarNotaCobro(entidadDetalle) : undefined}
           onEliminarNota={canManage ? (id) => eliminarNotaCobro(entidadDetalle.id, id) : undefined}
+          onEditar={() => {
+            cerrarDetalle();
+            handleEditarCobro(entidadDetalle);
+          }}
           canManage={canManage}
         />
       )}
@@ -450,6 +458,10 @@ export function Acciones({ proyectoId, proyectoNombre }) {
           onEliminarNota={canManage ? (id) => eliminarNotaCompra(entidadDetalle.id, id) : undefined}
           onTogglePago={() => handleToggleEstadoPagoCompra(entidadDetalle)}
           onToggleEnvio={() => handleToggleEstadoEnvioCompra(entidadDetalle)}
+          onEditar={() => {
+            cerrarDetalle();
+            handleEditarCompra(entidadDetalle);
+          }}
           canManage={canManage}
         />
       )}

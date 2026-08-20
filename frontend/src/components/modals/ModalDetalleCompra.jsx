@@ -1,10 +1,9 @@
-import { ShoppingCart } from "lucide-react";
-
 import { formatMoneda, formatFecha } from "../../utils/formato";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
 import { getEstadoPago, getEstadoEnvio, getCondicionPagoLabel } from "../../constants/estadoCompra";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
-import { AZUL, ROJO, NARANJA } from "../../constants/colores";
+import { OLIVA_CLARO } from "../../constants/colores";
+import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { SeccionNotas } from "../shared/SeccionNotas";
 import {
   DetalleShell,
@@ -13,8 +12,6 @@ import {
   ChipsComprobantes,
   TileEstado,
 } from "./PiezasDetalle";
-
-const OLIVA_CLARO = "#a8b36a";
 
 /**
  * Vista de solo lectura de una Compra, con el lenguaje visual de la dirección
@@ -37,6 +34,7 @@ export function ModalDetalleCompra({
   onEliminarNota,
   onTogglePago,
   onToggleEnvio,
+  onEditar,
   canManage = false,
 }) {
   const estadoPago = getEstadoPago(compra.estado_pago);
@@ -78,21 +76,32 @@ export function ModalDetalleCompra({
 
   return (
     <DetalleShell
-      tipo="Compra"
-      icono={ShoppingCart}
+      tipo={TIPOS_MOVIMIENTO.compra.singular}
+      icono={TIPOS_MOVIMIENTO.compra.icono}
       contexto={contexto}
       fecha={formatFecha(compra.fecha)}
       titulo={compra.descripcion}
       subtitulo={subtitulo}
       total={compra.precio_total}
       onCerrar={onCerrar}
+      onEditar={canManage ? onEditar : undefined}
     >
       <BarraComposicion
         segmentos={[
-          { label: "Neto", monto: compra.precio_neto, color: AZUL },
+          { label: "Neto", monto: compra.precio_neto, color: TIPOS_MOVIMIENTO.compra.color },
           { label: "Impuestos", monto: totalImpuestos, color: OLIVA_CLARO },
-          { label: "Nota de crédito", monto: notasCredito, color: ROJO, signo: -1 },
-          { label: "Nota de débito", monto: notasDebito, color: NARANJA, signo: 1 },
+          {
+            label: "Nota de crédito",
+            monto: notasCredito,
+            color: TIPOS_MOVIMIENTO.nota_credito.color,
+            signo: -1,
+          },
+          {
+            label: "Nota de débito",
+            monto: notasDebito,
+            color: TIPOS_MOVIMIENTO.nota_debito.color,
+            signo: 1,
+          },
         ]}
       />
 

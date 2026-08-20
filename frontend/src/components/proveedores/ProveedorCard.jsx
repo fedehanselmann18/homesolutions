@@ -2,10 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { Pencil, Trash2, Phone, Mail, Package, FileMinus, FilePlus } from "lucide-react";
 import useAuth from "../../context/useAuth";
 import { formatMoneda } from "../../utils/formato";
+import { VERDE, ROJO } from "../../constants/colores";
 import "./ProveedorCard.css";
-
-const VERDE = "#16a34a";
-const ROJO = "#dc2626";
 
 export function ProveedorCard({
   proveedor,

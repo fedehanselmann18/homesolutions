@@ -10,12 +10,13 @@ export const DIAS_FASE_ESTANCADA = 30;
 
 const MS_POR_DIA = 1000 * 60 * 60 * 24;
 
-// Qué cuenta como pendiente. Se exportan para que el Panel muestre los mismos
-// contadores por proyecto sin volver a escribir el criterio.
+// Qué cuenta como pendiente. Los dos primeros se exportan para que el Panel
+// (utils/panel.js) y el libro de obra muestren los mismos contadores sin
+// volver a escribir el criterio; los de comprobante sólo se usan acá abajo.
 export const esCompraImpaga = (compra) => compra.estado_pago === "pendiente";
 export const esCompraSinEntregar = (compra) => compra.estado_envio === "pedido";
-export const esCompraSinComprobante = (compra) => (compra.comprobantes ?? []).length === 0;
-export const esCobroSinComprobante = (cobro) => (cobro.comprobantes ?? []).length === 0;
+const esCompraSinComprobante = (compra) => (compra.comprobantes ?? []).length === 0;
+const esCobroSinComprobante = (cobro) => (cobro.comprobantes ?? []).length === 0;
 
 // Exportada: la usa también la página de detalle de fase para "hace cuántos
 // días está en curso" con el mismo criterio que las fases estancadas de acá.
@@ -42,9 +43,8 @@ function nombreProveedor(compra, proveedores) {
   return proveedores.find((p) => p.id === compra.proveedor_id)?.nombre ?? "Proveedor eliminado";
 }
 
-// Exportada: la reutiliza la página de detalle de fase para su propio
-// "Seguimiento de la fase", filtrado a las compras de esa fase nomás.
-export function describirCompra(compra, productos, proveedores, hoy) {
+/** Normaliza una Compra al shape que consumen las tarjetas de seguimiento. */
+function describirCompra(compra, productos, proveedores, hoy) {
   return {
     id: compra.id,
     proveedor: nombreProveedor(compra, proveedores),

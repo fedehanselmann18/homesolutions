@@ -44,7 +44,10 @@ export function FiltrosLista({
   const limpiar = () => onCambiar(FILTROS_VACIOS);
 
   const opcionesProyecto = proyectos
-    ? [{ value: "", label: "Todos los proyectos" }, ...proyectos.map((p) => ({ value: p.id, label: p.nombre }))]
+    ? [
+        { value: "", label: "Todos los proyectos" },
+        ...proyectos.map((p) => ({ value: p.id, label: p.nombre })),
+      ]
     : null;
 
   return (

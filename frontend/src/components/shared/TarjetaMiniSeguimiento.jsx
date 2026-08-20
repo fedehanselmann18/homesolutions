@@ -29,7 +29,7 @@ export function TarjetaMiniSeguimiento({
           {tieneBadges && (
             <div className="mini-seg-badges">
               {badges.map((badge) => (
-                <span key={badge} className="mini-seg-badge">
+                <span key={badge} className="badge badge--sm badge--neutro">
                   {badge}
                 </span>
               ))}

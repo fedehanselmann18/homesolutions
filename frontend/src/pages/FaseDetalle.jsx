@@ -21,6 +21,8 @@ import ModalConfirmar from "../components/modals/ModalConfirmar";
 import ModalDetalleGasto from "../components/modals/ModalDetalleGasto";
 import ModalDetalleCompra from "../components/modals/ModalDetalleCompra";
 import { Cargando } from "../components/shared/Cargando";
+import { Tabs } from "../components/shared/Tabs";
+import { EstadoError } from "../components/shared/EstadoError";
 import { Breadcrumbs } from "../components/shared/Breadcrumbs";
 import AccionesFase from "../components/fases/AccionesFase";
 import SeguimientoFase from "../components/fases/SeguimientoFase";
@@ -29,8 +31,15 @@ import AnalisisFase from "../components/fases/AnalisisFase";
 import "../components/proyectos/Seguimiento.css";
 import "../components/proyectos/AnalisisGeneral.css";
 import "./FaseDetalle.css";
+import { TINTE_PASTILLA } from "../constants/tipoMovimiento";
 
 const diasTexto = (dias) => `hace ${dias} ${dias === 1 ? "día" : "días"}`;
+
+const TABS = [
+  { key: "acciones", label: "Acciones de la fase" },
+  { key: "seguimiento", label: "Seguimiento de la fase" },
+  { key: "analisis", label: "Análisis de la fase" },
+];
 
 export function FaseDetalle() {
   const { proyectoId, faseId } = useParams();
@@ -60,6 +69,10 @@ export function FaseDetalle() {
     eliminarCompra,
     toggleEstadoPagoCompra,
     toggleEstadoEnvioCompra,
+    agregarComprobantesCompra,
+    eliminarComprobanteCompra,
+    agregarComprobantesGasto,
+    eliminarComprobanteGasto,
     guardarNota,
   } = useFaseDetalle(faseId);
 
@@ -203,7 +216,7 @@ export function FaseDetalle() {
 
   if (cargando) return <Cargando texto="Cargando fase..." />;
   if (error || !fase || !proyecto) {
-    return <div className="fase-detalle-vacio">No se pudo cargar el detalle de la fase.</div>;
+    return <EstadoError mensaje="No se pudo cargar el detalle de la fase." grande />;
   }
 
   const estadoInfo = getEstadoLabel(fase.estado);
@@ -251,7 +264,7 @@ export function FaseDetalle() {
               className="fase-detalle-estado"
               style={{
                 color: estadoInfo.color,
-                backgroundColor: `${estadoInfo.color}1c`,
+                backgroundColor: `${estadoInfo.color}${TINTE_PASTILLA}`,
                 borderColor: `${estadoInfo.color}55`,
               }}
             >
@@ -333,29 +346,12 @@ export function FaseDetalle() {
         />
       </div>
 
-      <div className="fase-detalle-tabs">
-        <button
-          type="button"
-          className={tabActiva === "acciones" ? "active" : ""}
-          onClick={() => setTabActiva("acciones")}
-        >
-          Acciones de la fase
-        </button>
-        <button
-          type="button"
-          className={tabActiva === "seguimiento" ? "active" : ""}
-          onClick={() => setTabActiva("seguimiento")}
-        >
-          Seguimiento de la fase
-        </button>
-        <button
-          type="button"
-          className={tabActiva === "analisis" ? "active" : ""}
-          onClick={() => setTabActiva("analisis")}
-        >
-          Análisis de la fase
-        </button>
-      </div>
+      <Tabs
+        tabs={TABS}
+        activa={tabActiva}
+        onCambiar={setTabActiva}
+        etiqueta="Secciones de la fase"
+      />
 
       {tabActiva === "acciones" && (
         <AccionesFase
@@ -388,6 +384,15 @@ export function FaseDetalle() {
           onVerComprobanteCompra={getComprobanteCompra}
           onVerNotaCompra={getNotaCompra}
           onVerComprobanteGasto={getComprobanteGasto}
+          onAgregarComprobanteCompra={agregarComprobantesCompra}
+          onEliminarComprobanteCompra={eliminarComprobanteCompra}
+          onAgregarComprobanteGasto={agregarComprobantesGasto}
+          onEliminarComprobanteGasto={eliminarComprobanteGasto}
+          onTogglePagoCompra={handleToggleEstadoPagoCompra}
+          onToggleEnvioCompra={handleToggleEstadoEnvioCompra}
+          onEditarCompra={handleEditarCompra}
+          onEditarGasto={handleEditarGasto}
+          canManage={canManage}
         />
       )}
 
@@ -463,6 +468,10 @@ export function FaseDetalle() {
           onAgregarNota={canManage ? () => handleAgregarNotaCompra(entidadDetalle) : undefined}
           onTogglePago={() => handleToggleEstadoPagoCompra(entidadDetalle)}
           onToggleEnvio={() => handleToggleEstadoEnvioCompra(entidadDetalle)}
+          onEditar={() => {
+            cerrarDetalle();
+            handleEditarCompra(entidadDetalle);
+          }}
           canManage={canManage}
         />
       )}

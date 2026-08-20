@@ -514,6 +514,18 @@ class CompraUpdate(BaseModel):
     condicion_pago: str | None = None
     estado_pago: str | None = None
     estado_envio: str | None = None
+    # El modal de edición manda la compra entera: es un formulario, así que lo
+    # que quedó en pantalla es lo que tiene que quedar guardado. Sin estos dos
+    # campos Pydantic los descartaba en silencio y editar un producto o un
+    # impuesto no hacía nada (peor todavía: precio_neto SÍ se guardaba, así
+    # que el neto terminaba sin coincidir con su propio detalle).
+    #
+    # Son opcionales y se distinguen de "no los mandé" por exclude_unset: quien
+    # sólo togglea pago/envío no manda ninguno de los dos y su detalle queda
+    # intacto. Mandar [] sí vacía la lista, que es lo que uno espera de un
+    # formulario donde borraste todas las filas.
+    detalle: list[DetalleCompraCreate] | None = None
+    impuestos: list[CompraImpuestoCreate] | None = None
 
 
 class CompraOut(CompraBase, TimestampOut):

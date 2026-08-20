@@ -13,11 +13,6 @@
   --libro-cols: 104px minmax(0, 1fr) 108px 92px 128px 128px 84px;
 }
 
-.libro-vacio {
-  color: var(--color-tinta-muted);
-  font-size: var(--text-base);
-}
-
 /* --- cabecera con la leyenda de totales por tipo --- */
 
 .libro__cabecera {

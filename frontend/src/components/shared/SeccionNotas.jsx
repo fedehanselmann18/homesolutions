@@ -9,7 +9,8 @@ import "./SeccionNotas.css";
 /**
  * Lista las notas de crédito/débito (cuenta corriente) de una Compra o un
  * Cobro puntual, con un botón dedicado para agregar una nueva -- separado de
- * SeccionComprobantes (que es solo para factura/remito, sin plata propia).
+ * los comprobantes (ComprobantesUploader / ChipsComprobantes), que son solo
+ * factura/remito y no mueven plata por sí mismos.
  *
  * No maneja el modal de alta: onAgregar() avisa al padre (la página, que es
  * quien tiene ModalNota montado, mismo criterio que onEditar en las demás cards).

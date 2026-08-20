@@ -1,28 +1,19 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { formatMoneda, formatMonedaCorta } from "../../utils/formato";
-
-const VERDE = "#16a34a";
+import { VERDE, PALETA_GRAFICOS } from "../../constants/colores";
+import { EstadoVacio } from "../shared/EstadoVacio";
 
 // Compartido entre AnalisisGeneral (proyecto) y AnalisisFase: mismo lenguaje
 // visual para que el análisis de una fase se lea como una versión acotada
 // del análisis del proyecto, no como una pantalla distinta.
-export const COLORES_TORTA = [
-  "#6f7f45",
-  "#16a34a",
-  "#d97706",
-  "#64748b",
-  "#7c3aed",
-  "#0891b2",
-  "#dc2626",
-  "#52525b",
-];
+export const COLORES_TORTA = PALETA_GRAFICOS;
 
 export function Seccion({ titulo, descripcion, children, vacio, mensajeVacio }) {
   return (
     <section className="analisis-seccion">
       <h3 className="analisis-seccion-titulo">{titulo}</h3>
       {descripcion && <p className="analisis-seccion-descripcion">{descripcion}</p>}
-      {vacio ? <p className="analisis-vacio">{mensajeVacio}</p> : children}
+      {vacio ? <EstadoVacio mensaje={mensajeVacio} /> : children}
     </section>
   );
 }
@@ -51,7 +42,15 @@ export function ContenidoTreemap({ x, y, width, height, depth, name, monto, colo
 
   if (depth === 1) {
     return (
-      <rect x={x} y={y} width={width} height={height} fill="none" stroke="#fff" strokeWidth={4} />
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        fill="none"
+        stroke="var(--color-superficie)"
+        strokeWidth={4}
+      />
     );
   }
 
@@ -67,7 +66,7 @@ export function ContenidoTreemap({ x, y, width, height, depth, name, monto, colo
         height={height}
         fill={color ?? VERDE}
         fillOpacity={opacidad}
-        stroke="#fff"
+        stroke="var(--color-superficie)"
         strokeWidth={1}
       />
       {entraElTexto && (

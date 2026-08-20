@@ -137,46 +137,10 @@
   border-color: var(--color-musgo-dark);
 }
 
-.fase-detalle-vacio {
-  font-family: var(--font-ui);
-  color: var(--color-tinta-muted);
-  padding: var(--space-8) 0;
-}
-
 /* Shell de tabs de la fase (Acciones/Seguimiento/Análisis) -- misma
    composición documentada en docs/redesign/04_shell_tabs.md: inactivas en
    tinta muted, la activa en terracota con borde inferior, separadas del
    contenido por una línea horizontal completa. */
-.fase-detalle-tabs {
-  display: flex;
-  gap: var(--space-6);
-  border-bottom: 1px solid var(--color-linea);
-}
-
-.fase-detalle-tabs button {
-  font-family: var(--font-ui);
-  font-size: var(--text-base);
-  font-weight: 600;
-  color: var(--color-tinta-muted);
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  padding: var(--space-3) 0;
-  margin-bottom: -1px;
-  cursor: pointer;
-  transition:
-    color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.fase-detalle-tabs button:hover {
-  color: var(--color-tinta);
-}
-
-.fase-detalle-tabs button.active {
-  color: var(--color-terracota);
-  border-bottom-color: var(--color-terracota);
-}
 
 @media (max-width: 480px) {
   .fase-detalle-header-top {

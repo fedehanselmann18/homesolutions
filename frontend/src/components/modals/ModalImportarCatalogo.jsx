@@ -104,7 +104,9 @@ function SelectorCategorias({
   const categoriasDelTipo = categoriasDisponibles.filter((c) => c.tipo === tipo);
 
   const toggle = (id) => {
-    onChange(categoriaIds.includes(id) ? categoriaIds.filter((x) => x !== id) : [...categoriaIds, id]);
+    onChange(
+      categoriaIds.includes(id) ? categoriaIds.filter((x) => x !== id) : [...categoriaIds, id]
+    );
   };
 
   const etiqueta = categoriaIds.length
@@ -159,15 +161,15 @@ function SelectorCategorias({
 function BadgeEstado({ fila }) {
   if (fila.estado === "actualiza_precio") {
     return (
-      <span className="catalogo-badge catalogo-badge--actualiza">
+      <span className="badge badge--marca">
         {formatMoneda(fila.precio_actual)} → {formatMoneda(fila.precio)}
       </span>
     );
   }
   if (fila.estado === "sin_cambios") {
-    return <span className="catalogo-badge catalogo-badge--sin-cambios">Sin cambios</span>;
+    return <span className="badge badge--neutro">Sin cambios</span>;
   }
-  return <span className="catalogo-badge catalogo-badge--nuevo">Nuevo</span>;
+  return <span className="badge badge--exito">Nuevo</span>;
 }
 
 /**
@@ -265,7 +267,11 @@ export function ModalImportarCatalogo({
           : [],
         // No depende de si el proveedor es nuevo o existente -- depende de
         // qué productos nuevos aparezcan, así que siempre se manda.
-        categorias: categoriasDisponibles.map((c) => ({ id: c.id, nombre: c.nombre, tipo: c.tipo })),
+        categorias: categoriasDisponibles.map((c) => ({
+          id: c.id,
+          nombre: c.nombre,
+          tipo: c.tipo,
+        })),
       });
 
       setLectura(resultado);
@@ -341,11 +347,15 @@ export function ModalImportarCatalogo({
   // Las categorías ya elegidas son sub-rubros del tipo anterior -- si el
   // tipo cambia, dejan de tener sentido (mismo criterio que ModalProducto.jsx).
   const handleCambiarTipo = (id, nuevoTipo) => {
-    setFilas((prev) => prev.map((f) => (f._id === id ? { ...f, tipo: nuevoTipo, categoria_ids: [] } : f)));
+    setFilas((prev) =>
+      prev.map((f) => (f._id === id ? { ...f, tipo: nuevoTipo, categoria_ids: [] } : f))
+    );
   };
 
   const toggleSeleccion = (id) => {
-    setFilas((prev) => prev.map((f) => (f._id === id ? { ...f, seleccionada: !f.seleccionada } : f)));
+    setFilas((prev) =>
+      prev.map((f) => (f._id === id ? { ...f, seleccionada: !f.seleccionada } : f))
+    );
   };
 
   const filasSeleccionables = filas.filter((f) => Boolean(f.tipo));
@@ -386,7 +396,9 @@ export function ModalImportarCatalogo({
       if (creados > 0)
         partes.push(`${creados} ${creados === 1 ? "producto importado" : "productos importados"}`);
       if (actualizados > 0)
-        partes.push(`${actualizados} ${actualizados === 1 ? "precio actualizado" : "precios actualizados"}`);
+        partes.push(
+          `${actualizados} ${actualizados === 1 ? "precio actualizado" : "precios actualizados"}`
+        );
       toast.success(partes.join(" · ") || "Importación completada.");
 
       onImportado?.();
@@ -419,7 +431,9 @@ export function ModalImportarCatalogo({
       >
         <Paperclip size={26} strokeWidth={1.75} className="comprobantes-dropzone-icono" />
         <span className="comprobantes-dropzone-texto">Arrastrá el catálogo acá</span>
-        <span className="comprobantes-dropzone-subtexto">Excel, CSV, PDF, JPG o PNG · máx. 10MB</span>
+        <span className="comprobantes-dropzone-subtexto">
+          Excel, CSV, PDF, JPG o PNG · máx. 10MB
+        </span>
         <input
           id="catalogo-input-archivo"
           type="file"
@@ -474,7 +488,12 @@ export function ModalImportarCatalogo({
       acciones={
         paso === "productos" ? (
           <>
-            <button type="button" onClick={onCerrar} className="btn btn-secondary" disabled={guardando}>
+            <button
+              type="button"
+              onClick={onCerrar}
+              className="btn btn-secondary"
+              disabled={guardando}
+            >
               Cancelar
             </button>
             <button
@@ -512,7 +531,8 @@ export function ModalImportarCatalogo({
           {lectura.proveedor_sugerido?.tipo === "existente" && !eligiendoExistente && (
             <div className="catalogo-proveedor-sugerido">
               <p>
-                Este catálogo parece ser de <strong>{lectura.proveedor_sugerido.nombre}</strong>. ¿Confirmás?
+                Este catálogo parece ser de <strong>{lectura.proveedor_sugerido.nombre}</strong>.
+                ¿Confirmás?
               </p>
               <div className="catalogo-proveedor-acciones">
                 <button
@@ -587,7 +607,9 @@ export function ModalImportarCatalogo({
                   <input
                     type="text"
                     value={formProveedorNuevo.cuit}
-                    onChange={(e) => setFormProveedorNuevo((prev) => ({ ...prev, cuit: e.target.value }))}
+                    onChange={(e) =>
+                      setFormProveedorNuevo((prev) => ({ ...prev, cuit: e.target.value }))
+                    }
                   />
                 </label>
               </div>
@@ -607,7 +629,9 @@ export function ModalImportarCatalogo({
                   <input
                     type="email"
                     value={formProveedorNuevo.email}
-                    onChange={(e) => setFormProveedorNuevo((prev) => ({ ...prev, email: e.target.value }))}
+                    onChange={(e) =>
+                      setFormProveedorNuevo((prev) => ({ ...prev, email: e.target.value }))
+                    }
                   />
                 </label>
               </div>
@@ -666,7 +690,9 @@ export function ModalImportarCatalogo({
                             checked={fila.seleccionada}
                             disabled={sinTipo}
                             onChange={() => toggleSeleccion(fila._id)}
-                            title={sinTipo ? "Elegí un tipo antes de importar esta fila" : undefined}
+                            title={
+                              sinTipo ? "Elegí un tipo antes de importar esta fila" : undefined
+                            }
                           />
                         </td>
                         <td>

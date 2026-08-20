@@ -16,6 +16,7 @@ import ModalProveedor from "../components/modals/ModalProveedor";
 import ModalImportarCatalogo from "../components/modals/ModalImportarCatalogo";
 import ModalConfirmar from "../components/modals/ModalConfirmar";
 import { Cargando } from "../components/shared/Cargando";
+import { EstadoVacio } from "../components/shared/EstadoVacio";
 import "./Proveedores.css";
 
 export function Proveedores() {
@@ -24,8 +25,15 @@ export function Proveedores() {
   const canManage = usuario?.rol === "admin";
   const toast = useToast();
 
-  const { proveedores, loading, error, agregarProveedor, editarProveedor, borrarProveedor, recargar } =
-    useProveedores();
+  const {
+    proveedores,
+    loading,
+    error,
+    agregarProveedor,
+    editarProveedor,
+    borrarProveedor,
+    recargar,
+  } = useProveedores();
 
   const [productos, setProductos] = useState([]);
   const [compras, setCompras] = useState([]);
@@ -183,11 +191,14 @@ export function Proveedores() {
       </div>
 
       {proveedoresFiltrados.length === 0 ? (
-        <p className="proveedores-feedback">
-          {proveedores.length === 0
-            ? "No hay proveedores todavía. ¡Cargá el primero!"
-            : "Ningún proveedor coincide con la búsqueda."}
-        </p>
+        <EstadoVacio
+          mensaje={
+            proveedores.length === 0
+              ? "No hay proveedores todavía. ¡Cargá el primero!"
+              : "Ningún proveedor coincide con la búsqueda."
+          }
+          grande
+        />
       ) : (
         <div className="proveedores-grid">
           {proveedoresFiltrados.map(

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { X } from "lucide-react";
 import { TIPOS_NOTA, ORIGENES_NOTA_COMPRA, ORIGENES_NOTA_COBRO } from "../../constants/notas";
 import { TIPOS_FACTURA } from "../../constants/tipoFactura";
+import { OLIVA, OLIVA_TINT } from "../../constants/colores";
 import { restanteDetalleCompra } from "../../utils/notas";
 import { formatMoneda } from "../../utils/formato";
 import { obtenerMensajeError } from "../../utils/errorHandling";
@@ -350,7 +351,7 @@ export function ModalNota({
                     {fila.detalle_compra_id && esDevolucion && (
                       <span
                         className="modal-form-fila-dinamica-tipo"
-                        style={{ color: "#6f7f45", backgroundColor: "#eef0e9" }}
+                        style={{ color: OLIVA, backgroundColor: OLIVA_TINT }}
                       >
                         Disponible: {restante}
                       </span>

@@ -24,12 +24,14 @@ import {
 
 import { TarjetaKpi } from "../shared/TarjetaKpi";
 import { Cargando } from "../shared/Cargando";
+import { EstadoVacio } from "../shared/EstadoVacio";
+import { EstadoError } from "../shared/EstadoError";
 import { calcularAnalisis } from "../../utils/analisis";
 import { formatMoneda, formatMonedaCorta } from "../../utils/formato";
 import { useToast } from "../../context/useToast";
 import useAuth from "../../context/useAuth";
 import { Seccion, TooltipMoneda, ContenidoTreemap, Torta, COLORES_TORTA } from "./AnalisisGraficos";
-import { VERDE, ROJO, AZUL, NARANJA } from "../../constants/colores";
+import { VERDE, ROJO, AZUL, NARANJA, LINEA } from "../../constants/colores";
 import "./AnalisisGeneral.css";
 
 const COLOR_CASCADA = {
@@ -142,7 +144,7 @@ export function AnalisisGeneral({ proyectoId }) {
 
   if (cargando) return <Cargando texto="Cargando análisis..." />;
   if (!analisis)
-    return <p className="analisis-vacio">No se pudo cargar el análisis del proyecto.</p>;
+    return <EstadoError mensaje="No se pudo cargar el análisis del proyecto." grande />;
 
   const {
     totales,
@@ -219,7 +221,7 @@ export function AnalisisGeneral({ proyectoId }) {
       >
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={cascada} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={LINEA} />
             <XAxis dataKey="nombre" tick={{ fontSize: 12 }} />
             <YAxis
               domain={escala.dominio}
@@ -304,7 +306,7 @@ export function AnalisisGeneral({ proyectoId }) {
       >
         <ResponsiveContainer width="100%" height={240}>
           <BarChart data={pagosPorTipoFactura} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={LINEA} />
             <XAxis dataKey="label" tick={{ fontSize: 12 }} />
             <YAxis tickFormatter={formatMonedaCorta} tick={{ fontSize: 12 }} width={80} />
             <Tooltip content={<TooltipMoneda obtenerValor={(d) => d.monto} />} />
@@ -362,7 +364,7 @@ export function AnalisisGeneral({ proyectoId }) {
 
         <h4 className="analisis-subtitulo">Egresos por fase</h4>
         {egresosPorFase.length === 0 ? (
-          <p className="analisis-vacio">Todavía no hay gastos ni compras imputados a una fase.</p>
+          <EstadoVacio mensaje="Todavía no hay gastos ni compras imputados a una fase." />
         ) : (
           <ResponsiveContainer width="100%" height={Math.max(egresosPorFase.length * 52, 140)}>
             <BarChart
@@ -370,7 +372,7 @@ export function AnalisisGeneral({ proyectoId }) {
               layout="vertical"
               margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e4e4e7" />
+              <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={LINEA} />
               <XAxis type="number" tickFormatter={formatMonedaCorta} tick={{ fontSize: 12 }} />
               <YAxis
                 type="category"

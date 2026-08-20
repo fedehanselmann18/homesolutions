@@ -106,7 +106,7 @@
 
 .seccion-notas-item--debito .seccion-notas-item-tipo,
 .seccion-notas-item--debito .seccion-notas-item-monto {
-  color: #d97706;
+  color: var(--color-arcilla);
 }
 
 .seccion-notas-item-monto {

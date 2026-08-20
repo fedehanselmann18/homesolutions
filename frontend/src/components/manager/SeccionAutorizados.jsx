@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ChevronDown, Trash2, UserPlus } from "lucide-react";
 
 import "./Manager.css";
+import { EstadoVacio } from "../shared/EstadoVacio";
 
 /**
  * Whitelist de autoregistro: quién puede crearse cuenta en /registro y con
@@ -72,17 +73,15 @@ export function SeccionAutorizados({ autorizados, guardando, onAutorizar, onRevo
         <div>
           <h3 className="manager-subtitulo">Pendientes de registrarse</h3>
           {pendientes.length === 0 ? (
-            <p className="manager-vacio">
-              Nadie pendiente: todos los autorizados ya tienen cuenta.
-            </p>
+            <EstadoVacio mensaje="Nadie pendiente: todos los autorizados ya tienen cuenta." />
           ) : (
             <ul className="manager-lista">
               {pendientes.map((autorizado) => (
                 <li key={autorizado.id} className="manager-lista__item">
                   <span className="manager-lista__nombre">{autorizado.nombre_usuario}</span>
                   <span
-                    className={`manager-chip ${
-                      autorizado.rol === "admin" ? "manager-chip--admin" : ""
+                    className={`badge ${
+                      autorizado.rol === "admin" ? "badge--marca" : "badge--neutro"
                     }`}
                   >
                     {autorizado.rol === "admin" ? "Admin" : "Lectura"}
@@ -109,7 +108,7 @@ export function SeccionAutorizados({ autorizados, guardando, onAutorizar, onRevo
               {registrados.map((autorizado) => (
                 <li key={autorizado.id} className="manager-lista__item manager-lista__item--tenue">
                   <span className="manager-lista__nombre">{autorizado.nombre_usuario}</span>
-                  <span className="manager-chip">Con cuenta</span>
+                  <span className="badge badge--neutro">Con cuenta</span>
                 </li>
               ))}
             </ul>

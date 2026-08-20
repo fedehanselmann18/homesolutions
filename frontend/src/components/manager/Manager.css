@@ -54,18 +54,6 @@
   justify-content: flex-end;
 }
 
-.manager-chip {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 9px;
-  border-radius: 999px;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  background: var(--color-base-2);
-  color: var(--color-tinta-muted);
-  white-space: nowrap;
-}
-
 .manager-chip--admin {
   background: var(--color-terracota-tint);
   color: var(--color-terracota-dark);
@@ -256,12 +244,6 @@
   flex: 1;
   font-weight: 600;
   color: var(--color-tinta);
-}
-
-.manager-vacio {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--color-tinta-muted);
 }
 
 .manager-error {

@@ -103,11 +103,6 @@
   min-width: 200px;
 }
 
-.proveedores-feedback {
-  color: var(--color-tinta-muted);
-  font-size: 0.9rem;
-}
-
 .proveedores-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));

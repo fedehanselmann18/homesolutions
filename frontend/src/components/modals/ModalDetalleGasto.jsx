@@ -1,8 +1,6 @@
-import { Receipt } from "lucide-react";
-
 import { formatFecha } from "../../utils/formato";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
-import { NARANJA } from "../../constants/colores";
+import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { DetalleShell, BarraComposicion, SeccionDetalle, ChipsComprobantes } from "./PiezasDetalle";
 
 /**
@@ -19,6 +17,7 @@ export function ModalDetalleGasto({
   onVerComprobante,
   onAgregarComprobante,
   onEliminarComprobante,
+  onEditar,
 }) {
   const contexto = [getTipoFacturaLabel(gasto.tipo_factura), faseNombre ?? "Gasto general"]
     .filter(Boolean)
@@ -26,17 +25,20 @@ export function ModalDetalleGasto({
 
   return (
     <DetalleShell
-      tipo="Gasto"
-      icono={Receipt}
+      tipo={TIPOS_MOVIMIENTO.gasto.singular}
+      icono={TIPOS_MOVIMIENTO.gasto.icono}
       contexto={contexto}
       fecha={formatFecha(gasto.fecha)}
       titulo={gasto.descripcion}
       subtitulo={usuarioNombre ? `Cargado por ${usuarioNombre}` : null}
       total={gasto.monto}
-      totalColor={NARANJA}
+      totalColor={TIPOS_MOVIMIENTO.gasto.color}
       onCerrar={onCerrar}
+      onEditar={onEditar}
     >
-      <BarraComposicion segmentos={[{ label: "Monto", monto: gasto.monto, color: NARANJA }]} />
+      <BarraComposicion
+        segmentos={[{ label: "Monto", monto: gasto.monto, color: TIPOS_MOVIMIENTO.gasto.color }]}
+      />
 
       {gasto.categorias?.length > 0 && (
         <SeccionDetalle titulo="Categorías">

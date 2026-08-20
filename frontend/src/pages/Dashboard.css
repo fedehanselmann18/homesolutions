@@ -27,13 +27,6 @@
   margin: 0;
 }
 
-.panel-vacio {
-  font-size: var(--text-base);
-  color: var(--color-tinta-muted);
-  margin: 8px 0;
-  font-family: var(--font-ui);
-}
-
 /* --- KPIs: franja de números, sin cards -- separados por reglas verticales --- */
 
 .panel-kpis {
@@ -121,11 +114,6 @@
   margin: 0 0 var(--space-4);
 }
 
-/* --- Filtro de estado (En curso / A iniciar / Terminados): clases
-   .panel-filtro-estado* -- viven en components/proyectos/TablaProyectos.css,
-   no acá, porque Proyectos.jsx también las usa y cada página se carga por
-   separado con React.lazy. --- */
-
 /* --- KPI destacado: mismo TarjetaKpi de siempre, con un fondo que ocupa
    toda la celda (dirección 1a) en vez de agrandar el número. La celda de
    .panel-kpis ya trae padding horizontal + separador vertical -- acá sólo se
@@ -140,11 +128,6 @@
   padding-bottom: var(--space-4);
   background-color: var(--color-terracota-tint-fila);
 }
-
-/* --- Proyectos en curso: tabla real (dirección 1a "Planilla") -- el CSS de
-   la tabla en sí (grid, fila, segmentos de fases, chips) vive en
-   components/proyectos/TablaProyectos.css: la comparte con la página
-   Proyectos, así las dos pantallas leen exactamente igual. --- */
 
 /* --- Tooltip del gráfico --- */
 

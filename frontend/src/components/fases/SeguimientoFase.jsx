@@ -4,14 +4,11 @@ import { calcularSeguimiento } from "../../utils/seguimiento";
 import { formatMoneda, formatFecha } from "../../utils/formato";
 import { getCondicionPagoLabel } from "../../constants/estadoCompra";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
+import { ROJO, NARANJA, GRIS } from "../../constants/colores";
 import { TarjetaMiniSeguimiento } from "../shared/TarjetaMiniSeguimiento";
 import { EstadoVacio } from "../shared/EstadoVacio";
 import { ModalDetalleCompra } from "../modals/ModalDetalleCompra";
 import { ModalDetalleGasto } from "../modals/ModalDetalleGasto";
-
-const ROJO = "#dc2626";
-const NARANJA = "#d97706";
-const GRIS = "#64748b";
 
 const diasTexto = (dias) => `hace ${dias} ${dias === 1 ? "día" : "días"}`;
 
@@ -56,9 +53,28 @@ export function SeguimientoFase({
   onVerComprobanteCompra,
   onVerNotaCompra,
   onVerComprobanteGasto,
+  // Seguimiento es la pantalla de "lo que falta": si desde acá no se puede
+  // adjuntar el comprobante que falta ni marcar la compra como pagada, hay
+  // que ir a buscar el mismo movimiento a otra pestaña. Todo opcional para
+  // no romper si algún día se usa este componente en modo lectura.
+  onAgregarComprobanteCompra,
+  onEliminarComprobanteCompra,
+  onAgregarComprobanteGasto,
+  onEliminarComprobanteGasto,
+  onTogglePagoCompra,
+  onToggleEnvioCompra,
+  onEditarCompra,
+  onEditarGasto,
+  canManage = false,
 }) {
-  const [detalle, setDetalle] = useState(null); // { tipo: "compra" | "gasto", entidad }
+  // Igual que en el Seguimiento del proyecto: se guarda el id y la entidad se
+  // re-lee, así togglear o subir un comprobante se refleja en el modal abierto.
+  const [detalle, setDetalle] = useState(null); // { tipo: "compra" | "gasto", id }
   const cerrarDetalle = () => setDetalle(null);
+
+  const entidadDetalle = detalle
+    ? (detalle.tipo === "compra" ? comprasFase : gastosFase).find((e) => e.id === detalle.id)
+    : null;
 
   const seguimiento = useMemo(
     () =>
@@ -85,15 +101,8 @@ export function SeguimientoFase({
 
   const nombreProveedor = (proveedorId) => proveedores.find((p) => p.id === proveedorId)?.nombre;
 
-  const abrirDetalleCompra = (compraId) => {
-    const compra = comprasFase.find((c) => c.id === compraId);
-    if (compra) setDetalle({ tipo: "compra", entidad: compra });
-  };
-
-  const abrirDetalleGasto = (gastoId) => {
-    const gasto = gastosFase.find((g) => g.id === gastoId);
-    if (gasto) setDetalle({ tipo: "gasto", entidad: gasto });
-  };
+  const abrirDetalleCompra = (compraId) => setDetalle({ tipo: "compra", id: compraId });
+  const abrirDetalleGasto = (gastoId) => setDetalle({ tipo: "gasto", id: gastoId });
 
   return (
     <div className="seguimiento">
@@ -256,24 +265,65 @@ export function SeguimientoFase({
         </Seccion>
       )}
 
-      {detalle?.tipo === "compra" && (
+      {entidadDetalle && detalle.tipo === "compra" && (
         <ModalDetalleCompra
-          compra={detalle.entidad}
+          compra={entidadDetalle}
           faseNombre={faseNombre}
-          proveedorNombre={nombreProveedor(detalle.entidad.proveedor_id)}
+          proveedorNombre={nombreProveedor(entidadDetalle.proveedor_id)}
           productos={productos}
           onCerrar={cerrarDetalle}
-          onVerComprobante={(c) => onVerComprobanteCompra(detalle.entidad.id, c.id)}
-          onVerNota={(n) => onVerNotaCompra(detalle.entidad.id, n.id)}
+          onVerComprobante={(c) => onVerComprobanteCompra(entidadDetalle.id, c.id)}
+          onVerNota={(n) => onVerNotaCompra(entidadDetalle.id, n.id)}
+          onAgregarComprobante={
+            canManage && onAgregarComprobanteCompra
+              ? (files) => onAgregarComprobanteCompra(entidadDetalle.id, files)
+              : undefined
+          }
+          onEliminarComprobante={
+            canManage && onEliminarComprobanteCompra
+              ? (id) => onEliminarComprobanteCompra(entidadDetalle.id, id)
+              : undefined
+          }
+          onTogglePago={onTogglePagoCompra ? () => onTogglePagoCompra(entidadDetalle) : undefined}
+          onToggleEnvio={
+            onToggleEnvioCompra ? () => onToggleEnvioCompra(entidadDetalle) : undefined
+          }
+          onEditar={
+            onEditarCompra
+              ? () => {
+                  cerrarDetalle();
+                  onEditarCompra(entidadDetalle);
+                }
+              : undefined
+          }
+          canManage={canManage}
         />
       )}
 
-      {detalle?.tipo === "gasto" && (
+      {entidadDetalle && detalle.tipo === "gasto" && (
         <ModalDetalleGasto
-          gasto={detalle.entidad}
+          gasto={entidadDetalle}
           faseNombre={faseNombre}
           onCerrar={cerrarDetalle}
-          onVerComprobante={(c) => onVerComprobanteGasto(detalle.entidad.id, c.id)}
+          onVerComprobante={(c) => onVerComprobanteGasto(entidadDetalle.id, c.id)}
+          onAgregarComprobante={
+            canManage && onAgregarComprobanteGasto
+              ? (files) => onAgregarComprobanteGasto(entidadDetalle.id, files)
+              : undefined
+          }
+          onEliminarComprobante={
+            canManage && onEliminarComprobanteGasto
+              ? (id) => onEliminarComprobanteGasto(entidadDetalle.id, id)
+              : undefined
+          }
+          onEditar={
+            canManage && onEditarGasto
+              ? () => {
+                  cerrarDetalle();
+                  onEditarGasto(entidadDetalle);
+                }
+              : undefined
+          }
         />
       )}
     </div>

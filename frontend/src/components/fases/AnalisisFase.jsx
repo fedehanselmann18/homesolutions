@@ -3,6 +3,7 @@ import { ResponsiveContainer, Tooltip, Treemap } from "recharts";
 
 import { calcularAnalisis } from "../../utils/analisis";
 import { formatMoneda } from "../../utils/formato";
+import { ROJO, NARANJA } from "../../constants/colores";
 import { TarjetaKpi } from "../shared/TarjetaKpi";
 import {
   Seccion,
@@ -11,9 +12,6 @@ import {
   Torta,
   COLORES_TORTA,
 } from "../proyectos/AnalisisGraficos";
-
-const ROJO = "#dc2626";
-const NARANJA = "#d97706";
 
 /**
  * Tab "Análisis de la fase" de FaseDetalle.jsx -- reusa calcularAnalisis

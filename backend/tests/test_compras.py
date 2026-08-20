@@ -324,3 +324,112 @@ def test_precio_total_con_impuestos_y_notas_eager_loaded_desde_la_db(
     )
 
     assert compra_recargada.precio_total == 111000.0  # 100000 + 21000 - 10000
+
+
+# ---------------------------------------------------------------------------
+# Editar detalle e impuestos desde el PUT. El modal de edición manda la compra
+# entera (es un formulario: lo que se ve es lo que queda), así que el PUT tiene
+# que reconciliar esas dos listas y no sólo las columnas propias.
+# ---------------------------------------------------------------------------
+
+
+def test_actualizar_compra_agrega_un_impuesto(client, db_session, headers_admin):
+    compra, _, _ = _crear_compra_con_detalle(client, db_session, headers_admin)
+    impuesto = _crear_impuesto(db_session)
+
+    respuesta = client.put(
+        f"/compras/{compra['id']}",
+        json={"impuestos": [{"impuesto_id": str(impuesto.id), "monto": 42000}]},
+        headers=headers_admin,
+    )
+
+    assert respuesta.status_code == 200
+    cuerpo = respuesta.json()
+    assert len(cuerpo["impuestos_aplicados"]) == 1
+    assert cuerpo["impuestos_aplicados"][0]["monto"] == 42000
+    # precio_total = neto + impuestos
+    assert cuerpo["precio_total"] == compra["precio_neto"] + 42000
+
+
+def test_actualizar_compra_quita_un_impuesto(client, db_session, headers_admin):
+    compra, _, _ = _crear_compra_con_detalle(client, db_session, headers_admin)
+    impuesto = _crear_impuesto(db_session)
+    client.put(
+        f"/compras/{compra['id']}",
+        json={"impuestos": [{"impuesto_id": str(impuesto.id), "monto": 42000}]},
+        headers=headers_admin,
+    )
+
+    respuesta = client.put(f"/compras/{compra['id']}", json={"impuestos": []}, headers=headers_admin)
+
+    assert respuesta.status_code == 200
+    assert respuesta.json()["impuestos_aplicados"] == []
+
+
+def test_actualizar_compra_cambia_la_cantidad_del_detalle(client, db_session, headers_admin):
+    compra, _, _ = _crear_compra_con_detalle(
+        client, db_session, headers_admin, precio_unitario=100000, cantidad=2
+    )
+    linea = compra["detalle"][0]
+
+    respuesta = client.put(
+        f"/compras/{compra['id']}",
+        json={
+            "precio_neto": 500000,
+            "detalle": [
+                {
+                    "producto_id": linea["producto_id"],
+                    "cantidad": 5,
+                    "precio_unitario": 100000,
+                }
+            ],
+        },
+        headers=headers_admin,
+    )
+
+    assert respuesta.status_code == 200
+    cuerpo = respuesta.json()
+    assert len(cuerpo["detalle"]) == 1
+    assert cuerpo["detalle"][0]["cantidad"] == 5
+    assert cuerpo["precio_neto"] == 500000
+
+
+def test_editar_una_compra_no_desvincula_los_productos_de_sus_notas(client, db_session, headers_admin):
+    """
+    El vínculo nota -> línea de compra es SET NULL (ver NotaCompraDetalle): si
+    el PUT borrara y recreara el detalle en cada guardado, editar cualquier
+    campo dejaría a las notas sin saber qué producto se devolvió. La línea que
+    no cambia de producto tiene que conservar su id.
+    """
+    compra, _, _ = _crear_compra_con_detalle(client, db_session, headers_admin)
+    linea = compra["detalle"][0]
+
+    respuesta = client.put(
+        f"/compras/{compra['id']}",
+        json={
+            "descripcion": "Descripción nueva",
+            "detalle": [
+                {
+                    "producto_id": linea["producto_id"],
+                    "cantidad": linea["cantidad"],
+                    "precio_unitario": linea["precio_unitario"],
+                }
+            ],
+        },
+        headers=headers_admin,
+    )
+
+    assert respuesta.status_code == 200
+    assert respuesta.json()["detalle"][0]["id"] == linea["id"]
+
+
+def test_actualizar_compra_sin_mandar_detalle_lo_deja_intacto(client, db_session, headers_admin):
+    """Togglear pago/envío manda sólo ese campo -- no puede vaciar el detalle."""
+    compra, _, _ = _crear_compra_con_detalle(client, db_session, headers_admin)
+
+    respuesta = client.put(
+        f"/compras/{compra['id']}", json={"estado_pago": "pendiente"}, headers=headers_admin
+    )
+
+    assert respuesta.status_code == 200
+    assert len(respuesta.json()["detalle"]) == 1

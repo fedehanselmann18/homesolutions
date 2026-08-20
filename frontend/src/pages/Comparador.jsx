@@ -8,9 +8,12 @@ import { TIPOS_PRODUCTO, getTipoProducto } from "../constants/tipoProducto";
 import { formatMoneda } from "../utils/formato";
 import { agruparPorProducto, filtrarProductos } from "../utils/comparador";
 import { Cargando } from "../components/shared/Cargando";
+import { EstadoVacio } from "../components/shared/EstadoVacio";
+import { EstadoError } from "../components/shared/EstadoError";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 import "./Comparador.css";
+import { TINTE_PASTILLA } from "../constants/tipoMovimiento";
 
 // Comparador de precios: dos vistas sobre el mismo catálogo de productos.
 // 1) "Mismo producto" -> solo marca+modelo cargados en 2+ proveedores, para
@@ -66,7 +69,7 @@ export function Comparador() {
   );
 
   if (cargando || cargandoProveedores) return <Cargando texto="Cargando comparador..." />;
-  if (error) return <p className="comparador-feedback">No se pudo cargar el comparador.</p>;
+  if (error) return <EstadoError mensaje="No se pudo cargar el comparador." grande />;
 
   return (
     <div className="comparador-container">
@@ -81,10 +84,7 @@ export function Comparador() {
         <h2 className="comparador-seccion-titulo">Mismo producto, distintos proveedores</h2>
 
         {grupos.length === 0 ? (
-          <p className="comparador-feedback">
-            Todavía no hay ningún producto con la misma marca y modelo cargado en más de un
-            proveedor.
-          </p>
+          <EstadoVacio mensaje="Todavía no hay ningún producto con la misma marca y modelo cargado en más de un proveedor." grande />
         ) : (
           <div className="comparador-grupos">
             {grupos.map((grupo) => {
@@ -98,13 +98,13 @@ export function Comparador() {
                       </h3>
                       <div className="comparador-grupo-chips">
                         <span
-                          className="comparador-badge"
-                          style={{ color: tipo.color, backgroundColor: `${tipo.color}1c` }}
+                          className="badge"
+                          style={{ color: tipo.color, backgroundColor: `${tipo.color}${TINTE_PASTILLA}` }}
                         >
                           {tipo.icono && <tipo.icono size={12} strokeWidth={2.25} />} {tipo.label}
                         </span>
                         {grupo.categorias.map((c) => (
-                          <span key={c.id} className="comparador-chip">
+                          <span key={c.id} className="badge badge--neutro">
                             {c.nombre}
                           </span>
                         ))}
@@ -178,7 +178,7 @@ export function Comparador() {
         </div>
 
         {filtrados.length === 0 ? (
-          <p className="comparador-feedback">Ningún producto coincide con el filtro.</p>
+          <EstadoVacio mensaje="Ningún producto coincide con el filtro." />
         ) : (
           <div className="comparador-tabla-wrap">
             <table className="comparador-tabla comparador-tabla--ancha">
@@ -200,8 +200,8 @@ export function Comparador() {
                       </td>
                       <td>
                         <span
-                          className="comparador-badge"
-                          style={{ color: tipo.color, backgroundColor: `${tipo.color}1c` }}
+                          className="badge"
+                          style={{ color: tipo.color, backgroundColor: `${tipo.color}${TINTE_PASTILLA}` }}
                         >
                           {tipo.icono && <tipo.icono size={12} strokeWidth={2.25} />} {tipo.label}
                         </span>

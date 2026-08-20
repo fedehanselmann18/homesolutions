@@ -1,6 +1,5 @@
+import { VERDE } from "../../constants/colores";
 import "./TarjetaKpi.css";
-
-const VERDE = "#16a34a";
 
 /**
  * Barra de progreso de un KPI. El porcentaje se recorta a [0, 100] para

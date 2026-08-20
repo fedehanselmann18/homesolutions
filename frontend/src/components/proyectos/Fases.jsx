@@ -16,16 +16,18 @@ import "./Fases.css";
 import useAuth from "../../context/useAuth";
 import { useToast } from "../../context/useToast";
 import { ESTADO_LABELS } from "../../constants/estados";
-import { VERDE, NARANJA, ROJO } from "../../constants/colores";
+import { VERDE, NARANJA, ROJO, LINEA, TINTA_MUTED } from "../../constants/colores";
+import { EstadoVacio } from "../shared/EstadoVacio";
 import { calcularAnalisis } from "../../utils/analisis";
 import { diasDesde } from "../../utils/seguimiento";
 import { formatMoneda } from "../../utils/formato";
 import { obtenerDetalleBackend } from "../../utils/errorHandling";
+import { TINTE_PASTILLA } from "../../constants/tipoMovimiento";
 
 function colorFase(estado) {
   if (estado === "terminada" || estado === "auditada") return VERDE;
   if (estado === "en_curso") return NARANJA;
-  return "#e4e4e7"; // --color-linea, plano porque el borde va por style inline
+  return LINEA; // plano y no CSS var porque el borde va por style inline
 }
 
 export function Fases({ proyectoId }) {
@@ -131,7 +133,7 @@ export function Fases({ proyectoId }) {
       </div>
 
       {fases.length === 0 ? (
-        <p>No hay fases disponibles para este proyecto.</p>
+        <EstadoVacio mensaje="No hay fases disponibles para este proyecto." />
       ) : (
         <div className="fases-tabla">
           <div className="fases-tabla-header">
@@ -145,7 +147,7 @@ export function Fases({ proyectoId }) {
 
           {fases.map((fase, i) => {
             const estadoInfo = ESTADO_LABELS[fase.estado] ?? {
-              color: "#6b7280",
+              color: TINTA_MUTED,
               label: fase.estado,
             };
             const gastado = gastadoPorFase?.porFase.get(fase.id) ?? 0;
@@ -199,7 +201,7 @@ export function Fases({ proyectoId }) {
 
                 <span
                   className="fases-tabla-estado"
-                  style={{ backgroundColor: `${estadoInfo.color}1c`, color: estadoInfo.color }}
+                  style={{ backgroundColor: `${estadoInfo.color}${TINTE_PASTILLA}`, color: estadoInfo.color }}
                 >
                   {estadoInfo.label}
                 </span>

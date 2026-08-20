@@ -30,11 +30,6 @@
   border-color: var(--color-tinta);
 }
 
-.proyectos-feedback {
-  font-family: var(--font-ui);
-  color: var(--color-tinta-muted);
-}
-
 @media (max-width: 640px) {
   .proyectos-toolbar {
     flex-direction: column;

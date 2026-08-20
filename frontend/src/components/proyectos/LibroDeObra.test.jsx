@@ -78,10 +78,10 @@ describe("LibroDeObra", () => {
       screen.getByText((_, e) => texto(e) === "Subtotal del día +$ 3.050.000")
     ).toBeInTheDocument();
     expect(
-      screen.getByText((_, e) => texto(e) === "Subtotal del día -$ 84.500")
+      screen.getByText((_, e) => texto(e) === "Subtotal del día −$ 84.500")
     ).toBeInTheDocument();
     expect(
-      screen.getByText((_, e) => texto(e) === "Subtotal del día -$ 2.109.183")
+      screen.getByText((_, e) => texto(e) === "Subtotal del día −$ 2.109.183")
     ).toBeInTheDocument();
   });
 
@@ -119,7 +119,9 @@ describe("LibroDeObra", () => {
     render_();
 
     const importes = [...document.querySelectorAll(".libro__importe")].map(texto);
-    expect(importes).toEqual(["-$ 2.109.183", "-$ 84.500", "+$ 3.050.000"]);
+    // Menos tipográfico (U+2212), no guion: mismo glifo que usa el Panel en
+    // "Actividad reciente" -- ver signoTexto() en constants/tipoMovimiento.js.
+    expect(importes).toEqual(["−$ 2.109.183", "−$ 84.500", "+$ 3.050.000"]);
   });
 
   it("abre el detalle al hacer click en la fila", async () => {

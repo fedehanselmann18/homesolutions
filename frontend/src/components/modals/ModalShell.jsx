@@ -2,7 +2,7 @@ import { X, CircleAlert } from "lucide-react";
 
 import { formatMoneda } from "../../utils/formato";
 
-import "./ModalCompra.css";
+import "./modal-base.css";
 import "./ModalShell.css";
 
 /**
@@ -43,7 +43,7 @@ export function ModalShell({
       onClick={cerrarDeshabilitado ? undefined : onCerrar}
     >
       <Contenedor
-        className={`modal-contenido shell${ancho ? " modal-contenido--ancho shell--ancho" : ""}${clase ? ` ${clase}` : ""}`}
+        className={`modal-contenido shell${ancho ? " shell--ancho" : ""}${clase ? ` ${clase}` : ""}`}
         // El diálogo se anuncia como tal (y con su título) para lectores de
         // pantalla: sin esto es un div más, indistinguible del resto de la
         // página que quedó atrás del overlay.

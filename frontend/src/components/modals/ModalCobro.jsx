@@ -1,12 +1,16 @@
 import { useState, useEffect } from "react";
 import { ComprobantesUploader } from "../shared/ComprobantesUploader";
-import { TIPOS_FACTURA } from "../../constants/tipoFactura";
+import { SeccionNotas } from "../shared/SeccionNotas";
+import { formatFecha } from "../../utils/formato";
+import { TIPOS_FACTURA, getTipoFacturaLabel } from "../../constants/tipoFactura";
+import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
+import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { useExtraccionIA } from "../../hooks/useExtraccionIA";
 import { useToast } from "../../context/useToast";
 import { validarRequerido, validarMonto, validarFecha } from "../../utils/formValidation";
-import ModalShell from "./ModalShell";
+import { BarraComposicion } from "./PiezasDetalle";
+import { EditarShell, SeccionForm, TotalRiel } from "./PiezasEditar";
 import { PasoComprobante, BannerIA, ResumenValidacion, MarcaIA } from "./PiezasIA";
-import "./ModalCobro.css";
 
 const validarCampo = (name, value) => {
   if (name === "descripcion") return validarRequerido(value, "La descripción es obligatoria.");
@@ -15,7 +19,14 @@ const validarCampo = (name, value) => {
   return null;
 };
 
-export function ModalCobro({ cobro, proyectoActual, onGuardar, onCerrar, onVerComprobante }) {
+export function ModalCobro({
+  cobro,
+  proyectoActual,
+  onGuardar,
+  onCerrar,
+  onVerComprobante,
+  onVerNota,
+}) {
   const esEdicion = Boolean(cobro);
 
   const [form, setForm] = useState({
@@ -143,170 +154,206 @@ export function ModalCobro({ cobro, proyectoActual, onGuardar, onCerrar, onVerCo
     />
   );
 
+  // Las notas ya cargadas son las que llevan el bruto al neto. Se muestran
+  // (de sólo lectura) para que el número del riel se entienda; se agregan y
+  // se borran desde la ficha de detalle, mismo criterio que en Compra: una
+  // nota impacta contra la API al instante y "Cancelar" dejaría de cancelar.
+  const notas = cobro?.notas ?? [];
+  const notasCredito = totalNotasCredito(notas);
+  const notasDebito = totalNotasDebito(notas);
+  const montoBruto = Number(form.monto) || 0;
+  const montoNeto = montoBruto - notasCredito + notasDebito;
+
+  const contexto = [
+    getTipoFacturaLabel(form.tipo_factura),
+    !esEdicion ? proyectoActual?.nombre : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <ModalShell
-      titulo={esEdicion ? "Editar cobro" : "Nuevo cobro"}
-      contexto={!esEdicion ? proyectoActual?.nombre : undefined}
-      ancho
+    <EditarShell
+      tipo={TIPOS_MOVIMIENTO.cobro.singular}
+      icono={TIPOS_MOVIMIENTO.cobro.icono}
+      esEdicion={esEdicion}
+      contexto={contexto}
+      fecha={form.fecha ? formatFecha(form.fecha) : null}
+      conRiel
+      guardando={guardando}
       onCerrar={onCerrar}
       onSubmit={handleSubmit}
-      cerrarDeshabilitado={guardando}
-      total={Number(form.monto) || 0}
-      totalLabel="Monto"
       aviso={
         mostrarFormulario && faltantes.length > 0
           ? `Revisá ${faltantes.length} ${faltantes.length === 1 ? "campo" : "campos"}`
           : null
       }
-      acciones={
-        <>
-          <button
-            type="button"
-            onClick={onCerrar}
-            className="btn btn-secondary"
-            disabled={guardando}
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="btn btn-primary"
-            disabled={guardando || !mostrarFormulario}
-          >
-            {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Crear cobro"}
-          </button>
-        </>
-      }
+      textoGuardar={esEdicion ? "Guardar cambios" : "Crear cobro"}
+      guardarDeshabilitado={!mostrarFormulario}
     >
-      {mostrarFormulario && lecturaIA && (
-        <BannerIA
-          nombreArchivo={lecturaIA.archivo}
-          resumen={`Leído con IA · ${lecturaIA.campos} ${lecturaIA.campos === 1 ? "campo" : "campos"} completados`}
-          onVolverALeer={handleAutocompletarIA}
-          leyendo={extrayendo}
-          disabled={guardando}
-        />
-      )}
-
-      {mostrarFormulario && <ResumenValidacion faltantes={faltantes} />}
-
-      {mostrarFormulario ? (
-        <div className="modal-form-seccion">
-          <div className="modal-form-seccion-header">
-            <span>Comprobantes</span>
-            {!lecturaIA && (
-              <button
-                type="button"
-                className="modal-btn-agregar-fila"
-                onClick={handleAutocompletarIA}
-                disabled={guardando || extrayendo || comprobantesCambios.archivos.length === 0}
-                title={
-                  comprobantesCambios.archivos.length === 0
-                    ? "Primero arrastrá o elegí un comprobante"
-                    : "Leer el comprobante y prellenar el formulario"
-                }
-              >
-                {extrayendo ? "Leyendo..." : "Autocompletar con IA"}
-              </button>
-            )}
-          </div>
-          {uploader}
+      {!mostrarFormulario ? (
+        <div className="mov-edit__paso">
+          <PasoComprobante
+            hayArchivo={comprobantesCambios.archivos.length > 0}
+            leyendo={extrayendo}
+            onLeer={handleAutocompletarIA}
+            onCargarAMano={() => setMostrarFormulario(true)}
+          >
+            {uploader}
+          </PasoComprobante>
         </div>
       ) : (
-        <PasoComprobante
-          hayArchivo={comprobantesCambios.archivos.length > 0}
-          leyendo={extrayendo}
-          onLeer={handleAutocompletarIA}
-          onCargarAMano={() => setMostrarFormulario(true)}
-        >
-          {uploader}
-        </PasoComprobante>
-      )}
-
-      {mostrarFormulario && (
-        <>
-          <div className="modal-form-seccion">
-            <div className="modal-form-seccion-header">
-              <span>Datos generales</span>
-            </div>
-
-            {!esEdicion && proyectoActual && (
-              <label>
-                Proyecto
-                <input
-                  type="text"
-                  value={`${proyectoActual.nombre} (proyecto actual)`}
-                  disabled
-                  readOnly
-                />
-              </label>
+        <div className="mov-edit__grid">
+          <div className="mov-edit__form">
+            {lecturaIA && (
+              <BannerIA
+                nombreArchivo={lecturaIA.archivo}
+                resumen={`Leído con IA · ${lecturaIA.campos} ${lecturaIA.campos === 1 ? "campo" : "campos"} completados`}
+                onVolverALeer={handleAutocompletarIA}
+                leyendo={extrayendo}
+                disabled={guardando}
+              />
             )}
 
-            <label className={claseIA("descripcion")}>
-              Descripción
-              <input
-                type="text"
-                name="descripcion"
-                value={form.descripcion}
-                onChange={handleChange}
-                required
-              />
-              {errores.descripcion && <p className="campo-error">{errores.descripcion}</p>}
-              {camposIA.has("descripcion") && !errores.descripcion && <MarcaIA />}
-            </label>
+            <ResumenValidacion faltantes={faltantes} />
 
-            <div className="modal-form-fila">
-              <label className={claseIA("monto")}>
-                Monto
-                <input
-                  type="number"
-                  name="monto"
-                  value={form.monto}
-                  onChange={handleChange}
-                  min="0"
-                  step="0.01"
-                  required
-                />
-                {errores.monto && <p className="campo-error">{errores.monto}</p>}
-                {camposIA.has("monto") && !errores.monto && <MarcaIA />}
-              </label>
+            <SeccionForm
+              titulo="Comprobantes"
+              accion={
+                !lecturaIA && (
+                  <button
+                    type="button"
+                    className="mov-edit__seccion-accion"
+                    onClick={handleAutocompletarIA}
+                    disabled={guardando || extrayendo || comprobantesCambios.archivos.length === 0}
+                    title={
+                      comprobantesCambios.archivos.length === 0
+                        ? "Primero arrastrá o elegí un comprobante"
+                        : "Leer el comprobante y prellenar el formulario"
+                    }
+                  >
+                    {extrayendo ? "Leyendo..." : "Autocompletar con IA"}
+                  </button>
+                )
+              }
+            >
+              {uploader}
+            </SeccionForm>
 
-              <label className={claseIA("fecha")}>
-                Fecha
-                <input
-                  type="date"
-                  name="fecha"
-                  value={form.fecha}
-                  onChange={handleChange}
-                  required
-                />
-                {errores.fecha && <p className="campo-error">{errores.fecha}</p>}
-                {camposIA.has("fecha") && !errores.fecha && <MarcaIA />}
-              </label>
-            </div>
+            <SeccionForm titulo="Datos generales">
+              {!esEdicion && proyectoActual && (
+                <label className="mov-edit__campo">
+                  Proyecto
+                  <input
+                    type="text"
+                    value={`${proyectoActual.nombre} (proyecto actual)`}
+                    disabled
+                    readOnly
+                  />
+                </label>
+              )}
 
-            <label className={claseIA("tipo_factura")}>
-              Tipo de factura
-              <select
-                name="tipo_factura"
-                value={form.tipo_factura}
-                onChange={handleChange}
-                required
+              <label
+                className={`mov-edit__campo mov-edit__campo--titulo ${claseIA("descripcion")}`}
               >
-                <option value="" disabled>
-                  Selecciona un tipo de factura
-                </option>
-                {TIPOS_FACTURA.map((tipo) => (
-                  <option key={tipo.value} value={tipo.value}>
-                    {tipo.label}
+                Descripción
+                <input
+                  type="text"
+                  name="descripcion"
+                  value={form.descripcion}
+                  onChange={handleChange}
+                  required
+                />
+                {errores.descripcion && <p className="campo-error">{errores.descripcion}</p>}
+                {camposIA.has("descripcion") && !errores.descripcion && <MarcaIA />}
+              </label>
+
+              <div className="mov-edit__campos">
+                <label className={`mov-edit__campo ${claseIA("monto")}`}>
+                  Monto
+                  <input
+                    type="number"
+                    name="monto"
+                    value={form.monto}
+                    onChange={handleChange}
+                    min="0"
+                    step="0.01"
+                    required
+                  />
+                  {errores.monto && <p className="campo-error">{errores.monto}</p>}
+                  {camposIA.has("monto") && !errores.monto && <MarcaIA />}
+                </label>
+
+                <label className={`mov-edit__campo ${claseIA("fecha")}`}>
+                  Fecha
+                  <input
+                    type="date"
+                    name="fecha"
+                    value={form.fecha}
+                    onChange={handleChange}
+                    required
+                  />
+                  {errores.fecha && <p className="campo-error">{errores.fecha}</p>}
+                  {camposIA.has("fecha") && !errores.fecha && <MarcaIA />}
+                </label>
+              </div>
+
+              <label
+                className={`mov-edit__campo mov-edit__campo--corto ${claseIA("tipo_factura")}`}
+              >
+                Tipo de factura
+                <select
+                  name="tipo_factura"
+                  value={form.tipo_factura}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="" disabled>
+                    Selecciona un tipo de factura
                   </option>
-                ))}
-              </select>
-            </label>
+                  {TIPOS_FACTURA.map((tipo) => (
+                    <option key={tipo.value} value={tipo.value}>
+                      {tipo.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </SeccionForm>
           </div>
-        </>
+
+          <aside className="mov-edit__riel">
+            <TotalRiel
+              label={notas.length > 0 ? "Neto" : "Monto"}
+              monto={montoNeto}
+              color={TIPOS_MOVIMIENTO.cobro.color}
+            />
+
+            <BarraComposicion
+              segmentos={[
+                { label: "Bruto", monto: montoBruto, color: TIPOS_MOVIMIENTO.cobro.color },
+                {
+                  label: "Nota de crédito",
+                  monto: notasCredito,
+                  color: TIPOS_MOVIMIENTO.nota_credito.color,
+                  signo: -1,
+                },
+                {
+                  label: "Nota de débito",
+                  monto: notasDebito,
+                  color: TIPOS_MOVIMIENTO.nota_debito.color,
+                  signo: 1,
+                },
+              ]}
+            />
+
+            {notas.length > 0 && (
+              <div className="mov-edit__notas">
+                <SeccionNotas notas={notas} contexto="cobro" onVer={onVerNota} canManage={false} />
+              </div>
+            )}
+          </aside>
+        </div>
       )}
-    </ModalShell>
+    </EditarShell>
   );
 }
 

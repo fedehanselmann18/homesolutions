@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import "./ModalFase.css";
 import ModalShell from "./ModalShell";
 
 const ESTADOS_OPCIONES = [

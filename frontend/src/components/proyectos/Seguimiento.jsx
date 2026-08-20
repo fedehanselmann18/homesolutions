@@ -14,14 +14,21 @@ import {
   useProveedores,
 } from "../../hooks/queries";
 
+import { useAccionesProyecto } from "../../hooks/useAccionesProyecto";
+import useAuth from "../../context/useAuth";
+
 import { TarjetaAlerta } from "../shared/TarjetaAlerta";
 import { TarjetaKpi } from "../shared/TarjetaKpi";
 import { TarjetaMiniSeguimiento } from "../shared/TarjetaMiniSeguimiento";
 import { EstadoVacio } from "../shared/EstadoVacio";
+import { EstadoError } from "../shared/EstadoError";
 import { Cargando } from "../shared/Cargando";
 import { ModalDetalleCompra } from "../modals/ModalDetalleCompra";
 import { ModalDetalleGasto } from "../modals/ModalDetalleGasto";
 import { ModalDetalleCobro } from "../modals/ModalDetalleCobro";
+import ModalCompra from "../modals/ModalCompra";
+import ModalGasto from "../modals/ModalGasto";
+import ModalCobro from "../modals/ModalCobro";
 import { calcularSeguimiento, DIAS_FASE_ESTANCADA } from "../../utils/seguimiento";
 import { formatMoneda, formatFecha } from "../../utils/formato";
 import { getCondicionPagoLabel } from "../../constants/estadoCompra";
@@ -47,10 +54,6 @@ function Seccion({ titulo, descripcion, cantidad, children }) {
   );
 }
 
-function ListaVacia({ mensaje }) {
-  return <p className="seguimiento-vacio">{mensaje}</p>;
-}
-
 function AlertaColumna({ children }) {
   return <p className="seguimiento-alerta-columna">{children}</p>;
 }
@@ -63,7 +66,21 @@ function badgesCompra(compra) {
 }
 
 export function Seguimiento({ proyectoId, onIrATab }) {
-  const [detalle, setDetalle] = useState(null); // { tipo: "compra" | "gasto" | "cobro", entidad }
+  // Se guarda el id y no la entidad: desde acá se puede togglear pago/envío y
+  // subir comprobantes, y eso recarga las queries -- una copia congelada del
+  // objeto seguiría mostrando el estado viejo dentro del modal abierto.
+  const [detalle, setDetalle] = useState(null); // { tipo: "compra" | "gasto" | "cobro", id }
+  const [editando, setEditando] = useState(null); // { tipo, entidad } | null
+
+  const { usuario } = useAuth();
+  const canManage = usuario?.rol === "admin";
+
+  // Seguimiento es la pantalla de "lo que falta": compras sin pagar, sin
+  // entregar y movimientos sin comprobante. Poder resolverlo desde la misma
+  // ficha evita el rodeo de ir a Acciones a buscar el mismo movimiento.
+  // Reusa el hook de Acciones -- comparten las query keys, así que React
+  // Query dedupea y una mutación acá refresca las dos pestañas.
+  const acciones = useAccionesProyecto(proyectoId);
 
   const proyectoQuery = useProyecto(proyectoId);
   const fasesQuery = useFasesPorProyecto(proyectoId);
@@ -117,7 +134,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
 
   if (cargando) return <Cargando texto="Cargando seguimiento..." />;
   if (error || !seguimiento) {
-    return <p className="seguimiento-vacio">No se pudieron cargar los datos del seguimiento.</p>;
+    return <EstadoError mensaje="No se pudieron cargar los datos del seguimiento." grande />;
   }
 
   const {
@@ -139,22 +156,42 @@ export function Seguimiento({ proyectoId, onIrATab }) {
   const nombreProveedor = (proveedorId) =>
     datos.proveedores.find((p) => p.id === proveedorId)?.nombre;
 
-  const abrirDetalleCompra = (compraId) => {
-    const compra = datos.compras.find((c) => c.id === compraId);
-    if (compra) setDetalle({ tipo: "compra", entidad: compra });
-  };
-
-  const abrirDetalleGasto = (gastoId) => {
-    const gasto = datos.gastos.find((g) => g.id === gastoId);
-    if (gasto) setDetalle({ tipo: "gasto", entidad: gasto });
-  };
-
-  const abrirDetalleCobro = (cobroId) => {
-    const cobro = datos.cobros.find((c) => c.id === cobroId);
-    if (cobro) setDetalle({ tipo: "cobro", entidad: cobro });
-  };
+  const abrirDetalleCompra = (compraId) => setDetalle({ tipo: "compra", id: compraId });
+  const abrirDetalleGasto = (gastoId) => setDetalle({ tipo: "gasto", id: gastoId });
+  const abrirDetalleCobro = (cobroId) => setDetalle({ tipo: "cobro", id: cobroId });
 
   const cerrarDetalle = () => setDetalle(null);
+
+  // La entidad se re-lee de la colección en cada render, así el modal
+  // muestra el estado de después de togglear o subir un comprobante.
+  const coleccionPorTipo = {
+    compra: datos.compras,
+    gasto: datos.gastos,
+    cobro: datos.cobros,
+  };
+  const entidadDetalle = detalle
+    ? coleccionPorTipo[detalle.tipo].find((e) => e.id === detalle.id)
+    : null;
+
+  // Editar cierra la ficha y abre el modal de edición del mismo movimiento.
+  const abrirEdicion = (tipo, entidad) => {
+    cerrarDetalle();
+    setEditando({ tipo, entidad });
+  };
+  const cerrarEdicion = () => setEditando(null);
+
+  const guardarEdicion = async (datosForm, comprobantesCambios) => {
+    const { tipo, entidad } = editando;
+    try {
+      if (tipo === "compra") await acciones.guardarCompra(entidad, datosForm, comprobantesCambios);
+      else if (tipo === "gasto")
+        await acciones.guardarGasto(entidad, datosForm, comprobantesCambios);
+      else await acciones.guardarCobro(entidad, datosForm, comprobantesCambios);
+      cerrarEdicion();
+    } catch {
+      // el hook ya mostró el toast de error
+    }
+  };
 
   return (
     <div className="seguimiento">
@@ -352,7 +389,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
         cantidad={fasesEstancadas.length}
       >
         {fasesEstancadas.length === 0 ? (
-          <ListaVacia mensaje="Ninguna fase quedó frenada." />
+          <EstadoVacio mensaje="Ninguna fase quedó frenada." />
         ) : (
           <div className="seguimiento-lista">
             {fasesEstancadas.map((fase) => (
@@ -402,33 +439,101 @@ export function Seguimiento({ proyectoId, onIrATab }) {
         </Seccion>
       )}
 
-      {detalle?.tipo === "compra" && (
+      {entidadDetalle && detalle.tipo === "compra" && (
         <ModalDetalleCompra
-          compra={detalle.entidad}
-          faseNombre={nombreFase(detalle.entidad.fase_id)}
-          proveedorNombre={nombreProveedor(detalle.entidad.proveedor_id)}
+          compra={entidadDetalle}
+          faseNombre={nombreFase(entidadDetalle.fase_id)}
+          proveedorNombre={nombreProveedor(entidadDetalle.proveedor_id)}
           productos={datos.productos}
           onCerrar={cerrarDetalle}
-          onVerComprobante={(c) => getComprobanteCompra(detalle.entidad.id, c.id)}
-          onVerNota={(n) => getNotaCompra(detalle.entidad.id, n.id)}
+          onVerComprobante={(c) => getComprobanteCompra(entidadDetalle.id, c.id)}
+          onVerNota={(n) => getNotaCompra(entidadDetalle.id, n.id)}
+          onAgregarComprobante={
+            canManage
+              ? (files) => acciones.agregarComprobantesCompra(entidadDetalle.id, files)
+              : undefined
+          }
+          onEliminarComprobante={
+            canManage
+              ? (id) => acciones.eliminarComprobanteCompra(entidadDetalle.id, id)
+              : undefined
+          }
+          onTogglePago={() => acciones.toggleEstadoPagoCompra(entidadDetalle)}
+          onToggleEnvio={() => acciones.toggleEstadoEnvioCompra(entidadDetalle)}
+          onEditar={() => abrirEdicion("compra", entidadDetalle)}
+          canManage={canManage}
         />
       )}
 
-      {detalle?.tipo === "gasto" && (
+      {entidadDetalle && detalle.tipo === "gasto" && (
         <ModalDetalleGasto
-          gasto={detalle.entidad}
-          faseNombre={detalle.entidad.fase_id ? nombreFase(detalle.entidad.fase_id) : null}
+          gasto={entidadDetalle}
+          faseNombre={entidadDetalle.fase_id ? nombreFase(entidadDetalle.fase_id) : null}
           onCerrar={cerrarDetalle}
-          onVerComprobante={(c) => getComprobanteGasto(detalle.entidad.id, c.id)}
+          onVerComprobante={(c) => getComprobanteGasto(entidadDetalle.id, c.id)}
+          onAgregarComprobante={
+            canManage
+              ? (files) => acciones.agregarComprobantesGasto(entidadDetalle.id, files)
+              : undefined
+          }
+          onEliminarComprobante={
+            canManage ? (id) => acciones.eliminarComprobanteGasto(entidadDetalle.id, id) : undefined
+          }
+          onEditar={canManage ? () => abrirEdicion("gasto", entidadDetalle) : undefined}
         />
       )}
 
-      {detalle?.tipo === "cobro" && (
+      {entidadDetalle && detalle.tipo === "cobro" && (
         <ModalDetalleCobro
-          cobro={detalle.entidad}
+          cobro={entidadDetalle}
           onCerrar={cerrarDetalle}
-          onVerComprobante={(c) => getComprobanteCobro(detalle.entidad.id, c.id)}
-          onVerNota={(n) => getNotaCobro(detalle.entidad.id, n.id)}
+          onVerComprobante={(c) => getComprobanteCobro(entidadDetalle.id, c.id)}
+          onVerNota={(n) => getNotaCobro(entidadDetalle.id, n.id)}
+          onAgregarComprobante={
+            canManage
+              ? (files) => acciones.agregarComprobantesCobro(entidadDetalle.id, files)
+              : undefined
+          }
+          onEliminarComprobante={
+            canManage ? (id) => acciones.eliminarComprobanteCobro(entidadDetalle.id, id) : undefined
+          }
+          onEditar={() => abrirEdicion("cobro", entidadDetalle)}
+          canManage={canManage}
+        />
+      )}
+
+      {editando?.tipo === "compra" && (
+        <ModalCompra
+          compra={editando.entidad}
+          fasesDisponibles={datos.fases}
+          proveedores={datos.proveedores}
+          productosDisponibles={datos.productos}
+          impuestosDisponibles={acciones.impuestos}
+          onGuardar={guardarEdicion}
+          onCerrar={cerrarEdicion}
+          onVerComprobante={(c) => getComprobanteCompra(editando.entidad.id, c.id)}
+          onVerNota={(n) => getNotaCompra(editando.entidad.id, n.id)}
+        />
+      )}
+
+      {editando?.tipo === "gasto" && (
+        <ModalGasto
+          gasto={editando.entidad}
+          categoriasDisponibles={acciones.categoriasGasto}
+          fasesDisponibles={datos.fases}
+          onGuardar={guardarEdicion}
+          onCerrar={cerrarEdicion}
+          onVerComprobante={(c) => getComprobanteGasto(editando.entidad.id, c.id)}
+        />
+      )}
+
+      {editando?.tipo === "cobro" && (
+        <ModalCobro
+          cobro={editando.entidad}
+          onGuardar={guardarEdicion}
+          onCerrar={cerrarEdicion}
+          onVerComprobante={(c) => getComprobanteCobro(editando.entidad.id, c.id)}
+          onVerNota={(n) => getNotaCobro(editando.entidad.id, n.id)}
         />
       )}
     </div>

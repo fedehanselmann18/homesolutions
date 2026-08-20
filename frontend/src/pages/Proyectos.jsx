@@ -13,6 +13,9 @@ import { Cargando } from "../components/shared/Cargando";
 import { useToast } from "../context/useToast";
 import { usePageTitle } from "../hooks/usePageTitle";
 import "./Proyectos.css";
+import { FiltrosSegmentados } from "../components/shared/FiltrosSegmentados";
+import { EstadoVacio } from "../components/shared/EstadoVacio";
+import { EstadoError } from "../components/shared/EstadoError";
 
 // Orden fijo pedido: en curso primero, después a iniciar, después terminados.
 const ORDEN_SECCIONES = ["en_curso", "a_iniciar", "terminado"];
@@ -69,7 +72,8 @@ export function Proyectos() {
     gastosQuery.isLoading ||
     cobrosQuery.isLoading ||
     comprasQuery.isLoading;
-  const errorCarga = error || fasesQuery.error || gastosQuery.error || cobrosQuery.error || comprasQuery.error;
+  const errorCarga =
+    error || fasesQuery.error || gastosQuery.error || cobrosQuery.error || comprasQuery.error;
 
   const panel = useMemo(() => {
     if (cargando || errorCarga) return null;
@@ -80,14 +84,22 @@ export function Proyectos() {
       cobros: cobrosQuery.data,
       compras: comprasQuery.data,
     });
-  }, [cargando, errorCarga, proyectos, fasesQuery.data, gastosQuery.data, cobrosQuery.data, comprasQuery.data]);
+  }, [
+    cargando,
+    errorCarga,
+    proyectos,
+    fasesQuery.data,
+    gastosQuery.data,
+    cobrosQuery.data,
+    comprasQuery.data,
+  ]);
 
   if (cargando) {
     return <Cargando texto="Cargando proyectos..." />;
   }
 
   if (errorCarga) {
-    return <p className="proyectos-feedback">Error al cargar los proyectos.</p>;
+    return <EstadoError mensaje="Error al cargar los proyectos." grande />;
   }
 
   const proyectosResumen = panel.proyectosResumen;
@@ -200,28 +212,17 @@ export function Proyectos() {
       />
 
       {proyectos.length === 0 ? (
-        <p className="proyectos-feedback">No hay proyectos todavía. ¡Creá el primero!</p>
+        <EstadoVacio mensaje="No hay proyectos todavía. ¡Creá el primero!" grande />
       ) : (
         <>
           <div className="proyectos-toolbar">
-            <div className="panel-filtro-estado" role="tablist" aria-label="Filtrar proyectos por estado">
-              {FILTROS.map((f) => (
-                <button
-                  key={f.key}
-                  type="button"
-                  role="tab"
-                  aria-selected={f.key === filtroEstado}
-                  className={
-                    f.key === filtroEstado
-                      ? "panel-filtro-estado-btn panel-filtro-estado-btn--activo"
-                      : "panel-filtro-estado-btn"
-                  }
-                  onClick={() => setFiltroEstado(f.key)}
-                >
-                  {f.label} <span className="panel-filtro-estado-contador">{contadores[f.key]}</span>
-                </button>
-              ))}
-            </div>
+            <FiltrosSegmentados
+              opciones={FILTROS}
+              activa={filtroEstado}
+              contadores={contadores}
+              etiqueta="Filtrar proyectos por estado"
+              onCambiar={setFiltroEstado}
+            />
 
             <label className="proyectos-orden">
               <span className="label-ficha">Ordenar por</span>
@@ -234,7 +235,7 @@ export function Proyectos() {
           </div>
 
           {proyectosVisibles.length === 0 ? (
-            <p className="proyectos-feedback">No se encontraron proyectos con ese criterio.</p>
+            <EstadoVacio mensaje="No se encontraron proyectos con ese criterio." />
           ) : filtroEstado === "todos" ? (
             <div className="panel-tabla panel-tabla--acciones">
               <div className="panel-tabla-header">

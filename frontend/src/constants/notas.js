@@ -8,10 +8,6 @@ export const TIPOS_NOTA = [
   { value: "nota_debito", label: "Nota de débito" },
 ];
 
-export function getTipoNotaLabel(value) {
-  return TIPOS_NOTA.find((t) => t.value === value)?.label ?? value;
-}
-
 // Origen: por qué existe la nota. Distinto según sea del lado Compra
 // (proveedor) o Cobro (cliente/proyecto) -- Compra puede ser por devolución
 // de un producto puntual; Cobro no tiene líneas de producto, así que su

@@ -1,7 +1,7 @@
 // constants/estados.js
 import { Clock, CirclePlay, CircleCheckBig, Search } from "lucide-react";
 
-export const ESTADOS = {
+const ESTADOS = {
   a_iniciar: { color: "#6b7280", label: "A iniciar", icono: Clock },
   en_curso: { color: "#d97706", label: "En curso", icono: CirclePlay },
   terminado: { color: "#16a34a", label: "Terminado", icono: CircleCheckBig },

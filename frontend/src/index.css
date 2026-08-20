@@ -62,13 +62,27 @@
   --font-display: "Public Sans", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-ui: "Public Sans", -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* escala tipográfica — reemplaza los font-size sueltos (0.68rem, 0.74rem,
-     0.82rem, 1.02rem, etc.) que fueron apareciendo componente a componente.
-     --text-xs cubre los meta-textos/chips más chicos; --text-3xl, los
-     números grandes de KPI. */
+  /* escala tipográfica — única fuente de verdad para el tamaño de texto.
+     Reemplaza los font-size sueltos (0.62, 0.66, 0.68, 0.74, 0.78, 0.85,
+     0.88, 0.92, 1.02, 1.1, 1.4, 1.5rem...) que fueron apareciendo componente
+     a componente: había ~230 declaraciones literales contra 92 usos de token,
+     y varias eran el token escrito a mano.
+
+     Roles, de chico a grande:
+     - --text-2xs  headers de tabla dentro de un modal, badges muy chicos
+     - --text-xs   labels de ficha en mayúsculas, chips, meta-texto
+     - --text-sm   texto secundario, botones chicos, filtros
+     - --text-base texto de UI por defecto
+     - --text-md   inputs y valores de formulario
+     - --text-lg   títulos de sección
+     - --text-xl   títulos de modal
+     - --text-2xl  título de una página de detalle (proyecto, fase, proveedor)
+     - --text-3xl  título de una página de listado y números grandes de KPI */
+  --text-2xs: 0.66rem;
   --text-xs: 0.72rem;
   --text-sm: 0.82rem;
   --text-base: 0.9rem;
+  --text-md: 0.95rem;
   --text-lg: 1.05rem;
   --text-xl: 1.25rem;
   --text-2xl: 1.6rem;
@@ -101,8 +115,8 @@
      fuera de él. Ej.: `.proyecto-card__nombre`, `.proyecto-header__top`
      (ver ProyectoCard.jsx, ProyectoDetalleHeader.jsx).
    - Modificador (bloque--modificador o bloque__elemento--modificador): una
-     variante del bloque o elemento. Ej.: `.modal-contenido--ancho` (modal más
-     ancho para formularios con más campos).
+     variante del bloque o elemento. Ej.: `.mov-edit--riel` (el modal de
+     edición en su versión con riel de resumen, más ancha).
 
    No es estricto: hay clases utilitarias sin bloque (`.btn`, `.badge`,
    `.campo-error` acá mismo) que son intencionalmente globales, no parte de
@@ -253,20 +267,60 @@ textarea:focus-visible,
 }
 
 /* Badge / etiqueta de estado — único lugar de la app con radio grande a
-   propósito (ver DESIGN.md §7). El color se define inline por componente
-   según la semántica (estado, tipo, etc.), esta clase solo da la forma. */
+   propósito (ver DESIGN.md §7). Esta clase da la FORMA; el color lo pone
+   quien la usa: inline con el color del tipo (ver constants/tipoMovimiento)
+   o con uno de los modificadores semánticos de abajo.
+
+   Antes había doce reimplementaciones de esta misma pastilla repartidas por
+   la app (`.proveedor-detalle-badge` era un clon exacto, `.comparador-chip` y
+   `.proveedor-detalle-chip` eran idénticas entre sí, `.manager-chip` escribía
+   `border-radius: 999px` a mano teniendo el token) con nueve tamaños de letra
+   distintos -- mientras esta clase no la usaba nadie.
+
+   Los chips INTERACTIVOS no entran acá: `.chips-cat-chip` (toggle de
+   categoría), `.detalle__chip` y `.comprobantes-chip` (archivo clickeable)
+   son controles, no etiquetas, y tienen hover/foco propios. */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   padding: 3px 10px;
   border-radius: var(--radius-pill);
   border: 1px solid transparent;
   font-family: var(--font-ui);
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.02em;
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Variante chica: dentro de una tarjeta densa o de una fila de formulario. */
+.badge--sm {
+  gap: 4px;
+  padding: 1px 7px;
+  font-size: var(--text-2xs);
+}
+
+/* Colores semánticos, para cuando el badge no lleva el color de un tipo. */
+.badge--neutro {
+  background-color: var(--color-base-2);
+  color: var(--color-tinta-muted);
+}
+
+.badge--marca {
+  background-color: var(--color-terracota-tint);
+  color: var(--color-terracota-dark);
+}
+
+.badge--exito {
+  background-color: var(--color-musgo-tint);
+  color: var(--color-musgo-dark);
+}
+
+.badge--peligro {
+  background-color: var(--color-oxido-tint);
+  color: var(--color-oxido);
 }
 
 /* Etiqueta tipo "ficha" para labels de formulario y meta-texto — mayúsculas

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import "./ModalProveedor.css";
 import ModalShell from "./ModalShell";
 
 export function ModalProveedor({ proveedor, onGuardar, onCerrar }) {

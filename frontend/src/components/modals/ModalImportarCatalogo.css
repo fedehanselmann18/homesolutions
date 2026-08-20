@@ -210,16 +210,6 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
-.catalogo-badge {
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 3px 9px;
-  border-radius: var(--radius-pill);
-}
-
 .catalogo-badge--nuevo {
   color: var(--color-musgo-dark);
   background-color: var(--color-musgo-tint);

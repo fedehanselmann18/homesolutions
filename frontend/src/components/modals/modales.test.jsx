@@ -225,6 +225,52 @@ describe("smoke de modales", () => {
     expect(screen.queryAllByRole("switch")).toHaveLength(0);
   });
 
+  // Los tres modales de edición comparten el lenguaje de la ficha de detalle
+  // (EditarShell): header oscuro con el tipo del movimiento y, en los que
+  // tienen un total derivado, el riel con el resumen.
+
+  it("los modales de edición usan el header con el tipo de movimiento", () => {
+    const { unmount: u1 } = render(<ModalGasto gasto={gasto} onGuardar={noop} onCerrar={noop} />);
+    expect(screen.getByText(/Gasto · Editar/)).toBeInTheDocument();
+    u1();
+
+    const { unmount: u2 } = render(<ModalCobro cobro={cobro} onGuardar={noop} onCerrar={noop} />);
+    expect(screen.getByText(/Cobro · Editar/)).toBeInTheDocument();
+    u2();
+
+    render(<ModalCompra compra={compra} onGuardar={noop} onCerrar={noop} />);
+    expect(screen.getByText(/Compra · Editar/)).toBeInTheDocument();
+  });
+
+  it("ModalGasto no lleva riel: su monto se tipea, va al footer", () => {
+    const { container } = render(<ModalGasto gasto={gasto} onGuardar={noop} onCerrar={noop} />);
+
+    expect(container.querySelector(".mov-edit__riel")).toBeNull();
+    expect(container.querySelector(".mov-edit__footer-total-monto")).toHaveTextContent("$ 84.500");
+  });
+
+  it("ModalCobro muestra en el riel el neto y las notas que lo explican", () => {
+    // El cobro de la fixture es 3.200.000 bruto con una nota de crédito de
+    // 150.000 -> neto 3.050.000.
+    const { container } = render(<ModalCobro cobro={cobro} onGuardar={noop} onCerrar={noop} />);
+
+    const riel = container.querySelector(".mov-edit__riel");
+    expect(riel).toBeTruthy();
+    expect(riel).toHaveTextContent("Neto");
+    expect(riel).toHaveTextContent("$ 3.050.000");
+    // La nota va desplegada, sin toggle, igual que en Compra.
+    expect(riel).toHaveTextContent("Ajuste");
+    expect(container.querySelector(".seccion-notas-item-toggle")).toBeNull();
+  });
+
+  it("un cobro sin notas no muestra la sección de notas en el riel", () => {
+    const sinNotas = { ...cobro, notas: [] };
+    const { container } = render(<ModalCobro cobro={sinNotas} onGuardar={noop} onCerrar={noop} />);
+
+    expect(container.querySelector(".mov-edit__notas")).toBeNull();
+    expect(container.querySelector(".mov-edit__riel")).toHaveTextContent("$ 3.200.000");
+  });
+
   it("ModalCompra nuevo arranca en el paso del comprobante", () => {
     render(<ModalCompra onGuardar={noop} onCerrar={noop} />);
     expect(screen.getByText(/arrastrá la factura o el remito/i)).toBeInTheDocument();

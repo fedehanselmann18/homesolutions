@@ -17,17 +17,12 @@ import { TarjetaKpi } from "../components/shared/TarjetaKpi";
 import { TablaProyectos } from "../components/proyectos/TablaProyectos";
 import { calcularPanel } from "../utils/panel";
 import { formatMoneda, formatMonedaCorta, formatFecha } from "../utils/formato";
-import { VERDE, ROJO, NARANJA, AZUL } from "../constants/colores";
+import { VERDE, ROJO, NARANJA } from "../constants/colores";
+import { getTipoMovimiento, signoTexto, TINTE_PASTILLA } from "../constants/tipoMovimiento";
+import { FiltrosSegmentados } from "../components/shared/FiltrosSegmentados";
+import { EstadoVacio } from "../components/shared/EstadoVacio";
+import { EstadoError } from "../components/shared/EstadoError";
 import "./Dashboard.css";
-
-const TIPOS_MOVIMIENTO = {
-  cobro: { label: "Cobro", color: VERDE, signo: "+" },
-  gasto: { label: "Gasto", color: NARANJA, signo: "−" },
-  compra: { label: "Compra", color: AZUL, signo: "−" },
-  // Nota de crédito resta (a favor nuestro/del cliente), nota de débito suma.
-  nota_credito: { label: "Nota de crédito", color: "#dc2626", signo: "−" },
-  nota_debito: { label: "Nota de débito", color: NARANJA, signo: "+" },
-};
 
 // Filtro de estado de la tabla "Proyectos en curso" (dirección 1a) -- client
 // side, sobre los datos que ya trajo el Panel (sin pedir nada nuevo al
@@ -183,13 +178,17 @@ export function Dashboard() {
 
   if (cargando) return <DashboardSkeleton />;
   if (error || !panel)
-    return <p className="panel-vacio">No se pudieron cargar los datos del panel.</p>;
+    return <EstadoError mensaje="No se pudieron cargar los datos del panel." grande />;
 
   const { kpis, proyectosResumen, actividad, evolucion } = panel;
   const totalProyectos = kpis.enCurso + kpis.terminados + kpis.aIniciar;
 
   const filtro = FILTROS_PROYECTO.find((f) => f.key === filtroEstado);
-  const contadorPorFiltro = { en_curso: kpis.enCurso, a_iniciar: kpis.aIniciar, terminado: kpis.terminados };
+  const contadorPorFiltro = {
+    en_curso: kpis.enCurso,
+    a_iniciar: kpis.aIniciar,
+    terminado: kpis.terminados,
+  };
   const proyectosFiltrados = proyectosResumen.filter((p) => p.estado === filtroEstado);
 
   // Detalle del KPI "Requiere acción": junta los 3 subtotales que vengan en
@@ -211,9 +210,7 @@ export function Dashboard() {
     return (
       <div className="panel">
         <h1 className="panel-titulo">Panel</h1>
-        <p className="panel-vacio">
-          Todavía no hay proyectos cargados. Creá el primero desde la sección Proyectos.
-        </p>
+        <EstadoVacio mensaje="Todavía no hay proyectos cargados. Creá el primero desde la sección Proyectos." grande />
       </div>
     );
   }
@@ -271,28 +268,17 @@ export function Dashboard() {
         titulo={filtro.titulo}
         descripcion="Tocá una fila para ir al detalle del proyecto"
         accion={
-          <div className="panel-filtro-estado" role="tablist" aria-label="Filtrar proyectos por estado">
-            {FILTROS_PROYECTO.map((f) => (
-              <button
-                key={f.key}
-                type="button"
-                role="tab"
-                aria-selected={f.key === filtroEstado}
-                className={
-                  f.key === filtroEstado
-                    ? "panel-filtro-estado-btn panel-filtro-estado-btn--activo"
-                    : "panel-filtro-estado-btn"
-                }
-                onClick={() => setFiltroEstado(f.key)}
-              >
-                {f.label} <span className="panel-filtro-estado-contador">{contadorPorFiltro[f.key]}</span>
-              </button>
-            ))}
-          </div>
+          <FiltrosSegmentados
+            opciones={FILTROS_PROYECTO}
+            activa={filtroEstado}
+            contadores={contadorPorFiltro}
+            etiqueta="Filtrar proyectos por estado"
+            onCambiar={setFiltroEstado}
+          />
         }
       >
         {proyectosFiltrados.length === 0 ? (
-          <p className="panel-vacio">{filtro.vacio}</p>
+          <EstadoVacio mensaje={filtro.vacio} />
         ) : (
           <TablaProyectos
             proyectos={proyectosFiltrados}
@@ -305,10 +291,10 @@ export function Dashboard() {
         <Seccion titulo="Cobrado vs. gastado" descripcion="Últimos 6 meses, todos los proyectos">
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={evolucion} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eee" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-linea)" />
               <XAxis dataKey="label" tick={{ fontSize: 12 }} />
               <YAxis tickFormatter={formatMonedaCorta} tick={{ fontSize: 12 }} width={80} />
-              <Tooltip content={<TooltipEvolucion />} cursor={{ fill: "#f4f4f5" }} />
+              <Tooltip content={<TooltipEvolucion />} cursor={{ fill: "var(--color-base-2)" }} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar
                 dataKey="cobrado"
@@ -330,18 +316,21 @@ export function Dashboard() {
 
         <Seccion titulo="Actividad reciente" descripcion="Últimos movimientos cargados">
           {actividad.length === 0 ? (
-            <p className="panel-vacio">Todavía no hay movimientos cargados.</p>
+            <EstadoVacio mensaje="Todavía no hay movimientos cargados." />
           ) : (
             <ul className="panel-actividad">
               {actividad.map((mov) => {
-                const tipo = TIPOS_MOVIMIENTO[mov.tipo];
+                const tipo = getTipoMovimiento(mov.tipo);
                 return (
                   <li key={`${mov.tipo}-${mov.id}`} className="panel-actividad-item">
                     <span
                       className="panel-actividad-tipo"
-                      style={{ color: tipo.color, backgroundColor: `${tipo.color}1c` }}
+                      style={{
+                        color: tipo.color,
+                        backgroundColor: `${tipo.color}${TINTE_PASTILLA}`,
+                      }}
                     >
-                      {tipo.label}
+                      {tipo.singular}
                     </span>
                     <span className="panel-actividad-texto">
                       <span className="panel-actividad-descripcion">{mov.descripcion}</span>
@@ -350,7 +339,7 @@ export function Dashboard() {
                       </span>
                     </span>
                     <span className="panel-actividad-monto" style={{ color: tipo.color }}>
-                      {tipo.signo} {formatMoneda(mov.monto)}
+                      {signoTexto(tipo.signo)} {formatMoneda(mov.monto)}
                     </span>
                   </li>
                 );

@@ -215,6 +215,31 @@ export function useFaseDetalle(faseId) {
     invalidar("compras");
   };
 
+  // --- Comprobantes ---
+  // Se pueden sumar/quitar desde la ficha de detalle sin abrir el modal de
+  // edición: en Seguimiento el caso típico es "esta compra no tiene
+  // comprobante", y obligar a pasar por el formulario entero para adjuntar
+  // un PDF era el rodeo que hacía que no se cargaran.
+  const agregarComprobantesCompra = async (compraId, files) => {
+    await Promise.all(Array.from(files).map((archivo) => subirComprobanteCompra(compraId, archivo)));
+    invalidar("compras");
+  };
+
+  const eliminarComprobanteCompraAccion = async (compraId, comprobanteId) => {
+    await eliminarComprobanteCompra(compraId, comprobanteId);
+    invalidar("compras");
+  };
+
+  const agregarComprobantesGasto = async (gastoId, files) => {
+    await Promise.all(Array.from(files).map((archivo) => subirComprobanteGasto(gastoId, archivo)));
+    invalidar("gastos");
+  };
+
+  const eliminarComprobanteGastoAccion = async (gastoId, comprobanteId) => {
+    await eliminarComprobanteGasto(gastoId, comprobanteId);
+    invalidar("gastos");
+  };
+
   return {
     fase,
     proyecto,
@@ -238,6 +263,10 @@ export function useFaseDetalle(faseId) {
     eliminarCompra: eliminarCompraAccion,
     toggleEstadoPagoCompra,
     toggleEstadoEnvioCompra,
+    agregarComprobantesCompra,
+    eliminarComprobanteCompra: eliminarComprobanteCompraAccion,
+    agregarComprobantesGasto,
+    eliminarComprobanteGasto: eliminarComprobanteGastoAccion,
     guardarNota,
   };
 }

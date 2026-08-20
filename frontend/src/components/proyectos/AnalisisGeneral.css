@@ -125,12 +125,6 @@
   margin: 0 0 var(--space-4);
 }
 
-.analisis-vacio {
-  font-size: 0.88rem;
-  color: var(--color-tinta-muted);
-  margin: 8px 0;
-}
-
 /* --- Tooltip de los gráficos --- */
 
 .analisis-tooltip {

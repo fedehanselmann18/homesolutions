@@ -1,9 +1,26 @@
-/* ModalCompra.css */
+/* ===========================================================================
+   Base compartida de TODOS los modales — overlay, caja, formulario, secciones
+   y filas dinámicas.
+
+   Antes esto vivía repetido en ocho archivos (ModalCompra/Cobro/Gasto/Fase/
+   Nota/Producto/Proveedor/Proyecto.css) con valores que no coincidían entre
+   sí: `.modal-contenido` con padding --space-6 en siete y --space-8 en uno,
+   `.modal-contenido--ancho` en 620 / 640 / 660, `.modal-form input` con y sin
+   `width: 100%`. Como son todos selectores globales con la misma
+   especificidad, cuál ganaba dependía del orden en que Vite armaba el bundle
+   — y como el CSS sale code-splitteado por ruta, del camino de navegación del
+   usuario. El mismo modal podía abrirse con 24px o 32px de padding según de
+   qué página venías.
+
+   Regla para no volver ahí: los selectores `.modal-*` genéricos se definen
+   SOLO en este archivo. Cada Modal*.css puede tener lo suyo propio, pero
+   siempre bajo una clase que le pertenezca.
+   =========================================================================== */
 
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(42, 36, 30, 0.55);
+  background-color: rgb(0 0 0 / 55%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -28,15 +45,12 @@
   box-sizing: border-box;
 }
 
-.modal-contenido--ancho {
-  max-width: 620px;
-}
-
 @keyframes modal-in {
   from {
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -46,10 +60,12 @@
 .modal-contenido h2 {
   margin: 0 0 var(--space-6);
   font-family: var(--font-display);
-  font-size: 1.4rem;
+  font-size: var(--text-xl);
   font-weight: 600;
   color: var(--color-tinta);
 }
+
+/* --- formulario --- */
 
 .modal-form {
   display: flex;
@@ -73,7 +89,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -82,10 +98,11 @@
 }
 
 .modal-form input,
-.modal-form select {
+.modal-form select,
+.modal-form textarea {
   width: 100%;
   font-family: var(--font-ui);
-  font-size: 0.95rem;
+  font-size: var(--text-md);
   font-weight: 400;
   text-transform: none;
   letter-spacing: normal;
@@ -98,6 +115,16 @@
   transition: border-color 0.15s ease;
 }
 
+.modal-form textarea {
+  resize: vertical;
+  min-height: 4.5rem;
+}
+
+.modal-form input[type="file"] {
+  padding: 7px 10px;
+  font-size: var(--text-base);
+}
+
 /* `:user-invalid` y no `:invalid`: sólo pinta de rojo después de que el
    usuario tocó el campo. Antes esto era `input:invalid:not(:placeholder-shown)`
    duplicado en ModalProyecto.css y ModalFase.css, pero como el guard depende
@@ -108,7 +135,8 @@
 }
 
 .modal-form input:focus,
-.modal-form select:focus {
+.modal-form select:focus,
+.modal-form textarea:focus {
   outline: none;
   border-color: var(--color-terracota);
   background-color: var(--color-superficie);
@@ -123,7 +151,7 @@
   padding-right: 2rem;
 }
 
-/* Secciones dinámicas: detalle de productos e impuestos */
+/* --- secciones (datos generales, comprobantes, detalle de productos) --- */
 
 .modal-form-seccion {
   display: flex;
@@ -140,16 +168,24 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--color-tinta-muted);
 }
 
+.modal-form-seccion-vacio {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+/* --- filas dinámicas (productos e impuestos de una nota) --- */
+
 .modal-btn-agregar-fila {
   font-family: var(--font-ui);
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   text-transform: none;
   letter-spacing: normal;
@@ -171,44 +207,22 @@
   cursor: not-allowed;
 }
 
-.modal-form-seccion--ia {
-  background-color: var(--color-terracota-tint);
-  border-color: var(--color-terracota);
-}
-
-.modal-btn-ia {
-  display: inline-flex;
+.modal-btn-quitar-fila {
+  display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  align-self: flex-start;
-  font-family: var(--font-ui);
-  font-size: 0.85rem;
-  font-weight: 700;
-  padding: 9px 18px;
-  margin-top: 4px;
-  border-radius: var(--radius-pill);
-  border: none;
-  background: linear-gradient(135deg, var(--color-terracota), var(--color-musgo));
-  color: var(--color-superficie);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-oxido-tint);
+  background-color: transparent;
+  color: var(--color-oxido);
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(111, 127, 69, 0.35);
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease,
-    opacity 0.15s ease;
+  transition: background-color 0.15s ease;
 }
 
-.modal-btn-ia:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(111, 127, 69, 0.45);
-}
-
-.modal-btn-ia:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
+.modal-btn-quitar-fila:hover {
+  background-color: var(--color-oxido-tint);
 }
 
 .modal-form-fila-dinamica {
@@ -228,6 +242,24 @@
   align-items: start;
 }
 
+.modal-form-fila-dinamica > * {
+  min-width: 0;
+}
+
+.modal-form-fila-dinamica input,
+.modal-form-fila-dinamica select {
+  margin: 0;
+}
+
+.modal-form-fila-dinamica--headers {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  color: var(--color-tinta-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 0 2px;
+}
+
 .modal-form-fila-dinamica-producto {
   display: flex;
   flex-direction: column;
@@ -240,34 +272,16 @@
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 0.66rem;
+  font-size: var(--text-2xs);
   font-weight: 600;
   padding: 2px 8px;
   border-radius: var(--radius-pill);
   white-space: nowrap;
 }
 
-.modal-form-fila-dinamica > * {
-  min-width: 0;
-}
-
-.modal-form-fila-dinamica input,
-.modal-form-fila-dinamica select {
-  margin: 0;
-}
-
-.modal-form-fila-dinamica--headers {
-  font-size: 0.68rem;
-  font-weight: 600;
-  color: var(--color-tinta-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  padding: 0 2px;
-}
-
 .modal-form-fila-dinamica-precio,
 .modal-form-fila-dinamica-subtotal {
-  font-size: 0.88rem;
+  font-size: var(--text-base);
   padding: 9px 10px;
   border-radius: var(--radius-sm);
   text-align: right;
@@ -290,59 +304,7 @@
   border: 1px solid var(--color-musgo);
 }
 
-.modal-btn-quitar-fila {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-oxido-tint);
-  background-color: transparent;
-  color: var(--color-oxido);
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.modal-btn-quitar-fila:hover {
-  background-color: var(--color-oxido-tint);
-}
-
-.modal-form-seccion-vacio {
-  margin: 0;
-  font-size: 0.82rem;
-  color: var(--color-tinta-muted);
-}
-
-/* Precio neto calculado (reemplaza el input manual) */
-
-.modal-form-calculado {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.modal-form-calculado-label {
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--color-tinta-muted);
-}
-
-.modal-form-calculado-valor {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--color-tinta);
-  padding: 9px 12px;
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-base-2);
-  font-variant-numeric: tabular-nums;
-}
-
-/* Resumen: neto + impuestos = total, se recalcula solo */
+/* --- resumen: neto + impuestos = total, se recalcula solo --- */
 
 .modal-form-resumen {
   display: flex;
@@ -357,61 +319,18 @@
 .modal-form-resumen-fila {
   display: flex;
   justify-content: space-between;
-  font-size: 0.88rem;
+  font-size: var(--text-base);
   color: var(--color-tinta-muted);
   font-variant-numeric: tabular-nums;
 }
 
 .modal-form-resumen-fila--total {
-  font-size: 1.02rem;
+  font-size: var(--text-lg);
   font-weight: 700;
   color: var(--color-tinta);
   border-top: 1px solid var(--color-linea);
   padding-top: 6px;
   margin-top: 2px;
-}
-
-/* Acciones */
-
-.modal-acciones {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 4px;
-}
-
-.modal-btn-cancelar,
-.modal-btn-guardar {
-  font-family: var(--font-ui);
-  font-size: 0.88rem;
-  font-weight: 600;
-  padding: 9px 18px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-linea);
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.modal-btn-cancelar {
-  background-color: transparent;
-  color: var(--color-tinta);
-}
-
-.modal-btn-cancelar:hover {
-  background-color: var(--color-base-2);
-}
-
-.modal-btn-guardar {
-  background-color: var(--color-terracota);
-  border-color: var(--color-terracota);
-  color: var(--color-superficie);
-}
-
-.modal-btn-guardar:hover {
-  background-color: var(--color-terracota-dark);
-  border-color: var(--color-terracota-dark);
 }
 
 @media (max-width: 600px) {
@@ -432,5 +351,11 @@
   .modal-form-fila-dinamica-precio,
   .modal-form-fila-dinamica-subtotal {
     text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-contenido {
+    padding: var(--space-6);
   }
 }

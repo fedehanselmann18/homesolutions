@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 
 import FiltrosLista from "../shared/FiltrosLista";
+import { FiltrosSegmentados } from "../shared/FiltrosSegmentados";
+import { EstadoVacio } from "../shared/EstadoVacio";
 import LibroDeObra from "../proyectos/LibroDeObra";
 import { FILTROS_VACIOS, filtrarCompras, filtrarGastos } from "../../utils/filtros";
 
@@ -45,7 +47,7 @@ export function AccionesFase({
   const gastosFiltrados = useMemo(() => filtrarGastos(gastos, filtros), [gastos, filtros]);
 
   if (compras.length === 0 && gastos.length === 0) {
-    return <p>No hay compras ni gastos registrados para esta fase.</p>;
+    return <EstadoVacio mensaje="No hay compras ni gastos registrados para esta fase." />;
   }
 
   const comprasVisibles = filtroTipo === "gastos" ? [] : comprasFiltradas;
@@ -59,22 +61,16 @@ export function AccionesFase({
 
   return (
     <div>
-      <div className="acciones-filtros-tipo">
-        {FILTROS_TIPO.map((f) => (
-          <button
-            key={f.key}
-            type="button"
-            className={`acciones-filtro-tipo${filtroTipo === f.key ? " acciones-filtro-tipo--activo" : ""}`}
-            onClick={() => {
-              setFiltroTipo(f.key);
-              if (f.key !== "compras") setFiltros(FILTROS_VACIOS);
-            }}
-          >
-            {f.label}
-            <span className="acciones-filtro-tipo-contador">{contadorPorFiltro[f.key]}</span>
-          </button>
-        ))}
-      </div>
+      <FiltrosSegmentados
+        opciones={FILTROS_TIPO}
+        activa={filtroTipo}
+        contadores={contadorPorFiltro}
+        etiqueta="Filtrar movimientos por tipo"
+        onCambiar={(key) => {
+          setFiltroTipo(key);
+          if (key !== "compras") setFiltros(FILTROS_VACIOS);
+        }}
+      />
 
       {filtroTipo === "compras" && (
         <FiltrosLista

@@ -6,11 +6,16 @@
    importes exactos (impuestos uno por uno, notas de crédito y débito) tienen
    que poder leerse sin abrir la compra para editarla. */
 
-.detalle {
+/* Doble clase para ganarle al `max-width: 440px` de `.modal-contenido`
+   (modal-base.css) sin depender del orden del bundle. Mismo ancho que
+   `.modal-contenido.mov-edit`: ver el movimiento y editarlo tienen que ser
+   la misma caja, no dos tamaños distintos. */
+.modal-contenido.detalle {
   padding: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  max-width: 620px;
   max-height: 88vh;
 }
 
@@ -436,28 +441,6 @@
   color: var(--color-tinta-muted);
 }
 
-.detalle__chip--nota-credito {
-  border-color: var(--color-oxido-tint);
-  background: var(--color-oxido-tint);
-  font-weight: 600;
-  color: var(--color-oxido);
-}
-
-.detalle__chip--nota-credito svg {
-  color: inherit;
-}
-
-.detalle__chip--nota-debito {
-  border-color: var(--color-arcilla-tint);
-  background: var(--color-arcilla-tint);
-  font-weight: 600;
-  color: var(--color-arcilla);
-}
-
-.detalle__chip--nota-debito svg {
-  color: inherit;
-}
-
 .detalle__chip--agregar {
   border-style: dashed;
   border-color: var(--color-gris-claro-marca);
@@ -503,6 +486,14 @@
   padding: var(--space-3) var(--space-4);
   border-top: 1px solid var(--color-linea);
   background: var(--color-superficie);
+}
+
+/* "Editar" cierra el circuito ver -> editar sin volver a la lista (mismo
+   ícono de lápiz que la fila del libro de obra, para que se reconozca). */
+.detalle__editar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 @media (max-width: 560px) {

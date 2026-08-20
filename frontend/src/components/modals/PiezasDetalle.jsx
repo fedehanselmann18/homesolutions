@@ -1,12 +1,13 @@
 import { useRef, useState } from "react";
-import { X, Plus } from "lucide-react";
+import { X, Plus, Pencil } from "lucide-react";
 
 import { formatMoneda } from "../../utils/formato";
 import { iconoParaArchivo, nombreDeArchivo } from "../../utils/archivos";
 import { obtenerMensajeError } from "../../utils/errorHandling";
 
-import "./ModalCompra.css";
+import "./modal-base.css";
 import "./ModalDetalle.css";
+import { TINTE_PASTILLA } from "../../constants/tipoMovimiento";
 
 /**
  * Piezas compartidas por los tres modales de detalle (Compra / Gasto / Cobro),
@@ -24,14 +25,15 @@ export function DetalleShell({
   total,
   totalColor,
   onCerrar,
+  // Opcional: pasar de "ver" a "editar" sin volver a la lista. Es una prop y
+  // no algo fijo del shell porque Gasto/Cobro todavía no tienen su modal de
+  // edición rediseñado -- sin el handler, el footer queda igual que antes.
+  onEditar,
   children,
 }) {
   return (
     <div className="modal-overlay" onClick={onCerrar}>
-      <div
-        className="modal-contenido modal-contenido--ancho detalle"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="modal-contenido detalle" onClick={(e) => e.stopPropagation()}>
         <div className="detalle__header">
           <span className="detalle__tipo">
             {Icono && <Icono size={13} strokeWidth={2.25} />}
@@ -70,6 +72,12 @@ export function DetalleShell({
           <button type="button" className="btn btn-secondary" onClick={onCerrar}>
             Cerrar
           </button>
+          {onEditar && (
+            <button type="button" className="btn btn-primary detalle__editar" onClick={onEditar}>
+              <Pencil size={14} strokeWidth={2} />
+              Editar
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -248,7 +256,7 @@ export function TileEstado({ label, estado, activo, onToggle, titulo }) {
     <div className={`detalle__estado${activo ? " detalle__estado--activo" : ""}`}>
       <span
         className="detalle__estado-icono"
-        style={{ background: `${estado.color}1f`, color: estado.color }}
+        style={{ background: `${estado.color}${TINTE_PASTILLA}`, color: estado.color }}
       >
         {Icono && <Icono size={15} strokeWidth={2.25} />}
       </span>

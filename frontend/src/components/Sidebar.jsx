@@ -1,7 +1,14 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Building2, Truck, GitCompare, UserCog, LogOut } from "lucide-react";
 import { useAuth } from "../context/useAuth";
-import { useProyectos, useProveedores, useFases, useGastos, useCobros, useCompras } from "../hooks/queries";
+import {
+  useProyectos,
+  useProveedores,
+  useFases,
+  useGastos,
+  useCobros,
+  useCompras,
+} from "../hooks/queries";
 import { calcularPanel } from "../utils/panel";
 import { RUTA_RESETEO, esManager } from "../constants/manager";
 import logo from "../assets/HS_logo_blanco.png";
@@ -50,7 +57,11 @@ function NavEquipo() {
   };
 
   const datosListos =
-    proyectosQuery.data && fasesQuery.data && gastosQuery.data && cobrosQuery.data && comprasQuery.data;
+    proyectosQuery.data &&
+    fasesQuery.data &&
+    gastosQuery.data &&
+    cobrosQuery.data &&
+    comprasQuery.data;
 
   const obrasEnCurso = datosListos
     ? calcularPanel({

@@ -9,8 +9,16 @@ import AnalisisGeneral from "../components/proyectos/AnalisisGeneral";
 import Seguimiento from "../components/proyectos/Seguimiento";
 import { Cargando } from "../components/shared/Cargando";
 import { EstadoError } from "../components/shared/EstadoError";
+import { Tabs } from "../components/shared/Tabs";
 import { obtenerMensajeError } from "../utils/errorHandling";
 import "./ProyectoDetalle.css";
+
+const TABS = [
+  { key: "fases", label: "Fases del proyecto" },
+  { key: "acciones", label: "Acciones" },
+  { key: "analisis", label: "Análisis General" },
+  { key: "seguimiento", label: "Seguimiento" },
+];
 
 function ProyectoDetalle() {
   const { id } = useParams();
@@ -38,32 +46,12 @@ function ProyectoDetalle() {
         breadcrumb={[{ label: "Proyectos", to: "/proyectos" }, { label: proyecto.nombre }]}
       />
 
-      <div className="tabs">
-        <button
-          className={tabActiva === "fases" ? "active" : ""}
-          onClick={() => setTabActiva("fases")}
-        >
-          Fases del proyecto
-        </button>
-        <button
-          className={tabActiva === "acciones" ? "active" : ""}
-          onClick={() => setTabActiva("acciones")}
-        >
-          Acciones
-        </button>
-        <button
-          className={tabActiva === "analisis" ? "active" : ""}
-          onClick={() => setTabActiva("analisis")}
-        >
-          Análisis General
-        </button>
-        <button
-          className={tabActiva === "seguimiento" ? "active" : ""}
-          onClick={() => setTabActiva("seguimiento")}
-        >
-          Seguimiento
-        </button>
-      </div>
+      <Tabs
+        tabs={TABS}
+        activa={tabActiva}
+        onCambiar={setTabActiva}
+        etiqueta="Secciones del proyecto"
+      />
 
       {tabActiva === "fases" && <Fases proyectoId={proyecto.id} />}
       {tabActiva === "acciones" && (

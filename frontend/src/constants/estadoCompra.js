@@ -1,16 +1,16 @@
 import { Clock, CircleCheckBig, Truck, PackageCheck } from "lucide-react";
 
-export const ESTADO_PAGO = {
+const ESTADO_PAGO = {
   pendiente: { color: "#d97706", label: "Pendiente", icono: Clock },
   pagado: { color: "#16a34a", label: "Pagado", icono: CircleCheckBig },
 };
 
-export const ESTADO_ENVIO = {
+const ESTADO_ENVIO = {
   pedido: { color: "#64748b", label: "Pedido", icono: Truck },
   entregado: { color: "#16a34a", label: "Entregado", icono: PackageCheck },
 };
 
-export const CONDICION_PAGO = {
+const CONDICION_PAGO = {
   contado: "Contado",
   cuenta_corriente: "Cuenta corriente",
   cheque: "Cheque",

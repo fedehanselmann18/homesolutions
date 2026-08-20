@@ -1,16 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  ArrowLeft,
-  Mail,
-  MapPin,
-  Phone,
-  Pencil,
-  Trash2,
-  FileMinus,
-  FilePlus,
-  Sparkles,
-} from "lucide-react";
+import { Mail, MapPin, Phone, Pencil, Trash2, Sparkles } from "lucide-react";
 
 import {
   getProveedorPorId,
@@ -38,6 +28,13 @@ import { getCategorias } from "../services/categoriaService";
 
 import useAuth from "../context/useAuth";
 import { getTipoProducto } from "../constants/tipoProducto";
+import { VERDE, ROJO } from "../constants/colores";
+import {
+  TIPOS_MOVIMIENTO,
+  getTipoMovimiento,
+  signoTexto,
+  TINTE_PASTILLA,
+} from "../constants/tipoMovimiento";
 import { formatMoneda, formatFecha } from "../utils/formato";
 import { calcularResumenProveedor } from "../utils/proveedores";
 import { FILTROS_VACIOS, filtrarCompras } from "../utils/filtros";
@@ -49,8 +46,11 @@ import ModalImportarCatalogo from "../components/modals/ModalImportarCatalogo";
 import ModalDetalleCompra from "../components/modals/ModalDetalleCompra";
 import ModalConfirmar from "../components/modals/ModalConfirmar";
 import { Cargando } from "../components/shared/Cargando";
+import { EstadoVacio } from "../components/shared/EstadoVacio";
+import { EstadoError } from "../components/shared/EstadoError";
 import { TarjetaAlerta } from "../components/shared/TarjetaAlerta";
 import FiltrosLista from "../components/shared/FiltrosLista";
+import { Breadcrumbs } from "../components/shared/Breadcrumbs";
 import { useToast } from "../context/useToast";
 import { usePageTitle } from "../hooks/usePageTitle";
 
@@ -261,22 +261,17 @@ export function ProveedorDetalle() {
   if (cargando) return <Cargando texto="Cargando proveedor..." />;
   if (error || !proveedor) {
     return (
-      <div className="proveedor-detalle-vacio">No se pudo cargar el detalle del proveedor.</div>
+      <EstadoError mensaje="No se pudo cargar el detalle del proveedor." grande />
     );
   }
 
   return (
     <div className="proveedor-detalle">
-      <button
-        type="button"
-        className="proveedor-detalle-volver"
-        onClick={() => navigate("/proveedores")}
-      >
-        <ArrowLeft size={16} strokeWidth={2} />
-        Volver a proveedores
-      </button>
-
       <div className="proveedor-detalle-header">
+        <Breadcrumbs
+          items={[{ label: "Proveedores", to: "/proveedores" }, { label: proveedor.nombre }]}
+        />
+
         <div className="proveedor-detalle-header-top">
           <h1 className="proveedor-detalle-nombre">{proveedor.nombre}</h1>
           {canManage && (
@@ -298,9 +293,7 @@ export function ProveedorDetalle() {
         </div>
 
         <div className="proveedor-detalle-datos">
-          {proveedor.cuit && (
-            <span className="proveedor-detalle-dato">CUIT: {proveedor.cuit}</span>
-          )}
+          {proveedor.cuit && <span className="proveedor-detalle-dato">CUIT: {proveedor.cuit}</span>}
           {proveedor.telefono && (
             <span className="proveedor-detalle-dato">
               <Phone size={15} strokeWidth={2} /> {proveedor.telefono}
@@ -329,7 +322,7 @@ export function ProveedorDetalle() {
             <span className="proveedor-detalle-metrica-label">Deuda pendiente</span>
             <span
               className="proveedor-detalle-metrica-valor"
-              style={{ color: resumen.deuda > 0 ? "#dc2626" : "#16a34a" }}
+              style={{ color: resumen.deuda > 0 ? ROJO : VERDE }}
             >
               {formatMoneda(resumen.deuda)}
             </span>
@@ -337,7 +330,10 @@ export function ProveedorDetalle() {
           {resumen.totalNotasCredito > 0 && (
             <div className="proveedor-detalle-metrica">
               <span className="proveedor-detalle-metrica-label">Notas de crédito</span>
-              <span className="proveedor-detalle-metrica-valor" style={{ color: "#dc2626" }}>
+              <span
+                className="proveedor-detalle-metrica-valor"
+                style={{ color: TIPOS_MOVIMIENTO.nota_credito.color }}
+              >
                 -{formatMoneda(resumen.totalNotasCredito)}
               </span>
             </div>
@@ -345,7 +341,10 @@ export function ProveedorDetalle() {
           {resumen.totalNotasDebito > 0 && (
             <div className="proveedor-detalle-metrica">
               <span className="proveedor-detalle-metrica-label">Notas de débito</span>
-              <span className="proveedor-detalle-metrica-valor" style={{ color: "#c2662d" }}>
+              <span
+                className="proveedor-detalle-metrica-valor"
+                style={{ color: TIPOS_MOVIMIENTO.nota_debito.color }}
+              >
                 +{formatMoneda(resumen.totalNotasDebito)}
               </span>
             </div>
@@ -360,15 +359,15 @@ export function ProveedorDetalle() {
           </div>
           <div className="seguimiento-lista">
             {resumen.notas.map((nota) => {
-              const esCredito = nota.tipo === "nota_credito";
+              const tipoNota = getTipoMovimiento(nota.tipo);
               return (
                 <TarjetaAlerta
                   key={nota.id}
-                  icono={esCredito ? FileMinus : FilePlus}
-                  color={esCredito ? "#dc2626" : "#c2662d"}
+                  icono={tipoNota.icono}
+                  color={tipoNota.color}
                   titulo={nota.origenDescripcion}
                   detalle={`Compra del ${formatFecha(nota.origenFecha)}`}
-                  monto={`${esCredito ? "-" : "+"}${formatMoneda(nota.monto)}`}
+                  monto={`${signoTexto(tipoNota.signo)}${formatMoneda(nota.monto)}`}
                   onClick={() => setDetalleCompraId(nota.origenId)}
                 />
               );
@@ -396,7 +395,7 @@ export function ProveedorDetalle() {
         </div>
 
         {productos.length === 0 ? (
-          <p>Este proveedor todavía no tiene productos cargados.</p>
+          <EstadoVacio mensaje="Este proveedor todavía no tiene productos cargados." />
         ) : (
           <div className="proveedor-detalle-tabla-wrap">
             <table className="proveedor-detalle-tabla">
@@ -419,8 +418,11 @@ export function ProveedorDetalle() {
                       </td>
                       <td>
                         <span
-                          className="proveedor-detalle-badge"
-                          style={{ color: tipo.color, backgroundColor: `${tipo.color}1c` }}
+                          className="badge"
+                          style={{
+                            color: tipo.color,
+                            backgroundColor: `${tipo.color}${TINTE_PASTILLA}`,
+                          }}
                         >
                           {tipo.icono && <tipo.icono size={12} strokeWidth={2.25} />} {tipo.label}
                         </span>
@@ -428,7 +430,7 @@ export function ProveedorDetalle() {
                       <td>
                         <div className="proveedor-detalle-chips">
                           {(producto.categorias ?? []).map((c) => (
-                            <span key={c.id} className="proveedor-detalle-chip">
+                            <span key={c.id} className="badge badge--neutro">
                               {c.nombre}
                             </span>
                           ))}
@@ -475,7 +477,7 @@ export function ProveedorDetalle() {
         )}
 
         {resumen.comprasDelProveedor.length === 0 ? (
-          <p>Todavía no hay compras registradas a este proveedor.</p>
+          <EstadoVacio mensaje="Todavía no hay compras registradas a este proveedor." />
         ) : (
           <LibroDeObra
             titulo={`Compras — ${proveedor.nombre}`}
@@ -563,7 +565,6 @@ export function ProveedorDetalle() {
           onCancelar={() => setProductoAEliminar(null)}
         />
       )}
-
     </div>
   );
 }

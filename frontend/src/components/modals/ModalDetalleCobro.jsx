@@ -1,9 +1,7 @@
-import { HandCoins } from "lucide-react";
-
 import { formatMoneda, formatFecha } from "../../utils/formato";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
-import { VERDE, ROJO, NARANJA } from "../../constants/colores";
+import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { SeccionNotas } from "../shared/SeccionNotas";
 import { DetalleShell, BarraComposicion, SeccionDetalle, ChipsComprobantes } from "./PiezasDetalle";
 
@@ -22,6 +20,7 @@ export function ModalDetalleCobro({
   onEliminarComprobante,
   onAgregarNota,
   onEliminarNota,
+  onEditar,
   canManage = false,
 }) {
   const notas = cobro.notas ?? [];
@@ -34,22 +33,33 @@ export function ModalDetalleCobro({
 
   return (
     <DetalleShell
-      tipo="Cobro"
-      icono={HandCoins}
+      tipo={TIPOS_MOVIMIENTO.cobro.singular}
+      icono={TIPOS_MOVIMIENTO.cobro.icono}
       contexto={getTipoFacturaLabel(cobro.tipo_factura)}
       fecha={formatFecha(cobro.fecha)}
       titulo={cobro.descripcion}
       subtitulo={usuarioNombre ? `Cargado por ${usuarioNombre}` : null}
       totalLabel="Neto"
       total={montoNeto}
-      totalColor={VERDE}
+      totalColor={TIPOS_MOVIMIENTO.cobro.color}
       onCerrar={onCerrar}
+      onEditar={canManage ? onEditar : undefined}
     >
       <BarraComposicion
         segmentos={[
-          { label: "Bruto", monto: cobro.monto, color: VERDE },
-          { label: "Nota de crédito", monto: notasCredito, color: ROJO, signo: -1 },
-          { label: "Nota de débito", monto: notasDebito, color: NARANJA, signo: 1 },
+          { label: "Bruto", monto: cobro.monto, color: TIPOS_MOVIMIENTO.cobro.color },
+          {
+            label: "Nota de crédito",
+            monto: notasCredito,
+            color: TIPOS_MOVIMIENTO.nota_credito.color,
+            signo: -1,
+          },
+          {
+            label: "Nota de débito",
+            monto: notasDebito,
+            color: TIPOS_MOVIMIENTO.nota_debito.color,
+            signo: 1,
+          },
         ]}
       />
 

@@ -202,8 +202,74 @@ def create_compra(
 
 
 # ---------------------------------------------------------------------------
-# PUT : Actualizar compra (solo campos propios, no detalle/impuestos)
+# PUT : Actualizar compra (campos propios + detalle/impuestos si vienen)
 # ---------------------------------------------------------------------------
+
+
+def _reconciliar_detalle(db: Session, compra: models.Compra, lineas) -> None:
+    """
+    Deja el detalle igual a lo que mandó el formulario, pero reusando las filas
+    que ya existían en vez de borrar todo y recrear.
+
+    Importa por qué: NotaCompraDetalle.detalle_compra_id apunta a estas filas
+    con ON DELETE SET NULL. Si cada guardado las recreara, editar cualquier
+    campo de la compra dejaría a sus notas de crédito sin saber qué producto
+    se devolvió -- y sin forma de recuperarlo. Emparejando por producto_id, la
+    línea que no cambió conserva su id y las notas siguen apuntando a algo.
+
+    Las que sobran se borran solas: la relación es cascade delete-orphan.
+    """
+    disponibles: dict[str, list[models.DetalleCompra]] = {}
+    for fila in compra.detalle:
+        disponibles.setdefault(str(fila.producto_id), []).append(fila)
+
+    resultado = []
+    for linea in lineas:
+        producto = db.query(models.Producto).filter(models.Producto.id == linea.producto_id).first()
+        if not producto:
+            raise HTTPException(status_code=404, detail=f"Producto {linea.producto_id} no encontrado")
+
+        pool = disponibles.get(str(linea.producto_id))
+        if pool:
+            fila = pool.pop(0)
+            fila.cantidad = linea.cantidad
+            fila.precio_unitario = linea.precio_unitario
+        else:
+            fila = models.DetalleCompra(
+                producto_id=linea.producto_id,
+                cantidad=linea.cantidad,
+                precio_unitario=linea.precio_unitario,
+            )
+        resultado.append(fila)
+
+    compra.detalle = resultado
+
+
+def _reconciliar_impuestos(db: Session, compra: models.Compra, lineas) -> None:
+    """
+    Mismo criterio que _reconciliar_detalle. Acá no hay notas apuntando a
+    estas filas, pero sí un UniqueConstraint (compra_id, impuesto_id): reusar
+    la fila del mismo impuesto evita chocar contra él al cambiarle el monto.
+    """
+    disponibles: dict[str, list[models.CompraImpuesto]] = {}
+    for fila in compra.impuestos_aplicados:
+        disponibles.setdefault(str(fila.impuesto_id), []).append(fila)
+
+    resultado = []
+    for linea in lineas:
+        impuesto = db.query(models.Impuesto).filter(models.Impuesto.id == linea.impuesto_id).first()
+        if not impuesto:
+            raise HTTPException(status_code=404, detail=f"Impuesto {linea.impuesto_id} no encontrado")
+
+        pool = disponibles.get(str(linea.impuesto_id))
+        if pool:
+            fila = pool.pop(0)
+            fila.monto = linea.monto
+        else:
+            fila = models.CompraImpuesto(impuesto_id=linea.impuesto_id, monto=linea.monto)
+        resultado.append(fila)
+
+    compra.impuestos_aplicados = resultado
 
 
 @router.put("/{compra_id}", response_model=CompraOut, status_code=status.HTTP_200_OK)
@@ -229,8 +295,19 @@ def update_compra(
         if not proveedor:
             raise HTTPException(status_code=404, detail="Proveedor no encontrado")
 
+    # Se sacan del dict antes del setattr: no son columnas sino relaciones, y
+    # asignarles la lista de dicts cruda rompería el mapeo. `exclude_unset`
+    # arriba garantiza que sólo estén acá si el cliente los mandó de verdad.
+    lineas_detalle = datos.pop("detalle", None)
+    lineas_impuestos = datos.pop("impuestos", None)
+
     for key, value in datos.items():
         setattr(compra_existente, key, value)
+
+    if lineas_detalle is not None:
+        _reconciliar_detalle(db, compra_existente, compra.detalle)
+    if lineas_impuestos is not None:
+        _reconciliar_impuestos(db, compra_existente, compra.impuestos)
 
     try:
         db.commit()

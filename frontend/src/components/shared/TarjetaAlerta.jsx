@@ -1,4 +1,5 @@
 import "./TarjetaAlerta.css";
+import { TINTE_PASTILLA } from "../../constants/tipoMovimiento";
 
 /**
  * Fila de "algo que necesita atención". Nació en la sección Necesita atención
@@ -13,7 +14,7 @@ import "./TarjetaAlerta.css";
 export function TarjetaAlerta({ icono: Icono, color, titulo, detalle, monto, extra, onClick }) {
   const contenido = (
     <>
-      <span className="alerta-icono" style={{ color, backgroundColor: `${color}1c` }}>
+      <span className="alerta-icono" style={{ color, backgroundColor: `${color}${TINTE_PASTILLA}` }}>
         <Icono size={16} strokeWidth={2} />
       </span>
       <span className="alerta-texto">

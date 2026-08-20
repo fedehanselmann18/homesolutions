@@ -1,6 +1,7 @@
 import { KeyRound, LogOut, ShieldCheck, ShieldOff, UserCheck, UserX } from "lucide-react";
 
 import "./Manager.css";
+import { EstadoVacio } from "../shared/EstadoVacio";
 
 /**
  * Planilla de cuentas del equipo con las acciones de mantenimiento que puede
@@ -19,7 +20,7 @@ export function ListaUsuarios({
   onToggleActivo,
 }) {
   if (usuarios.length === 0) {
-    return <p className="manager-vacio">Todavía no hay ninguna cuenta creada.</p>;
+    return <EstadoVacio mensaje="Todavía no hay ninguna cuenta creada." />;
   }
 
   return (
@@ -40,14 +41,14 @@ export function ListaUsuarios({
               <tr key={usuario.id} className={usuario.activo ? "" : "manager-fila--inactiva"}>
                 <td className="manager-tabla__nombre">{usuario.nombre_usuario}</td>
                 <td>
-                  <span className={`manager-chip ${esAdmin ? "manager-chip--admin" : ""}`}>
+                  <span className={`badge ${esAdmin ? "badge--marca" : "badge--neutro"}`}>
                     {esAdmin ? "Admin" : "Lectura"}
                   </span>
                 </td>
                 <td>
                   <span
-                    className={`manager-chip ${
-                      usuario.activo ? "manager-chip--activo" : "manager-chip--inactivo"
+                    className={`badge ${
+                      usuario.activo ? "badge--exito" : "badge--peligro"
                     }`}
                   >
                     {usuario.activo ? "Activa" : "Desactivada"}

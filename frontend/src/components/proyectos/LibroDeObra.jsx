@@ -1,14 +1,5 @@
 import { useMemo, useState } from "react";
-import {
-  FileMinus,
-  FilePlus,
-  Pencil,
-  Trash2,
-  FileSignature,
-  ShoppingCart,
-  Receipt,
-  HandCoins,
-} from "lucide-react";
+import { FileMinus, FilePlus, Pencil, Trash2, FileSignature } from "lucide-react";
 
 import { formatMoneda, formatFecha } from "../../utils/formato";
 import { iconoParaArchivo, nombreDeArchivo } from "../../utils/archivos";
@@ -16,18 +7,11 @@ import { getEstadoPago, getEstadoEnvio } from "../../constants/estadoCompra";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
 import { esCompraImpaga, esCompraSinEntregar, diasDesde } from "../../utils/seguimiento";
-import { VERDE, NARANJA, AZUL } from "../../constants/colores";
+import { TIPOS_MOVIMIENTO as TIPOS, signoTexto } from "../../constants/tipoMovimiento";
 
 import "./LibroDeObra.css";
-
-// `label` es para la leyenda de totales (en plural) y `singular` + `icono`
-// para la columna Tipo de cada fila, que usa el mismo icono y el mismo
-// tratamiento en mayúsculas que el header del modal de detalle.
-const TIPOS = {
-  cobro: { label: "Cobros", singular: "Cobro", icono: HandCoins, color: VERDE, signo: 1 },
-  compra: { label: "Compras", singular: "Compra", icono: ShoppingCart, color: AZUL, signo: -1 },
-  gasto: { label: "Gastos", singular: "Gasto", icono: Receipt, color: NARANJA, signo: -1 },
-};
+import { EstadoVacio } from "../shared/EstadoVacio";
+import { TINTE_PASTILLA } from "../../constants/tipoMovimiento";
 
 const capitalizar = (texto) => texto.charAt(0).toUpperCase() + texto.slice(1);
 
@@ -36,7 +20,7 @@ const diaConNombre = (fecha) =>
     new Date(`${fecha}T00:00:00`).toLocaleDateString("es-AR", { weekday: "long" })
   )} ${formatFecha(fecha)}`;
 
-const conSigno = (monto, signo) => `${signo > 0 ? "+" : "-"}${formatMoneda(Math.abs(monto))}`;
+const conSigno = (monto, signo) => `${signoTexto(signo)}${formatMoneda(Math.abs(monto))}`;
 
 function montoNetoCobro(cobro) {
   const notas = cobro.notas ?? [];
@@ -163,7 +147,7 @@ export function LibroDeObra({
   // "Cobros $ 0 · Gastos $ 0".
   const totalesPorTipo = useMemo(
     () =>
-      Object.keys(TIPOS)
+      ["cobro", "compra", "gasto"]
         .map((tipo) => ({
           tipo,
           items: movimientos.filter((m) => m.tipo === tipo),
@@ -211,7 +195,7 @@ export function LibroDeObra({
   const mostrarAcciones = canManage && permitirEdicion;
 
   if (movimientos.length === 0) {
-    return <p className="libro-vacio">No hay movimientos que coincidan.</p>;
+    return <EstadoVacio mensaje="No hay movimientos que coincidan." />;
   }
 
   return (
@@ -222,7 +206,7 @@ export function LibroDeObra({
         {totalesPorTipo.map(({ tipo, total }) => (
           <span key={tipo} className="libro__leyenda">
             <span className="libro__punto" style={{ background: TIPOS[tipo].color }} />
-            {TIPOS[tipo].label} {formatMoneda(total)}
+            {TIPOS[tipo].plural} {formatMoneda(total)}
           </span>
         ))}
       </div>
@@ -437,7 +421,7 @@ function EstadoBoton({ estado, titulo, canManage, onClick }) {
       className="libro__estado"
       title={canManage ? titulo : estado.label}
       disabled={!canManage}
-      style={{ color: estado.color, backgroundColor: `${estado.color}1f` }}
+      style={{ color: estado.color, backgroundColor: `${estado.color}${TINTE_PASTILLA}` }}
       onClick={onClick}
     >
       {Icono && <Icono size={14} strokeWidth={2.25} />}

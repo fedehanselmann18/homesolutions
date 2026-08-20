@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { TIPOS_PRODUCTO } from "../../constants/tipoProducto";
-import "./ModalProducto.css";
 import ModalShell from "./ModalShell";
 import ChipsCategorias from "./ChipsCategorias";
 

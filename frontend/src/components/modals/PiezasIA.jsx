@@ -23,7 +23,7 @@ import "./PiezasIA.css";
  * queda invisible (contraste 1:1). Ahí va el blanco, que además acompaña al
  * texto blanco del botón; el oliva queda para fondos claros.
  */
-export function LogoCargando({ size = 18, variante = "oliva" }) {
+function LogoCargando({ size = 18, variante = "oliva" }) {
   return (
     <img
       src={variante === "blanco" ? logoIsoBlanco : logoIsoOliva}

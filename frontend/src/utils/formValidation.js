@@ -29,7 +29,7 @@ export function validarFecha(valor) {
 // ver backend/app/schemas.py). Sin este chequeo en el front, una contraseña
 // corta viaja igual y vuelve como 422 -- que el usuario leía como un error
 // cualquiera, sin saber que el problema era el largo.
-export const MINIMO_PASSWORD = 8;
+const MINIMO_PASSWORD = 8;
 
 export function validarPassword(valor) {
   if (!valor) return "La contraseña es obligatoria.";
