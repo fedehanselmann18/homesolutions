@@ -26,6 +26,9 @@ const OPCIONES_TIPO_FACTURA = [{ value: "", label: "Todos" }, ...TIPOS_FACTURA];
  * `mostrarComprobante` aplica a Cobros/Gastos.
  * `mostrarFechas` se apaga donde la lista ya está ordenada y agrupada por día
  * (el libro de obra), que es donde el rango de fechas no agrega nada.
+ * `proyectos` sólo se pasa desde la lista de compras de un proveedor, que es
+ * la única que cruza varios proyectos (parado adentro de uno no hay nada que
+ * elegir); si no viene, el select ni se dibuja.
  */
 export function FiltrosLista({
   filtros,
@@ -35,12 +38,26 @@ export function FiltrosLista({
   mostrarEstadoEnvio = false,
   mostrarComprobante = false,
   mostrarFechas = true,
+  proyectos = null,
 }) {
   const cambiarCampo = (campo, valor) => onCambiar({ ...filtros, [campo]: valor });
   const limpiar = () => onCambiar(FILTROS_VACIOS);
 
+  const opcionesProyecto = proyectos
+    ? [{ value: "", label: "Todos los proyectos" }, ...proyectos.map((p) => ({ value: p.id, label: p.nombre }))]
+    : null;
+
   return (
     <div className="filtros-lista">
+      {opcionesProyecto && (
+        <SelectFlotante
+          label="Proyecto"
+          value={filtros.proyecto}
+          onChange={(v) => cambiarCampo("proyecto", v)}
+          opciones={opcionesProyecto}
+        />
+      )}
+
       {mostrarEstadoPago && (
         <SelectFlotante
           label="Estado de pago"

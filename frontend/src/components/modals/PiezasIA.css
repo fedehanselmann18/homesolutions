@@ -26,6 +26,25 @@
   cursor: not-allowed;
 }
 
+/* Logo pulsando mientras la IA lee -- escala y opacidad subiendo y bajando
+   de forma lenta y pareja, nada de rotar ni rebotar (eso se siente más a
+   "cargando indefinidamente" que a "pensando"). */
+@keyframes logo-pulso {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.72;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+}
+
+.logo-cargando {
+  animation: logo-pulso 1.1s ease-in-out infinite;
+}
+
 /* Atenuado, no gris: sin archivo el botón sigue siendo la acción principal
    del paso, sólo que todavía no se puede usar. */
 .ia-boton--atenuado {

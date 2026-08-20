@@ -25,7 +25,15 @@
   margin: 4px 0 0;
 }
 
+.proveedores-header__acciones {
+  display: flex;
+  gap: 10px;
+}
+
 .proveedores-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   background-color: var(--color-terracota);
   color: var(--color-superficie);
   border: 1px solid var(--color-terracota);
@@ -43,6 +51,17 @@
 .proveedores-button:hover {
   background-color: var(--color-terracota-dark);
   border-color: var(--color-terracota-dark);
+}
+
+.proveedores-button--secundario {
+  background-color: transparent;
+  color: var(--color-terracota);
+}
+
+.proveedores-button--secundario:hover {
+  background-color: var(--color-terracota-tint);
+  border-color: var(--color-terracota);
+  color: var(--color-terracota-dark);
 }
 
 .proveedores-filtros {

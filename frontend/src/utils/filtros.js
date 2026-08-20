@@ -33,6 +33,10 @@ export const FILTROS_VACIOS = {
   desde: "",
   hasta: "",
   tipoFactura: "",
+  // Sólo lo usa la lista de compras de un proveedor (ProveedorDetalle): ahí
+  // las compras vienen de varios proyectos y hace falta poder aislar uno.
+  // Parado adentro de un proyecto no aplica, y queda en "" sin molestar.
+  proyecto: "",
   notas: "todas",
   estadoPago: "todos",
   estadoEnvio: "todos",
@@ -61,9 +65,18 @@ function coincideComprobante(comprobantes, filtroComprobante) {
   return filtroComprobante === "con" ? tiene : !tiene;
 }
 
-export function filtrarCompras(compras, filtros = FILTROS_VACIOS) {
+/**
+ * `proyectoDeCompra` es opcional: la Compra guarda fase_id, no proyecto_id
+ * (ver models.py), así que quien quiera filtrar por proyecto tiene que pasar
+ * cómo resolverlo (fase -> proyecto). Sin ese resolver el filtro de proyecto
+ * simplemente no aplica, que es lo correcto donde ya estás parado adentro de
+ * un proyecto.
+ */
+export function filtrarCompras(compras, filtros = FILTROS_VACIOS, { proyectoDeCompra } = {}) {
   return compras.filter((c) => {
     if (!coincideFecha(c.fecha, filtros.desde, filtros.hasta)) return false;
+    if (filtros.proyecto && proyectoDeCompra && proyectoDeCompra(c) !== filtros.proyecto)
+      return false;
     if (filtros.tipoFactura && c.tipo_factura !== filtros.tipoFactura) return false;
     if (!coincideNotas(c.notas, filtros.notas)) return false;
     if (
@@ -107,6 +120,7 @@ export function hayFiltrosActivos(filtros) {
     filtros.desde ||
     filtros.hasta ||
     filtros.tipoFactura ||
+    filtros.proyecto ||
     (filtros.notas && filtros.notas !== "todas") ||
     (filtros.estadoPago && filtros.estadoPago !== "todos") ||
     (filtros.estadoEnvio && filtros.estadoEnvio !== "todos") ||

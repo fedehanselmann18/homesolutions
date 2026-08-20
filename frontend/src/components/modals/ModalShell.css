@@ -48,6 +48,27 @@
   color: var(--color-tinta-muted);
 }
 
+/* Variante etiqueta (arriba del título): punto de marca + nombre corto en
+   mayúsculas. Solo para contextos que son un nombre, no una frase. */
+.shell__contexto--destacado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-terracota-dark);
+}
+
+.shell__contexto-punto {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--color-terracota);
+  flex-shrink: 0;
+}
+
 .shell__espaciador {
   flex: 1;
 }

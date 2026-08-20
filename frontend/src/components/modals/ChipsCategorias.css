@@ -1,0 +1,185 @@
+/* Chips de categorías -- mismo lenguaje visual de pill que catalogo-badge
+   (ModalImportarCatalogo.css), pero clickeable. */
+
+.chips-cat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.chips-cat-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chips-cat-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-tinta-muted);
+}
+
+.chips-cat-contador {
+  font-size: 0.72rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--color-tinta-muted);
+}
+
+.chips-cat-limpiar {
+  margin-left: auto;
+  font-family: var(--font-ui);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-tinta-muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.chips-cat-limpiar:hover {
+  color: var(--color-tinta);
+}
+
+.chips-cat-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.chips-cat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-linea);
+  background-color: var(--color-superficie);
+  color: var(--color-tinta-muted);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.chips-cat-chip:hover {
+  border-color: var(--color-terracota);
+  color: var(--color-tinta);
+}
+
+.chips-cat-chip--elegida {
+  background-color: var(--color-terracota);
+  border-color: var(--color-terracota);
+  color: var(--color-superficie);
+}
+
+.chips-cat-chip--elegida:hover {
+  background-color: var(--color-terracota-dark);
+  border-color: var(--color-terracota-dark);
+  color: var(--color-superficie);
+}
+
+/* --- estado vacío + creación inline --- */
+
+.chips-cat-vacio {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: var(--space-4);
+  border: 1px dashed var(--color-linea);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-base-1);
+}
+
+.chips-cat-vacio-titulo {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--color-tinta);
+}
+
+.chips-cat-vacio-detalle {
+  font-size: 0.8rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--color-tinta-muted);
+}
+
+.chips-cat-crear {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+
+.chips-cat-crear input {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 7px 10px;
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-superficie);
+  color: var(--color-tinta);
+  box-sizing: border-box;
+}
+
+.chips-cat-crear input:focus {
+  outline: none;
+  border-color: var(--color-terracota);
+}
+
+.chips-cat-crear-boton {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-terracota);
+  background-color: var(--color-superficie);
+  color: var(--color-terracota-dark);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.chips-cat-crear-boton:hover:not(:disabled) {
+  background-color: var(--color-terracota-tint);
+}
+
+.chips-cat-crear-boton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chips-cat-error {
+  font-size: 0.78rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--color-oxido);
+}

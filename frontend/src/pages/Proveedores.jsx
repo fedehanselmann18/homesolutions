@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { Search, Sparkles } from "lucide-react";
 
 import { useProveedores } from "../hooks/useProveedores";
 import { getProductos } from "../services/productoService";
@@ -13,6 +13,7 @@ import { usePageTitle } from "../hooks/usePageTitle";
 
 import ProveedorCard from "../components/proveedores/ProveedorCard";
 import ModalProveedor from "../components/modals/ModalProveedor";
+import ModalImportarCatalogo from "../components/modals/ModalImportarCatalogo";
 import ModalConfirmar from "../components/modals/ModalConfirmar";
 import { Cargando } from "../components/shared/Cargando";
 import "./Proveedores.css";
@@ -23,7 +24,7 @@ export function Proveedores() {
   const canManage = usuario?.rol === "admin";
   const toast = useToast();
 
-  const { proveedores, loading, error, agregarProveedor, editarProveedor, borrarProveedor } =
+  const { proveedores, loading, error, agregarProveedor, editarProveedor, borrarProveedor, recargar } =
     useProveedores();
 
   const [productos, setProductos] = useState([]);
@@ -36,6 +37,17 @@ export function Proveedores() {
   const [modalAbierto, setModalAbierto] = useState(false);
   const [proveedorSeleccionado, setProveedorSeleccionado] = useState(null);
   const [proveedorAEliminar, setProveedorAEliminar] = useState(null);
+  const [modalImportarAbierto, setModalImportarAbierto] = useState(false);
+
+  const refetchProductos = async () => {
+    setProductos(await getProductos());
+  };
+
+  // El modal de importar puede crear una categoría sin cerrarse (ver
+  // ChipsCategorias) -- refrescamos para que aparezca como chip elegible.
+  const refetchCategorias = async () => {
+    setCategorias(await getCategorias());
+  };
 
   useEffect(() => {
     const fetchDatos = async () => {
@@ -133,9 +145,19 @@ export function Proveedores() {
         </div>
 
         {canManage && (
-          <button className="proveedores-button" onClick={abrirModalCrear}>
-            Nuevo proveedor
-          </button>
+          <div className="proveedores-header__acciones">
+            <button
+              type="button"
+              className="proveedores-button proveedores-button--secundario"
+              onClick={() => setModalImportarAbierto(true)}
+            >
+              <Sparkles size={16} strokeWidth={2.25} />
+              Importar catálogo
+            </button>
+            <button className="proveedores-button" onClick={abrirModalCrear}>
+              Nuevo proveedor
+            </button>
+          </div>
         )}
       </header>
 
@@ -210,6 +232,20 @@ export function Proveedores() {
           nombreRecurso={proveedorAEliminar.nombre}
           onConfirmar={handleConfirmarEliminar}
           onCancelar={() => setProveedorAEliminar(null)}
+        />
+      )}
+
+      {modalImportarAbierto && (
+        <ModalImportarCatalogo
+          proveedoresDisponibles={proveedores}
+          productosTodos={productos}
+          categoriasDisponibles={categorias}
+          onImportado={async () => {
+            await Promise.all([recargar(), refetchProductos()]);
+          }}
+          onCerrar={() => setModalImportarAbierto(false)}
+          onCargarAMano={abrirModalCrear}
+          onCategoriaCreada={refetchCategorias}
         />
       )}
     </div>

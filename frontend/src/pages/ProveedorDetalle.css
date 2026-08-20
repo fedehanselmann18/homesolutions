@@ -159,6 +159,24 @@
   color: var(--color-tinta);
 }
 
+.proveedor-detalle-seccion-header-acciones {
+  display: flex;
+  gap: 8px;
+}
+
+.proveedor-detalle-btn-ia {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 6px;
+  background-color: transparent !important;
+  border-color: var(--color-terracota) !important;
+  color: var(--color-terracota-dark) !important;
+}
+
+.proveedor-detalle-btn-ia:hover {
+  background-color: var(--color-terracota-tint) !important;
+}
+
 .proveedor-detalle-seccion-header button {
   font-family: var(--font-ui);
   font-size: 0.85rem;

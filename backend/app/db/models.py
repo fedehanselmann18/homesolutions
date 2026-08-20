@@ -165,7 +165,10 @@ class Proveedor(TimestampMixin, Base):
 
     id: Mapped[uuid.UUID] = uuid_pk()
     nombre: Mapped[str] = mapped_column(String(150), nullable=False)
-    cuit: Mapped[str] = mapped_column(String(20), nullable=False)
+    # Opcional: hay proveedores (distribuidoras chicas, comercios de barrio)
+    # de los que no se tiene el CUIT, y no poder cargarlos por eso no tiene
+    # sentido -- el dato fiscal se completa después si aparece.
+    cuit: Mapped[str | None] = mapped_column(String(20))
     direccion: Mapped[str | None] = mapped_column(String(255))
     telefono: Mapped[str | None] = mapped_column(String(50))
     email: Mapped[str | None] = mapped_column(String(150))

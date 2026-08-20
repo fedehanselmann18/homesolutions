@@ -37,7 +37,7 @@ export function ModalProveedor({ proveedor, onGuardar, onCerrar }) {
     try {
       await onGuardar({
         nombre: form.nombre,
-        cuit: form.cuit,
+        cuit: form.cuit || null,
         direccion: form.direccion || null,
         telefono: form.telefono || null,
         email: form.email || null,
@@ -75,8 +75,14 @@ export function ModalProveedor({ proveedor, onGuardar, onCerrar }) {
       </label>
 
       <label>
-        CUIT
-        <input type="text" name="cuit" value={form.cuit} onChange={handleChange} required />
+        CUIT (opcional)
+        <input
+          type="text"
+          name="cuit"
+          value={form.cuit}
+          onChange={handleChange}
+          placeholder="XX-XXXXXXXX-X"
+        />
       </label>
 
       <label>

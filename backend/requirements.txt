@@ -23,6 +23,11 @@ slowapi==0.1.9
 
 google-genai==2.16.0
 
+# Parseo de catálogos Excel/CSV a texto tabular antes de mandarlos a Gemini
+# (ver app/ia/catalogo.py) -- openpyxl es el engine que pandas usa para .xlsx.
+pandas==3.0.5
+openpyxl==3.1.5
+
 # Cliente S3-compatible para subir/leer/borrar comprobantes en Cloudflare R2
 # (ver app/files/storage.py). Si R2_* no está en el .env, no se usa: los
 # comprobantes se guardan en disco local (dev).

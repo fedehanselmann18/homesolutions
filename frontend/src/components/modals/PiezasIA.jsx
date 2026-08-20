@@ -1,5 +1,8 @@
 import { Sparkles, FileText, CircleAlert } from "lucide-react";
 
+import logoIsoBlanco from "../../assets/HS_iso_blanco.png";
+import logoIsoOliva from "../../assets/HS_iso_oliva.png";
+
 import "./PiezasIA.css";
 
 /**
@@ -10,7 +13,35 @@ import "./PiezasIA.css";
  * marcado como leído del comprobante.
  */
 
-export function BotonIA({ onClick, disabled, leyendo, atenuado = false, children }) {
+/**
+ * Indicador de "la IA está pensando": el isotipo de la casita pulsando
+ * despacio (escala + opacidad, sin girar ni rebotar -- ver PiezasIA.css). Es
+ * la marca del producto haciendo de spinner en vez de un spinner genérico.
+ *
+ * La variante importa: el isotipo oliva es EXACTAMENTE el mismo color que
+ * --color-terracota (#6f7f45), así que sobre el fondo sólido de .ia-boton
+ * queda invisible (contraste 1:1). Ahí va el blanco, que además acompaña al
+ * texto blanco del botón; el oliva queda para fondos claros.
+ */
+export function LogoCargando({ size = 18, variante = "oliva" }) {
+  return (
+    <img
+      src={variante === "blanco" ? logoIsoBlanco : logoIsoOliva}
+      alt=""
+      className="logo-cargando"
+      style={{ width: size, height: size }}
+    />
+  );
+}
+
+export function BotonIA({
+  onClick,
+  disabled,
+  leyendo,
+  atenuado = false,
+  textoLeyendo = "Leyendo comprobante...",
+  children,
+}) {
   return (
     <button
       type="button"
@@ -18,8 +49,12 @@ export function BotonIA({ onClick, disabled, leyendo, atenuado = false, children
       onClick={onClick}
       disabled={disabled}
     >
-      <Sparkles size={16} strokeWidth={2.25} />
-      {leyendo ? "Leyendo comprobante..." : children}
+      {leyendo ? (
+        <LogoCargando size={16} variante="blanco" />
+      ) : (
+        <Sparkles size={16} strokeWidth={2.25} />
+      )}
+      {leyendo ? textoLeyendo : children}
     </button>
   );
 }
@@ -27,8 +62,21 @@ export function BotonIA({ onClick, disabled, leyendo, atenuado = false, children
 /**
  * Estado inicial: la zona de carga ocupa el modal y leer el comprobante es la
  * acción principal. `children` es el uploader de comprobantes.
+ *
+ * textoBoton/textoLeyendo/textoManual son opcionales -- por default queda el
+ * texto de comprobantes (Compra/Gasto/Cobro); ModalImportarCatalogo los pisa
+ * porque acá no se "autocompleta" un formulario, se lee un catálogo entero.
  */
-export function PasoComprobante({ children, hayArchivo, leyendo, onLeer, onCargarAMano }) {
+export function PasoComprobante({
+  children,
+  hayArchivo,
+  leyendo,
+  onLeer,
+  onCargarAMano,
+  textoBoton = "Autocompletar con IA",
+  textoLeyendo = "Leyendo comprobante...",
+  textoManual = "Cargar los datos a mano",
+}) {
   return (
     <div className="ia-paso">
       {children}
@@ -37,18 +85,26 @@ export function PasoComprobante({ children, hayArchivo, leyendo, onLeer, onCarga
         disabled={!hayArchivo || leyendo}
         leyendo={leyendo}
         atenuado={!hayArchivo}
+        textoLeyendo={textoLeyendo}
       >
-        Autocompletar con IA
+        {textoBoton}
       </BotonIA>
       <button type="button" className="ia-paso-manual" onClick={onCargarAMano}>
-        Cargar los datos a mano
+        {textoManual}
       </button>
     </div>
   );
 }
 
 /** Banner del comprobante ya leído, con la opción de volver a pasarlo por la IA. */
-export function BannerIA({ nombreArchivo, resumen, onVolverALeer, leyendo, disabled }) {
+export function BannerIA({
+  nombreArchivo,
+  resumen,
+  onVolverALeer,
+  leyendo,
+  disabled,
+  textoLeyendo = "Leyendo comprobante...",
+}) {
   return (
     <div className="ia-banner">
       <span className="ia-banner-icono">
@@ -60,7 +116,12 @@ export function BannerIA({ nombreArchivo, resumen, onVolverALeer, leyendo, disab
       </div>
       <span className="ia-banner-espaciador" />
       {onVolverALeer && (
-        <BotonIA onClick={onVolverALeer} disabled={disabled || leyendo} leyendo={leyendo}>
+        <BotonIA
+          onClick={onVolverALeer}
+          disabled={disabled || leyendo}
+          leyendo={leyendo}
+          textoLeyendo={textoLeyendo}
+        >
           Volver a leer
         </BotonIA>
       )}

@@ -1,0 +1,243 @@
+/* ModalImportarCatalogo.css */
+
+.modal-contenido--importar-catalogo {
+  max-width: 860px;
+}
+
+/* --- Paso proveedor --- */
+
+.catalogo-paso-proveedor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.catalogo-proveedor-sugerido {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--color-terracota);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-terracota-tint);
+}
+
+.catalogo-proveedor-sugerido p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--color-tinta);
+}
+
+.catalogo-proveedor-acciones {
+  display: flex;
+  gap: 8px;
+}
+
+.catalogo-proveedor-acciones .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.catalogo-proveedor-elegir {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.catalogo-proveedor-elegir label {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-tinta-muted);
+}
+
+.catalogo-proveedor-separador {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--color-tinta-muted);
+  position: relative;
+}
+
+/* --- Advertencias de la lectura --- */
+
+.catalogo-advertencias {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--space-3) 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-oxido);
+  background: var(--color-oxido-tint);
+}
+
+.catalogo-advertencias p {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--color-tinta);
+}
+
+/* --- Caso vacío --- */
+
+.catalogo-vacio {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  text-align: center;
+  color: var(--color-tinta-muted);
+}
+
+.catalogo-vacio p {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+/* --- Tabla de productos --- */
+
+.catalogo-tabla-wrap {
+  overflow-x: auto;
+}
+
+.catalogo-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.catalogo-tabla th {
+  text-align: left;
+  padding: 6px 8px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--color-tinta-muted);
+  border-bottom: 1px solid var(--color-linea);
+}
+
+.catalogo-tabla td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--color-linea);
+  vertical-align: middle;
+}
+
+.catalogo-tabla input[type="checkbox"] {
+  width: auto;
+  accent-color: var(--color-terracota);
+}
+
+.catalogo-tabla input[type="text"],
+.catalogo-tabla input[type="number"],
+.catalogo-tabla select {
+  width: 100%;
+  min-width: 90px;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  padding: 6px 8px;
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-base-1);
+  color: var(--color-tinta);
+  box-sizing: border-box;
+}
+
+.catalogo-tabla input:focus,
+.catalogo-tabla select:focus {
+  outline: none;
+  border-color: var(--color-terracota);
+  background-color: var(--color-superficie);
+}
+
+.catalogo-fila--advertencia td {
+  background-color: var(--color-oxido-tint);
+}
+
+/* --- Selector de categorías (celda de la tabla) --- */
+
+.catalogo-categorias-vacio {
+  color: var(--color-tinta-muted);
+}
+
+.catalogo-categorias-selector {
+  position: relative;
+}
+
+.catalogo-categorias-boton {
+  width: 100%;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+  font-family: var(--font-ui);
+  font-size: 0.85rem;
+  padding: 6px 8px;
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-base-1);
+  color: var(--color-tinta);
+  cursor: pointer;
+}
+
+.catalogo-categorias-boton:hover {
+  border-color: var(--color-terracota);
+}
+
+.catalogo-categorias-popover {
+  /* top/left los pone SelectorCategorias inline, calculados con
+     getBoundingClientRect del botón (ver el comentario en el componente) --
+     position: fixed porque se porta a document.body, fuera de cualquier
+     ancestro con overflow que lo recorte. */
+  position: fixed;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 280px;
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 10px;
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-superficie);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.catalogo-badge {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+}
+
+.catalogo-badge--nuevo {
+  color: var(--color-musgo-dark);
+  background-color: var(--color-musgo-tint);
+}
+
+.catalogo-badge--actualiza {
+  color: var(--color-terracota-dark);
+  background-color: var(--color-terracota-tint);
+}
+
+.catalogo-badge--sin-cambios {
+  color: var(--color-tinta-muted);
+  background-color: var(--color-base-2);
+}
+
+@media (max-width: 560px) {
+  .catalogo-proveedor-elegir {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

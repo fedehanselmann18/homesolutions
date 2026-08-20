@@ -43,11 +43,19 @@ _CUIT_REGEX = re.compile(r"^(\d{2})-?(\d{8})-?(\d{1})$")
 _CUIT_MULTIPLICADORES = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
 
 
-def _validar_cuit(valor: str) -> str:
+def _validar_cuit(valor: str | None) -> str | None:
     """Valida formato (11 dígitos, con o sin guiones) y el dígito
     verificador con el algoritmo estándar de AFIP (módulo 11). Devuelve el
     valor tal cual lo mandó el cliente (con o sin guiones, no se normaliza)
-    si es válido, o levanta ValueError con un mensaje claro si no."""
+    si es válido, o levanta ValueError con un mensaje claro si no.
+
+    El CUIT es opcional: si no vino (None) o vino vacío, se guarda como None
+    en vez de "" -- así "no lo sé" es un solo valor en la base y no dos.
+    Ahora bien, si el usuario SÍ escribió algo, se valida igual de estricto
+    que antes: un CUIT a medias es peor que no tenerlo."""
+    if valor is None or not valor.strip():
+        return None
+
     coincidencia = _CUIT_REGEX.match(valor.strip())
     if not coincidencia:
         raise ValueError("El CUIT tiene que tener el formato XX-XXXXXXXX-X (11 dígitos, con o sin guiones)")
@@ -270,7 +278,7 @@ class FaseOut(FaseBase, TimestampOut):
 
 class ProveedorBase(BaseModel):
     nombre: str
-    cuit: str
+    cuit: str | None = None  # opcional, ver _validar_cuit
     direccion: str | None = None
     telefono: str | None = None
     email: str | None = None
@@ -279,7 +287,7 @@ class ProveedorBase(BaseModel):
 class ProveedorCreate(ProveedorBase):
     @field_validator("cuit")
     @classmethod
-    def cuit_valido(cls, valor: str) -> str:
+    def cuit_valido(cls, valor: str | None) -> str | None:
         return _validar_cuit(valor)
 
 
@@ -293,8 +301,6 @@ class ProveedorUpdate(BaseModel):
     @field_validator("cuit")
     @classmethod
     def cuit_valido(cls, valor: str | None) -> str | None:
-        if valor is None:
-            return None
         return _validar_cuit(valor)
 
 
@@ -698,4 +704,64 @@ class IAExtraccionComprobante(BaseModel):
     categoria_gasto_id: uuid.UUID | None = None
     detalle: list[IADetalleSugerido] = []
     impuestos: list[IAImpuestoSugerido] = []
+    advertencias: list[str] = []
+
+
+class IACatalogoProveedorSugerido(BaseModel):
+    """
+    Proveedor que la IA cree haber identificado en el encabezado/pie del
+    catálogo, cuando el front no mandó un proveedor_id fijo (ver
+    app/ia/catalogo.py). "existente" significa que matcheó (por nombre o
+    cuit, comparación laxa) contra alguno de `contexto.proveedores` -- ahí
+    solo importan id/nombre. "nuevo" significa que no matcheó ninguno: se
+    devuelve lo que se haya podido leer del documento (puede venir con
+    campos en None) para que el usuario los complete a mano antes de crear
+    el proveedor.
+    """
+
+    tipo: str  # "existente" | "nuevo"
+    id: uuid.UUID | None = None
+    nombre: str | None = None
+    cuit: str | None = None
+    telefono: str | None = None
+    email: str | None = None
+
+
+class IACatalogoProducto(BaseModel):
+    """
+    Una línea de producto detectada en el catálogo. `estado` la clasifica
+    contra el catálogo actual del proveedor (contexto.productos, solo
+    disponible si el front ya mandó un proveedor_id fijo): "nuevo" si no
+    matcheó ningún producto existente (por marca+modelo), "actualiza_precio"
+    si matcheó pero el precio detectado es distinto al actual, "sin_cambios"
+    si matcheó y el precio es igual. producto_id/precio_actual solo vienen
+    completos cuando matcheó contra algo existente.
+
+    categoria_ids solo tiene sentido cuando estado == "nuevo": un producto
+    que ya existía (actualiza_precio/sin_cambios) ya tiene sus categorías
+    asignadas de antes, así que ahí siempre queda en lista vacía -- no hay
+    nada que sugerir ni que pisar.
+    """
+
+    marca: str
+    modelo: str
+    tipo: str | None = None  # equipo/materiales/mano_obra -- None si no se pudo reconocer
+    precio: float
+    estado: str  # "nuevo" | "actualiza_precio" | "sin_cambios"
+    producto_id: uuid.UUID | None = None
+    precio_actual: float | None = None
+    categoria_ids: list[uuid.UUID] = []
+
+
+class IALecturaCatalogo(BaseModel):
+    """
+    Resultado de leer un catálogo de proveedor (Excel/CSV/PDF/imagen) con
+    Gemini, para prellenar el modal de importación (ver routes/ia.py). No se
+    persiste nada acá -- el usuario revisa la vista previa y confirma fila
+    por fila antes de que el front llame a los endpoints normales de
+    proveedores/productos.
+    """
+
+    proveedor_sugerido: IACatalogoProveedorSugerido | None = None
+    productos: list[IACatalogoProducto] = []
     advertencias: list[str] = []

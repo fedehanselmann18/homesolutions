@@ -1,6 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Mail, MapPin, Phone, Pencil, Trash2, FileMinus, FilePlus } from "lucide-react";
+import {
+  ArrowLeft,
+  Mail,
+  MapPin,
+  Phone,
+  Pencil,
+  Trash2,
+  FileMinus,
+  FilePlus,
+  Sparkles,
+} from "lucide-react";
 
 import {
   getProveedorPorId,
@@ -13,22 +23,18 @@ import {
   actualizarProducto,
   eliminarProducto,
 } from "../services/productoService";
+// La ficha del proveedor consulta compras, no las carga: crear/editar/borrar
+// una compra vive en su proyecto, que es donde hay contexto de fase. Lo único
+// que se escribe desde acá son los estados de pago/envío (actualizarCompra).
 import {
   getCompras,
-  crearCompra,
   actualizarCompra,
-  eliminarCompra,
-  subirComprobanteCompra,
   getComprobanteCompra,
-  eliminarComprobanteCompra,
-  crearNotaCompra,
   getNotaCompra,
-  eliminarNotaCompra,
 } from "../services/compraService";
 import { getFases } from "../services/faseService";
 import { getProyectos } from "../services/proyectoService";
 import { getCategorias } from "../services/categoriaService";
-import { getImpuestos } from "../services/impuestosService";
 
 import useAuth from "../context/useAuth";
 import { getTipoProducto } from "../constants/tipoProducto";
@@ -36,11 +42,10 @@ import { formatMoneda, formatFecha } from "../utils/formato";
 import { calcularResumenProveedor } from "../utils/proveedores";
 import { FILTROS_VACIOS, filtrarCompras } from "../utils/filtros";
 
-import CompraCard from "../components/proyectos/cards/CompraCard";
+import LibroDeObra from "../components/proyectos/LibroDeObra";
 import ModalProveedor from "../components/modals/ModalProveedor";
 import ModalProducto from "../components/modals/ModalProducto";
-import ModalCompra from "../components/modals/ModalCompra";
-import ModalNota from "../components/modals/ModalNota";
+import ModalImportarCatalogo from "../components/modals/ModalImportarCatalogo";
 import ModalDetalleCompra from "../components/modals/ModalDetalleCompra";
 import ModalConfirmar from "../components/modals/ModalConfirmar";
 import { Cargando } from "../components/shared/Cargando";
@@ -67,26 +72,23 @@ export function ProveedorDetalle() {
   const [fases, setFases] = useState([]);
   const [proyectos, setProyectos] = useState([]);
   const [categorias, setCategorias] = useState([]);
-  const [impuestos, setImpuestos] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState(null);
 
   const [modalProveedorAbierto, setModalProveedorAbierto] = useState(false);
   const [modalProductoAbierto, setModalProductoAbierto] = useState(false);
   const [productoEditando, setProductoEditando] = useState(null);
-  const [modalCompraAbierto, setModalCompraAbierto] = useState(false);
-  const [compraEditando, setCompraEditando] = useState(null);
+  const [modalImportarAbierto, setModalImportarAbierto] = useState(false);
 
-  const [modalNotaAbierto, setModalNotaAbierto] = useState(false);
-  const [notaCompra, setNotaCompra] = useState(null); // la Compra sobre la que se carga la nota
-
-  const [compraDetalle, setCompraDetalle] = useState(null);
+  // Se guarda el id y no la compra: togglear pago/envío desde el modal
+  // recarga `compras`, y una copia congelada del objeto seguiría mostrando
+  // el estado viejo.
+  const [detalleCompraId, setDetalleCompraId] = useState(null);
 
   const [filtrosCompras, setFiltrosCompras] = useState(FILTROS_VACIOS);
 
   const [confirmarEliminarProveedor, setConfirmarEliminarProveedor] = useState(false);
   const [productoAEliminar, setProductoAEliminar] = useState(null);
-  const [compraAEliminar, setCompraAEliminar] = useState(null);
 
   useEffect(() => {
     fetchTodo();
@@ -97,30 +99,21 @@ export function ProveedorDetalle() {
     try {
       setCargando(true);
       setError(null);
-      const [
-        proveedorData,
-        productosData,
-        comprasData,
-        fasesData,
-        proyectosData,
-        categoriasData,
-        impuestosData,
-      ] = await Promise.all([
-        getProveedorPorId(id),
-        getProductosPorProveedor(id),
-        getCompras(),
-        getFases(),
-        getProyectos(),
-        getCategorias(),
-        getImpuestos(),
-      ]);
+      const [proveedorData, productosData, comprasData, fasesData, proyectosData, categoriasData] =
+        await Promise.all([
+          getProveedorPorId(id),
+          getProductosPorProveedor(id),
+          getCompras(),
+          getFases(),
+          getProyectos(),
+          getCategorias(),
+        ]);
       setProveedor(proveedorData);
       setProductos(productosData);
       setCompras(comprasData);
       setFases(fasesData);
       setProyectos(proyectosData);
       setCategorias(categoriasData);
-      setImpuestos(impuestosData);
     } catch (err) {
       console.error("Error fetching detalle de proveedor:", err);
       setError(err);
@@ -133,6 +126,13 @@ export function ProveedorDetalle() {
     setProductos(await getProductosPorProveedor(id));
   };
 
+  // Los modales pueden crear una categoría sin salir del modal (ver
+  // ChipsCategorias) -- hay que refrescar la lista para que aparezca como
+  // chip elegible ahí mismo.
+  const refetchCategorias = async () => {
+    setCategorias(await getCategorias());
+  };
+
   const refetchCompras = async () => {
     setCompras(await getCompras());
   };
@@ -142,33 +142,33 @@ export function ProveedorDetalle() {
     [proveedor, id, productos, compras]
   );
 
-  const comprasDelProveedorFiltradas = useMemo(
-    () => filtrarCompras(resumen.comprasDelProveedor, filtrosCompras),
-    [resumen.comprasDelProveedor, filtrosCompras]
-  );
-
   const nombreProyecto = (proyectoId) => proyectos.find((p) => p.id === proyectoId)?.nombre;
   const nombreFase = (faseId) => fases.find((f) => f.id === faseId)?.nombre;
 
-  // Lleva la vista a la compra de origen de una nota de crédito -- las
-  // compras ya tienen id={`compra-${compra.id}`} en su card (ver CompraCard.jsx).
-  const irACompra = (compraId) => {
-    document
-      .getElementById(`compra-${compraId}`)
-      ?.scrollIntoView({ behavior: "smooth", block: "center" });
-  };
+  // La Compra guarda fase_id, no proyecto_id (ver models.py): para saber de
+  // qué proyecto es hay que pasar por su fase.
+  const proyectoDeCompra = useMemo(() => {
+    const proyectoPorFase = new Map(fases.map((f) => [f.id, f.proyecto_id]));
+    return (compra) => proyectoPorFase.get(compra.fase_id) ?? null;
+  }, [fases]);
 
-  // Fases etiquetadas con el proyecto al que pertenecen: desde acá no hay un
-  // proyecto/fase "actual" como en FaseDetalle, así que hay que poder elegir
-  // cualquier fase de cualquier proyecto para la nueva compra.
-  const fasesParaSelect = useMemo(
-    () =>
-      fases.map((f) => ({
-        id: f.id,
-        nombre: `${nombreProyecto(f.proyecto_id) ?? "?"} — ${f.nombre}`,
-      })),
-    [fases, proyectos]
+  const nombreProyectoDeCompra = (compra) => nombreProyecto(proyectoDeCompra(compra));
+
+  // Sólo los proyectos en los que este proveedor tiene alguna compra: ofrecer
+  // los 4 del sistema cuando le compraste a uno solo es ruido.
+  const proyectosConCompras = useMemo(() => {
+    const ids = new Set(resumen.comprasDelProveedor.map(proyectoDeCompra).filter(Boolean));
+    return proyectos.filter((p) => ids.has(p.id));
+  }, [resumen.comprasDelProveedor, proyectoDeCompra, proyectos]);
+
+  const comprasDelProveedorFiltradas = useMemo(
+    () => filtrarCompras(resumen.comprasDelProveedor, filtrosCompras, { proyectoDeCompra }),
+    [resumen.comprasDelProveedor, filtrosCompras, proyectoDeCompra]
   );
+
+  const compraDetalle = detalleCompraId
+    ? resumen.comprasDelProveedor.find((c) => c.id === detalleCompraId)
+    : null;
 
   // --- Proveedor ---
   const handleGuardarProveedor = async (datos) => {
@@ -232,54 +232,10 @@ export function ProveedorDetalle() {
     }
   };
 
-  // --- Compras (historial) ---
-  const handleNuevaCompra = () => {
-    setCompraEditando(null);
-    setModalCompraAbierto(true);
-  };
-
-  const handleEditarCompra = (compra) => {
-    setCompraEditando(compra);
-    setModalCompraAbierto(true);
-  };
-
-  const handleGuardarCompra = async (
-    datosForm,
-    comprobantesCambios = { archivos: [], eliminarIds: [] }
-  ) => {
-    try {
-      const compra = compraEditando
-        ? await actualizarCompra(compraEditando.id, datosForm)
-        : await crearCompra(datosForm);
-
-      await Promise.all([
-        ...comprobantesCambios.eliminarIds.map((cid) => eliminarComprobanteCompra(compra.id, cid)),
-        ...comprobantesCambios.archivos.map((archivo) =>
-          subirComprobanteCompra(compra.id, archivo)
-        ),
-      ]);
-
-      setModalCompraAbierto(false);
-      setCompraEditando(null);
-      refetchCompras();
-    } catch (err) {
-      console.error("Error guardando compra:", err);
-      toast.error("No se pudo guardar la compra.");
-    }
-  };
-
-  const handleConfirmarEliminarCompra = async () => {
-    const compraId = compraAEliminar.id;
-    setCompraAEliminar(null);
-    try {
-      await eliminarCompra(compraId);
-      refetchCompras();
-    } catch (err) {
-      console.error("Error eliminando compra:", err);
-      toast.error("No se pudo eliminar la compra.");
-    }
-  };
-
+  // --- Compras (historial, sólo consulta) ---
+  // Marcar pagado/entregado es lo único que se escribe desde acá: es
+  // justamente la acción que uno quiere a mano mirando lo que le debe a un
+  // proveedor. Crear/editar/borrar la compra sigue viviendo en su proyecto.
   const handleToggleEstadoPagoCompra = async (compra) => {
     try {
       const estado_pago = compra.estado_pago === "pagado" ? "pendiente" : "pagado";
@@ -300,36 +256,6 @@ export function ProveedorDetalle() {
       console.error("Error actualizando el estado de envío de la compra:", err);
       toast.error("No se pudo actualizar el estado de envío.");
     }
-  };
-
-  const handleAgregarComprobantesCompra = async (compraId, files) => {
-    await Promise.all(
-      Array.from(files).map((archivo) => subirComprobanteCompra(compraId, archivo))
-    );
-    refetchCompras();
-  };
-
-  const handleEliminarComprobanteCompra = async (compraId, comprobanteId) => {
-    await eliminarComprobanteCompra(compraId, comprobanteId);
-    refetchCompras();
-  };
-
-  // --- Notas (cuenta corriente: nota de crédito / débito) ---
-  const handleAgregarNotaCompra = (compra) => {
-    setNotaCompra(compra);
-    setModalNotaAbierto(true);
-  };
-
-  const handleGuardarNota = async (payload) => {
-    await crearNotaCompra(notaCompra.id, payload);
-    setModalNotaAbierto(false);
-    setNotaCompra(null);
-    refetchCompras();
-  };
-
-  const handleEliminarNotaCompra = async (compraId, notaId) => {
-    await eliminarNotaCompra(compraId, notaId);
-    refetchCompras();
   };
 
   if (cargando) return <Cargando texto="Cargando proveedor..." />;
@@ -372,7 +298,9 @@ export function ProveedorDetalle() {
         </div>
 
         <div className="proveedor-detalle-datos">
-          <span className="proveedor-detalle-dato">CUIT: {proveedor.cuit}</span>
+          {proveedor.cuit && (
+            <span className="proveedor-detalle-dato">CUIT: {proveedor.cuit}</span>
+          )}
           {proveedor.telefono && (
             <span className="proveedor-detalle-dato">
               <Phone size={15} strokeWidth={2} /> {proveedor.telefono}
@@ -441,7 +369,7 @@ export function ProveedorDetalle() {
                   titulo={nota.origenDescripcion}
                   detalle={`Compra del ${formatFecha(nota.origenFecha)}`}
                   monto={`${esCredito ? "-" : "+"}${formatMoneda(nota.monto)}`}
-                  onClick={() => irACompra(nota.origenId)}
+                  onClick={() => setDetalleCompraId(nota.origenId)}
                 />
               );
             })}
@@ -452,7 +380,19 @@ export function ProveedorDetalle() {
       <div className="proveedor-detalle-seccion">
         <div className="proveedor-detalle-seccion-header">
           <h2>Catálogo de productos</h2>
-          {canManage && <button onClick={handleNuevoProducto}>Nuevo producto</button>}
+          {canManage && (
+            <div className="proveedor-detalle-seccion-header-acciones">
+              <button
+                type="button"
+                className="proveedor-detalle-btn-ia"
+                onClick={() => setModalImportarAbierto(true)}
+              >
+                <Sparkles size={15} strokeWidth={2.25} />
+                Importar catálogo
+              </button>
+              <button onClick={handleNuevoProducto}>Nuevo producto</button>
+            </div>
+          )}
         </div>
 
         {productos.length === 0 ? (
@@ -521,13 +461,13 @@ export function ProveedorDetalle() {
       <div className="acciones-seccion">
         <div className="acciones-header">
           <h2>Historial de compras</h2>
-          {canManage && <button onClick={handleNuevaCompra}>Nueva compra</button>}
         </div>
 
         {resumen.comprasDelProveedor.length > 0 && (
           <FiltrosLista
             filtros={filtrosCompras}
             onCambiar={setFiltrosCompras}
+            proyectos={proyectosConCompras}
             mostrarNotas
             mostrarEstadoPago
             mostrarEstadoEnvio
@@ -536,33 +476,25 @@ export function ProveedorDetalle() {
 
         {resumen.comprasDelProveedor.length === 0 ? (
           <p>Todavía no hay compras registradas a este proveedor.</p>
-        ) : comprasDelProveedorFiltradas.length === 0 ? (
-          <p>Ninguna compra coincide con los filtros.</p>
         ) : (
-          <div className="acciones-grid acciones-grid--compras">
-            {comprasDelProveedorFiltradas.map((compra) => (
-              <CompraCard
-                key={compra.id}
-                compra={compra}
-                faseNombre={nombreFase(compra.fase_id)}
-                proveedorNombre={proveedor.nombre}
-                productos={productos}
-                onEditar={handleEditarCompra}
-                onEliminar={(compraId) =>
-                  setCompraAEliminar(resumen.comprasDelProveedor.find((c) => c.id === compraId))
-                }
-                onTogglePago={handleToggleEstadoPagoCompra}
-                onToggleEnvio={handleToggleEstadoEnvioCompra}
-                onVerComprobante={getComprobanteCompra}
-                onAgregarComprobante={handleAgregarComprobantesCompra}
-                onEliminarComprobante={handleEliminarComprobanteCompra}
-                onAgregarNota={handleAgregarNotaCompra}
-                onVerNota={getNotaCompra}
-                onEliminarNota={handleEliminarNotaCompra}
-                onAbrirDetalle={setCompraDetalle}
-              />
-            ))}
-          </div>
+          <LibroDeObra
+            titulo={`Compras — ${proveedor.nombre}`}
+            compras={comprasDelProveedorFiltradas}
+            nombreFase={nombreFase}
+            nombreProyecto={nombreProyectoDeCompra}
+            saldoLabel="Total comprado"
+            canManage={canManage}
+            // Se consulta, no se edita: la compra se carga y se corrige desde
+            // su proyecto. Lo único que queda a mano son los toggles de
+            // pago/envío, que es lo que se mira parado en un proveedor.
+            permitirEdicion={false}
+            onAbrirDetalle={(_tipo, compra) => setDetalleCompraId(compra.id)}
+            onTogglePagoCompra={handleToggleEstadoPagoCompra}
+            onToggleEnvioCompra={handleToggleEstadoEnvioCompra}
+            onVerComprobante={(_tipo, compraId, comprobanteId) =>
+              getComprobanteCompra(compraId, comprobanteId)
+            }
+          />
         )}
       </div>
 
@@ -581,32 +513,19 @@ export function ProveedorDetalle() {
           categoriasDisponibles={categorias}
           onGuardar={handleGuardarProducto}
           onCerrar={() => setModalProductoAbierto(false)}
+          onCategoriaCreada={refetchCategorias}
         />
       )}
 
-      {modalCompraAbierto && (
-        <ModalCompra
-          compra={compraEditando}
-          fasesDisponibles={fasesParaSelect}
-          proveedorFijo={proveedor}
-          productosDisponibles={productos}
-          impuestosDisponibles={impuestos}
-          onGuardar={handleGuardarCompra}
-          onCerrar={() => setModalCompraAbierto(false)}
-          onVerComprobante={
-            compraEditando ? (c) => getComprobanteCompra(compraEditando.id, c.id) : undefined
-          }
-        />
-      )}
-
-      {modalNotaAbierto && (
-        <ModalNota
-          contexto="compra"
-          entidad={notaCompra}
-          productos={productos}
-          impuestosDisponibles={impuestos}
-          onGuardar={handleGuardarNota}
-          onCerrar={() => setModalNotaAbierto(false)}
+      {modalImportarAbierto && (
+        <ModalImportarCatalogo
+          proveedor={proveedor}
+          productosDelProveedor={productos}
+          categoriasDisponibles={categorias}
+          onImportado={refetchProductos}
+          onCerrar={() => setModalImportarAbierto(false)}
+          onCargarAMano={handleNuevoProducto}
+          onCategoriaCreada={refetchCategorias}
         />
       )}
 
@@ -616,9 +535,12 @@ export function ProveedorDetalle() {
           faseNombre={nombreFase(compraDetalle.fase_id)}
           proveedorNombre={proveedor.nombre}
           productos={productos}
-          onCerrar={() => setCompraDetalle(null)}
+          onCerrar={() => setDetalleCompraId(null)}
           onVerComprobante={(c) => getComprobanteCompra(compraDetalle.id, c.id)}
           onVerNota={(n) => getNotaCompra(compraDetalle.id, n.id)}
+          onTogglePago={() => handleToggleEstadoPagoCompra(compraDetalle)}
+          onToggleEnvio={() => handleToggleEstadoEnvioCompra(compraDetalle)}
+          canManage={canManage}
         />
       )}
 
@@ -642,15 +564,6 @@ export function ProveedorDetalle() {
         />
       )}
 
-      {compraAEliminar && (
-        <ModalConfirmar
-          titulo="Eliminar compra"
-          mensaje="Esta acción no se puede deshacer."
-          nombreRecurso={`Compra del ${formatFecha(compraAEliminar.fecha)}`}
-          onConfirmar={handleConfirmarEliminarCompra}
-          onCancelar={() => setCompraAEliminar(null)}
-        />
-      )}
     </div>
   );
 }

@@ -36,3 +36,40 @@ export const extraerComprobanteConIA = async (archivo, tipoEntidad, contexto = {
   });
   return data;
 };
+
+/**
+ * Le pide al backend que lea un catálogo de proveedor (Excel/CSV, PDF o
+ * foto de una lista de precios) con IA, para prellenar la vista previa de
+ * ModalImportarCatalogo. No sube ni guarda nada -- la creación/actualización
+ * real la hace el front después, llamando a los endpoints normales de
+ * proveedores/productos con lo que el usuario confirmó.
+ *
+ * @param {File} archivo
+ * @param {string|null} proveedorId Si el catálogo es de un proveedor que ya
+ *   existe, se manda su id y la IA no intenta resolver uno. Si es null, la
+ *   IA intenta leer el proveedor del documento y lo devuelve en
+ *   proveedor_sugerido.
+ * @param {{proveedores?: {id:string,nombre:string,cuit?:string}[], productos?: {id:string,marca:string,modelo:string,tipo:string,precio:number}[], categorias?: {id:string,nombre:string,tipo:string}[]}} contexto
+ *   `productos` solo tiene sentido si ya se manda proveedorId -- es el
+ *   catálogo actual de ESE proveedor, para clasificar cada fila detectada.
+ *   `categorias` es el catálogo completo, para sugerir categoria_ids en los
+ *   productos nuevos.
+ */
+export const leerCatalogoConIA = async (archivo, proveedorId, contexto = {}) => {
+  const formData = new FormData();
+  formData.append("archivo", archivo);
+  if (proveedorId) formData.append("proveedor_id", proveedorId);
+  formData.append(
+    "contexto",
+    JSON.stringify({
+      proveedores: contexto.proveedores ?? [],
+      productos: contexto.productos ?? [],
+      categorias: contexto.categorias ?? [],
+    })
+  );
+
+  const { data } = await axiosClient.post("/ia/leer-catalogo", formData, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return data;
+};

@@ -17,6 +17,7 @@ import "./ModalShell.css";
 export function ModalShell({
   titulo,
   contexto,
+  contextoDestacado = false,
   ancho = false,
   clase = "",
   capaSuperior = false,
@@ -53,9 +54,20 @@ export function ModalShell({
         onSubmit={onSubmit}
       >
         <div className="shell__header">
+          {/* Con `contextoDestacado` el contexto sube arriba del título como
+              etiqueta (punto + mayúsculas): sirve cuando es un nombre corto
+              ("Aluar Sur"). Por defecto queda debajo y en texto plano, que es
+              lo que necesitan los modales cuyo contexto es una frase larga
+              (ej. "Sobre: <descripción>" en ModalNota). */}
           <div className="shell__titulo">
+            {contexto && contextoDestacado && (
+              <span className="shell__contexto shell__contexto--destacado">
+                <span className="shell__contexto-punto" />
+                {contexto}
+              </span>
+            )}
             <h2>{titulo}</h2>
-            {contexto && <span className="shell__contexto">{contexto}</span>}
+            {contexto && !contextoDestacado && <span className="shell__contexto">{contexto}</span>}
           </div>
           <span className="shell__espaciador" />
           <button

@@ -26,6 +26,10 @@ FIRMAS_POR_EXTENSION = {
     ".jpg": (b"\xff\xd8\xff",),
     ".jpeg": (b"\xff\xd8\xff",),
     ".png": (b"\x89PNG\r\n\x1a\n",),
+    # .xlsx es en realidad un .zip -- no hay ext propia acá porque nadie más
+    # que /ia/leer-catalogo la usa (ver routes/ia.py), pero la firma es
+    # genérica y no choca con nada de lo de arriba.
+    ".xlsx": (b"PK\x03\x04",),
 }
 
 CONTENT_TYPE_POR_EXTENSION = {

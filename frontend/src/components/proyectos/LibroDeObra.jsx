@@ -15,7 +15,7 @@ import { iconoParaArchivo, nombreDeArchivo } from "../../utils/archivos";
 import { getEstadoPago, getEstadoEnvio } from "../../constants/estadoCompra";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
-import { esCompraImpaga, diasDesde } from "../../utils/seguimiento";
+import { esCompraImpaga, esCompraSinEntregar, diasDesde } from "../../utils/seguimiento";
 import { VERDE, NARANJA, AZUL } from "../../constants/colores";
 
 import "./LibroDeObra.css";
@@ -61,7 +61,17 @@ export function LibroDeObra({
   cobros = [],
   nombreFase,
   nombreProveedor,
+  // Opcional: sólo lo pasa la lista de compras de un proveedor, donde los
+  // movimientos son de varios proyectos y saber de cuál es cada uno es el
+  // dato que más falta. Adentro de un proyecto sobra y no se pasa.
+  nombreProyecto,
   canManage = false,
+  // Un admin puede tener permiso para editar y aun así no corresponder que
+  // edite desde acá: en la ficha del proveedor la compra se consulta, pero
+  // se carga y se corrige desde su proyecto, que es donde tiene contexto de
+  // fase. Los estados de pago/envío SÍ se togglean igual (ver EstadoBoton),
+  // que es la acción que uno quiere a mano mirando lo que le debe a alguien.
+  permitirEdicion = true,
   // En una fase no entra plata, así que el acumulado no es un "saldo": el
   // rótulo se ajusta desde donde se use.
   saldoLabel = "Saldo",
@@ -84,12 +94,20 @@ export function LibroDeObra({
         fecha: compra.fecha,
         importe: Number(compra.precio_total) || 0,
         titulo: compra.descripcion,
-        // Una compra impaga hace cuántos días lo está: es la señal que
-        // dispara el "sin pagar" de los KPI, y se pierde si sólo se ve la fecha.
-        alerta: esCompraImpaga(compra)
-          ? `${diasDesde(compra.fecha, new Date())} días sin pagar`
-          : null,
+        // Lo que le falta a la compra, en rojo al lado del título: hace
+        // cuántos días está impaga (la señal que dispara el "sin pagar" de
+        // los KPI, y que se pierde si sólo se ve la fecha) y si además
+        // todavía no llegó. Las dos cosas se acumulan: una compra puede
+        // estar impaga Y sin entregar.
+        alerta:
+          [
+            esCompraImpaga(compra) ? `${diasDesde(compra.fecha, new Date())} días sin pagar` : null,
+            esCompraSinEntregar(compra) ? "sin entregar" : null,
+          ]
+            .filter(Boolean)
+            .join(" · ") || null,
         contexto: [
+          nombreProyecto?.(compra),
           nombreProveedor?.(compra.proveedor_id),
           nombreFase?.(compra.fase_id),
           getTipoFacturaLabel(compra.tipo_factura),
@@ -138,14 +156,23 @@ export function LibroDeObra({
     }
 
     return cronologicos.reverse();
-  }, [compras, gastos, cobros, nombreFase, nombreProveedor]);
+  }, [compras, gastos, cobros, nombreFase, nombreProveedor, nombreProyecto]);
 
+  // Sólo los tipos que realmente aparecen en la planilla: una lista que es
+  // toda de compras (la ficha de un proveedor) no tiene por qué anunciar
+  // "Cobros $ 0 · Gastos $ 0".
   const totalesPorTipo = useMemo(
     () =>
-      Object.keys(TIPOS).map((tipo) => ({
-        tipo,
-        total: movimientos.filter((m) => m.tipo === tipo).reduce((acc, m) => acc + m.importe, 0),
-      })),
+      Object.keys(TIPOS)
+        .map((tipo) => ({
+          tipo,
+          items: movimientos.filter((m) => m.tipo === tipo),
+        }))
+        .filter(({ items }) => items.length > 0)
+        .map(({ tipo, items }) => ({
+          tipo,
+          total: items.reduce((acc, m) => acc + m.importe, 0),
+        })),
     [movimientos]
   );
 
@@ -178,12 +205,17 @@ export function LibroDeObra({
     }
   };
 
+  // La columna de acciones (editar/eliminar/nota) define el ancho del grid
+  // -- ver --libro-cols en LibroDeObra.css. Si no se dibuja, el grid tiene
+  // que volver al de lectura o quedaría una columna vacía a la derecha.
+  const mostrarAcciones = canManage && permitirEdicion;
+
   if (movimientos.length === 0) {
     return <p className="libro-vacio">No hay movimientos que coincidan.</p>;
   }
 
   return (
-    <div className={`libro${canManage ? " libro--admin" : ""}`}>
+    <div className={`libro${mostrarAcciones ? " libro--admin" : ""}`}>
       <div className="libro__cabecera">
         <span className="libro__titulo">{titulo}</span>
         <span className="libro__espaciador" />
@@ -204,7 +236,7 @@ export function LibroDeObra({
         <span className="label-ficha">Estado</span>
         <span className="label-ficha libro__num">Importe</span>
         <span className="label-ficha libro__num">Saldo</span>
-        {canManage && <span />}
+        {mostrarAcciones && <span />}
       </div>
 
       {dias.map((dia) => (
@@ -222,6 +254,7 @@ export function LibroDeObra({
               key={m.key}
               movimiento={m}
               canManage={canManage}
+              mostrarAcciones={mostrarAcciones}
               onAbrirDetalle={onAbrirDetalle}
               onTogglePagoCompra={onTogglePagoCompra}
               onToggleEnvioCompra={onToggleEnvioCompra}
@@ -241,7 +274,7 @@ export function LibroDeObra({
         <span />
         <span />
         <span className="libro__num libro__saldo-monto cifra">{formatMoneda(saldoFinal)}</span>
-        {canManage && <span />}
+        {mostrarAcciones && <span />}
       </div>
     </div>
   );
@@ -250,6 +283,7 @@ export function LibroDeObra({
 function FilaMovimiento({
   movimiento,
   canManage,
+  mostrarAcciones,
   onAbrirDetalle,
   onTogglePagoCompra,
   onToggleEnvioCompra,
@@ -361,7 +395,7 @@ function FilaMovimiento({
 
       <span className="libro__num libro__saldo-fila cifra">{formatMoneda(saldo)}</span>
 
-      {canManage && (
+      {mostrarAcciones && (
         <span className="libro__acciones">
           {(tipo === "compra" || tipo === "cobro") && onAgregarNota && (
             <button

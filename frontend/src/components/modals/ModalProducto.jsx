@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { TIPOS_PRODUCTO } from "../../constants/tipoProducto";
 import "./ModalProducto.css";
 import ModalShell from "./ModalShell";
+import ChipsCategorias from "./ChipsCategorias";
 
 export function ModalProducto({
   producto,
@@ -9,6 +10,7 @@ export function ModalProducto({
   categoriasDisponibles = [],
   onGuardar,
   onCerrar,
+  onCategoriaCreada,
 }) {
   const esEdicion = Boolean(producto);
 
@@ -32,11 +34,6 @@ export function ModalProducto({
       });
     }
   }, [producto]);
-
-  // Las categorías son sub-rubros de un tipo (ej. "Aires Acondicionados" es del
-  // tipo "equipo") -- solo tiene sentido ofrecer las que coinciden con el tipo
-  // elegido, para no dejar cargar una combinación sin sentido.
-  const categoriasDelTipo = categoriasDisponibles.filter((c) => c.tipo === form.tipo);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -76,7 +73,8 @@ export function ModalProducto({
   return (
     <ModalShell
       titulo={esEdicion ? "Editar producto" : "Nuevo producto"}
-      contexto={proveedor ? `Proveedor: ${proveedor.nombre}` : undefined}
+      contexto={proveedor?.nombre}
+      contextoDestacado
       onCerrar={onCerrar}
       onSubmit={handleSubmit}
       cerrarDeshabilitado={guardando}
@@ -138,25 +136,14 @@ export function ModalProducto({
       </div>
 
       {form.tipo && (
-        <div className="modal-form-checkboxes">
-          <span className="modal-form-checkboxes-label">Categorías</span>
-          {categoriasDelTipo.length === 0 ? (
-            <p className="modal-form-seccion-vacio">No hay categorías cargadas para este tipo.</p>
-          ) : (
-            <div className="modal-form-checkboxes-grid">
-              {categoriasDelTipo.map((cat) => (
-                <label key={cat.id} className="modal-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={form.categoria_ids.includes(cat.id)}
-                    onChange={() => toggleCategoria(cat.id)}
-                  />
-                  {cat.nombre}
-                </label>
-              ))}
-            </div>
-          )}
-        </div>
+        <ChipsCategorias
+          categoriaIds={form.categoria_ids}
+          tipo={form.tipo}
+          categoriasDisponibles={categoriasDisponibles}
+          onToggle={toggleCategoria}
+          onLimpiar={() => setForm((prev) => ({ ...prev, categoria_ids: [] }))}
+          onCategoriaCreada={onCategoriaCreada}
+        />
       )}
     </ModalShell>
   );
