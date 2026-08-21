@@ -8,6 +8,7 @@ import {
   UserPlus,
   History,
   Settings,
+  FolderSearch,
   LogOut,
 } from "lucide-react";
 import { useAuth } from "../context/useAuth";
@@ -25,6 +26,7 @@ import {
   RUTA_MANAGER_AUTORIZADOS,
   RUTA_MANAGER_AUDITORIA,
   RUTA_MANAGER_CONFIGURACION,
+  RUTA_MANAGER_ARCHIVOS,
   esManager,
 } from "../constants/manager";
 import logo from "../assets/HS_logo_blanco.png";
@@ -47,6 +49,7 @@ const ITEMS_NAV_MANAGER = [
   { to: RUTA_MANAGER_AUTORIZADOS, label: "Autorizados", icono: UserPlus },
   { to: RUTA_MANAGER_AUDITORIA, label: "Historial", icono: History },
   { to: RUTA_MANAGER_CONFIGURACION, label: "Configuración", icono: Settings },
+  { to: RUTA_MANAGER_ARCHIVOS, label: "Archivos", icono: FolderSearch },
 ];
 
 // "mlopez" -> "ML", "Agustin" -> "AG" (sin separador, se usan las primeras 2

@@ -40,3 +40,12 @@ export function formatFechaHora(instante) {
     minute: "2-digit",
   });
 }
+
+// Tamaño de archivo legible (1536 -> "1.5 KB"), para la reconciliación de
+// R2 (ver GestionArchivos.jsx). Los comprobantes están topeados a 10MB (ver
+// MAX_SIZE_BYTES en el backend), así que nunca hace falta ir más allá de MB.
+export function formatBytes(bytes) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}

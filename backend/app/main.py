@@ -28,6 +28,7 @@ from app.routes import (
     productos,
     proveedores,
     proyectos,
+    storage,
     usuarios,
 )
 from app.security_middleware import CSRFMiddleware, SecurityHeadersMiddleware, UnhandledExceptionMiddleware
@@ -101,6 +102,7 @@ app.include_router(gastos.router)
 app.include_router(ia.router)
 app.include_router(auditoria.router)
 app.include_router(configuracion.router)
+app.include_router(storage.router)
 
 
 @app.get("/")

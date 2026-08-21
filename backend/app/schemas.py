@@ -281,6 +281,56 @@ class ConfiguracionUpdate(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Reconciliación de archivos en R2
+# ---------------------------------------------------------------------------
+
+
+class ObjetoR2(BaseModel):
+    """Un objeto del bucket que no tiene ninguna fila de comprobante/nota
+    apuntándolo -- ver app/routes/storage.py."""
+
+    key: str
+    tamanio_bytes: int
+    modificado_en: datetime
+
+
+class ArchivoRoto(BaseModel):
+    """El caso inverso: una fila con archivo_path que ya no existe en R2."""
+
+    tipo_recurso: str
+    recurso_id: str
+    archivo_path: str
+
+
+class ReconciliacionR2(BaseModel):
+    huerfanos: list[ObjetoR2]
+    rotos: list[ArchivoRoto]
+
+
+class PurgarHuerfanosRequest(BaseModel):
+    claves: list[str]
+
+    @field_validator("claves")
+    @classmethod
+    def al_menos_una_clave(cls, claves: list[str]) -> list[str]:
+        if not claves:
+            raise ValueError("Mandá al menos una clave para purgar")
+        return claves
+
+
+class PurgarHuerfanosResultado(BaseModel):
+    """
+    `omitidas`: claves que se pidieron purgar pero ya no son huérfanas o
+    fallaron al borrar (ver routes/storage.py) -- se revalida cada una justo
+    antes de borrar, no solo contra la lista que vio el front al abrir la
+    pantalla.
+    """
+
+    purgadas: list[str]
+    omitidas: list[str]
+
+
+# ---------------------------------------------------------------------------
 # Proyecto / Fase
 # ---------------------------------------------------------------------------
 

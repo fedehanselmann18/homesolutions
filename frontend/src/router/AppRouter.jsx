@@ -23,6 +23,7 @@ const GestionEquipo = lazy(() => import("../pages/manager/GestionEquipo"));
 const GestionAutorizados = lazy(() => import("../pages/manager/GestionAutorizados"));
 const GestionAuditoria = lazy(() => import("../pages/manager/GestionAuditoria"));
 const GestionConfiguracion = lazy(() => import("../pages/manager/GestionConfiguracion"));
+const GestionArchivos = lazy(() => import("../pages/manager/GestionArchivos"));
 
 // Rutas internas: agregá acá cada página nueva a medida que la vayas armando
 // (Proyectos, Proveedores, Productos, etc.), todas anidadas dentro de
@@ -59,6 +60,7 @@ export function AppRouter() {
               <Route path="autorizados" element={<GestionAutorizados />} />
               <Route path="auditoria" element={<GestionAuditoria />} />
               <Route path="configuracion" element={<GestionConfiguracion />} />
+              <Route path="archivos" element={<GestionArchivos />} />
             </Route>
           </Route>
         </Route>

@@ -418,3 +418,39 @@
 .manager-configuracion__form .campo {
   width: 220px;
 }
+
+/* --- Archivos (reconciliación R2) ----------------------------------------- */
+
+.manager-archivos__seccion {
+  margin-bottom: var(--space-6);
+}
+
+.manager-archivos__seccion:last-child {
+  margin-bottom: 0;
+}
+
+.manager-archivos__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.manager-archivos__header .manager-subtitulo {
+  margin: 0;
+}
+
+.manager-archivos__ayuda-inline {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 400;
+  color: var(--color-tinta-muted);
+}
+
+.manager-archivos__key {
+  font-family: monospace;
+  font-size: var(--text-sm);
+  color: var(--color-tinta);
+  word-break: break-all;
+}

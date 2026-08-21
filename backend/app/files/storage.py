@@ -256,3 +256,29 @@ def ver_comprobante(path: str):
     if not ruta.exists():
         raise HTTPException(status_code=404, detail="Archivo no encontrado")
     return FileResponse(ruta, filename=ruta.name)
+
+
+def listar_objetos_r2() -> list[dict]:
+    """
+    Lista TODOS los objetos del bucket configurado, paginando internamente
+    (list_objects_v2 devuelve como mucho 1000 por página). Solo tiene
+    sentido llamarla si settings.r2_configurado es True -- el caller decide
+    eso (ver routes/storage.py), acá no se valida para no importar la
+    respuesta HTTP de "R2 no configurado" en un módulo que también sabe
+    hablar con disco local.
+    """
+    objetos = []
+    paginador = _r2_client().get_paginator("list_objects_v2")
+    try:
+        for pagina in paginador.paginate(Bucket=settings.R2_BUCKET_NAME):
+            for obj in pagina.get("Contents", []):
+                objetos.append(
+                    {
+                        "key": obj["Key"],
+                        "tamanio_bytes": obj["Size"],
+                        "modificado_en": obj["LastModified"],
+                    }
+                )
+    except (BotoCoreError, ClientError) as exc:
+        raise HTTPException(status_code=502, detail="No se pudo listar los objetos de R2") from exc
+    return objetos

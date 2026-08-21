@@ -18,6 +18,7 @@ export const RUTA_MANAGER_EQUIPO = `${RUTA_RESETEO}/equipo`;
 export const RUTA_MANAGER_AUTORIZADOS = `${RUTA_RESETEO}/autorizados`;
 export const RUTA_MANAGER_AUDITORIA = `${RUTA_RESETEO}/auditoria`;
 export const RUTA_MANAGER_CONFIGURACION = `${RUTA_RESETEO}/configuracion`;
+export const RUTA_MANAGER_ARCHIVOS = `${RUTA_RESETEO}/archivos`;
 
 export const esManager = (usuario) => usuario?.nombre_usuario === NOMBRE_USUARIO_MANAGER;
 

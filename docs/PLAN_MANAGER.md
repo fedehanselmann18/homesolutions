@@ -20,7 +20,7 @@ directo a la infraestructura.
 
 1. ~~Auditoría persistida~~ (base para justificar y loguear todo lo demás) — HECHO
 2. ~~Panel de configuración del sistema~~ — HECHO
-3. Reconciliación de archivos huérfanos en R2
+3. ~~Reconciliación de archivos huérfanos en R2~~ — HECHO
 4. Sesiones activas
 5. Backup / export on-demand
 6. "Ver como" (impersonar usuario) — al final, alcance acotado a solo lectura
@@ -110,7 +110,28 @@ proyecto.
 
 ---
 
-## 3. Reconciliación de archivos huérfanos en R2
+## 3. Reconciliación de archivos huérfanos en R2 — HECHO (21/08/2026)
+
+Implementado con el bonus incluido: `GET /storage/reconciliacion` devuelve
+huérfanos (objeto en R2 sin fila) Y rotos (fila con `archivo_path` que ya no
+existe en R2), comparando contra las 5 tablas que tienen `archivo_path`
+(`ComprobanteCompra`, `NotaCompra`, `ComprobanteGasto`, `ComprobanteCobro`,
+`NotaCobro`). `POST /storage/reconciliacion/purgar` borra las claves
+pedidas, revalidando cada una contra la DB en el momento del borrado (no
+solo contra lo que vio el front al abrir la pantalla) y queda en la
+auditoría del punto 1. Página "Archivos" nueva en el sidebar de Manager.
+
+**Decisión que se tomó al hacerlo** (no estaba en la lista de pendientes):
+on-demand con botón, no job periódico — encaja con "correr on-demand vs.
+job periódico" de abajo, resuelto a favor de on-demand porque para el
+tamaño de este equipo un botón alcanza y un job periódico sumaría
+infraestructura (cron, notificaciones) sin necesidad real todavía.
+
+Solo aplica con R2 configurado (en disco local, dev, el endpoint devuelve
+400 y la pantalla lo muestra como estado informativo, no como error) — no
+se pudo verificar visualmente contra un bucket real porque el entorno local
+no tiene R2 configurado; sí quedó cubierto con 12 tests de backend
+(mockeando `listar_objetos_r2`/`eliminar_comprobante`) y 5 de frontend.
 
 **Qué resuelve:** ojo, esto ya está mejor cubierto de lo que parecía —
 `eliminar_comprobante` (`app/files/storage.py`) se llama explícitamente antes
