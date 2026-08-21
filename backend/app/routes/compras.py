@@ -197,7 +197,7 @@ def create_compra(
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al crear la compra: datos inválidos")
 
-    log_auditoria(current_user.id, "create", "Compra", nueva_compra.id)
+    log_auditoria(db, current_user.id, "create", "Compra", nueva_compra.id)
     return nueva_compra
 
 
@@ -316,7 +316,7 @@ def update_compra(
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al actualizar la compra: datos inválidos")
 
-    log_auditoria(current_user.id, "update", "Compra", compra_existente.id)
+    log_auditoria(db, current_user.id, "update", "Compra", compra_existente.id)
     return compra_existente
 
 
@@ -344,7 +344,7 @@ def delete_compra(
     db.delete(compra)
     db.commit()
 
-    log_auditoria(current_user.id, "delete", "Compra", compra_data.id)
+    log_auditoria(db, current_user.id, "delete", "Compra", compra_data.id)
     return compra_data
 
 

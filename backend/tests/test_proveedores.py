@@ -56,7 +56,9 @@ def test_actualizar_proveedor_con_cuit_invalido_es_rechazado(client, db_session,
 
 
 def test_crear_proveedor_sin_cuit(client, headers_admin):
-    respuesta = client.post("/proveedores/crear", json={"nombre": "Distribuidora Sin CUIT"}, headers=headers_admin)
+    respuesta = client.post(
+        "/proveedores/crear", json={"nombre": "Distribuidora Sin CUIT"}, headers=headers_admin
+    )
     assert respuesta.status_code == 201
     assert respuesta.json()["cuit"] is None
 

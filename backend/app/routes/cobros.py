@@ -82,7 +82,7 @@ def create_cobro(
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al crear el cobro: datos inválidos")
 
-    log_auditoria(current_user.id, "create", "Cobro", nuevo_cobro.id)
+    log_auditoria(db, current_user.id, "create", "Cobro", nuevo_cobro.id)
     return nuevo_cobro
 
 
@@ -107,7 +107,7 @@ def update_cobro(
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al actualizar el cobro: datos inválidos")
 
-    log_auditoria(current_user.id, "update", "Cobro", cobro_existente.id)
+    log_auditoria(db, current_user.id, "update", "Cobro", cobro_existente.id)
     return cobro_existente
 
 
@@ -129,7 +129,7 @@ def delete_cobro(
     db.delete(cobro)
     db.commit()
 
-    log_auditoria(current_user.id, "delete", "Cobro", cobro_data.id)
+    log_auditoria(db, current_user.id, "delete", "Cobro", cobro_data.id)
     return cobro_data
 
 

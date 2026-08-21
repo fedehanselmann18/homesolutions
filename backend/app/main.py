@@ -14,10 +14,12 @@ from app.config import settings
 from app.db.db import get_db
 from app.limiter import limiter
 from app.routes import (
+    auditoria,
     categoriagasto,
     categorias,
     cobros,
     compras,
+    configuracion,
     fases,
     gastos,
     ia,
@@ -97,6 +99,8 @@ app.include_router(compras.router)
 app.include_router(cobros.router)
 app.include_router(gastos.router)
 app.include_router(ia.router)
+app.include_router(auditoria.router)
+app.include_router(configuracion.router)
 
 
 @app.get("/")

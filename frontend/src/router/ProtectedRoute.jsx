@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/useAuth.js";
-import { RUTA_RESETEO, esManager } from "../constants/manager.js";
+import { RUTA_MANAGER_EQUIPO, esManager, esRutaManager } from "../constants/manager.js";
 
 // Envuelve las rutas internas. Mientras useAuth resuelve si hay sesión
 // (loading), no renderiza nada para evitar un parpadeo hacia /login antes
@@ -23,16 +23,16 @@ export function ProtectedRoute() {
   }
 
   // Encierro bidireccional de la cuenta "Manager" (ver constants/manager.js):
-  // solo existe para resetear contraseñas, así que no entra a ninguna otra
-  // página aunque escriba la URL a mano -- y al revés, la página de reseteo
-  // no es para el resto del equipo.
-  const enRutaReseteo = pathname === RUTA_RESETEO;
+  // solo existe para el subárbol de gestión de cuentas (equipo/autorizados/
+  // auditoría), así que no entra a ninguna otra página aunque escriba la URL
+  // a mano -- y al revés, ese subárbol no es para el resto del equipo.
+  const enSubarbolManager = esRutaManager(pathname);
 
-  if (esManager(usuario) && !enRutaReseteo) {
-    return <Navigate to={RUTA_RESETEO} replace />;
+  if (esManager(usuario) && !enSubarbolManager) {
+    return <Navigate to={RUTA_MANAGER_EQUIPO} replace />;
   }
 
-  if (!esManager(usuario) && enRutaReseteo) {
+  if (!esManager(usuario) && enSubarbolManager) {
     return <Navigate to="/" replace />;
   }
 

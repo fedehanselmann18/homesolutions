@@ -124,7 +124,7 @@ def create_gasto(
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al crear el gasto: datos inválidos")
 
-    log_auditoria(current_user.id, "create", "Gasto", nuevo_gasto.id)
+    log_auditoria(db, current_user.id, "create", "Gasto", nuevo_gasto.id)
     return nuevo_gasto
 
 
@@ -163,7 +163,7 @@ def update_gasto(
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al actualizar el gasto: datos inválidos")
 
-    log_auditoria(current_user.id, "update", "Gasto", gasto_existente.id)
+    log_auditoria(db, current_user.id, "update", "Gasto", gasto_existente.id)
     return gasto_existente
 
 
@@ -183,7 +183,7 @@ def delete_gasto(
     db.delete(gasto)
     db.commit()
 
-    log_auditoria(current_user.id, "delete", "Gasto", gasto_data.id)
+    log_auditoria(db, current_user.id, "delete", "Gasto", gasto_data.id)
     return gasto_data
 
 

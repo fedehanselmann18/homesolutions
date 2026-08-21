@@ -1,5 +1,15 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Building2, Truck, GitCompare, UserCog, LogOut } from "lucide-react";
+import {
+  LayoutDashboard,
+  Building2,
+  Truck,
+  GitCompare,
+  Users,
+  UserPlus,
+  History,
+  Settings,
+  LogOut,
+} from "lucide-react";
 import { useAuth } from "../context/useAuth";
 import {
   useProyectos,
@@ -10,7 +20,13 @@ import {
   useCompras,
 } from "../hooks/queries";
 import { calcularPanel } from "../utils/panel";
-import { RUTA_RESETEO, esManager } from "../constants/manager";
+import {
+  RUTA_MANAGER_EQUIPO,
+  RUTA_MANAGER_AUTORIZADOS,
+  RUTA_MANAGER_AUDITORIA,
+  RUTA_MANAGER_CONFIGURACION,
+  esManager,
+} from "../constants/manager";
 import logo from "../assets/HS_logo_blanco.png";
 import "./Sidebar.css";
 
@@ -19,6 +35,18 @@ const ITEMS_NAV = [
   { to: "/proyectos", label: "Proyectos", icono: Building2, contador: (c) => c.proyectos },
   { to: "/proveedores", label: "Proveedores", icono: Truck, contador: (c) => c.proveedores },
   { to: "/comparador", label: "Comparador", icono: GitCompare, contador: null },
+];
+
+// Subárbol exclusivo de la cuenta "Manager" (ver constants/manager.js): antes
+// era un solo link ("Gestión de cuentas") a una pantalla con secciones
+// apiladas; ahora cada sección es su propia página, así que son varios links
+// bajo un mismo título de grupo -- mismo patrón visual que "En curso" más
+// abajo para las obras.
+const ITEMS_NAV_MANAGER = [
+  { to: RUTA_MANAGER_EQUIPO, label: "Equipo", icono: Users },
+  { to: RUTA_MANAGER_AUTORIZADOS, label: "Autorizados", icono: UserPlus },
+  { to: RUTA_MANAGER_AUDITORIA, label: "Historial", icono: History },
+  { to: RUTA_MANAGER_CONFIGURACION, label: "Configuración", icono: Settings },
 ];
 
 // "mlopez" -> "ML", "Agustin" -> "AG" (sin separador, se usan las primeras 2
@@ -131,15 +159,21 @@ export function Sidebar() {
 
       <nav className="sidebar-nav">
         {esManager(usuario) ? (
-          <NavLink
-            to={RUTA_RESETEO}
-            className={({ isActive }) =>
-              isActive ? "sidebar-link sidebar-link-active" : "sidebar-link"
-            }
-          >
-            <UserCog size={16} strokeWidth={2} className="sidebar-link-icono" />
-            Gestión de cuentas
-          </NavLink>
+          <>
+            <div className="sidebar-grupo-titulo">Gestión de cuentas</div>
+            {ITEMS_NAV_MANAGER.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={({ isActive }) =>
+                  isActive ? "sidebar-link sidebar-link-active" : "sidebar-link"
+                }
+              >
+                <item.icono size={16} strokeWidth={2} className="sidebar-link-icono" />
+                {item.label}
+              </NavLink>
+            ))}
+          </>
         ) : (
           <NavEquipo />
         )}

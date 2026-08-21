@@ -1,10 +1,9 @@
-import logging
-
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.audit import log_auditoria
 from app.auth.oAuth2 import NOMBRE_USUARIO_MANAGER, get_current_user, requiere_manager
 from app.auth.verification import hash_password
 from app.db import models
@@ -21,8 +20,6 @@ from app.schemas import (
 
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
 
-logger = logging.getLogger(__name__)
-
 # Equipo cerrado y conocido de antemano: solo las personas listadas en la
 # tabla usuarios_autorizados (ver models.UsuarioAutorizado) pueden crear
 # cuenta, y el rol de cada una es fijo (no lo elige el usuario). Antes el
@@ -38,18 +35,38 @@ logger = logging.getLogger(__name__)
 # y por qué la fila está protegida contra revocación.
 
 
-def _log_accion_manager(accion: str, usuario_nombre: str, usuario_id) -> None:
+def _log_accion_manager(
+    db: Session,
+    ejecutor: models.Usuario,
+    accion: str,
+    usuario_nombre: str,
+    usuario_id,
+    tipo_recurso: str = "Usuario",
+) -> None:
     """
-    Auditoría liviana de las acciones de mantenimiento: quedan en los logs
-    del servidor, sin tabla aparte (para el tamaño de este equipo alcanza).
-    El ejecutor es siempre la cuenta "Manager" -- va explícito en el mensaje
-    por si este helper se reutiliza para otra cosa más adelante.
+    Auditoría de las acciones de mantenimiento: van a la tabla `auditoria`
+    (consultable desde la app) y al log del servidor, igual que el resto de
+    la app -- ver app/audit.py, que hace las dos escrituras.
+
+    El ejecutor es siempre la cuenta "Manager" (todos estos endpoints pasan
+    por requiere_manager), pero se recibe como parámetro en vez de darlo por
+    sentado: la fila de auditoría tiene que decir QUIÉN, no confiar en que
+    el gate de arriba no cambie nunca.
+
+    El nombre del usuario objetivo va en `detalle` y no solo en recurso_id
+    porque el id no le dice nada a nadie leyendo el listado, y porque en las
+    acciones de borrado la fila objetivo ya no existe para ir a buscarlo.
+
+    OJO con el orden: llamar SIEMPRE después del commit de la acción (ver el
+    docstring de app/audit.py).
     """
-    logger.info(
-        "Acción de Manager: %s sobre usuario %s (id=%s)",
+    log_auditoria(
+        db,
+        ejecutor.id,
         accion,
-        usuario_nombre,
+        tipo_recurso,
         usuario_id,
+        detalle={"usuario": usuario_nombre},
     )
 
 
@@ -188,7 +205,6 @@ def autorizar_usuario(
         raise HTTPException(status_code=400, detail="Esa persona ya tiene cuenta creada")
 
     autorizado = models.UsuarioAutorizado(nombre_usuario=datos.nombre_usuario, rol=datos.rol)
-    _log_accion_manager(f"autorizar (rol={datos.rol})", datos.nombre_usuario, "sin cuenta todavía")
     try:
         db.add(autorizado)
         db.commit()
@@ -196,6 +212,15 @@ def autorizar_usuario(
     except IntegrityError:
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al autorizar el usuario")
+
+    _log_accion_manager(
+        db,
+        current_user,
+        f"autorizar (rol={datos.rol})",
+        autorizado.nombre_usuario,
+        autorizado.id,
+        tipo_recurso="Autorizacion",
+    )
     return autorizado
 
 
@@ -245,9 +270,22 @@ def revocar_autorizacion(
             detail="Esa persona ya tiene cuenta creada: desactivá la cuenta en vez de revocar la autorización",
         )
 
-    _log_accion_manager("revocar autorización", autorizado.nombre_usuario, autorizado.id)
+    # Nombre e id se copian ANTES del delete: una vez commiteado el borrado,
+    # el objeto queda sin fila detrás y leerle los atributos falla.
+    nombre_revocado = autorizado.nombre_usuario
+    id_revocado = autorizado.id
+
     db.delete(autorizado)
     db.commit()
+
+    _log_accion_manager(
+        db,
+        current_user,
+        "revocar autorización",
+        nombre_revocado,
+        id_revocado,
+        tipo_recurso="Autorizacion",
+    )
 
 
 @router.get("/opciones-registro", status_code=status.HTTP_200_OK)
@@ -391,9 +429,10 @@ def resetear_password(
     )
 
     usuario.hashed_password = hash_password(datos.password)
-    _log_accion_manager("resetear contraseña", usuario.nombre_usuario, usuario.id)
     db.commit()
     db.refresh(usuario)
+
+    _log_accion_manager(db, current_user, "resetear contraseña", usuario.nombre_usuario, usuario.id)
     return usuario
 
 
@@ -419,10 +458,11 @@ def cambiar_rol(
     """
     usuario = _buscar_usuario_ajeno(db, user_id, current_user, "No podés cambiar tu propio rol")
 
-    _log_accion_manager(f"cambiar rol a {datos.rol}", usuario.nombre_usuario, usuario.id)
     usuario.rol = datos.rol
     db.commit()
     db.refresh(usuario)
+
+    _log_accion_manager(db, current_user, f"cambiar rol a {datos.rol}", usuario.nombre_usuario, usuario.id)
     return usuario
 
 
@@ -450,12 +490,13 @@ def cerrar_sesion_de_usuario(
         db, user_id, current_user, "No podés cerrar tu propia sesión con esto (usá /auth/logout)"
     )
 
-    _log_accion_manager("cerrar sesión", usuario.nombre_usuario, usuario.id)
     db.query(models.Usuario).filter(models.Usuario.id == usuario.id).update(
         {"fecha_actualizacion": func.now()}, synchronize_session=False
     )
     db.commit()
     db.refresh(usuario)
+
+    _log_accion_manager(db, current_user, "cerrar sesión", usuario.nombre_usuario, usuario.id)
     return usuario
 
 
@@ -474,10 +515,11 @@ def desactivar_usuario(
     """
     usuario = _buscar_usuario_ajeno(db, user_id, current_user, "No podés desactivar tu propia cuenta")
 
-    _log_accion_manager("desactivar", usuario.nombre_usuario, usuario.id)
     usuario.activo = False
     db.commit()
     db.refresh(usuario)
+
+    _log_accion_manager(db, current_user, "desactivar", usuario.nombre_usuario, usuario.id)
     return usuario
 
 
@@ -492,8 +534,9 @@ def reactivar_usuario(
     """Deshace un /desactivar: la persona vuelve a poder loguearse."""
     usuario = _buscar_usuario_ajeno(db, user_id, current_user, "No podés reactivar tu propia cuenta")
 
-    _log_accion_manager("reactivar", usuario.nombre_usuario, usuario.id)
     usuario.activo = True
     db.commit()
     db.refresh(usuario)
+
+    _log_accion_manager(db, current_user, "reactivar", usuario.nombre_usuario, usuario.id)
     return usuario

@@ -118,8 +118,9 @@ def _armar_prompt(proveedor_id: str | None, contexto: dict, es_tabular: bool) ->
 
 
 def leer_catalogo(
-    archivo_bytes: bytes, mime_type: str, proveedor_id: str | None, contexto: dict
+    archivo_bytes: bytes, mime_type: str, proveedor_id: str | None, contexto: dict, modelo: str | None = None
 ) -> IALecturaCatalogo:
+    """`modelo`: ver el mismo parámetro en extractor.extraer_comprobante."""
     cliente = _cliente()
     es_tabular = mime_type in MIME_TIPOS_TABULARES
     prompt = _armar_prompt(proveedor_id, contexto, es_tabular)
@@ -137,7 +138,7 @@ def leer_catalogo(
 
     try:
         respuesta = cliente.models.generate_content(
-            model=settings.GEMINI_MODEL,
+            model=modelo or settings.GEMINI_MODEL,
             contents=contenido,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",

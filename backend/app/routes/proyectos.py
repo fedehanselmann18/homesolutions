@@ -60,7 +60,7 @@ def create_project(
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al crear el proyecto: datos inválidos")
 
-    log_auditoria(current_user.id, "create", "Proyecto", nuevo_proyecto.id)
+    log_auditoria(db, current_user.id, "create", "Proyecto", nuevo_proyecto.id)
     return nuevo_proyecto
 
 
@@ -92,7 +92,7 @@ def delete_project(
     db.delete(proyecto)
     db.commit()
 
-    log_auditoria(current_user.id, "delete", "Proyecto", proyecto_data.id)
+    log_auditoria(db, current_user.id, "delete", "Proyecto", proyecto_data.id)
     return proyecto_data
 
 
@@ -120,7 +120,7 @@ def update_project(
         db.rollback()
         raise HTTPException(status_code=400, detail="Error al actualizar el proyecto: datos inválidos")
 
-    log_auditoria(current_user.id, "update", "Proyecto", proyecto_existente.id)
+    log_auditoria(db, current_user.id, "update", "Proyecto", proyecto_existente.id)
     return proyecto_existente
 
 

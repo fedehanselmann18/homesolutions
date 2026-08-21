@@ -2,9 +2,12 @@ import json
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
+from sqlalchemy.orm import Session
 
 from app.auth.oAuth2 import requiere_admin
+from app.configuracion import obtener_valor
 from app.db import models
+from app.db.db import get_db
 from app.files.storage import contenido_coincide_con_extension
 from app.ia.catalogo import LecturaCatalogoError, leer_catalogo
 from app.ia.extractor import ExtraccionIAError, extraer_comprobante
@@ -48,6 +51,7 @@ async def extraer_comprobante_endpoint(
     tipo_entidad: str = Form(...),
     contexto: str = Form("{}"),
     archivo: UploadFile = File(...),
+    db: Session = Depends(get_db),
     current_user: models.Usuario = Depends(requiere_admin),
 ):
     """
@@ -91,6 +95,9 @@ async def extraer_comprobante_endpoint(
             mime_type=MIME_POR_EXTENSION[ext],
             tipo_entidad=tipo_entidad,
             contexto=contexto_dict,
+            # Editable desde Manager (ver PLAN_MANAGER.md #2) sin redeployar
+            # -- ver app/configuracion.py para el fallback a Settings/.env.
+            modelo=obtener_valor(db, "GEMINI_MODEL"),
         )
     except ExtraccionIAError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
@@ -107,6 +114,7 @@ async def leer_catalogo_endpoint(
     proveedor_id: str | None = Form(None),
     contexto: str = Form("{}"),
     archivo: UploadFile = File(...),
+    db: Session = Depends(get_db),
     current_user: models.Usuario = Depends(requiere_admin),
 ):
     """
@@ -157,6 +165,7 @@ async def leer_catalogo_endpoint(
             mime_type=MIME_POR_EXTENSION_CATALOGO[ext],
             proveedor_id=proveedor_id or None,
             contexto=contexto_dict,
+            modelo=obtener_valor(db, "GEMINI_MODEL"),
         )
     except LecturaCatalogoError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc

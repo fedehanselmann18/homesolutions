@@ -1,63 +1,53 @@
 import { useCallback, useEffect, useState } from "react";
-import { UserCog } from "lucide-react";
+import { Users } from "lucide-react";
 
 import {
-  autorizarUsuario,
   cambiarRolUsuario,
   cerrarSesionUsuario,
   desactivarUsuario,
   getUsuarios,
-  getUsuariosAutorizados,
   reactivarUsuario,
   resetearPasswordUsuario,
-  revocarAutorizacion,
-} from "../services/usuarioService";
-import { NOMBRE_USUARIO_MANAGER } from "../constants/manager";
-import { obtenerMensajeError } from "../utils/errorHandling";
-import { usePageTitle } from "../hooks/usePageTitle";
-import { useToast } from "../context/useToast";
-import { Cargando } from "../components/shared/Cargando";
-import { PageHeader } from "../components/shared/PageHeader";
-import ModalConfirmar from "../components/modals/ModalConfirmar";
-import ListaUsuarios from "../components/manager/ListaUsuarios";
-import ModalResetearPassword from "../components/manager/ModalResetearPassword";
-import SeccionAutorizados from "../components/manager/SeccionAutorizados";
-import "./ResetearContrasena.css";
+} from "../../services/usuarioService";
+import { NOMBRE_USUARIO_MANAGER } from "../../constants/manager";
+import { obtenerMensajeError } from "../../utils/errorHandling";
+import { usePageTitle } from "../../hooks/usePageTitle";
+import { useToast } from "../../context/useToast";
+import { Cargando } from "../../components/shared/Cargando";
+import { PageHeader } from "../../components/shared/PageHeader";
+import ModalConfirmar from "../../components/modals/ModalConfirmar";
+import ListaUsuarios from "../../components/manager/ListaUsuarios";
+import ModalResetearPassword from "../../components/manager/ModalResetearPassword";
+import "./GestionManager.css";
 
-// Única página que ve la cuenta "Manager" (ver ProtectedRoute y Sidebar):
-// todo el mantenimiento de cuentas entra acá adentro en secciones, en vez de
-// abrir una ruta nueva por función -- así el encierro de esa cuenta sigue
-// siendo una sola comparación de ruta.
-//
-// Todas estas acciones son exclusivas de "Manager" en el backend
-// (requiere_manager), no de rol == "admin".
-export function ResetearContrasena() {
-  usePageTitle("Gestión de cuentas");
+/**
+ * Página de Manager: planilla de cuentas ya creadas -- resetear contraseña,
+ * cambiar rol, cerrar sesión, desactivar/reactivar. Todas estas acciones son
+ * exclusivas de "Manager" en el backend (requiere_manager), no de
+ * rol == "admin".
+ */
+export function GestionEquipo() {
+  usePageTitle("Equipo");
   const toast = useToast();
 
   const [usuarios, setUsuarios] = useState([]);
-  const [autorizados, setAutorizados] = useState([]);
   const [cargando, setCargando] = useState(true);
   const [errorCarga, setErrorCarga] = useState(null);
   const [guardando, setGuardando] = useState(false);
 
   // Acción pendiente de confirmación (cambiar rol / cerrar sesión /
-  // desactivar / reactivar / revocar). Todas tocan a otra persona y no se
-  // deshacen solas, así que ninguna se dispara con un click suelto.
+  // desactivar / reactivar). Todas tocan a otra persona y no se deshacen
+  // solas, así que ninguna se dispara con un click suelto.
   const [confirmacion, setConfirmacion] = useState(null);
   const [usuarioAResetear, setUsuarioAResetear] = useState(null);
 
   const cargarDatos = useCallback(async () => {
     try {
-      const [listaUsuarios, listaAutorizados] = await Promise.all([
-        getUsuarios(),
-        getUsuariosAutorizados(),
-      ]);
+      const listaUsuarios = await getUsuarios();
       // La propia cuenta "Manager" queda fuera de la planilla: el backend
       // rechaza toda acción sobre uno mismo (guard de auto-acción), así que
       // mostrarla sería ofrecer botones que siempre fallan.
       setUsuarios(listaUsuarios.filter((u) => u.nombre_usuario !== NOMBRE_USUARIO_MANAGER));
-      setAutorizados(listaAutorizados);
       setErrorCarga(null);
     } catch (err) {
       setErrorCarga(obtenerMensajeError(err));
@@ -71,8 +61,7 @@ export function ResetearContrasena() {
   }, [cargarDatos]);
 
   // Envoltorio común: ejecuta la acción, avisa por toast y recarga la lista
-  // (el estado que devuelve cada endpoint es de un solo usuario, y varias
-  // acciones cambian también la lista de autorizados).
+  // (el estado que devuelve cada endpoint es de un solo usuario).
   const ejecutar = async (accion, mensajeExito) => {
     try {
       setGuardando(true);
@@ -158,28 +147,6 @@ export function ResetearContrasena() {
     });
   };
 
-  const handleAutorizar = async (nombreUsuario, rol, onListo) => {
-    const ok = await ejecutar(
-      () => autorizarUsuario(nombreUsuario, rol),
-      `${nombreUsuario} ya puede crearse la cuenta desde la pantalla de registro.`
-    );
-    if (ok) onListo();
-  };
-
-  const pedirRevocacion = (autorizado) => {
-    setConfirmacion({
-      titulo: "Revocar autorización",
-      mensaje: `${autorizado.nombre_usuario} deja de aparecer en la pantalla de registro y no va a poder crearse la cuenta.`,
-      nombreRecurso: autorizado.nombre_usuario,
-      textoConfirmar: "Revocar",
-      accion: () =>
-        ejecutar(
-          () => revocarAutorizacion(autorizado.id),
-          `Autorización de ${autorizado.nombre_usuario} revocada.`
-        ),
-    });
-  };
-
   const confirmarAccion = async () => {
     const pendiente = confirmacion;
     setConfirmacion(null);
@@ -187,48 +154,30 @@ export function ResetearContrasena() {
   };
 
   return (
-    <div className="reseteo-container">
+    <div className="manager-pagina">
       <PageHeader
-        icono={<UserCog size={20} strokeWidth={2} />}
-        titulo="Gestión de cuentas"
-        subtitulo="Contraseñas, roles, sesiones y altas del equipo. Solo lo ve esta cuenta."
+        icono={<Users size={20} strokeWidth={2} />}
+        titulo="Equipo"
+        subtitulo="Contraseñas, roles y sesiones de las cuentas ya creadas. Solo lo ve esta cuenta."
       />
 
       {cargando ? (
         <Cargando texto="Cargando cuentas..." />
       ) : errorCarga ? (
-        <p className="reseteo-error">{errorCarga}</p>
+        <p className="manager-pagina__error">{errorCarga}</p>
       ) : (
-        <>
-          <section className="reseteo-seccion">
-            <h2 className="reseteo-seccion__titulo">Equipo</h2>
-            <p className="reseteo-seccion__ayuda">
-              Cuentas ya creadas. Desactivar corta el acceso sin borrar nada; cerrar sesión solo
-              obliga a volver a entrar.
-            </p>
-            <ListaUsuarios
-              usuarios={usuarios}
-              onResetear={setUsuarioAResetear}
-              onCambiarRol={pedirCambioDeRol}
-              onCerrarSesion={pedirCierreDeSesion}
-              onToggleActivo={pedirToggleActivo}
-            />
-          </section>
-
-          <section className="reseteo-seccion">
-            <h2 className="reseteo-seccion__titulo">Autorizar gente nueva</h2>
-            <p className="reseteo-seccion__ayuda">
-              El nombre autorizado acá es el que esa persona va a elegir en la pantalla de registro
-              para crearse la cuenta.
-            </p>
-            <SeccionAutorizados
-              autorizados={autorizados}
-              guardando={guardando}
-              onAutorizar={handleAutorizar}
-              onRevocar={pedirRevocacion}
-            />
-          </section>
-        </>
+        <div className="manager-pagina__tarjeta">
+          <p className="manager-pagina__ayuda">
+            Desactivar corta el acceso sin borrar nada; cerrar sesión solo obliga a volver a entrar.
+          </p>
+          <ListaUsuarios
+            usuarios={usuarios}
+            onResetear={setUsuarioAResetear}
+            onCambiarRol={pedirCambioDeRol}
+            onCerrarSesion={pedirCierreDeSesion}
+            onToggleActivo={pedirToggleActivo}
+          />
+        </div>
       )}
 
       {usuarioAResetear && (
@@ -254,4 +203,4 @@ export function ResetearContrasena() {
   );
 }
 
-export default ResetearContrasena;
+export default GestionEquipo;

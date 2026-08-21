@@ -1,5 +1,5 @@
 import { Suspense, lazy } from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { MainLayout } from "../layouts/MainLayout";
 import { Login } from "../pages/Login";
@@ -17,7 +17,12 @@ const ProyectoDetalle = lazy(() => import("../pages/ProyectoDetalle"));
 const FaseDetalle = lazy(() => import("../pages/FaseDetalle"));
 const Proveedores = lazy(() => import("../pages/Proveedores"));
 const ProveedorDetalle = lazy(() => import("../pages/ProveedorDetalle"));
-const ResetearContrasena = lazy(() => import("../pages/ResetearContrasena"));
+// Subárbol exclusivo de la cuenta "Manager" (ver constants/manager.js): una
+// página por sección en vez de una sola pantalla con todas apiladas.
+const GestionEquipo = lazy(() => import("../pages/manager/GestionEquipo"));
+const GestionAutorizados = lazy(() => import("../pages/manager/GestionAutorizados"));
+const GestionAuditoria = lazy(() => import("../pages/manager/GestionAuditoria"));
+const GestionConfiguracion = lazy(() => import("../pages/manager/GestionConfiguracion"));
 
 // Rutas internas: agregá acá cada página nueva a medida que la vayas armando
 // (Proyectos, Proveedores, Productos, etc.), todas anidadas dentro de
@@ -43,9 +48,18 @@ export function AppRouter() {
             <Route path="/proveedores" element={<Proveedores />} />
             <Route path="/proveedores/:id" element={<ProveedorDetalle />} />
             <Route path="/comparador" element={<Comparador />} />
-            {/* Solo la cuenta "Manager" llega acá: ProtectedRoute saca de esta
-                ruta a cualquier otro usuario (y encierra a Manager en ella). */}
-            <Route path={RUTA_RESETEO} element={<ResetearContrasena />} />
+            {/* Solo la cuenta "Manager" llega a este subárbol: ProtectedRoute
+                saca de acá a cualquier otro usuario (y encierra a Manager
+                dentro de él). El índice redirige a "equipo" -- la URL base
+                sola no tiene página propia, era el link que mostraba el
+                sidebar antes de que hubiera varias. */}
+            <Route path={RUTA_RESETEO}>
+              <Route index element={<Navigate to="equipo" replace />} />
+              <Route path="equipo" element={<GestionEquipo />} />
+              <Route path="autorizados" element={<GestionAutorizados />} />
+              <Route path="auditoria" element={<GestionAuditoria />} />
+              <Route path="configuracion" element={<GestionConfiguracion />} />
+            </Route>
           </Route>
         </Route>
       </Routes>

@@ -25,7 +25,7 @@ export function ListaUsuarios({
 
   return (
     <div className="manager-tabla-scroll">
-      <table className="manager-tabla">
+      <table className="manager-tabla" aria-label="Cuentas del equipo">
         <thead>
           <tr>
             <th>Usuario</th>

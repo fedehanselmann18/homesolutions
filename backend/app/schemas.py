@@ -208,6 +208,79 @@ class UsuarioOut(UsuarioBase, TimestampOut):
 
 
 # ---------------------------------------------------------------------------
+# Auditoría
+# ---------------------------------------------------------------------------
+
+
+class AuditoriaOut(BaseModel):
+    """
+    Una fila del rastro de auditoría (ver models.Auditoria).
+
+    No hereda de TimestampOut, a diferencia de todos los demás Out: esta
+    tabla no tiene fecha_creacion/fecha_actualizacion porque una fila de
+    auditoría no se edita nunca. Su única fecha es creado_en.
+    """
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    usuario_id: uuid.UUID
+    # No es una columna: lo completa el endpoint con el join a usuarios,
+    # mismo patrón que ya_registrado en UsuarioAutorizadoOut. El id solo no
+    # le dice nada a nadie leyendo el listado.
+    usuario_nombre: Optional[str] = None
+    accion: str
+    tipo_recurso: str
+    recurso_id: Optional[str] = None
+    detalle: Optional[dict] = None
+    creado_en: datetime
+
+
+class AuditoriaPagina(BaseModel):
+    """
+    A diferencia del resto de los listados (que devuelven una lista pelada),
+    la auditoría viaja envuelta con el total: es la única pantalla con
+    paginado real en la UI, y sin saber cuántas filas hay en total no se
+    puede dibujar "mostrando 1-50 de 320" ni deshabilitar "siguiente" en la
+    última página.
+    """
+
+    items: list[AuditoriaOut]
+    total: int
+
+
+# ---------------------------------------------------------------------------
+# Configuración
+# ---------------------------------------------------------------------------
+
+
+class ConfiguracionValor(BaseModel):
+    """
+    Una clave editable (ver app/configuracion.py, CLAVES_CONFIGURABLES) con
+    su valor efectivo (fila de la tabla o default de Settings/.env) y si ese
+    valor viene de una fila o del fallback -- el front lo usa para mostrar
+    "(valor del .env)" cuando todavía nadie la pisó desde acá.
+    """
+
+    clave: str
+    valor: str
+    descripcion: str
+    personalizado: bool
+
+
+class ConfiguracionUpdate(BaseModel):
+    valor: str
+
+    @field_validator("valor")
+    @classmethod
+    def valor_no_vacio(cls, valor: str) -> str:
+        limpio = valor.strip()
+        if not limpio:
+            raise ValueError("El valor no puede estar vacío")
+        return limpio
+
+
+# ---------------------------------------------------------------------------
 # Proyecto / Fase
 # ---------------------------------------------------------------------------
 

@@ -164,7 +164,11 @@ def test_proveedor_matchea_por_nombre_normalizado():
 def test_proveedor_matchea_por_cuit():
     id_proveedor = str(uuid.uuid4())
     contexto = {"proveedores": [{"id": id_proveedor, "nombre": "Griferías S.A.", "cuit": "20-11111111-2"}]}
-    datos = {"proveedor": {"nombre": "otro nombre", "cuit": "20111111112"}, "productos": [], "advertencias": []}
+    datos = {
+        "proveedor": {"nombre": "otro nombre", "cuit": "20111111112"},
+        "productos": [],
+        "advertencias": [],
+    }
 
     resultado = _validar_y_limpiar(datos, None, contexto)
 
@@ -175,7 +179,12 @@ def test_proveedor_matchea_por_cuit():
 def test_proveedor_sin_match_se_ofrece_como_nuevo():
     contexto = {"proveedores": [{"id": str(uuid.uuid4()), "nombre": "Otro Proveedor", "cuit": "1"}]}
     datos = {
-        "proveedor": {"nombre": "Proveedor Nuevo SRL", "cuit": "30555555553", "telefono": None, "email": None},
+        "proveedor": {
+            "nombre": "Proveedor Nuevo SRL",
+            "cuit": "30555555553",
+            "telefono": None,
+            "email": None,
+        },
         "productos": [],
         "advertencias": [],
     }

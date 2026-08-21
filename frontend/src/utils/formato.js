@@ -25,3 +25,18 @@ export function formatFecha(fecha) {
     year: "numeric",
   });
 }
+
+// Timestamp completo (fecha + hora), para el rastro de auditoría. A
+// diferencia de formatFecha, acá el valor que manda el backend YA es un
+// instante con zona horaria (creado_en es un timestamptz), así que se parsea
+// directo: no hace falta -- ni corresponde -- el truco del "T00:00:00".
+export function formatFechaHora(instante) {
+  if (!instante) return "";
+  return new Date(instante).toLocaleString("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}

@@ -145,8 +145,16 @@ def _armar_prompt(tipo_entidad: str, contexto: dict) -> str:
 
 
 def extraer_comprobante(
-    archivo_bytes: bytes, mime_type: str, tipo_entidad: str, contexto: dict
+    archivo_bytes: bytes, mime_type: str, tipo_entidad: str, contexto: dict, modelo: str | None = None
 ) -> IAExtraccionComprobante:
+    """
+    `modelo`: override de settings.GEMINI_MODEL, resuelto por el caller
+    contra la tabla `configuracion` (ver app/configuracion.py). Este módulo
+    no toca la DB directamente -- no tiene sesión a mano y no la necesita
+    para nada más -- así que el valor efectivo llega ya resuelto. None (el
+    default de este parámetro) es el caso de siempre: nadie lo pisó desde
+    Manager, se usa el del .env.
+    """
     if tipo_entidad not in CAMPOS_POR_ENTIDAD:
         raise ExtraccionIAError(f"tipo_entidad inválido: {tipo_entidad}")
 
@@ -155,7 +163,7 @@ def extraer_comprobante(
 
     try:
         respuesta = cliente.models.generate_content(
-            model=settings.GEMINI_MODEL,
+            model=modelo or settings.GEMINI_MODEL,
             contents=[
                 types.Part.from_bytes(data=archivo_bytes, mime_type=mime_type),
                 prompt,
