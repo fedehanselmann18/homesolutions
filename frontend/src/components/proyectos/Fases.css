@@ -7,12 +7,12 @@
 
 .fases-header h2 {
   font-family: var(--font-display);
-  font-size: 1.5rem;
+  font-size: var(--text-xl);
 }
 
 .fases-header button {
   font-family: var(--font-ui);
-  font-size: 0.88rem;
+  font-size: var(--text-base);
   font-weight: 600;
   padding: 9px 18px;
   border-radius: var(--radius-sm);
@@ -35,41 +35,12 @@
    criterio visual que components/proyectos/TablaProyectos.css (borde
    izquierdo de color, chevron que aparece en hover), pero con sus propias
    columnas (#, fase, estado, gastado, % del presupuesto). */
-
-.fases-tabla {
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
-.fases-tabla-header,
-.fases-tabla-fila,
-.fases-tabla-total {
-  display: grid;
+.fases-tabla-header, .fases-tabla-fila, .fases-tabla-total {
   grid-template-columns: 34px 2fr 1fr 1.1fr 1.6fr 116px;
-  gap: var(--space-4);
-  align-items: center;
-}
-
-.fases-tabla-header {
-  padding: 10px var(--space-4);
-  background-color: var(--color-base-1);
-  border-bottom: 1px solid var(--color-linea);
 }
 
 .fases-tabla-col--num {
   text-align: right;
-}
-
-.fases-tabla-fila {
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--color-linea);
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.fases-tabla-fila:hover {
-  background-color: var(--color-base-1);
 }
 
 .fases-tabla-num {
@@ -118,13 +89,8 @@
   text-overflow: ellipsis;
   max-width: 100%;
 }
-
 .fases-tabla-estado {
   justify-self: start;
-  font-size: var(--text-xs);
-  font-weight: 700;
-  padding: 2px 10px;
-  border-radius: var(--radius-pill);
 }
 
 .fases-tabla-col--num {
@@ -204,34 +170,6 @@
   cursor: default;
 }
 
-.fases-tabla-accion-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-  background: var(--color-superficie);
-  color: var(--color-tinta-muted);
-  cursor: pointer;
-  transition:
-    border-color 0.15s ease,
-    color 0.15s ease,
-    background-color 0.15s ease;
-}
-
-.fases-tabla-accion-btn:hover {
-  border-color: var(--color-tinta);
-  color: var(--color-tinta);
-}
-
-.fases-tabla-accion-btn--eliminar:hover {
-  border-color: var(--color-oxido);
-  color: var(--color-oxido);
-  background-color: color-mix(in srgb, var(--color-oxido) 12%, white);
-}
-
 .fases-tabla-chevron {
   color: var(--color-tinta-muted);
   opacity: 0.5;
@@ -266,7 +204,8 @@
 }
 
 @media (max-width: 900px) {
-  .fases-tabla {
+  /* Ver la nota equivalente en TablaProyectos.css. */
+  .planilla.fases-tabla {
     overflow-x: auto;
   }
 

@@ -1,10 +1,12 @@
 import { X } from "lucide-react";
 
 import { formatMoneda } from "../../utils/formato";
+import { useModal } from "../../hooks/useModal";
 
 import "./modal-base.css";
 import "./ModalDetalle.css";
 import "./ModalEditar.css";
+import { LogoCargando } from "../shared/LogoCargando";
 
 /**
  * Piezas compartidas por los modales de EDICIÓN de Compra / Gasto / Cobro
@@ -43,9 +45,13 @@ export function EditarShell({
   guardarDeshabilitado = false,
   children,
 }) {
+  const dialogoRef = useModal(onCerrar, guardando);
+
   return (
     <div className="modal-overlay" onClick={guardando ? undefined : onCerrar}>
       <form
+        ref={dialogoRef}
+        tabIndex={-1}
         className={`modal-contenido detalle mov-edit${conRiel ? " mov-edit--riel" : ""}`}
         role="dialog"
         aria-modal="true"
@@ -64,10 +70,11 @@ export function EditarShell({
           {fecha && <span className="detalle__fecha">{fecha}</span>}
           <button
             type="button"
-            className="detalle__cerrar"
+            className="btn-icono detalle__cerrar"
             onClick={onCerrar}
             disabled={guardando}
             title="Cerrar"
+            aria-label="Cerrar"
           >
             <X size={17} strokeWidth={2} />
           </button>
@@ -102,7 +109,14 @@ export function EditarShell({
               className="btn btn-primary"
               disabled={guardando || guardarDeshabilitado}
             >
-              {guardando ? "Guardando..." : textoGuardar}
+              {guardando ? (
+                <>
+                  <LogoCargando size={14} variante="blanco" />
+                  Guardando...
+                </>
+              ) : (
+                textoGuardar
+              )}
             </button>
           </div>
         </div>

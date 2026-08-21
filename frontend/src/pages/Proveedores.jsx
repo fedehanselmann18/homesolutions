@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 import { useProveedores } from "../hooks/useProveedores";
 import { getProductos } from "../services/productoService";
@@ -16,6 +16,8 @@ import ModalProveedor from "../components/modals/ModalProveedor";
 import ModalImportarCatalogo from "../components/modals/ModalImportarCatalogo";
 import ModalConfirmar from "../components/modals/ModalConfirmar";
 import { Cargando } from "../components/shared/Cargando";
+import { PageHeader } from "../components/shared/PageHeader";
+import { Buscador } from "../components/shared/Buscador";
 import { EstadoVacio } from "../components/shared/EstadoVacio";
 import "./Proveedores.css";
 
@@ -143,44 +145,43 @@ export function Proveedores() {
 
   return (
     <div className="proveedores-container">
-      <header className="proveedores-header">
-        <div className="proveedores-header__texto">
-          <h1 className="proveedores-header__titulo">Proveedores</h1>
-          <p className="proveedores-header__subtitulo">
-            {proveedores.length}{" "}
-            {proveedores.length === 1 ? "proveedor cargado" : "proveedores cargados"}
-          </p>
-        </div>
-
-        {canManage && (
-          <div className="proveedores-header__acciones">
-            <button
-              type="button"
-              className="proveedores-button proveedores-button--secundario"
-              onClick={() => setModalImportarAbierto(true)}
-            >
-              <Sparkles size={16} strokeWidth={2.25} />
-              Importar catálogo
-            </button>
-            <button className="proveedores-button" onClick={abrirModalCrear}>
-              Nuevo proveedor
-            </button>
-          </div>
-        )}
-      </header>
+      <PageHeader
+        titulo="Proveedores"
+        subtitulo={`${proveedores.length} ${
+          proveedores.length === 1 ? "proveedor cargado" : "proveedores cargados"
+        }`}
+        acciones={
+          canManage && (
+            <>
+              <button
+                type="button"
+                className="btn btn-marca"
+                onClick={() => setModalImportarAbierto(true)}
+              >
+                <Sparkles size={16} strokeWidth={2} />
+                Importar catálogo
+              </button>
+              <button type="button" className="btn btn-primary" onClick={abrirModalCrear}>
+                Nuevo proveedor
+              </button>
+            </>
+          )
+        }
+      />
 
       <div className="proveedores-filtros">
-        <div className="proveedores-buscador">
-          <Search size={16} strokeWidth={2} />
-          <input
-            type="text"
-            placeholder="Buscar por nombre..."
-            value={busqueda}
-            onChange={(e) => setBusqueda(e.target.value)}
-          />
-        </div>
+        <Buscador
+          valor={busqueda}
+          onCambiar={setBusqueda}
+          placeholder="Buscar por nombre…"
+          etiqueta="Buscar proveedor"
+        />
 
-        <select value={categoriaFiltro} onChange={(e) => setCategoriaFiltro(e.target.value)}>
+        <select
+          className="campo proveedores-filtros__select"
+          value={categoriaFiltro}
+          onChange={(e) => setCategoriaFiltro(e.target.value)}
+        >
           <option value="">Todas las categorías</option>
           {categorias.map((cat) => (
             <option key={cat.id} value={cat.id}>

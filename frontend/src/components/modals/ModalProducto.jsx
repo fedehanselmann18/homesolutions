@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { TIPOS_PRODUCTO } from "../../constants/tipoProducto";
 import ModalShell from "./ModalShell";
 import ChipsCategorias from "./ChipsCategorias";
+import { LogoCargando } from "../shared/LogoCargando";
 
 export function ModalProducto({
   producto,
@@ -88,7 +89,16 @@ export function ModalProducto({
             Cancelar
           </button>
           <button type="submit" className="btn btn-primary" disabled={guardando}>
-            {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Crear producto"}
+            {guardando ? (
+              <>
+                <LogoCargando size={14} variante="blanco" />
+                Guardando...
+              </>
+            ) : esEdicion ? (
+              "Guardar cambios"
+            ) : (
+              "Crear producto"
+            )}
           </button>
         </>
       }

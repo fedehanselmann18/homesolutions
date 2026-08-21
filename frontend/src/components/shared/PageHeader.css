@@ -1,0 +1,93 @@
+.page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding-bottom: var(--space-6);
+  margin-bottom: var(--space-6);
+  border-bottom: 1px solid var(--color-linea);
+}
+
+/* El Panel abre con la franja de KPIs, que ya trae su propia línea superior:
+   dos reglas seguidas se leían como un error de maquetado. */
+.page-header--sin-linea {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.page-header__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  background: var(--color-terracota-tint);
+  color: var(--color-terracota-dark);
+}
+
+.page-header__texto {
+  min-width: 0;
+}
+
+.page-header__titulo-grupo {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.page-header__titulo {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-tinta);
+  margin: 0;
+}
+
+.page-header__chip {
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-tinta-muted);
+  border: 1px solid var(--color-linea);
+  padding: 3px 7px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+}
+
+.page-header__subtitulo {
+  font-size: var(--text-base);
+  color: var(--color-tinta-muted);
+  margin: var(--space-1) 0 0;
+}
+
+.page-header__acciones {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+/* En angosto el encabezado se apila y las acciones ocupan el ancho: antes esto
+   sólo lo hacía Proyectos, así que los botones de Proveedores y Manager
+   quedaban chicos y pegados a la derecha. */
+@media (max-width: 640px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-header__acciones {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .page-header__acciones > * {
+    justify-content: center;
+  }
+}

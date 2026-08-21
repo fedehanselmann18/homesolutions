@@ -45,7 +45,7 @@ function Seccion({ titulo, descripcion, cantidad, children }) {
         <h3 className="seguimiento-seccion-titulo">
           <AlertTriangle className="seguimiento-seccion-icono" size={20} strokeWidth={2.25} />
           {titulo}
-          {cantidad > 0 && <span className="seguimiento-contador">{cantidad}</span>}
+          {cantidad > 0 && <span className="badge badge--sm badge--neutro">{cantidad}</span>}
         </h3>
         {descripcion && <p className="seguimiento-seccion-descripcion">{descripcion}</p>}
       </div>
@@ -236,7 +236,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
             <h4 className="seguimiento-columna-titulo">
               Pendientes de pago
               {comprasImpagas.length > 0 && (
-                <span className="seguimiento-contador">{comprasImpagas.length}</span>
+                <span className="badge badge--sm badge--neutro">{comprasImpagas.length}</span>
               )}
             </h4>
             {comprasImpagas.length === 0 ? (
@@ -267,7 +267,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
             <h4 className="seguimiento-columna-titulo">
               Pendientes de entrega
               {comprasSinEntregar.length > 0 && (
-                <span className="seguimiento-contador">{comprasSinEntregar.length}</span>
+                <span className="badge badge--sm badge--neutro">{comprasSinEntregar.length}</span>
               )}
             </h4>
             {comprasSinEntregar.length === 0 ? (
@@ -299,7 +299,9 @@ export function Seguimiento({ proyectoId, onIrATab }) {
             <h4 className="seguimiento-columna-titulo">
               Sin comprobante
               {comprasSinComprobante.length > 0 && (
-                <span className="seguimiento-contador">{comprasSinComprobante.length}</span>
+                <span className="badge badge--sm badge--neutro">
+                  {comprasSinComprobante.length}
+                </span>
               )}
             </h4>
             {comprasSinComprobante.length === 0 ? (

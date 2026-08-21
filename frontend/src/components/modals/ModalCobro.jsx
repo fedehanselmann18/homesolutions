@@ -11,6 +11,7 @@ import { validarRequerido, validarMonto, validarFecha } from "../../utils/formVa
 import { BarraComposicion } from "./PiezasDetalle";
 import { EditarShell, SeccionForm, TotalRiel } from "./PiezasEditar";
 import { PasoComprobante, BannerIA, ResumenValidacion, MarcaIA } from "./PiezasIA";
+import { LogoCargando } from "../shared/LogoCargando";
 
 const validarCampo = (name, value) => {
   if (name === "descripcion") return validarRequerido(value, "La descripción es obligatoria.");
@@ -231,7 +232,14 @@ export function ModalCobro({
                         : "Leer el comprobante y prellenar el formulario"
                     }
                   >
-                    {extrayendo ? "Leyendo..." : "Autocompletar con IA"}
+                    {extrayendo ? (
+                      <>
+                        <LogoCargando size={13} />
+                        Leyendo...
+                      </>
+                    ) : (
+                      "Autocompletar con IA"
+                    )}
                   </button>
                 )
               }

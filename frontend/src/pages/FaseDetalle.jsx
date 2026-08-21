@@ -258,10 +258,10 @@ export function FaseDetalle() {
       <div className="fase-detalle-header" style={{ borderLeftColor: estadoInfo.color }}>
         <div className="fase-detalle-header-top">
           <div className="fase-detalle-header-titulo">
-            <span className="fase-detalle-numero">Fase {fase.orden}</span>
+            <span className="badge badge--neutro fase-detalle-numero">Fase {fase.orden}</span>
             <h1 className="fase-detalle-nombre">{fase.nombre}</h1>
             <span
-              className="fase-detalle-estado"
+              className="badge fase-detalle-estado"
               style={{
                 color: estadoInfo.color,
                 backgroundColor: `${estadoInfo.color}${TINTE_PASTILLA}`,

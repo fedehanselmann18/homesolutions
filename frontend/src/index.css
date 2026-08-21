@@ -1,4 +1,5 @@
-/* Tokens de marca — ver DESIGN.md y el Manual de uso (HS_IID_Manual, v1_06/26).
+/* Tokens de marca — ver docs/DESIGN.md y el Manual de uso (HS_IID_Manual,
+   v1_06/26).
    Única fuente de verdad para color/tipografía/espaciado de toda la app; el
    resto de los .css consume estas variables.
 
@@ -30,6 +31,14 @@
   --color-oxido-tint: #fbe2e2;
   --color-acero: #64748b;
   --color-acero-tint: #e7eaee;
+
+  /* Versiones oscurecidas para TEXTO sobre el tint del mismo color: el color
+     pleno no llega a contraste suficiente sobre su propio tint. Estaban como
+     hex sueltos en TablaProyectos.css (#3f5122/#a35a05/#475569), que era el
+     único lugar de la app que necesitaba este rol y por eso nunca tuvo token. */
+  --color-terracota-texto: #3f5122;
+  --color-arcilla-texto: #a35a05;
+  --color-acero-texto: #475569;
 
   /* color — resto de la paleta oficial del manual, disponible para usos
      puntuales (chips, ilustraciones, fondos de marca) aunque la escala de
@@ -72,6 +81,7 @@
      - --text-2xs  headers de tabla dentro de un modal, badges muy chicos
      - --text-xs   labels de ficha en mayúsculas, chips, meta-texto
      - --text-sm   texto secundario, botones chicos, filtros
+     - --text-btn  controles: botón, opción de select flotante
      - --text-base texto de UI por defecto
      - --text-md   inputs y valores de formulario
      - --text-lg   títulos de sección
@@ -81,6 +91,11 @@
   --text-2xs: 0.66rem;
   --text-xs: 0.72rem;
   --text-sm: 0.82rem;
+  /* --text-btn queda fuera de orden a propósito: cae entre --text-sm y
+     --text-base y existe sólo porque .btn ya usaba 0.85rem, replicado a mano
+     en 27 declaraciones. Es el tamaño de los controles (botón, opción de
+     select flotante); para texto va --text-sm o --text-base. */
+  --text-btn: 0.85rem;
   --text-base: 0.9rem;
   --text-md: 0.95rem;
   --text-lg: 1.05rem;
@@ -88,9 +103,17 @@
   --text-2xl: 1.6rem;
   --text-3xl: 2rem;
 
-  /* espaciado — escala de 4px */
+  /* espaciado — escala de 4px, con dos medios pasos.
+
+     6px y 10px no son múltiplos de 4, pero son los dos gaps más usados de la
+     app (41 y 19 usos literales, más que --space-2): la densidad de las filas
+     y las pastillas se apoya en ellos. Forzarlos a 4/8/12 cambiaría el aspecto
+     de media app para ganar pureza de escala, así que se reconocen como paso
+     en vez de pelearlos. Fuera de estos dos, nada nuevo entre medio. */
   --space-1: 4px;
+  --space-1-5: 6px;
   --space-2: 8px;
+  --space-2-5: 10px;
   --space-3: 12px;
   --space-4: 16px;
   --space-6: 24px;
@@ -102,6 +125,24 @@
   --radius-sm: 6px;
   --radius-pill: 999px;
   --shadow-overlay: 0 16px 40px rgba(24, 24, 27, 0.16);
+
+  /* movimiento — 93 de las 99 transiciones de la app ya usaban este valor. */
+  --transicion: 0.15s ease;
+}
+
+/* Respeta la preferencia de sistema de "menos movimiento". Antes esto existía
+   sólo para .skeleton del Panel, así que la animación de entrada de los 14
+   modales y la barra de carga (que es infinita, el peor caso) seguían
+   corriendo igual. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Convención de nombres de clase: BEM (bloque__elemento--modificador).
@@ -215,7 +256,7 @@ textarea:focus-visible,
   align-items: center;
   gap: var(--space-2);
   font-family: var(--font-ui);
-  font-size: 0.85rem;
+  font-size: var(--text-btn);
   font-weight: 600;
   padding: 10px 18px;
   border-radius: var(--radius-sm);
@@ -255,6 +296,21 @@ textarea:focus-visible,
   background: var(--color-base-2);
 }
 
+/* Acción secundaria que pertenece a la marca -- hoy, "Importar catálogo" con
+   IA. Existe porque esa misma acción estaba en dos pantallas (el header de
+   Proveedores y el de la ficha de proveedor) con dos estilos inventados por
+   separado, los dos oliva en contorno. No es un secundario alternativo: si la
+   acción no es de marca, va .btn-secondary. */
+.btn-marca {
+  background: transparent;
+  border-color: var(--color-terracota);
+  color: var(--color-terracota-dark);
+}
+
+.btn-marca:hover:not(:disabled) {
+  background: var(--color-terracota-tint);
+}
+
 .btn-peligro {
   background: transparent;
   border-color: var(--color-oxido);
@@ -266,8 +322,192 @@ textarea:focus-visible,
   color: var(--color-superficie);
 }
 
+/* Única variante de tamaño. Existe porque los encabezados de listado ya
+   usaban un botón más chico (9px 16px en ProyectoHeader.css), no para abrir
+   la puerta a una escala de tamaños de botón. */
+.btn--sm {
+  padding: 7px 12px;
+  font-size: var(--text-sm);
+}
+
+/* Botón de sólo ícono: acción de fila (editar/eliminar), cerrar un modal,
+   quitar una fila de un formulario.
+
+   Antes había cinco implementaciones de esto mismo -- 22, 24, 26, 30 y 32px,
+   unas con borde y otras sin -- repartidas en SeccionNotas, Fases,
+   TablaProyectos, ModalShell y modal-base. Dos de ellas (ProveedorCard y
+   ProveedorDetalle) se montaban encima de una tercera y necesitaban 20
+   `!important` para ganarle al color.
+
+   La forma la da esta clase; el tamaño del ícono adentro es 14px siempre. */
+.btn-icono {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-tinta-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--transicion),
+    border-color var(--transicion),
+    color var(--transicion);
+}
+
+.btn-icono:hover:not(:disabled) {
+  background: var(--color-base-2);
+  color: var(--color-tinta);
+}
+
+.btn-icono:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Denso: dentro de una fila de tabla o de una tarjeta compacta. */
+.btn-icono--sm {
+  width: 24px;
+  height: 24px;
+}
+
+/* Con borde: cuando el botón tiene que leerse como control aunque la fila no
+   esté en hover (la planilla de fases, las filas de un formulario). */
+.btn-icono--contorno {
+  border-color: var(--color-linea);
+  background: var(--color-superficie);
+}
+
+.btn-icono--contorno:hover:not(:disabled) {
+  border-color: var(--color-tinta);
+  background: var(--color-superficie);
+}
+
+.btn-icono--peligro {
+  color: var(--color-oxido);
+}
+
+.btn-icono--peligro.btn-icono--contorno {
+  border-color: var(--color-oxido-tint);
+}
+
+.btn-icono--peligro:hover:not(:disabled) {
+  background: var(--color-oxido-tint);
+  border-color: var(--color-oxido);
+  color: var(--color-oxido);
+}
+
+/* Campo de formulario — input, select y textarea.
+
+   Había siete recetas distintas para el mismo campo (9px 12px en los modales,
+   10px 12px en Manager, 12px en Auth, 9px 12px con otro fondo en los selects
+   de página, 5px 10px en el orden de Proyectos, 7px 10px en categorías,
+   6px 8px en el catálogo). Manager.css incluso declaraba replicar el
+   formulario de Auth y usaba otro padding.
+
+   Los selectores por descendencia que la acompañan son un ALIAS, no una
+   segunda receta: los campos de los 14 modales y de los formularios de auth y
+   manager no llevan la clase en el markup (son decenas de inputs), así que se
+   enganchan acá en vez de redeclarar las mismas propiedades en cada .css.
+   Regla para no volver atrás: si un campo necesita otra geometría, va un
+   modificador de --sm, no un bloque nuevo en el .css del componente. */
+.campo,
+.modal-form input,
+.modal-form select,
+.modal-form textarea,
+.auth-campo input,
+.auth-campo select,
+.manager-campo input,
+.manager-campo select {
+  width: 100%;
+  font-family: var(--font-ui);
+  font-size: var(--text-md);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  padding: 9px 12px;
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-base-1);
+  color: var(--color-tinta);
+  transition: border-color var(--transicion);
+}
+
+.campo:focus,
+.modal-form input:focus,
+.modal-form select:focus,
+.modal-form textarea:focus,
+.auth-campo input:focus,
+.auth-campo select:focus,
+.manager-campo input:focus,
+.manager-campo select:focus {
+  outline: none;
+  border-color: var(--color-terracota);
+  background-color: var(--color-superficie);
+}
+
+.campo:disabled,
+.modal-form input:disabled,
+.modal-form select:disabled,
+.auth-campo input:disabled,
+.manager-campo input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* `:user-invalid` y no `:invalid`: sólo pinta de rojo después de que el
+   usuario tocó el campo. Con `:invalid` los campos sin placeholder y todos
+   los `type="date"` arrancaban en rojo con el formulario recién abierto. */
+.campo:user-invalid,
+.modal-form input:user-invalid {
+  border-color: var(--color-oxido);
+}
+
+/* Denso: filas de una tabla editable (el catálogo de la importación por IA),
+   donde el campo estándar rompería el alto de fila. */
+.campo--sm {
+  padding: 6px 8px;
+  font-size: var(--text-sm);
+}
+
+.campo--error {
+  border-color: var(--color-oxido);
+}
+
+textarea.campo,
+.modal-form textarea {
+  resize: vertical;
+  min-height: 4.5rem;
+}
+
+.modal-form input[type="file"] {
+  padding: 7px 10px;
+  font-size: var(--text-base);
+}
+
+/* La flecha del select es un SVG inline porque `appearance: none` se lleva
+   puesta la nativa. El color va hardcodeado (no acepta var() adentro de una
+   data URI): es --color-tinta-muted. */
+/* Auth y Manager quedan fuera a propósito: dibujan el chevron con un <svg>
+   real posicionado encima (.auth-campo__select svg), así que si además les
+   pusiéramos este background-image quedarían con dos flechas. */
+select.campo,
+.modal-form select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.7rem center;
+  background-size: 1rem;
+  padding-right: 2rem;
+  cursor: pointer;
+}
+
 /* Badge / etiqueta de estado — único lugar de la app con radio grande a
-   propósito (ver DESIGN.md §7). Esta clase da la FORMA; el color lo pone
+   propósito (ver docs/DESIGN.md §7). Esta clase da la FORMA; el color lo pone
    quien la usa: inline con el color del tipo (ver constants/tipoMovimiento)
    o con uno de los modificadores semánticos de abajo.
 
@@ -323,11 +563,60 @@ textarea:focus-visible,
   color: var(--color-oxido);
 }
 
+/* Planilla — la tabla en grid que usan el listado de proyectos (también dentro
+   del Panel) y el de fases de un proyecto.
+
+   Las dos estaban escritas por separado y eran idénticas salvo por
+   `grid-template-columns`: mismo borde, mismo radio, mismo `overflow: hidden`,
+   mismo header con fondo base-1 y padding 10px/16px, mismas filas con
+   12px/16px, mismo separador y misma transición. Hasta la media query de
+   scroll horizontal era la misma. Esta clase da ese chrome; cada uso pone
+   nada más sus columnas.
+
+   El contenedor no fija `display: grid`: eso va en el header y la fila, porque
+   entre medio puede haber otras cosas (los separadores de grupo del listado
+   agrupado por estado). */
+.planilla {
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.planilla__header,
+.planilla__fila {
+  display: grid;
+  gap: var(--space-4);
+  align-items: center;
+}
+
+.planilla__header {
+  padding: var(--space-2-5) var(--space-4);
+  background-color: var(--color-base-1);
+  border-bottom: 1px solid var(--color-linea);
+}
+
+.planilla__fila {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-linea);
+  cursor: pointer;
+  transition: background-color var(--transicion);
+}
+
+.planilla__fila:last-child {
+  border-bottom: none;
+}
+
+/* `--fila-hover` la setea cada fila cuando el hover lleva el color de su
+   estado (el listado de proyectos); donde no, cae al gris de base. */
+.planilla__fila:hover {
+  background-color: var(--fila-hover, var(--color-base-1));
+}
+
 /* Etiqueta tipo "ficha" para labels de formulario y meta-texto — mayúsculas
-   reservadas a este uso, nunca a títulos (ver DESIGN.md §3). */
+   reservadas a este uso, nunca a títulos (ver docs/DESIGN.md §3). */
 .label-ficha {
   font-family: var(--font-ui);
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -342,7 +631,7 @@ textarea:focus-visible,
    no recién al hacer submit) — usado por los modales de compra/gasto/cobro. */
 .campo-error {
   margin: 2px 0 0;
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-oxido);
 }

@@ -13,7 +13,7 @@ export function NoAutorizado() {
       <div className="auth-panel">
         <div className="auth-panel__marca">
           <img src={logoHS} alt="HomeSolutions" className="auth-panel__logo" />
-          <span className="auth-panel__restringido">
+          <span className="badge badge--peligro auth-panel__restringido">
             <Lock size={13} />
             Acceso restringido
           </span>
@@ -23,7 +23,9 @@ export function NoAutorizado() {
         <div className="auth-panel__form auth-panel__aviso">
           <h1>No estás autorizado para ver esta página</h1>
           <p>Iniciá sesión con tu cuenta para continuar.</p>
-          <button onClick={() => navigate("/login")}>Ir al login</button>
+          <button className="btn btn-primary" onClick={() => navigate("/login")}>
+            Ir al login
+          </button>
         </div>
       </div>
     </div>

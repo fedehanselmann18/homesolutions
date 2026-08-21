@@ -7,6 +7,7 @@ import { obtenerMensajeError } from "../utils/errorHandling";
 import { usePageTitle } from "../hooks/usePageTitle";
 import logoHS from "../assets/HS_logo_blanco.png";
 import "./Auth.css";
+import { LogoCargando } from "../components/shared/LogoCargando";
 
 export function Login() {
   usePageTitle("Iniciar sesión");
@@ -138,8 +139,15 @@ export function Login() {
 
           {error && <p className="auth-panel__error">{error}</p>}
 
-          <button type="submit" className="auth-panel__submit" disabled={enviando}>
-            {enviando ? "Ingresando..." : "Ingresar"}
+          <button type="submit" className="btn btn-primary auth-panel__submit" disabled={enviando}>
+            {enviando ? (
+              <>
+                <LogoCargando size={14} variante="blanco" />
+                Ingresando...
+              </>
+            ) : (
+              "Ingresar"
+            )}
           </button>
 
           <Link to="/registro" className="auth-panel__link">

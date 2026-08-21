@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import ModalShell from "./ModalShell";
+import { LogoCargando } from "../shared/LogoCargando";
 
 const ESTADOS_OPCIONES = [
   { value: "por_empezar", label: "Por empezar" },
@@ -63,7 +64,16 @@ export function ModalFase({ fase, onGuardar, onCerrar }) {
             Cancelar
           </button>
           <button type="submit" className="btn btn-primary" disabled={guardando}>
-            {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Crear fase"}
+            {guardando ? (
+              <>
+                <LogoCargando size={14} variante="blanco" />
+                Guardando...
+              </>
+            ) : esEdicion ? (
+              "Guardar cambios"
+            ) : (
+              "Crear fase"
+            )}
           </button>
         </>
       }

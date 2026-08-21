@@ -207,7 +207,7 @@ export function ComprobantesUploader({
                   {p.file.name}
                 </span>
                 <span className="comprobantes-chip-tamanio">{formatearTamanio(p.file.size)}</span>
-                <span className="comprobantes-chip-badge">nuevo</span>
+                <span className="badge badge--sm badge--marca comprobantes-chip-badge">nuevo</span>
                 <button
                   type="button"
                   className="comprobantes-chip-quitar"

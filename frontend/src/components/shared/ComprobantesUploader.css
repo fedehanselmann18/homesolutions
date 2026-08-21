@@ -51,11 +51,11 @@
 }
 
 .comprobantes-dropzone--prominente .comprobantes-dropzone-texto {
-  font-size: 0.95rem;
+  font-size: var(--text-md);
 }
 
 .comprobantes-dropzone--prominente .comprobantes-dropzone-subtexto {
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
 }
 
 .comprobantes-dropzone-icono {
@@ -63,26 +63,26 @@
 }
 
 .comprobantes-dropzone-texto {
-  font-size: 0.88rem;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-tinta);
 }
 
 .comprobantes-dropzone-subtexto {
-  font-size: 0.76rem;
+  font-size: var(--text-xs);
   color: var(--color-tinta-muted);
 }
 
 .comprobantes-errores {
   margin: 0;
   padding-left: 1.1rem;
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   color: var(--color-oxido);
 }
 
 .comprobantes-vacio {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: var(--text-sm);
   color: var(--color-tinta-muted);
 }
 
@@ -121,7 +121,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.85rem;
+  font-size: var(--text-btn);
   color: var(--color-tinta);
   text-align: left;
 }
@@ -148,20 +148,11 @@
 }
 
 .comprobantes-chip-tamanio {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--color-tinta-muted);
   flex-shrink: 0;
 }
-
 .comprobantes-chip-badge {
-  font-size: 0.66rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  color: var(--color-musgo-dark);
-  background-color: var(--color-musgo-tint);
-  padding: 2px 7px;
-  border-radius: var(--radius-pill);
   flex-shrink: 0;
 }
 

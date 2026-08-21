@@ -90,7 +90,9 @@ export function SeccionNotas({
       <div className="seccion-notas-header">
         <span className="seccion-notas-titulo">
           Notas de crédito / débito
-          {notas.length > 0 && <span className="seccion-notas-contador">{notas.length}</span>}
+          {notas.length > 0 && (
+            <span className="badge badge--sm badge--neutro">{notas.length}</span>
+          )}
         </span>
         {canManage && onAgregar && (
           <button type="button" className="seccion-notas-btn-agregar" onClick={onAgregar}>
@@ -155,7 +157,7 @@ export function SeccionNotas({
                     {canManage && onEliminar && (
                       <button
                         type="button"
-                        className="seccion-notas-btn-eliminar"
+                        className="btn-icono btn-icono--sm btn-icono--contorno btn-icono--peligro"
                         onClick={() => handleEliminar(n.id)}
                         disabled={eliminandoId === n.id}
                         title="Eliminar"
@@ -226,7 +228,7 @@ export function SeccionNotas({
                       {canManage && onEliminar && (
                         <button
                           type="button"
-                          className="seccion-notas-btn-eliminar"
+                          className="btn-icono btn-icono--sm btn-icono--contorno btn-icono--peligro"
                           onClick={() => handleEliminar(n.id)}
                           disabled={eliminandoId === n.id}
                           title="Eliminar"

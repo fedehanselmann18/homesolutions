@@ -1,6 +1,7 @@
 import { X, CircleAlert } from "lucide-react";
 
 import { formatMoneda } from "../../utils/formato";
+import { useModal } from "../../hooks/useModal";
 
 import "./modal-base.css";
 import "./ModalShell.css";
@@ -31,6 +32,7 @@ export function ModalShell({
   children,
 }) {
   const Contenedor = onSubmit ? "form" : "div";
+  const dialogoRef = useModal(onCerrar, cerrarDeshabilitado);
 
   return (
     <div
@@ -43,6 +45,11 @@ export function ModalShell({
       onClick={cerrarDeshabilitado ? undefined : onCerrar}
     >
       <Contenedor
+        ref={dialogoRef}
+        // `tabIndex={-1}` lo hace enfocable por código sin meterlo en el orden
+        // de tabulación: useModal le da el foco al abrir, así el lector de
+        // pantalla anuncia el diálogo y su título.
+        tabIndex={-1}
         className={`modal-contenido shell${ancho ? " shell--ancho" : ""}${clase ? ` ${clase}` : ""}`}
         // El diálogo se anuncia como tal (y con su título) para lectores de
         // pantalla: sin esto es un div más, indistinguible del resto de la
@@ -72,10 +79,11 @@ export function ModalShell({
           <span className="shell__espaciador" />
           <button
             type="button"
-            className="shell__cerrar"
+            className="btn-icono"
             onClick={onCerrar}
             disabled={cerrarDeshabilitado}
             title="Cerrar"
+            aria-label="Cerrar"
           >
             <X size={17} strokeWidth={2} />
           </button>

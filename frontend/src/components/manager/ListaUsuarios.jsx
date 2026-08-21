@@ -46,11 +46,7 @@ export function ListaUsuarios({
                   </span>
                 </td>
                 <td>
-                  <span
-                    className={`badge ${
-                      usuario.activo ? "badge--exito" : "badge--peligro"
-                    }`}
-                  >
+                  <span className={`badge ${usuario.activo ? "badge--exito" : "badge--peligro"}`}>
                     {usuario.activo ? "Activa" : "Desactivada"}
                   </span>
                 </td>

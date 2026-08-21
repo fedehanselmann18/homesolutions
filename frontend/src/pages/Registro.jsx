@@ -7,6 +7,7 @@ import { obtenerMensajeError } from "../utils/errorHandling";
 import { usePageTitle } from "../hooks/usePageTitle";
 import logoHS from "../assets/HS_logo_blanco.png";
 import "./Auth.css"; // reusa el mismo panel partido que el login
+import { LogoCargando } from "../components/shared/LogoCargando";
 
 export function Registro() {
   usePageTitle("Registro");
@@ -152,8 +153,15 @@ export function Registro() {
 
           {error && <p className="auth-panel__error">{error}</p>}
 
-          <button type="submit" className="auth-panel__submit" disabled={enviando}>
-            {enviando ? "Creando cuenta..." : "Crear cuenta"}
+          <button type="submit" className="btn btn-primary auth-panel__submit" disabled={enviando}>
+            {enviando ? (
+              <>
+                <LogoCargando size={14} variante="blanco" />
+                Creando cuenta...
+              </>
+            ) : (
+              "Crear cuenta"
+            )}
           </button>
 
           <Link to="/login" className="auth-panel__link">

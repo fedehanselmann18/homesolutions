@@ -97,59 +97,9 @@
   min-width: 0;
 }
 
-.modal-form input,
-.modal-form select,
-.modal-form textarea {
-  width: 100%;
-  font-family: var(--font-ui);
-  font-size: var(--text-md);
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: normal;
-  padding: 9px 12px;
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-base-1);
-  color: var(--color-tinta);
-  box-sizing: border-box;
-  transition: border-color 0.15s ease;
-}
-
-.modal-form textarea {
-  resize: vertical;
-  min-height: 4.5rem;
-}
-
-.modal-form input[type="file"] {
-  padding: 7px 10px;
-  font-size: var(--text-base);
-}
-
-/* `:user-invalid` y no `:invalid`: sólo pinta de rojo después de que el
-   usuario tocó el campo. Antes esto era `input:invalid:not(:placeholder-shown)`
-   duplicado en ModalProyecto.css y ModalFase.css, pero como el guard depende
-   de tener placeholder, los campos que no lo declaran (y todos los
-   `type="date"`) arrancaban en rojo con el formulario recién abierto. */
-.modal-form input:user-invalid {
-  border-color: var(--color-oxido);
-}
-
-.modal-form input:focus,
-.modal-form select:focus,
-.modal-form textarea:focus {
-  outline: none;
-  border-color: var(--color-terracota);
-  background-color: var(--color-superficie);
-}
-
-.modal-form select {
-  appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 0.7rem center;
-  background-size: 1rem;
-  padding-right: 2rem;
-}
+/* La geometría de input/select/textarea de acá adentro ya no vive en este
+   archivo: es la misma de `.campo` en index.css, que engancha
+   `.modal-form input` y compañía por descendencia. */
 
 /* --- secciones (datos generales, comprobantes, detalle de productos) --- */
 
@@ -207,24 +157,6 @@
   cursor: not-allowed;
 }
 
-.modal-btn-quitar-fila {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-oxido-tint);
-  background-color: transparent;
-  color: var(--color-oxido);
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.modal-btn-quitar-fila:hover {
-  background-color: var(--color-oxido-tint);
-}
-
 .modal-form-fila-dinamica {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr auto;
@@ -266,17 +198,8 @@
   gap: 5px;
   min-width: 0;
 }
-
 .modal-form-fila-dinamica-tipo {
   align-self: flex-start;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: var(--text-2xs);
-  font-weight: 600;
-  padding: 2px 8px;
-  border-radius: var(--radius-pill);
-  white-space: nowrap;
 }
 
 .modal-form-fila-dinamica-precio,
@@ -333,7 +256,7 @@
   margin-top: 2px;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .modal-form-fila {
     grid-template-columns: 1fr;
   }
@@ -352,9 +275,7 @@
   .modal-form-fila-dinamica-subtotal {
     text-align: left;
   }
-}
 
-@media (max-width: 480px) {
   .modal-contenido {
     padding: var(--space-6);
   }

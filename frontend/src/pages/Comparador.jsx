@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Search, TrendingDown } from "lucide-react";
+import { TrendingDown } from "lucide-react";
 
 import { useProveedores } from "../hooks/useProveedores";
 import { getProductos } from "../services/productoService";
@@ -9,6 +9,8 @@ import { formatMoneda } from "../utils/formato";
 import { agruparPorProducto, filtrarProductos } from "../utils/comparador";
 import { Cargando } from "../components/shared/Cargando";
 import { EstadoVacio } from "../components/shared/EstadoVacio";
+import { PageHeader } from "../components/shared/PageHeader";
+import { Buscador } from "../components/shared/Buscador";
 import { EstadoError } from "../components/shared/EstadoError";
 import { usePageTitle } from "../hooks/usePageTitle";
 
@@ -73,18 +75,19 @@ export function Comparador() {
 
   return (
     <div className="comparador-container">
-      <header className="comparador-header">
-        <h1 className="comparador-header__titulo">Comparador de precios</h1>
-        <p className="comparador-header__subtitulo">
-          Compará qué proveedor conviene antes de cargar una compra.
-        </p>
-      </header>
+      <PageHeader
+        titulo="Comparador de precios"
+        subtitulo="Compará qué proveedor conviene antes de cargar una compra."
+      />
 
       <section className="comparador-seccion">
         <h2 className="comparador-seccion-titulo">Mismo producto, distintos proveedores</h2>
 
         {grupos.length === 0 ? (
-          <EstadoVacio mensaje="Todavía no hay ningún producto con la misma marca y modelo cargado en más de un proveedor." grande />
+          <EstadoVacio
+            mensaje="Todavía no hay ningún producto con la misma marca y modelo cargado en más de un proveedor."
+            grande
+          />
         ) : (
           <div className="comparador-grupos">
             {grupos.map((grupo) => {
@@ -99,7 +102,10 @@ export function Comparador() {
                       <div className="comparador-grupo-chips">
                         <span
                           className="badge"
-                          style={{ color: tipo.color, backgroundColor: `${tipo.color}${TINTE_PASTILLA}` }}
+                          style={{
+                            color: tipo.color,
+                            backgroundColor: `${tipo.color}${TINTE_PASTILLA}`,
+                          }}
                         >
                           {tipo.icono && <tipo.icono size={12} strokeWidth={2.25} />} {tipo.label}
                         </span>
@@ -111,7 +117,7 @@ export function Comparador() {
                       </div>
                     </div>
                     {grupo.ahorroPct > 0 && (
-                      <span className="comparador-ahorro">
+                      <span className="badge badge--exito comparador-ahorro">
                         <TrendingDown size={14} strokeWidth={2} />
                         {grupo.ahorroPct.toFixed(0)}% de diferencia
                       </span>
@@ -130,7 +136,11 @@ export function Comparador() {
                         <tr key={oferta.id} className={i === 0 ? "comparador-fila-mejor" : ""}>
                           <td>
                             {oferta.proveedorNombre}
-                            {i === 0 && <span className="comparador-tag-mejor">Mejor precio</span>}
+                            {i === 0 && (
+                              <span className="badge badge--sm badge--exito comparador-tag-mejor">
+                                Mejor precio
+                              </span>
+                            )}
                           </td>
                           <td>{formatMoneda(oferta.precio)}</td>
                         </tr>
@@ -148,17 +158,18 @@ export function Comparador() {
         <h2 className="comparador-seccion-titulo">Explorar por categoría</h2>
 
         <div className="comparador-filtros">
-          <div className="comparador-buscador">
-            <Search size={16} strokeWidth={2} />
-            <input
-              type="text"
-              placeholder="Buscar por marca o modelo..."
-              value={busqueda}
-              onChange={(e) => setBusqueda(e.target.value)}
-            />
-          </div>
+          <Buscador
+            valor={busqueda}
+            onCambiar={setBusqueda}
+            placeholder="Buscar por marca o modelo…"
+            etiqueta="Buscar producto"
+          />
 
-          <select value={categoriaFiltro} onChange={(e) => setCategoriaFiltro(e.target.value)}>
+          <select
+            className="campo comparador-filtros__select"
+            value={categoriaFiltro}
+            onChange={(e) => setCategoriaFiltro(e.target.value)}
+          >
             <option value="">Todas las categorías</option>
             {categorias.map((cat) => (
               <option key={cat.id} value={cat.id}>
@@ -201,7 +212,10 @@ export function Comparador() {
                       <td>
                         <span
                           className="badge"
-                          style={{ color: tipo.color, backgroundColor: `${tipo.color}${TINTE_PASTILLA}` }}
+                          style={{
+                            color: tipo.color,
+                            backgroundColor: `${tipo.color}${TINTE_PASTILLA}`,
+                          }}
                         >
                           {tipo.icono && <tipo.icono size={12} strokeWidth={2.25} />} {tipo.label}
                         </span>

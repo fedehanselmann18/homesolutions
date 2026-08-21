@@ -35,13 +35,13 @@
 
 .modal-confirmar-mensaje {
   margin: 0;
-  font-size: 0.92rem;
+  font-size: var(--text-base);
   color: var(--color-tinta-muted);
 }
 
 .modal-confirmar-recurso {
   margin: 0;
-  font-size: 0.92rem;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-tinta);
 }

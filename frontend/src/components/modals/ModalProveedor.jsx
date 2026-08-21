@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import ModalShell from "./ModalShell";
+import { LogoCargando } from "../shared/LogoCargando";
 
 export function ModalProveedor({ proveedor, onGuardar, onCerrar }) {
   const esEdicion = Boolean(proveedor);
@@ -63,7 +64,16 @@ export function ModalProveedor({ proveedor, onGuardar, onCerrar }) {
             Cancelar
           </button>
           <button type="submit" className="btn btn-primary" disabled={guardando}>
-            {guardando ? "Guardando..." : esEdicion ? "Guardar cambios" : "Crear proveedor"}
+            {guardando ? (
+              <>
+                <LogoCargando size={14} variante="blanco" />
+                Guardando...
+              </>
+            ) : esEdicion ? (
+              "Guardar cambios"
+            ) : (
+              "Crear proveedor"
+            )}
           </button>
         </>
       }

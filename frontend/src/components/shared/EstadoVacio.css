@@ -13,7 +13,7 @@
 }
 
 .estado-vacio-mensaje {
-  font-size: 0.85rem;
+  font-size: var(--text-btn);
   color: var(--color-tinta-muted);
   margin: 0;
 }
@@ -32,6 +32,6 @@
 }
 
 .estado-vacio--grande .estado-vacio-mensaje {
-  font-size: 0.95rem;
+  font-size: var(--text-md);
   max-width: 42ch;
 }

@@ -1,7 +1,6 @@
 import { Sparkles, FileText, CircleAlert } from "lucide-react";
 
-import logoIsoBlanco from "../../assets/HS_iso_blanco.png";
-import logoIsoOliva from "../../assets/HS_iso_oliva.png";
+import { LogoCargando } from "../shared/LogoCargando";
 
 import "./PiezasIA.css";
 
@@ -12,27 +11,6 @@ import "./PiezasIA.css";
  * principal; el formulario aparece después, ya prellenado y con cada campo
  * marcado como leído del comprobante.
  */
-
-/**
- * Indicador de "la IA está pensando": el isotipo de la casita pulsando
- * despacio (escala + opacidad, sin girar ni rebotar -- ver PiezasIA.css). Es
- * la marca del producto haciendo de spinner en vez de un spinner genérico.
- *
- * La variante importa: el isotipo oliva es EXACTAMENTE el mismo color que
- * --color-terracota (#6f7f45), así que sobre el fondo sólido de .ia-boton
- * queda invisible (contraste 1:1). Ahí va el blanco, que además acompaña al
- * texto blanco del botón; el oliva queda para fondos claros.
- */
-function LogoCargando({ size = 18, variante = "oliva" }) {
-  return (
-    <img
-      src={variante === "blanco" ? logoIsoBlanco : logoIsoOliva}
-      alt=""
-      className="logo-cargando"
-      style={{ width: size, height: size }}
-    />
-  );
-}
 
 export function BotonIA({
   onClick,

@@ -48,7 +48,7 @@
 }
 
 .alerta-titulo {
-  font-size: 0.88rem;
+  font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-tinta);
   overflow: hidden;
@@ -57,7 +57,7 @@
 }
 
 .alerta-detalle {
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   color: var(--color-tinta-muted);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -73,13 +73,13 @@
 }
 
 .alerta-monto {
-  font-size: 0.88rem;
+  font-size: var(--text-base);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
 .alerta-extra {
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   color: var(--color-tinta-muted);
   white-space: nowrap;
 }

@@ -135,8 +135,8 @@ export function Fases({ proyectoId }) {
       {fases.length === 0 ? (
         <EstadoVacio mensaje="No hay fases disponibles para este proyecto." />
       ) : (
-        <div className="fases-tabla">
-          <div className="fases-tabla-header">
+        <div className="planilla fases-tabla">
+          <div className="planilla__header fases-tabla-header">
             <span className="label-ficha">#</span>
             <span className="label-ficha">Fase</span>
             <span className="label-ficha">Estado</span>
@@ -165,7 +165,7 @@ export function Fases({ proyectoId }) {
             return (
               <div
                 key={fase.id}
-                className="fases-tabla-fila"
+                className="planilla__fila fases-tabla-fila"
                 style={{ boxShadow: `inset 3px 0 0 ${colorFase(fase.estado)}` }}
                 onClick={() => navigate(`/proyectos/${proyectoId}/fases/${fase.id}`)}
                 role="button"
@@ -200,8 +200,11 @@ export function Fases({ proyectoId }) {
                 </span>
 
                 <span
-                  className="fases-tabla-estado"
-                  style={{ backgroundColor: `${estadoInfo.color}${TINTE_PASTILLA}`, color: estadoInfo.color }}
+                  className="badge fases-tabla-estado"
+                  style={{
+                    backgroundColor: `${estadoInfo.color}${TINTE_PASTILLA}`,
+                    color: estadoInfo.color,
+                  }}
                 >
                   {estadoInfo.label}
                 </span>
@@ -242,7 +245,7 @@ export function Fases({ proyectoId }) {
                       </span>
                       <button
                         type="button"
-                        className="fases-tabla-accion-btn"
+                        className="btn-icono btn-icono--sm btn-icono--contorno"
                         onClick={(e) => handleEditarFase(e, fase)}
                         title="Editar fase"
                       >
@@ -250,7 +253,7 @@ export function Fases({ proyectoId }) {
                       </button>
                       <button
                         type="button"
-                        className="fases-tabla-accion-btn fases-tabla-accion-btn--eliminar"
+                        className="btn-icono btn-icono--sm btn-icono--contorno btn-icono--peligro"
                         onClick={(e) => handleSolicitarEliminarFase(e, fase)}
                         title="Eliminar fase"
                       >

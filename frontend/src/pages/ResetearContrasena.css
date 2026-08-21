@@ -8,40 +8,6 @@
   font-family: var(--font-ui);
 }
 
-.reseteo-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  padding-bottom: var(--space-6);
-  margin-bottom: var(--space-6);
-  border-bottom: 1px solid var(--color-linea);
-}
-
-.reseteo-header__titulo {
-  font-family: var(--font-display);
-  font-size: 2rem;
-  font-weight: 600;
-  color: var(--color-tinta);
-  margin: 0;
-}
-
-.reseteo-header__subtitulo {
-  font-size: 0.9rem;
-  color: var(--color-tinta-muted);
-  margin: 4px 0 0;
-}
-
-.reseteo-header__icono {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-sm);
-  background: var(--color-terracota-tint);
-  color: var(--color-terracota-dark);
-}
-
 .reseteo-seccion {
   margin-bottom: var(--space-6);
   padding: var(--space-6);
@@ -52,7 +18,7 @@
 
 .reseteo-seccion__titulo {
   font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-size: var(--text-lg);
   font-weight: 600;
   color: var(--color-tinta);
   margin: 0;

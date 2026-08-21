@@ -21,7 +21,7 @@
 }
 
 .mini-seg-titulo {
-  font-size: 0.85rem;
+  font-size: var(--text-btn);
   font-weight: 600;
   color: var(--color-tinta);
   margin: 0;
@@ -31,7 +31,7 @@
 }
 
 .mini-seg-subtitulo {
-  font-size: 0.74rem;
+  font-size: var(--text-xs);
   color: var(--color-tinta-muted);
   margin: 2px 0 8px;
   overflow: hidden;
@@ -40,7 +40,7 @@
 }
 
 .mini-seg-productos {
-  font-size: 0.74rem;
+  font-size: var(--text-xs);
   color: var(--color-tinta-muted);
   margin: 2px 0 6px;
   overflow: hidden;
@@ -57,7 +57,7 @@
 }
 
 .mini-seg-fecha {
-  font-size: 0.7rem;
+  font-size: var(--text-xs);
   color: var(--color-tinta-muted);
   white-space: nowrap;
 }
@@ -76,7 +76,7 @@
 }
 
 .mini-seg-etiqueta {
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   color: var(--color-tinta-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -85,7 +85,7 @@
 }
 
 .mini-seg-monto {
-  font-size: 0.85rem;
+  font-size: var(--text-btn);
   font-weight: 700;
   color: var(--color-tinta);
   font-variant-numeric: tabular-nums;

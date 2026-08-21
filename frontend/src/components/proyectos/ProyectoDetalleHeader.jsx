@@ -90,7 +90,7 @@ function ProyectoDetalleHeader({ proyecto, breadcrumb }) {
       <div className="proyecto-header__top">
         <h1 className="proyecto-header__nombre">{proyecto.nombre}</h1>
         <span
-          className="proyecto-header__estado"
+          className="badge proyecto-header__estado"
           style={{
             color: estado.color,
             backgroundColor: `color-mix(in srgb, ${estado.color} 15%, white)`,

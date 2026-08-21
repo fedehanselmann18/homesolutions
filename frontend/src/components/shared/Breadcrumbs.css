@@ -3,7 +3,7 @@
   flex-wrap: wrap;
   align-items: center;
   font-family: var(--font-ui);
-  font-size: 0.82rem;
+  font-size: var(--text-sm);
   margin-bottom: var(--space-3);
 }
 

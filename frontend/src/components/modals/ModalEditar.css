@@ -88,7 +88,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.66rem;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -103,7 +103,7 @@
 
 .mov-edit__seccion-accion {
   font-family: var(--font-ui);
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   text-transform: none;
   letter-spacing: normal;
@@ -131,7 +131,7 @@
 
 .mov-edit__vacio {
   margin: 0;
-  font-size: 0.82rem;
+  font-size: var(--text-sm);
   color: var(--color-tinta-muted);
 }
 
@@ -152,7 +152,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  font-size: 0.66rem;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -171,7 +171,7 @@
 .mov-edit__form select,
 .mov-edit__solo-form select {
   font-family: var(--font-ui);
-  font-size: 0.95rem;
+  font-size: var(--text-md);
   font-weight: 500;
   text-transform: none;
   letter-spacing: normal;
@@ -215,13 +215,13 @@
 /* La descripción es el título de la compra: se escribe más grande, igual
    que se lee en la ficha de detalle. */
 .mov-edit__campo--titulo input {
-  font-size: 1.05rem;
+  font-size: var(--text-lg);
   font-weight: 600;
   letter-spacing: -0.01em;
 }
 
 .mov-edit__calculado {
-  font-size: 0.95rem;
+  font-size: var(--text-md);
   font-weight: 600;
   color: var(--color-tinta-muted);
   text-transform: none;
@@ -254,7 +254,7 @@
 }
 
 .mov-edit__fila--headers {
-  font-size: 0.66rem;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -287,7 +287,7 @@
 
 .mov-edit__precio,
 .mov-edit__subtotal {
-  font-size: 0.88rem;
+  font-size: var(--text-base);
   padding: 6px 0;
   white-space: nowrap;
   overflow: hidden;
@@ -303,25 +303,6 @@
   color: var(--color-musgo-dark);
 }
 
-.mov-edit__quitar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  flex: none;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-oxido-tint);
-  background: transparent;
-  color: var(--color-oxido);
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.mov-edit__quitar:hover {
-  background: var(--color-oxido-tint);
-}
-
 /* --- riel: total, estados, notas --- */
 
 .mov-edit__total {
@@ -331,7 +312,7 @@
 }
 
 .mov-edit__total-label {
-  font-size: 0.66rem;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -340,7 +321,7 @@
 
 .mov-edit__total-monto {
   font-family: var(--font-display);
-  font-size: 2rem;
+  font-size: var(--text-3xl);
   line-height: 1;
   font-weight: 700;
   letter-spacing: -0.025em;
@@ -381,7 +362,7 @@
 }
 
 .mov-edit__footer-total-label {
-  font-size: 0.66rem;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -399,7 +380,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   color: var(--color-oxido);
 }
 
@@ -409,7 +390,7 @@
   margin-left: auto;
 }
 
-@media (max-width: 820px) {
+@media (max-width: 900px) {
   .mov-edit__grid {
     grid-template-columns: minmax(0, 1fr);
   }

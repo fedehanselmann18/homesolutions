@@ -16,6 +16,7 @@ import { BarraComposicion, TileEstado } from "./PiezasDetalle";
 import { EditarShell, SeccionForm, TotalRiel } from "./PiezasEditar";
 import { PasoComprobante, BannerIA, ResumenValidacion, MarcaIA } from "./PiezasIA";
 import { TINTE_PASTILLA } from "../../constants/tipoMovimiento";
+import { LogoCargando } from "../shared/LogoCargando";
 
 const validarCampo = (name, value) => {
   if (name === "descripcion") return validarRequerido(value, "La descripción es obligatoria.");
@@ -425,7 +426,14 @@ export function ModalCompra({
                         : "Leer el comprobante y prellenar los campos"
                     }
                   >
-                    {extrayendo ? "Leyendo..." : "Autocompletar con IA"}
+                    {extrayendo ? (
+                      <>
+                        <LogoCargando size={13} />
+                        Leyendo...
+                      </>
+                    ) : (
+                      "Autocompletar con IA"
+                    )}
                   </button>
                 )
               }
@@ -639,7 +647,7 @@ export function ModalCompra({
                     </span>
                     <button
                       type="button"
-                      className="mov-edit__quitar"
+                      className="btn-icono btn-icono--contorno btn-icono--peligro"
                       title="Quitar"
                       onClick={() => eliminarFilaDetalle(fila._id)}
                     >
@@ -694,7 +702,7 @@ export function ModalCompra({
                   />
                   <button
                     type="button"
-                    className="mov-edit__quitar"
+                    className="btn-icono btn-icono--contorno btn-icono--peligro"
                     title="Quitar"
                     onClick={() => eliminarFilaImpuesto(fila._id)}
                   >

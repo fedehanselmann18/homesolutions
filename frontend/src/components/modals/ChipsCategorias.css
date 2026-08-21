@@ -15,7 +15,7 @@
 }
 
 .chips-cat-label {
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -23,7 +23,7 @@
 }
 
 .chips-cat-contador {
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   font-weight: 400;
   text-transform: none;
   letter-spacing: normal;
@@ -33,7 +33,7 @@
 .chips-cat-limpiar {
   margin-left: auto;
   font-family: var(--font-ui);
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   padding: 0;
   border: none;
@@ -59,7 +59,7 @@
   align-items: center;
   gap: 5px;
   font-family: var(--font-ui);
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   text-transform: none;
   letter-spacing: normal;
@@ -105,7 +105,7 @@
 }
 
 .chips-cat-vacio-titulo {
-  font-size: 0.85rem;
+  font-size: var(--text-btn);
   font-weight: 600;
   text-transform: none;
   letter-spacing: normal;
@@ -113,7 +113,7 @@
 }
 
 .chips-cat-vacio-detalle {
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   font-weight: 400;
   text-transform: none;
   letter-spacing: normal;
@@ -131,7 +131,7 @@
   flex: 1;
   min-width: 0;
   font-family: var(--font-ui);
-  font-size: 0.85rem;
+  font-size: var(--text-btn);
   font-weight: 400;
   text-transform: none;
   letter-spacing: normal;
@@ -154,7 +154,7 @@
   gap: 5px;
   flex-shrink: 0;
   font-family: var(--font-ui);
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   text-transform: none;
   letter-spacing: normal;
@@ -177,7 +177,7 @@
 }
 
 .chips-cat-error {
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   font-weight: 400;
   text-transform: none;
   letter-spacing: normal;

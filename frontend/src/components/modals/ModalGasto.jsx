@@ -8,6 +8,7 @@ import { useToast } from "../../context/useToast";
 import { validarRequerido, validarMonto, validarFecha } from "../../utils/formValidation";
 import { EditarShell, SeccionForm } from "./PiezasEditar";
 import { PasoComprobante, BannerIA, ResumenValidacion, MarcaIA } from "./PiezasIA";
+import { LogoCargando } from "../shared/LogoCargando";
 
 const validarCampo = (name, value) => {
   if (name === "descripcion") return validarRequerido(value, "La descripción es obligatoria.");
@@ -240,7 +241,14 @@ export function ModalGasto({
                       : "Leer el comprobante y prellenar el formulario"
                   }
                 >
-                  {extrayendo ? "Leyendo..." : "Autocompletar con IA"}
+                  {extrayendo ? (
+                    <>
+                      <LogoCargando size={13} />
+                      Leyendo...
+                    </>
+                  ) : (
+                    "Autocompletar con IA"
+                  )}
                 </button>
               )
             }

@@ -44,7 +44,7 @@
 }
 
 .shell__contexto {
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   color: var(--color-tinta-muted);
 }
 
@@ -54,7 +54,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.68rem;
+  font-size: var(--text-2xs);
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -71,25 +71,6 @@
 
 .shell__espaciador {
   flex: 1;
-}
-
-.shell__cerrar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-tinta-muted);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.shell__cerrar:hover:not(:disabled) {
-  background: var(--color-base-2);
-  color: var(--color-tinta);
 }
 
 /* --- cuerpo --- */
@@ -125,7 +106,7 @@
 }
 
 .shell__footer-total-label {
-  font-size: 0.68rem;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -142,7 +123,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   color: var(--color-oxido);
 }
 

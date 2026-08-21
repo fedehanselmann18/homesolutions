@@ -39,14 +39,21 @@ export function ProveedorCard({
     >
       {canManage && (
         <div className="proveedor-card__acciones-flotantes">
-          <button onClick={handleEditar} title="Editar" aria-label="Editar proveedor">
+          <button
+            type="button"
+            className="btn-icono btn-icono--sm btn-icono--contorno"
+            onClick={handleEditar}
+            title="Editar"
+            aria-label="Editar proveedor"
+          >
             <Pencil size={14} strokeWidth={2} />
           </button>
           <button
+            type="button"
+            className="btn-icono btn-icono--sm btn-icono--contorno btn-icono--peligro"
             onClick={handleEliminar}
             title="Eliminar"
             aria-label="Eliminar proveedor"
-            className="proveedor-card__btn-eliminar"
           >
             <Trash2 size={14} strokeWidth={2} />
           </button>
@@ -55,10 +62,10 @@ export function ProveedorCard({
 
       <h3 className="proveedor-card__nombre">{proveedor.nombre}</h3>
       <div className="proveedor-card__chips">
-        {rubro && <span className="proveedor-card__rubro">{rubro}</span>}
+        {rubro && <span className="badge badge--exito proveedor-card__rubro">{rubro}</span>}
         {totalNotasCredito > 0 && (
           <span
-            className="proveedor-card__badge-nc"
+            className="badge badge--peligro proveedor-card__badge-nc"
             title={`${formatMoneda(totalNotasCredito)} en notas de crédito`}
           >
             <FileMinus size={12} strokeWidth={2.25} />-{formatMoneda(totalNotasCredito)}
@@ -66,7 +73,7 @@ export function ProveedorCard({
         )}
         {totalNotasDebito > 0 && (
           <span
-            className="proveedor-card__badge-nd"
+            className="badge badge--marca proveedor-card__badge-nd"
             title={`${formatMoneda(totalNotasDebito)} en notas de débito`}
           >
             <FilePlus size={12} strokeWidth={2.25} />+{formatMoneda(totalNotasDebito)}

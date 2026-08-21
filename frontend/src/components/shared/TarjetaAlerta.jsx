@@ -14,7 +14,10 @@ import { TINTE_PASTILLA } from "../../constants/tipoMovimiento";
 export function TarjetaAlerta({ icono: Icono, color, titulo, detalle, monto, extra, onClick }) {
   const contenido = (
     <>
-      <span className="alerta-icono" style={{ color, backgroundColor: `${color}${TINTE_PASTILLA}` }}>
+      <span
+        className="alerta-icono"
+        style={{ color, backgroundColor: `${color}${TINTE_PASTILLA}` }}
+      >
         <Icono size={16} strokeWidth={2} />
       </span>
       <span className="alerta-texto">

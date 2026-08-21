@@ -3,6 +3,7 @@ import { useState } from "react";
 import ModalShell from "../modals/ModalShell";
 import { validarPassword } from "../../utils/formValidation";
 import "./Manager.css";
+import { LogoCargando } from "../shared/LogoCargando";
 
 /**
  * Contraseña nueva para una persona puntual del equipo. La escribe a mano
@@ -45,7 +46,14 @@ export function ModalResetearPassword({ usuario, guardando, onConfirmar, onCerra
             Cancelar
           </button>
           <button type="submit" className="btn btn-primary" disabled={guardando}>
-            {guardando ? "Guardando..." : "Cambiar contraseña"}
+            {guardando ? (
+              <>
+                <LogoCargando size={14} variante="blanco" />
+                Guardando...
+              </>
+            ) : (
+              "Cambiar contraseña"
+            )}
           </button>
         </>
       }

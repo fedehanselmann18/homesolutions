@@ -6,6 +6,7 @@ import { TIPOS_PRODUCTO } from "../../constants/tipoProducto";
 import { obtenerMensajeError } from "../../utils/errorHandling";
 
 import "./ChipsCategorias.css";
+import { LogoCargando } from "../shared/LogoCargando";
 
 /**
  * Selector de categorías como chips, compartido por ModalProducto (bloque
@@ -87,7 +88,7 @@ export function ChipsCategorias({
         onClick={handleCrear}
         disabled={creando || !nombreNueva.trim()}
       >
-        <Plus size={13} strokeWidth={2.5} />
+        {creando ? <LogoCargando size={13} /> : <Plus size={13} strokeWidth={2.5} />}
         {creando ? "Creando..." : "Crear categoría"}
       </button>
     </div>

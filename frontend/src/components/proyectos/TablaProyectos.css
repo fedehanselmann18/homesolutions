@@ -2,41 +2,11 @@
    fila por proyecto con sus columnas alineadas, en vez de repetir el label
    de cada dato adentro de cada tarjeta. La usan tanto el Panel ("Proyectos
    en curso") como la página Proyectos. */
-
-.panel-tabla {
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-
-.panel-tabla-header,
-.panel-tabla-fila {
-  display: grid;
+.panel-tabla-header, .panel-tabla-fila {
   grid-template-columns: 1.8fr 1fr 1.6fr 1fr 1.3fr 28px;
-  gap: var(--space-4);
-  align-items: center;
 }
-
-.panel-tabla-header {
-  padding: 10px var(--space-4);
-  background-color: var(--color-base-1);
-  border-bottom: 1px solid var(--color-linea);
-}
-
 .panel-tabla-fila {
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--color-linea);
   border-left: 3px solid transparent;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.panel-tabla-fila:last-child {
-  border-bottom: none;
-}
-
-.panel-tabla-fila:hover {
-  background-color: var(--fila-hover);
 }
 
 .panel-tabla-col {
@@ -162,38 +132,6 @@
 /* Editar/eliminar (página Proyectos, admin): ocultos hasta hacer hover de
    fila, igual criterio que el chevron -- no compiten con los datos en
    reposo. */
-.panel-tabla-accion-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--color-tinta-muted);
-  opacity: 0;
-  transition:
-    opacity 0.15s ease,
-    background-color 0.15s ease,
-    color 0.15s ease;
-  cursor: pointer;
-}
-
-.panel-tabla-fila:hover .panel-tabla-accion-btn,
-.panel-tabla-accion-btn:focus-visible {
-  opacity: 1;
-}
-
-.panel-tabla-accion-btn:hover {
-  background-color: var(--color-base-1);
-  color: var(--color-tinta);
-}
-
-.panel-tabla-accion-btn--eliminar:hover {
-  background-color: color-mix(in srgb, var(--color-oxido) 12%, white);
-  color: var(--color-oxido);
-}
 
 /* Variante con acciones (Editar/Eliminar, página Proyectos): la última
    columna necesita lugar para 2 botones de 26px + el chevron, no sólo el
@@ -206,7 +144,10 @@
 }
 
 @media (max-width: 900px) {
-  .panel-tabla {
+  /* Doble clase a propósito: `.planilla` fija `overflow: hidden` con la
+     misma especificidad, así que sin esto quién gana dependería del orden en
+     que Vite arma el bundle. */
+  .planilla.panel-tabla {
     overflow-x: auto;
   }
 
@@ -278,29 +219,29 @@
 }
 
 .panel-tabla-grupo-label {
-  font-size: 10.5px;
+  font-size: var(--text-2xs);
   font-weight: 700;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-/* Mismo verde/naranja/gris oscurecido que usa el mock para que el label se
-   lea sobre el tinte de fondo del grupo -- no son tokens porque sólo se
-   usan acá, como variante "oscura" puntual de --color-musgo/arcilla/acero. */
+/* Variante oscurecida de oliva/arcilla/acero para que el label se lea sobre
+   el tinte de fondo del grupo. Ahora son tokens (--color-*-texto en
+   index.css): el rol "texto sobre mi propio tint" no era exclusivo de acá. */
 .panel-tabla-grupo--en_curso .panel-tabla-grupo-label {
-  color: #3f5122;
+  color: var(--color-terracota-texto);
 }
 
 .panel-tabla-grupo--a_iniciar .panel-tabla-grupo-label {
-  color: #a35a05;
+  color: var(--color-arcilla-texto);
 }
 
 .panel-tabla-grupo--terminado .panel-tabla-grupo-label {
-  color: #475569;
+  color: var(--color-acero-texto);
 }
 
 .panel-tabla-grupo-contador {
-  font-size: 10.5px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   color: var(--color-tinta-muted);
   font-variant-numeric: tabular-nums;

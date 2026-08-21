@@ -4,6 +4,7 @@ import { X, Plus, Pencil } from "lucide-react";
 import { formatMoneda } from "../../utils/formato";
 import { iconoParaArchivo, nombreDeArchivo } from "../../utils/archivos";
 import { obtenerMensajeError } from "../../utils/errorHandling";
+import { useModal } from "../../hooks/useModal";
 
 import "./modal-base.css";
 import "./ModalDetalle.css";
@@ -31,9 +32,19 @@ export function DetalleShell({
   onEditar,
   children,
 }) {
+  const dialogoRef = useModal(onCerrar);
+
   return (
     <div className="modal-overlay" onClick={onCerrar}>
-      <div className="modal-contenido detalle" onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={dialogoRef}
+        tabIndex={-1}
+        className="modal-contenido detalle"
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${tipo}: ${titulo}`}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="detalle__header">
           <span className="detalle__tipo">
             {Icono && <Icono size={13} strokeWidth={2.25} />}
@@ -43,7 +54,13 @@ export function DetalleShell({
           {contexto && <span className="detalle__contexto">{contexto}</span>}
           <span className="detalle__espaciador" />
           <span className="detalle__fecha">{fecha}</span>
-          <button type="button" className="detalle__cerrar" onClick={onCerrar} title="Cerrar">
+          <button
+            type="button"
+            className="btn-icono detalle__cerrar"
+            onClick={onCerrar}
+            title="Cerrar"
+            aria-label="Cerrar"
+          >
             <X size={17} strokeWidth={2} />
           </button>
         </div>

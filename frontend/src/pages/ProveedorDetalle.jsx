@@ -260,9 +260,7 @@ export function ProveedorDetalle() {
 
   if (cargando) return <Cargando texto="Cargando proveedor..." />;
   if (error || !proveedor) {
-    return (
-      <EstadoError mensaje="No se pudo cargar el detalle del proveedor." grande />
-    );
+    return <EstadoError mensaje="No se pudo cargar el detalle del proveedor." grande />;
   }
 
   return (
@@ -276,13 +274,17 @@ export function ProveedorDetalle() {
           <h1 className="proveedor-detalle-nombre">{proveedor.nombre}</h1>
           {canManage && (
             <div className="proveedor-detalle-header-acciones">
-              <button type="button" onClick={() => setModalProveedorAbierto(true)}>
+              <button
+                type="button"
+                className="btn btn-secondary btn--sm"
+                onClick={() => setModalProveedorAbierto(true)}
+              >
                 <Pencil size={14} strokeWidth={2} />
                 Editar
               </button>
               <button
                 type="button"
-                className="proveedor-detalle-btn-eliminar"
+                className="btn btn-peligro btn--sm"
                 onClick={() => setConfirmarEliminarProveedor(true)}
               >
                 <Trash2 size={14} strokeWidth={2} />
@@ -383,13 +385,15 @@ export function ProveedorDetalle() {
             <div className="proveedor-detalle-seccion-header-acciones">
               <button
                 type="button"
-                className="proveedor-detalle-btn-ia"
+                className="btn btn-marca btn--sm"
                 onClick={() => setModalImportarAbierto(true)}
               >
-                <Sparkles size={15} strokeWidth={2.25} />
+                <Sparkles size={16} strokeWidth={2} />
                 Importar catálogo
               </button>
-              <button onClick={handleNuevoProducto}>Nuevo producto</button>
+              <button className="btn btn-primary btn--sm" onClick={handleNuevoProducto}>
+                Nuevo producto
+              </button>
             </div>
           )}
         </div>
@@ -439,12 +443,16 @@ export function ProveedorDetalle() {
                       <td>{formatMoneda(producto.precio)}</td>
                       {canManage && (
                         <td className="proveedor-detalle-tabla-acciones">
-                          <button type="button" onClick={() => handleEditarProducto(producto)}>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn--sm"
+                            onClick={() => handleEditarProducto(producto)}
+                          >
                             Editar
                           </button>
                           <button
                             type="button"
-                            className="proveedor-detalle-btn-eliminar-texto"
+                            className="btn btn-peligro btn--sm"
                             onClick={() => setProductoAEliminar(producto)}
                           >
                             Eliminar

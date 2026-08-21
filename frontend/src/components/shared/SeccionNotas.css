@@ -16,23 +16,14 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.85rem;
+  font-size: var(--text-btn);
   font-weight: 600;
   color: var(--color-tinta);
 }
 
-.seccion-notas-contador {
-  font-size: 0.66rem;
-  font-weight: 700;
-  color: var(--color-oxido);
-  background-color: var(--color-oxido-tint);
-  padding: 1px 7px;
-  border-radius: var(--radius-pill);
-}
-
 .seccion-notas-btn-agregar {
   font-family: var(--font-ui);
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   padding: 5px 11px;
   border-radius: var(--radius-sm);
@@ -50,7 +41,7 @@
 
 .seccion-notas-vacio {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   color: var(--color-tinta-muted);
 }
 
@@ -94,7 +85,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 0.75rem;
+  font-size: var(--text-xs);
   font-weight: 700;
   color: var(--color-tinta);
 }
@@ -110,7 +101,7 @@
 }
 
 .seccion-notas-item-monto {
-  font-size: 0.85rem;
+  font-size: var(--text-btn);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -118,7 +109,7 @@
 
 .seccion-notas-item-motivo {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   color: var(--color-tinta);
 }
 
@@ -126,13 +117,13 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px 10px;
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   color: var(--color-tinta-muted);
 }
 
 .seccion-notas-item-productos {
   margin: 0;
-  font-size: 0.74rem;
+  font-size: var(--text-xs);
   color: var(--color-tinta-muted);
   font-style: italic;
 }
@@ -149,7 +140,7 @@
   border: none;
   padding: 0;
   font-family: var(--font-ui);
-  font-size: 0.76rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   color: var(--color-musgo-dark);
   cursor: pointer;
@@ -164,33 +155,9 @@
   color: var(--color-tinta-muted);
 }
 
-.seccion-notas-btn-eliminar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-oxido-tint);
-  background-color: transparent;
-  color: var(--color-oxido);
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.seccion-notas-btn-eliminar:hover {
-  background-color: var(--color-oxido-tint);
-}
-
-.seccion-notas-btn-eliminar:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
 .seccion-notas-error {
   margin: 0;
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
   color: var(--color-oxido);
 }
 
@@ -225,7 +192,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
 }
 
 .seccion-notas-item-toggle-derecha {
@@ -236,7 +203,7 @@
 }
 
 .seccion-notas-item--compacta .seccion-notas-item-monto {
-  font-size: 0.78rem;
+  font-size: var(--text-sm);
 }
 
 .seccion-notas-chevron {

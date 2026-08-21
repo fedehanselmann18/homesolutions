@@ -54,7 +54,7 @@ export function FilaProyecto({ proyecto, onClick, renderAcciones }) {
 
   return (
     <div
-      className="panel-tabla-fila"
+      className="planilla__fila panel-tabla-fila"
       style={{
         borderLeftColor: positivo ? VERDE : ROJO,
         "--fila-hover": positivo
@@ -144,8 +144,8 @@ export function FilaProyecto({ proyecto, onClick, renderAcciones }) {
  */
 export function TablaProyectos({ proyectos, onFilaClick, renderAcciones }) {
   return (
-    <div className={renderAcciones ? "panel-tabla panel-tabla--acciones" : "panel-tabla"}>
-      <div className="panel-tabla-header">
+    <div className={`planilla panel-tabla${renderAcciones ? " panel-tabla--acciones" : ""}`}>
+      <div className="planilla__header panel-tabla-header">
         <span className="label-ficha">Proyecto</span>
         <span className="label-ficha">Disponible</span>
         <span className="label-ficha">Presupuesto ejecutado</span>

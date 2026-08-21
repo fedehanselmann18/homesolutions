@@ -176,7 +176,7 @@ export function Proyectos() {
       <>
         <button
           type="button"
-          className="panel-tabla-accion-btn"
+          className="btn-icono btn-icono--sm"
           title="Editar"
           aria-label={`Editar ${proyecto.nombre}`}
           onClick={(e) => {
@@ -188,7 +188,7 @@ export function Proyectos() {
         </button>
         <button
           type="button"
-          className="panel-tabla-accion-btn panel-tabla-accion-btn--eliminar"
+          className="btn-icono btn-icono--sm btn-icono--peligro"
           title="Eliminar"
           aria-label={`Eliminar ${proyecto.nombre}`}
           onClick={(e) => {
@@ -226,7 +226,11 @@ export function Proyectos() {
 
             <label className="proyectos-orden">
               <span className="label-ficha">Ordenar por</span>
-              <select value={ordenarPor} onChange={(e) => setOrdenarPor(e.target.value)}>
+              <select
+                className="campo campo--sm proyectos-orden__select"
+                value={ordenarPor}
+                onChange={(e) => setOrdenarPor(e.target.value)}
+              >
                 <option value="disponible">Disponible</option>
                 <option value="nombre">Nombre</option>
                 <option value="presupuesto">Presupuesto ejecutado</option>
@@ -237,8 +241,8 @@ export function Proyectos() {
           {proyectosVisibles.length === 0 ? (
             <EstadoVacio mensaje="No se encontraron proyectos con ese criterio." />
           ) : filtroEstado === "todos" ? (
-            <div className="panel-tabla panel-tabla--acciones">
-              <div className="panel-tabla-header">
+            <div className="planilla panel-tabla panel-tabla--acciones">
+              <div className="planilla__header panel-tabla-header">
                 <span className="label-ficha">Proyecto</span>
                 <span className="label-ficha">Disponible</span>
                 <span className="label-ficha">Presupuesto ejecutado</span>

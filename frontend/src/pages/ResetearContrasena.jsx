@@ -17,6 +17,7 @@ import { obtenerMensajeError } from "../utils/errorHandling";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { useToast } from "../context/useToast";
 import { Cargando } from "../components/shared/Cargando";
+import { PageHeader } from "../components/shared/PageHeader";
 import ModalConfirmar from "../components/modals/ModalConfirmar";
 import ListaUsuarios from "../components/manager/ListaUsuarios";
 import ModalResetearPassword from "../components/manager/ModalResetearPassword";
@@ -187,17 +188,11 @@ export function ResetearContrasena() {
 
   return (
     <div className="reseteo-container">
-      <header className="reseteo-header">
-        <div>
-          <h1 className="reseteo-header__titulo">Gestión de cuentas</h1>
-          <p className="reseteo-header__subtitulo">
-            Contraseñas, roles, sesiones y altas del equipo. Solo lo ve esta cuenta.
-          </p>
-        </div>
-        <span className="reseteo-header__icono">
-          <UserCog size={20} strokeWidth={2} />
-        </span>
-      </header>
+      <PageHeader
+        icono={<UserCog size={20} strokeWidth={2} />}
+        titulo="Gestión de cuentas"
+        subtitulo="Contraseñas, roles, sesiones y altas del equipo. Solo lo ve esta cuenta."
+      />
 
       {cargando ? (
         <Cargando texto="Cargando cuentas..." />

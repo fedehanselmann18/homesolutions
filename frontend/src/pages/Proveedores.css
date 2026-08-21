@@ -2,67 +2,8 @@
   font-family: var(--font-ui);
 }
 
-.proveedores-header {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  padding-bottom: var(--space-6);
-  margin-bottom: var(--space-6);
-  border-bottom: 1px solid var(--color-linea);
-}
-
-.proveedores-header__titulo {
-  font-family: var(--font-display);
-  font-size: 2rem;
-  font-weight: 600;
-  color: var(--color-tinta);
-  margin: 0;
-}
-
-.proveedores-header__subtitulo {
-  font-size: 0.9rem;
-  color: var(--color-tinta-muted);
-  margin: 4px 0 0;
-}
-
-.proveedores-header__acciones {
-  display: flex;
-  gap: 10px;
-}
-
-.proveedores-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background-color: var(--color-terracota);
-  color: var(--color-superficie);
-  border: 1px solid var(--color-terracota);
-  padding: 10px 20px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-ui);
-  font-weight: 600;
-  font-size: 0.88rem;
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.proveedores-button:hover {
-  background-color: var(--color-terracota-dark);
-  border-color: var(--color-terracota-dark);
-}
-
-.proveedores-button--secundario {
-  background-color: transparent;
-  color: var(--color-terracota);
-}
-
-.proveedores-button--secundario:hover {
-  background-color: var(--color-terracota-tint);
-  border-color: var(--color-terracota);
-  color: var(--color-terracota-dark);
-}
+/* El encabezado, el buscador y los botones ya no viven acá: son PageHeader,
+   Buscador y `.btn`/.campo. Sólo queda la grilla y la fila de filtros. */
 
 .proveedores-filtros {
   display: flex;
@@ -70,36 +11,8 @@
   margin-bottom: var(--space-6);
 }
 
-.proveedores-buscador {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-color: var(--color-superficie);
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-  padding: 9px 14px;
-  color: var(--color-tinta-muted);
-}
-
-.proveedores-buscador input {
-  flex: 1;
-  border: none;
-  outline: none;
-  font-family: var(--font-ui);
-  font-size: 0.9rem;
-  color: var(--color-tinta);
-  background: transparent;
-}
-
-.proveedores-filtros select {
-  font-family: var(--font-ui);
-  font-size: 0.9rem;
-  padding: 9px 12px;
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-superficie);
-  color: var(--color-tinta);
+.proveedores-filtros__select {
+  width: auto;
   min-width: 200px;
 }
 
@@ -109,12 +22,13 @@
   gap: var(--space-4);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 640px) {
   .proveedores-filtros {
     flex-direction: column;
   }
 
-  .proveedores-filtros select {
+  .proveedores-filtros__select {
+    width: 100%;
     min-width: 0;
   }
 }

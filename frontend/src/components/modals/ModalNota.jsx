@@ -8,6 +8,7 @@ import { formatMoneda } from "../../utils/formato";
 import { obtenerMensajeError } from "../../utils/errorHandling";
 import "./ModalNota.css";
 import ModalShell from "./ModalShell";
+import { LogoCargando } from "../shared/LogoCargando";
 
 const EXTENSIONES_PERMITIDAS = ".pdf,.jpg,.jpeg,.png";
 
@@ -245,7 +246,14 @@ export function ModalNota({
             Cancelar
           </button>
           <button type="submit" className="btn btn-primary" disabled={guardando}>
-            {guardando ? "Guardando..." : "Guardar nota"}
+            {guardando ? (
+              <>
+                <LogoCargando size={14} variante="blanco" />
+                Guardando...
+              </>
+            ) : (
+              "Guardar nota"
+            )}
           </button>
         </>
       }
@@ -350,7 +358,7 @@ export function ModalNota({
                     </select>
                     {fila.detalle_compra_id && esDevolucion && (
                       <span
-                        className="modal-form-fila-dinamica-tipo"
+                        className="badge badge--sm modal-form-fila-dinamica-tipo"
                         style={{ color: OLIVA, backgroundColor: OLIVA_TINT }}
                       >
                         Disponible: {restante}
@@ -381,7 +389,7 @@ export function ModalNota({
                   </span>
                   <button
                     type="button"
-                    className="modal-btn-quitar-fila"
+                    className="btn-icono btn-icono--contorno btn-icono--peligro"
                     onClick={() => eliminarFilaDetalle(fila._id)}
                   >
                     <X size={14} strokeWidth={2.25} />
@@ -434,7 +442,7 @@ export function ModalNota({
                 />
                 <button
                   type="button"
-                  className="modal-btn-quitar-fila"
+                  className="btn-icono btn-icono--contorno btn-icono--peligro"
                   onClick={() => eliminarFilaImpuesto(fila._id)}
                 >
                   <X size={14} strokeWidth={2.25} />

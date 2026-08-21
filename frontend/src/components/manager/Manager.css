@@ -10,7 +10,7 @@
 .manager-tabla {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: var(--text-base);
 }
 
 .manager-tabla th {
@@ -121,20 +121,6 @@
   letter-spacing: 0.03em;
   text-transform: uppercase;
   color: var(--color-tinta-muted);
-}
-
-.manager-campo input,
-.manager-campo select {
-  font-family: var(--font-ui);
-  font-size: 0.95rem;
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: normal;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-linea);
-  background: var(--color-base-1);
-  color: var(--color-tinta);
 }
 
 .manager-campo--error input {

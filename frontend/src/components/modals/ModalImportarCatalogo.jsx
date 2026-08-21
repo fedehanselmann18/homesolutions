@@ -15,6 +15,7 @@ import ChipsCategorias from "./ChipsCategorias";
 import "../shared/ComprobantesUploader.css";
 import "./PiezasIA.css";
 import "./ModalImportarCatalogo.css";
+import { LogoCargando } from "../shared/LogoCargando";
 
 const EXTENSIONES_PERMITIDAS = [".pdf", ".jpg", ".jpeg", ".png", ".xlsx", ".csv"];
 const TAMANIO_MAXIMO_BYTES = 10 * 1024 * 1024; // 10MB, espejo de backend/app/routes/ia.py
@@ -641,7 +642,14 @@ export function ModalImportarCatalogo({
                 disabled={!formProveedorNuevo.nombre || creandoProveedor}
                 onClick={handleCrearProveedorYContinuar}
               >
-                {creandoProveedor ? "Creando..." : "Crear proveedor y continuar"}
+                {creandoProveedor ? (
+                  <>
+                    <LogoCargando size={14} variante="blanco" />
+                    Creando...
+                  </>
+                ) : (
+                  "Crear proveedor y continuar"
+                )}
               </button>
             </>
           )}

@@ -50,7 +50,7 @@
   border-left: 2px solid transparent;
   color: var(--color-oscuro-texto-muted);
   text-decoration: none;
-  font-size: 0.86rem;
+  font-size: var(--text-btn);
   font-weight: 500;
   transition:
     background-color 0.15s ease,
@@ -72,14 +72,14 @@
    de foco/estado, no como relleno. El ícono se pinta oliva aparte porque
    usa currentColor: si no, heredaría el blanco del texto. */
 .sidebar-link-active {
-  background: #131313;
+  background: var(--color-oscuro-hover);
   color: var(--color-oscuro-texto);
   font-weight: 600;
   border-left-color: var(--color-terracota);
 }
 
 .sidebar-link-active:hover {
-  background: #131313;
+  background: var(--color-oscuro-hover);
 }
 
 .sidebar-link-active .sidebar-link-icono {
@@ -88,7 +88,7 @@
 
 .sidebar-link-contador {
   margin-left: auto;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   color: var(--color-gris-oscuro-marca);
 }
@@ -98,7 +98,7 @@
 
 .sidebar-grupo-titulo {
   margin: var(--space-4) 12px 6px;
-  font-size: 10px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -114,7 +114,7 @@
   border-left: 2px solid transparent;
   color: var(--color-oscuro-item-texto);
   text-decoration: none;
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   transition:
     background-color 0.15s ease,
     color 0.15s ease;
@@ -160,7 +160,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: var(--text-2xs);
   font-weight: 700;
 }
 
@@ -172,7 +172,7 @@
 }
 
 .sidebar-user-name {
-  font-size: 0.8rem;
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--color-oscuro-texto);
   overflow: hidden;
@@ -182,7 +182,7 @@
 }
 
 .sidebar-user-role {
-  font-size: 9.5px;
+  font-size: var(--text-2xs);
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;

@@ -21,6 +21,7 @@ import { VERDE, ROJO, NARANJA } from "../constants/colores";
 import { getTipoMovimiento, signoTexto, TINTE_PASTILLA } from "../constants/tipoMovimiento";
 import { FiltrosSegmentados } from "../components/shared/FiltrosSegmentados";
 import { EstadoVacio } from "../components/shared/EstadoVacio";
+import { PageHeader } from "../components/shared/PageHeader";
 import { EstadoError } from "../components/shared/EstadoError";
 import "./Dashboard.css";
 
@@ -75,7 +76,7 @@ function DashboardSkeleton() {
 
       <section className="panel-seccion">
         <div className="skeleton skeleton--seccion-titulo" />
-        <div className="panel-tabla">
+        <div className="planilla panel-tabla">
           {[0, 1, 2].map((i) => (
             <div key={i} className="skeleton skeleton--proyecto-fila" />
           ))}
@@ -209,21 +210,24 @@ export function Dashboard() {
   if (totalProyectos === 0) {
     return (
       <div className="panel">
-        <h1 className="panel-titulo">Panel</h1>
-        <EstadoVacio mensaje="Todavía no hay proyectos cargados. Creá el primero desde la sección Proyectos." grande />
+        <PageHeader sinLinea titulo="Panel" />
+        <EstadoVacio
+          mensaje="Todavía no hay proyectos cargados. Creá el primero desde la sección Proyectos."
+          grande
+        />
       </div>
     );
   }
 
   return (
     <div className="panel">
-      <div className="panel-header">
-        <h1 className="panel-titulo">Panel</h1>
-        <p className="panel-subtitulo">
-          {totalProyectos} {totalProyectos === 1 ? "proyecto" : "proyectos"} en total ·{" "}
-          {formatMoneda(kpis.contratadoEnCurso)} contratados en curso
-        </p>
-      </div>
+      <PageHeader
+        sinLinea
+        titulo="Panel"
+        subtitulo={`${totalProyectos} ${
+          totalProyectos === 1 ? "proyecto" : "proyectos"
+        } en total · ${formatMoneda(kpis.contratadoEnCurso)} contratados en curso`}
+      />
 
       <div className="panel-kpis">
         <TarjetaKpi
@@ -233,7 +237,7 @@ export function Dashboard() {
         />
         {/* Envuelto en .panel-kpi-realce (dirección 1a): mismo TarjetaKpi de
             siempre, sólo se le agrega un fondo que ocupa toda la celda para
-            destacarlo sin agrandar la tipografía (ver DESIGN.md/handoff). */}
+            destacarlo sin agrandar la tipografía (ver docs/DESIGN.md). */}
         <div className="panel-kpi-realce">
           <TarjetaKpi
             titulo="Dinero disponible"
@@ -324,7 +328,7 @@ export function Dashboard() {
                 return (
                   <li key={`${mov.tipo}-${mov.id}`} className="panel-actividad-item">
                     <span
-                      className="panel-actividad-tipo"
+                      className="badge badge--sm panel-actividad-tipo"
                       style={{
                         color: tipo.color,
                         backgroundColor: `${tipo.color}${TINTE_PASTILLA}`,
