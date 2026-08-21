@@ -21,7 +21,7 @@ directo a la infraestructura.
 1. ~~Auditoría persistida~~ (base para justificar y loguear todo lo demás) — HECHO
 2. ~~Panel de configuración del sistema~~ — HECHO
 3. ~~Reconciliación de archivos huérfanos en R2~~ — HECHO
-4. Sesiones activas
+4. ~~Sesiones activas~~ — HECHO
 5. Backup / export on-demand
 6. "Ver como" (impersonar usuario) — al final, alcance acotado a solo lectura
 
@@ -160,7 +160,30 @@ solo notifique sin borrar solo.
 
 ---
 
-## 4. Sesiones activas
+## 4. Sesiones activas — HECHO (21/08/2026)
+
+Implementado el alcance mínimo, tal como quedó resuelto abajo en
+"decisiones pendientes": solo "visto por última vez" (`ultima_actividad`),
+no una tabla completa de sesiones con IP/dispositivo — eso queda abierto
+para más adelante si hace falta.
+
+`ultima_actividad` se actualiza en `resolver_usuario_vigente`
+(`auth/oAuth2.py`) con throttle de 5 minutos, columna nueva en `Usuario`
+(migración `f4b83c2e910a`) y visible en la planilla de Equipo.
+
+**Trampa real que apareció al implementarlo** (no estaba prevista en el
+alcance de abajo, y si se pisa mal rompe el login de toda la app): el UPDATE
+que pisa `ultima_actividad` NO puede tocar `fecha_actualizacion` -- esa
+columna es el reloj de revocación de sesión (B-06). Se probó empíricamente
+que un bulk `Query.update()` de SQLAlchemy dispara igual el
+`onupdate=func.now()` de una columna aunque esa columna ni siquiera esté en
+el `values` dict del update, así que cada ping de actividad revocaría al
+toque la sesión que lo generó (la persona quedaría deslogueada por el
+simple hecho de usar la app). Se neutraliza reasignando
+`fecha_actualizacion` a sí misma (`models.Usuario.fecha_actualizacion`) en
+el mismo `values` dict -- ver el comentario de
+`_registrar_actividad_si_corresponde`. Cualquier otro bulk update sobre
+`Usuario` en el futuro tiene que tener esto presente.
 
 **Qué resuelve:** Manager puede cortar la sesión de alguien (`POST
 /usuarios/{id}/cerrar-sesion`) pero a ciegas — no ve quién está logueado

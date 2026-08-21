@@ -28,6 +28,12 @@ REFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS
 # relojes, y quedar revocado apenas se crea.
 TOLERANCIA_REVOCACION = timedelta(seconds=5)
 
+# "Visto por última vez" (PLAN_MANAGER.md #4): no se actualiza en cada
+# request, alcanza con saber "activo hace poco" -- Manager no necesita
+# precisión al segundo para esto, y 5 minutos evita un UPDATE de más en el
+# camino más caliente de toda la app (se ejecuta en TODO request autenticado).
+THROTTLE_ULTIMA_ACTIVIDAD = timedelta(minutes=5)
+
 
 def get_token(request: Request, token_header: str = Depends(oauth2_scheme)) -> str:
     """
@@ -111,6 +117,40 @@ def verify_refresh_token(token: str, credentials_exception) -> DatosToken:
     return _verificar_token(token, "refresh", credentials_exception)
 
 
+def _registrar_actividad_si_corresponde(db: Session, user: models.Usuario) -> None:
+    """
+    Actualiza ultima_actividad, pero SOLO si pasó THROTTLE_ULTIMA_ACTIVIDAD
+    desde el último ping -- evita un UPDATE en cada request autenticado (el
+    camino más caliente de la app entera). El chequeo del throttle es sobre
+    el valor ya cargado en memoria (user.ultima_actividad), así que en el
+    caso común (dentro de la ventana) esta función no toca la base para
+    nada, ni siquiera un SELECT extra.
+
+    CRÍTICO: el UPDATE se arma con fecha_actualizacion reasignada A SÍ MISMA
+    (models.Usuario.fecha_actualizacion, no un valor nuevo). Sin esa línea,
+    onupdate=func.now() de esa columna se dispara igual -- se probó
+    empíricamente que un bulk update de SQLAlchemy toca las columnas con
+    onupdate aunque no estén en el dict de valores -- y como
+    fecha_actualizacion es el reloj de revocación de sesión (B-06, ver
+    resolver_usuario_vigente), este ping de actividad invalidaría de
+    inmediato la sesión que lo está generando: la persona quedaría
+    deslogueada por el simple hecho de estar usando la app.
+    """
+    ahora = datetime.now(timezone.utc)
+    if user.ultima_actividad is not None and ahora - user.ultima_actividad < THROTTLE_ULTIMA_ACTIVIDAD:
+        return
+
+    db.query(models.Usuario).filter(models.Usuario.id == user.id).update(
+        {
+            "ultima_actividad": ahora,
+            "fecha_actualizacion": models.Usuario.fecha_actualizacion,
+        },
+        synchronize_session=False,
+    )
+    db.commit()
+    user.ultima_actividad = ahora
+
+
 def resolver_usuario_vigente(token_data: DatosToken, db: Session, credentials_exception) -> models.Usuario:
     """
     Busca el Usuario del token y chequea revocación (B-06): si el token se
@@ -133,6 +173,8 @@ def resolver_usuario_vigente(token_data: DatosToken, db: Session, credentials_ex
     # venza el token.
     if not user.activo:
         raise credentials_exception
+
+    _registrar_actividad_si_corresponde(db, user)
 
     return user
 

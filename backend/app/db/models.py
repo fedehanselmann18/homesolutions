@@ -79,6 +79,19 @@ class Usuario(TimestampMixin, Base):
     # login() en routes/login.py y resolver_usuario_vigente en auth/oAuth2.py.
     # Solo la cuenta "Manager" la puede prender/apagar.
     activo: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
+    # "Visto por última vez" (ver PLAN_MANAGER.md #4): se actualiza en
+    # resolver_usuario_vigente (auth/oAuth2.py) con throttle -- no en cada
+    # request, alcanza con saber "activo hace poco". NULL para cuentas que
+    # nunca hicieron un request autenticado desde que existe esta columna
+    # (incluida cualquier cuenta ya creada antes de esta migración).
+    #
+    # OJO si tocás esto: el UPDATE que la pisa NO puede tocar
+    # fecha_actualizacion (es el reloj de revocación de sesión, B-06, y
+    # onupdate=func.now() se dispara en CUALQUIER UPDATE de la fila, incluso
+    # uno que ni siquiera toca esa columna) -- si no se neutraliza a mano
+    # (ver _registrar_actividad_si_corresponde), cada ping de actividad
+    # invalidaría la sesión que lo está generando.
+    ultima_actividad: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class UsuarioAutorizado(TimestampMixin, Base):

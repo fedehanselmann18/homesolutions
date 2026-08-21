@@ -49,3 +49,17 @@ export function formatBytes(bytes) {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
+
+// "Visto por última vez" (ver PLAN_MANAGER.md #4, planilla de Equipo en
+// Manager): relativo y no una fecha/hora pelada -- para esto importa "hace
+// cuánto", no el instante exacto. Pasado el día cae a formatFechaHora
+// (fecha+hora concreta), donde lo relativo deja de aportar más que confundir.
+export function formatUltimaActividad(instante) {
+  if (!instante) return "Nunca";
+
+  const minutos = (Date.now() - new Date(instante).getTime()) / 60000;
+  if (minutos < 1) return "Ahora";
+  if (minutos < 60) return `Hace ${Math.floor(minutos)} min`;
+  if (minutos < 60 * 24) return `Hace ${Math.floor(minutos / 60)} h`;
+  return formatFechaHora(instante);
+}

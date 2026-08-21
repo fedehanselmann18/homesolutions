@@ -1,6 +1,7 @@
 import { KeyRound, LogOut, ShieldCheck, ShieldOff, UserCheck, UserX } from "lucide-react";
 
 import "./Manager.css";
+import { formatUltimaActividad } from "../../utils/formato";
 import { EstadoVacio } from "../shared/EstadoVacio";
 
 /**
@@ -31,6 +32,7 @@ export function ListaUsuarios({
             <th>Usuario</th>
             <th>Rol</th>
             <th>Estado</th>
+            <th>Última actividad</th>
             <th className="manager-tabla__acciones-col">Acciones</th>
           </tr>
         </thead>
@@ -49,6 +51,9 @@ export function ListaUsuarios({
                   <span className={`badge ${usuario.activo ? "badge--exito" : "badge--peligro"}`}>
                     {usuario.activo ? "Activa" : "Desactivada"}
                   </span>
+                </td>
+                <td className="manager-auditoria__fecha">
+                  {formatUltimaActividad(usuario.ultima_actividad)}
                 </td>
                 <td className="manager-tabla__acciones">
                   <button

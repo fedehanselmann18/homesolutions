@@ -17,9 +17,15 @@ vi.mock("../../context/useToast", () => ({
 }));
 
 const USUARIOS = [
-  { id: "u-1", nombre_usuario: "Agustin", rol: "admin", activo: true },
-  { id: "u-2", nombre_usuario: "Alejandro", rol: "lectura", activo: false },
-  { id: "u-3", nombre_usuario: "Manager", rol: "lectura", activo: true },
+  { id: "u-1", nombre_usuario: "Agustin", rol: "admin", activo: true, ultima_actividad: null },
+  {
+    id: "u-2",
+    nombre_usuario: "Alejandro",
+    rol: "lectura",
+    activo: false,
+    ultima_actividad: new Date().toISOString(),
+  },
+  { id: "u-3", nombre_usuario: "Manager", rol: "lectura", activo: true, ultima_actividad: null },
 ];
 
 // Cada fila de la planilla tiene los mismos botones, así que las acciones se
@@ -50,6 +56,14 @@ describe("GestionEquipo (página de Manager)", () => {
     expect(within(filaDe("Agustin")).getByText("Activa")).toBeInTheDocument();
     expect(within(filaDe("Alejandro")).getByText("Lectura")).toBeInTheDocument();
     expect(within(filaDe("Alejandro")).getByText("Desactivada")).toBeInTheDocument();
+  });
+
+  it("muestra 'Nunca' para quien no tiene ultima_actividad y 'Ahora' para quien la tiene reciente", async () => {
+    render(<GestionEquipo />);
+    await esperarCarga();
+
+    expect(within(filaDe("Agustin")).getByText("Nunca")).toBeInTheDocument();
+    expect(within(filaDe("Alejandro")).getByText("Ahora")).toBeInTheDocument();
   });
 
   it("resetea la contraseña desde el modal de la fila", async () => {
