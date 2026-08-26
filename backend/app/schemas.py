@@ -58,7 +58,7 @@ def _validar_cuit(valor: str | None) -> str | None:
 
     coincidencia = _CUIT_REGEX.match(valor.strip())
     if not coincidencia:
-        raise ValueError("El CUIT tiene que tener el formato XX-XXXXXXXX-X (11 dígitos, con o sin guiones)")
+        raise ValueError("El CUIT/CUIL tiene que tener el formato XX-XXXXXXXX-X (11 dígitos, con o sin guiones)")
 
     digitos = "".join(coincidencia.groups())
     suma = sum(int(d) * m for d, m in zip(digitos[:10], _CUIT_MULTIPLICADORES))
@@ -68,7 +68,7 @@ def _validar_cuit(valor: str | None) -> str | None:
         verificador_esperado = 0
 
     if verificador_esperado == 10 or int(digitos[10]) != verificador_esperado:
-        raise ValueError("El CUIT no es válido (el dígito verificador no coincide)")
+        raise ValueError("El CUIT/CUIL no es válido (el dígito verificador no coincide)")
 
     return valor.strip()
 

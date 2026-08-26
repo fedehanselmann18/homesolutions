@@ -19,17 +19,17 @@ def test_crear_proveedor_con_cuit_valido_sin_guiones(client, headers_admin):
 
 
 def test_crear_proveedor_con_digito_verificador_incorrecto_es_rechazado(client, headers_admin):
-    # El detail exacto de _validar_cuit lo aplana manejador_error_validacion
-    # (ver main.py) a "Revisá los datos ingresados: cuit." -- alcanza con
-    # confirmar que lo rechaza y que señala el campo correcto.
+    # manejador_error_validacion (ver main.py) muestra el mensaje puntual de
+    # _validar_cuit tal cual -- no solo "revisá el campo cuit", sino por qué.
     respuesta = client.post("/proveedores/crear", json=_payload("20-12345678-9"), headers=headers_admin)
     assert respuesta.status_code == 422
-    assert "cuit" in respuesta.json()["detail"]
+    assert "dígito verificador" in respuesta.json()["detail"]
 
 
 def test_crear_proveedor_con_formato_invalido_es_rechazado(client, headers_admin):
     respuesta = client.post("/proveedores/crear", json=_payload("no-es-un-cuit"), headers=headers_admin)
     assert respuesta.status_code == 422
+    assert "formato" in respuesta.json()["detail"]
 
 
 def test_actualizar_proveedor_con_cuit_invalido_es_rechazado(client, db_session, headers_admin):

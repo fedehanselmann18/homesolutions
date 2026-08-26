@@ -84,7 +84,7 @@ export function ModalProveedor({ proveedor, onGuardar, onCerrar }) {
       </label>
 
       <label>
-        CUIT (opcional)
+        CUIT/CUIL (opcional)
         <input
           type="text"
           name="cuit"

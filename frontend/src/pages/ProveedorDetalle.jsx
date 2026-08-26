@@ -7,6 +7,7 @@ import {
   actualizarProveedor,
   eliminarProveedor,
 } from "../services/proveedorService";
+import { obtenerMensajeError } from "../utils/errorHandling";
 import {
   getProductosPorProveedor,
   crearProducto,
@@ -178,7 +179,7 @@ export function ProveedorDetalle() {
       setModalProveedorAbierto(false);
     } catch (err) {
       console.error("Error guardando proveedor:", err);
-      toast.error("No se pudo guardar el proveedor.");
+      toast.error(obtenerMensajeError(err));
     }
   };
 

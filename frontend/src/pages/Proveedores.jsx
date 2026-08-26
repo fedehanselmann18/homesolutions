@@ -7,6 +7,7 @@ import { getCompras } from "../services/compraService";
 import { getCategorias } from "../services/categoriaService";
 import { getTipoProducto } from "../constants/tipoProducto";
 import { calcularResumenProveedor, rubroPrincipal } from "../utils/proveedores";
+import { obtenerMensajeError } from "../utils/errorHandling";
 import useAuth from "../context/useAuth";
 import { useToast } from "../context/useToast";
 import { usePageTitle } from "../hooks/usePageTitle";
@@ -121,7 +122,7 @@ export function Proveedores() {
       cerrarModal();
     } catch (err) {
       console.error("Error guardando proveedor:", err);
-      toast.error("No se pudo guardar el proveedor.");
+      toast.error(obtenerMensajeError(err));
     }
   };
 

@@ -521,7 +521,7 @@ export function ModalImportarCatalogo({
           onCargarAMano={handleCargarAMano}
           textoBoton="Leer catálogo con IA"
           textoLeyendo="Leyendo catálogo..."
-          textoManual="Cargar los productos a mano"
+          textoManual={proveedor ? "Agregar producto a mano" : "Cargar el proveedor a mano"}
         >
           {uploader}
         </PasoComprobante>
@@ -604,7 +604,7 @@ export function ModalImportarCatalogo({
                   />
                 </label>
                 <label>
-                  CUIT (opcional)
+                  CUIT/CUIL (opcional)
                   <input
                     type="text"
                     value={formProveedorNuevo.cuit}
@@ -670,7 +670,7 @@ export function ModalImportarCatalogo({
             <div className="catalogo-vacio">
               <p>No pude reconocer productos en este archivo.</p>
               <button type="button" className="ia-paso-manual" onClick={handleCargarAMano}>
-                Cargar los productos a mano
+                {proveedor ? "Agregar producto a mano" : "Cargar el proveedor a mano"}
               </button>
             </div>
           ) : (

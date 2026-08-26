@@ -47,12 +47,24 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 @app.exception_handler(RequestValidationError)
 async def manejador_error_validacion(request: Request, exc: RequestValidationError):
     # Traduce el array técnico default de FastAPI/Pydantic (loc/msg/type por
-    # cada campo) a un mensaje legible en español -- ver detalle de cada
-    # campo en los logs si hace falta debuggear, acá al usuario solo le
-    # importa CUÁLES campos revisar.
-    campos = [str(error["loc"][-1]) for error in exc.errors() if error.get("loc")]
-    detalle = "Revisá los datos ingresados"
-    detalle += f": {', '.join(campos)}." if campos else "."
+    # cada campo) a un mensaje legible en español. Si el error vino de uno
+    # de nuestros field_validator (ej. _validar_cuit, contraseña muy corta)
+    # ya escribimos ahí un mensaje puntual en español al levantar el
+    # ValueError -- se lo mostramos tal cual en vez de esconderlo (Pydantic
+    # v2 antepone "Value error, ", se lo sacamos). Para el resto (campo
+    # faltante, tipo incorrecto, etc.) esos mensajes default de Pydantic no
+    # son aptos para el usuario, así que seguimos con el resumen genérico
+    # por campo -- acá solo importa CUÁLES campos revisar.
+    errores = exc.errors()
+    mensajes_propios = [
+        error["msg"].removeprefix("Value error, ") for error in errores if error.get("type") == "value_error"
+    ]
+    if mensajes_propios:
+        detalle = " ".join(mensajes_propios)
+    else:
+        campos = [str(error["loc"][-1]) for error in errores if error.get("loc")]
+        detalle = "Revisá los datos ingresados"
+        detalle += f": {', '.join(campos)}." if campos else "."
     return JSONResponse(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, content={"detail": detalle})
 
 
