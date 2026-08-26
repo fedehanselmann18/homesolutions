@@ -65,13 +65,34 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
 
     # Orígenes permitidos por CORS, separados por coma (ej. en producción:
-    # "https://homesolutions.vercel.app,https://www.homesolutions.com.ar").
+    # "https://homesolutions.company,https://www.homesolutions.company").
     # Default: solo el Vite dev server local.
     FRONTEND_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
 
     @property
     def frontend_origins_list(self) -> list[str]:
         return [origen.strip() for origen in self.FRONTEND_ORIGINS.split(",") if origen.strip()]
+
+    # Dominio explícito para las cookies de sesión (ver login.py). Sin
+    # setear (default None) quedan "host-only": el browser solo las manda
+    # de vuelta al mismo host exacto que las puso (ej. solo a
+    # api.homesolutions.company). Alcanza para este caso -- el front nunca
+    # lee el valor de la cookie (access_token es httpOnly), solo necesita
+    # que el browser se la adjunte en sus pedidos a la API, y una vez que
+    # front y back compartan dominio raíz eso pasa solo. Solo hace falta
+    # setear esto (ej. ".homesolutions.company") si en el futuro otro
+    # subdominio necesita compartir la misma cookie.
+    COOKIE_DOMAIN: Optional[str] = None
+
+    # Fuerza el valor de SameSite en vez de inferirlo de ENVIRONMENT (ver
+    # login.py). None (default) mantiene el comportamiento de siempre:
+    # "none" en producción -- necesario mientras front y back estén en
+    # dominios de distinto "site" (ej. Vercel + Railway antes de tener
+    # dominio propio) -- y "lax" en dev. Una vez que front
+    # (homesolutions.company) y back (api.homesolutions.company) compartan
+    # dominio raíz, dejan de ser cross-site para el browser: conviene
+    # setear esto en "lax" explícito, más seguro que "none" y alcanza igual.
+    COOKIE_SAMESITE: Optional[str] = None
 
     # Almacenamiento de comprobantes en Cloudflare R2 (S3-compatible). Si
     # estas 4 variables no están seteadas, app/files/storage.py guarda los

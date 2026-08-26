@@ -28,14 +28,24 @@ COOKIE_SECURE = settings.ENVIRONMENT == "production"
 ACCESS_TOKEN_MAX_AGE = settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
 REFRESH_TOKEN_MAX_AGE = settings.REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
 
-# Frontend (Vercel) y backend (Railway) viven en dominios distintos en
-# producción -> son "cross-site". Con SameSite=Lax el browser guarda la
-# cookie en el login pero no la reenvía en pedidos posteriores desde otro
-# sitio (ej. GET /usuarios/me), así que la sesión se pierde al toque.
-# SameSite=None sí viaja cross-site, pero los browsers exigen que además sea
-# Secure (HTTPS) -- por eso en local (sin HTTPS, mismo "sitio" localhost en
-# distintos puertos) se mantiene "lax", que ahí sí alcanza.
-COOKIE_SAMESITE = "none" if settings.ENVIRONMENT == "production" else "lax"
+# Mientras front y back vivan en dominios de distinto "site" (ej. Vercel +
+# Railway) son "cross-site": con SameSite=Lax el browser guarda la cookie en
+# el login pero no la reenvía en pedidos posteriores desde otro sitio (ej.
+# GET /usuarios/me), así que la sesión se pierde al toque. SameSite=None sí
+# viaja cross-site, pero los browsers exigen que además sea Secure (HTTPS)
+# -- por eso en local (sin HTTPS, mismo "sitio" localhost en distintos
+# puertos) se mantiene "lax", que ahí sí alcanza. Una vez que front
+# (homesolutions.company) y back (api.homesolutions.company) compartan
+# dominio raíz dejan de ser cross-site, y conviene setear COOKIE_SAMESITE=lax
+# explícito en el .env de Railway (ver Settings.COOKIE_SAMESITE en
+# config.py) en vez de depender de este default automático.
+COOKIE_SAMESITE = settings.COOKIE_SAMESITE or ("none" if settings.ENVIRONMENT == "production" else "lax")
+
+# Domain explícito de las cookies (ver Settings.COOKIE_DOMAIN en config.py).
+# None por default -> cookie "host-only", que ya alcanza acá porque el
+# front nunca lee su valor, solo necesita que el browser se la adjunte en
+# los pedidos a la API.
+COOKIE_DOMAIN = settings.COOKIE_DOMAIN
 
 
 def _setear_cookies_sesion(response: Response, access_token: str) -> None:
@@ -53,6 +63,7 @@ def _setear_cookies_sesion(response: Response, access_token: str) -> None:
         httponly=True,
         secure=COOKIE_SECURE,
         samesite=COOKIE_SAMESITE,
+        domain=COOKIE_DOMAIN,
         max_age=ACCESS_TOKEN_MAX_AGE,
         path="/",
     )
@@ -64,6 +75,7 @@ def _setear_cookies_sesion(response: Response, access_token: str) -> None:
         httponly=False,
         secure=COOKIE_SECURE,
         samesite=COOKIE_SAMESITE,
+        domain=COOKIE_DOMAIN,
         max_age=ACCESS_TOKEN_MAX_AGE,
         path="/",
     )
@@ -110,6 +122,7 @@ def login(
         httponly=True,
         secure=COOKIE_SECURE,
         samesite=COOKIE_SAMESITE,
+        domain=COOKIE_DOMAIN,
         max_age=REFRESH_TOKEN_MAX_AGE,
         path="/auth",
     )
@@ -147,10 +160,16 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_db))
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
 def logout(response: Response):
-    # secure/samesite/path tienen que coincidir con los que se usaron al
-    # crearlas -- si no, en algunos browsers el Set-Cookie de borrado no
-    # pisa la cookie original y queda viva hasta que expire sola.
-    response.delete_cookie("access_token", path="/", secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE)
-    response.delete_cookie("csrf_token", path="/", secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE)
-    response.delete_cookie("refresh_token", path="/auth", secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE)
+    # secure/samesite/domain/path tienen que coincidir con los que se
+    # usaron al crearlas -- si no, en algunos browsers el Set-Cookie de
+    # borrado no pisa la cookie original y queda viva hasta que expire sola.
+    response.delete_cookie(
+        "access_token", path="/", secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE, domain=COOKIE_DOMAIN
+    )
+    response.delete_cookie(
+        "csrf_token", path="/", secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE, domain=COOKIE_DOMAIN
+    )
+    response.delete_cookie(
+        "refresh_token", path="/auth", secure=COOKIE_SECURE, samesite=COOKIE_SAMESITE, domain=COOKIE_DOMAIN
+    )
     return {"message": "Sesión cerrada"}
