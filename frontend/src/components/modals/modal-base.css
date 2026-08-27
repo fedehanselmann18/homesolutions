@@ -25,7 +25,12 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: var(--space-4);
+  /* El padding de sobra evita que la caja del modal (y su footer) quede
+     pegada al notch/home indicator en iPhones con esos bordes. */
+  padding: calc(var(--space-4) + env(safe-area-inset-top))
+    calc(var(--space-4) + env(safe-area-inset-right))
+    calc(var(--space-4) + env(safe-area-inset-bottom))
+    calc(var(--space-4) + env(safe-area-inset-left));
 }
 
 .modal-contenido {
@@ -38,6 +43,8 @@
   max-height: 90vh;
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   scrollbar-gutter: stable;
   box-shadow: var(--shadow-overlay);
   font-family: var(--font-ui);

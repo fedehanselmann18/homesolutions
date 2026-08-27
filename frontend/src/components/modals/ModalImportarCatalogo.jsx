@@ -121,7 +121,12 @@ function SelectorCategorias({
 
   const abrir = () => {
     const rect = botonRef.current.getBoundingClientRect();
-    setPosicion({ top: rect.bottom + 4, left: rect.left });
+    // El popover mide 280px fijos (ver .catalogo-categorias-popover): en
+    // mobile, un botón cerca del borde derecho de la tabla lo mandaba fuera
+    // del viewport (no hay forma de llegar a los checkboxes). Se clampea el
+    // left para que quede siempre dentro de la pantalla.
+    const left = Math.min(rect.left, window.innerWidth - 280 - 8);
+    setPosicion({ top: rect.bottom + 4, left: Math.max(8, left) });
     setAbierto((v) => !v);
   };
 

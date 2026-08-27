@@ -113,6 +113,8 @@
 
 .proveedor-detalle-tabla-wrap {
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .proveedor-detalle-tabla {

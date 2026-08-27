@@ -175,12 +175,40 @@
   box-sizing: border-box;
 }
 
+/* Red de contención: si algún elemento puntual se pasa por unos px del
+   ancho del viewport, que no arrastre toda la página hacia el costado. Es
+   la red de seguridad, no el parche -- cada overflow real que se encuentra
+   se corrige en el elemento que lo causa, esto sólo cubre lo que se escape
+   a futuro. */
+html,
+body {
+  overflow-x: hidden;
+}
+
 body {
   margin: 0;
   background: var(--color-base-1);
   color: var(--color-tinta);
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
+  /* Que el rebote elástico de iOS Safari al final de la página no se sienta
+     como si la página entera "flotara" -- el rebote de cada panel con scroll
+     propio (tablas, tabs, modales) se contiene aparte, ver sus .css. */
+  overscroll-behavior-y: contain;
+}
+
+/* Saca el flash gris por default al tocar en iOS/Android. No agrega ningún
+   estado :active nuevo -- los hover/focus que ya existen quedan igual. */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Evita el double-tap-zoom accidental sobre controles. */
+button,
+input,
+select,
+textarea {
+  touch-action: manipulation;
 }
 
 /* Scrollbar fino con el thumb en oliva de marca, en vez del gris de sistema. */

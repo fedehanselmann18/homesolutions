@@ -39,6 +39,8 @@
   padding: var(--space-3) var(--space-2);
   gap: 1px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .sidebar-link {
@@ -221,6 +223,9 @@
     align-items: center;
     border-right: none;
     border-bottom: 1px solid var(--color-oscuro-borde);
+    /* Queda sticky al borde superior (ver regla base) -- sin esto se mete
+       debajo del notch/Dynamic Island en iPhones con esos bordes. */
+    padding-top: env(safe-area-inset-top);
   }
 
   .sidebar-header {
@@ -235,6 +240,8 @@
   .sidebar-nav {
     flex-direction: row;
     overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
     padding: var(--space-2);
   }
 

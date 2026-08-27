@@ -30,6 +30,8 @@
 .mov-edit__paso {
   padding: var(--space-6) var(--space-4);
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Sin riel el formulario ocupa todo el modal y scrollea solo. */
@@ -37,6 +39,8 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 18px 20px 22px;
   display: flex;
   flex-direction: column;
@@ -48,6 +52,8 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 316px;
 }

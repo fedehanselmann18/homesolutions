@@ -347,6 +347,8 @@
 @media (max-width: 900px) and (min-width: 641px) {
   .libro {
     overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .libro__columnas,

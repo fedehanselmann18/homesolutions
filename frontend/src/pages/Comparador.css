@@ -104,6 +104,8 @@
 
 .comparador-tabla-wrap {
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .comparador-tabla--ancha th,

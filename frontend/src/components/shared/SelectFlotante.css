@@ -81,6 +81,8 @@
   box-shadow: var(--shadow-overlay);
   max-height: 240px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .select-flotante-opcion {

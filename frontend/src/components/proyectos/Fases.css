@@ -207,6 +207,8 @@
   /* Ver la nota equivalente en TablaProyectos.css. */
   .planilla.fases-tabla {
     overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .fases-tabla-header,

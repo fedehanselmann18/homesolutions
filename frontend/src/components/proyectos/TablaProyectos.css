@@ -149,6 +149,8 @@
      que Vite arma el bundle. */
   .planilla.panel-tabla {
     overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
   }
 
   .panel-tabla-header,
