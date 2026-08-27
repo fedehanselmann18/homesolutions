@@ -68,6 +68,21 @@
   gap: var(--space-6);
 }
 
+/* En mobile sólo queda "Cobrado" (2do de los 3 TarjetaKpi): "Precio
+   acordado" y "Queda por cobrar" son el mismo dato mirado desde otro lado,
+   y las tres juntas alargaban la pestaña antes de llegar a las cards de
+   pendientes, que es lo que se usa parado en la obra. */
+@media (max-width: 640px) {
+  .seguimiento-cobranza {
+    display: block;
+  }
+
+  .seguimiento-cobranza > *:first-child,
+  .seguimiento-cobranza > *:last-child {
+    display: none;
+  }
+}
+
 .seguimiento-lista {
   display: flex;
   flex-direction: column;

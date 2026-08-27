@@ -339,9 +339,12 @@
   white-space: nowrap;
 }
 
-/* En pantallas angostas la planilla no entra: se scrollea en horizontal en
-   vez de aplastar las columnas de importes. */
-@media (max-width: 900px) {
+/* Entre 900 y 641px la planilla no entra: se scrollea en horizontal en vez
+   de aplastar las columnas de importes. Por debajo de 640px pasa al patrón
+   de lista por día del mock ("Movimientos del proyecto"): cada fila deja de
+   ser una grilla de columnas y pasa a apilar tipo+importe, el movimiento,
+   el saldo y los estados/acciones. */
+@media (max-width: 900px) and (min-width: 641px) {
   .libro {
     overflow-x: auto;
   }
@@ -352,5 +355,77 @@
   .libro__dia,
   .libro__cabecera {
     min-width: 900px;
+  }
+}
+
+@media (max-width: 640px) {
+  .libro__columnas {
+    display: none;
+  }
+
+  .libro__fila {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "tipo  importe"
+      "mov   mov"
+      "saldo saldo"
+      "comp  estados";
+    row-gap: var(--space-2);
+    column-gap: var(--space-2);
+  }
+
+  .libro--admin .libro__fila {
+    grid-template-areas:
+      "tipo     importe"
+      "mov      mov"
+      "saldo    saldo"
+      "comp     estados"
+      "acciones acciones";
+  }
+
+  .libro__tipo {
+    grid-area: tipo;
+  }
+
+  .libro__importe {
+    grid-area: importe;
+    text-align: right;
+  }
+
+  .libro__movimiento {
+    grid-area: mov;
+  }
+
+  .libro__saldo-fila {
+    grid-area: saldo;
+    text-align: left;
+  }
+
+  .libro__comprobantes {
+    grid-area: comp;
+    flex-wrap: wrap;
+  }
+
+  .libro__estados {
+    grid-area: estados;
+    justify-content: flex-end;
+  }
+
+  /* Siempre visibles en touch -- ver docs/DESIGN.md §8. */
+  .libro__acciones {
+    grid-area: acciones;
+    opacity: 1;
+  }
+
+  .libro__saldo {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  .libro__saldo > span:empty {
+    display: none;
   }
 }

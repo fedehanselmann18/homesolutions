@@ -15,7 +15,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  margin-bottom: 10px;
+  margin-bottom: 6px;
 }
 
 .proveedor-detalle-nombre {
@@ -52,19 +52,22 @@
   flex-shrink: 0;
 }
 
+/* Franja de resumen financiero: una línea que envuelve, no un bloque de
+   cards -- ver docs/DESIGN.md, "headers cortos". */
 .proveedor-detalle-metricas {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 8px var(--space-8);
-  margin-top: var(--space-3);
-  padding: var(--space-3) 0 var(--space-6);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-6);
+  margin-top: var(--space-2);
+  padding-top: var(--space-2);
   border-top: 1px solid var(--color-linea);
 }
 
 .proveedor-detalle-metrica {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-1-5);
 }
 
 .proveedor-detalle-metrica-label {
@@ -77,7 +80,7 @@
 
 .proveedor-detalle-metrica-valor {
   font-family: var(--font-display);
-  font-size: var(--text-xl);
+  font-size: var(--text-md);
   font-weight: 600;
   color: var(--color-tinta);
   font-variant-numeric: tabular-nums;
@@ -149,10 +152,70 @@
   white-space: nowrap;
 }
 
+/* Catálogo en cards: mismo dato que la tabla de arriba, oculto por default
+   -- se muestra sólo en mobile (ver media query abajo), donde reemplaza a la
+   tabla en vez de dejarla con scroll horizontal. */
+.proveedor-detalle-catalogo-cards {
+  display: none;
+}
+
+.proveedor-detalle-producto-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-superficie);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-sm);
+}
+
+.proveedor-detalle-producto-card__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.proveedor-detalle-producto-card__nombre {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--color-tinta);
+}
+
+.proveedor-detalle-producto-card__precio {
+  font-weight: 700;
+  color: var(--color-tinta);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.proveedor-detalle-producto-card__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1-5);
+}
+
+.proveedor-detalle-producto-card__acciones {
+  display: flex;
+  gap: var(--space-1-5);
+  margin-left: auto;
+}
+
 @media (max-width: 640px) {
   .proveedor-detalle-header-top {
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+
+  .proveedor-detalle-tabla-wrap {
+    display: none;
+  }
+
+  .proveedor-detalle-catalogo-cards {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
   }
 }

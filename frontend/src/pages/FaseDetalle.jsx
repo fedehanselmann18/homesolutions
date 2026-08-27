@@ -8,12 +8,10 @@ import { getComprobanteGasto } from "../services/gastoService";
 import useAuth from "../context/useAuth";
 import { getEstadoLabel } from "../constants/estados";
 import { diasDesde, esCompraImpaga } from "../utils/seguimiento";
-import { formatMoneda, formatFecha } from "../utils/formato";
-import { ROJO } from "../constants/colores";
+import { formatFecha } from "../utils/formato";
 import { useFaseDetalle } from "../hooks/useFaseDetalle";
 import { usePageTitle } from "../hooks/usePageTitle";
 
-import { TarjetaKpi } from "../components/shared/TarjetaKpi";
 import ModalGasto from "../components/modals/ModalGasto";
 import ModalCompra from "../components/modals/ModalCompra";
 import ModalNota from "../components/modals/ModalNota";
@@ -314,38 +312,6 @@ export function FaseDetalle() {
         </div>
       </div>
 
-      <div className="analisis-kpis">
-        <TarjetaKpi
-          titulo="Gastado en esta fase"
-          valor={formatMoneda(kpis.gastadoFase)}
-          destacado
-        />
-        <TarjetaKpi
-          titulo="% del presupuesto del proyecto"
-          valor={`${kpis.pctPresupuesto.toFixed(1)}%`}
-          porcentaje={kpis.pctPresupuesto}
-          detalle={`${formatMoneda(proyecto.precio_acordado)} acordados`}
-          color={kpis.pctPresupuesto > 100 ? ROJO : undefined}
-        />
-        <TarjetaKpi
-          titulo="% del gasto total del proyecto"
-          valor={`${kpis.pctGastoTotal.toFixed(1)}%`}
-          porcentaje={kpis.pctGastoTotal}
-          detalle="Comparado con las demás fases"
-        />
-        <TarjetaKpi
-          titulo="Sin pagar"
-          valor={formatMoneda(montoSinPagarFase)}
-          detalle={
-            comprasImpagasFase.length === 0
-              ? "Todo al día"
-              : `${comprasImpagasFase.length} ${comprasImpagasFase.length === 1 ? "compra" : "compras"}`
-          }
-          color={montoSinPagarFase > 0 ? ROJO : undefined}
-          destacado
-        />
-      </div>
-
       <Tabs
         tabs={TABS}
         activa={tabActiva}
@@ -405,6 +371,8 @@ export function FaseDetalle() {
           proveedores={proveedores}
           cobrosProyecto={cobrosProyecto}
           kpisFase={kpis}
+          comprasImpagasFase={comprasImpagasFase}
+          montoSinPagarFase={montoSinPagarFase}
         />
       )}
 

@@ -37,16 +37,13 @@
   border-left: none;
 }
 
+/* En mobile la franja de 5 KPIs apilados alargaba demasiado el Panel antes
+   de llegar a lo que de verdad se usa parado en la obra: la lista de
+   proyectos en curso y los gráficos. Se oculta entera -- los mismos números
+   están en el detalle de cada proyecto. */
 @media (max-width: 640px) {
   .panel-kpis {
-    flex-direction: column;
-    gap: var(--space-4);
-  }
-
-  .panel-kpis > * {
-    flex-basis: auto;
-    padding: 0;
-    border-left: none;
+    display: none;
   }
 }
 

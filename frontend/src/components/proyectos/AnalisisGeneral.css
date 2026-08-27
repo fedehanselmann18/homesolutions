@@ -62,16 +62,13 @@
   border-left: none;
 }
 
+/* En mobile se oculta la franja de KPIs del principio (Cobrado/Gastado/
+   Disponible en Análisis General; Gastado en esta fase/etc. en Análisis de
+   la fase, que comparte esta clase): alargaba la pestaña antes de llegar a
+   los gráficos, que es el contenido propio de esta tab. */
 @media (max-width: 640px) {
   .analisis-kpis {
-    flex-direction: column;
-    gap: var(--space-4);
-  }
-
-  .analisis-kpis > * {
-    flex-basis: auto;
-    padding: 0;
-    border-left: none;
+    display: none;
   }
 }
 

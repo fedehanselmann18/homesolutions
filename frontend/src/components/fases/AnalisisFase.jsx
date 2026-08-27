@@ -28,6 +28,8 @@ export function AnalisisFase({
   proveedores,
   cobrosProyecto,
   kpisFase,
+  comprasImpagasFase,
+  montoSinPagarFase,
 }) {
   const analisis = useMemo(
     () =>
@@ -57,6 +59,34 @@ export function AnalisisFase({
 
   return (
     <div className="analisis">
+      <div className="analisis-kpis">
+        <TarjetaKpi titulo="Gastado en esta fase" valor={formatMoneda(kpisFase.gastadoFase)} destacado />
+        <TarjetaKpi
+          titulo="% del presupuesto del proyecto"
+          valor={`${kpisFase.pctPresupuesto.toFixed(1)}%`}
+          porcentaje={kpisFase.pctPresupuesto}
+          detalle={`${formatMoneda(proyecto.precio_acordado)} acordados`}
+          color={kpisFase.pctPresupuesto > 100 ? ROJO : undefined}
+        />
+        <TarjetaKpi
+          titulo="% del gasto total del proyecto"
+          valor={`${kpisFase.pctGastoTotal.toFixed(1)}%`}
+          porcentaje={kpisFase.pctGastoTotal}
+          detalle="Comparado con las demás fases"
+        />
+        <TarjetaKpi
+          titulo="Sin pagar"
+          valor={formatMoneda(montoSinPagarFase)}
+          detalle={
+            comprasImpagasFase.length === 0
+              ? "Todo al día"
+              : `${comprasImpagasFase.length} ${comprasImpagasFase.length === 1 ? "compra" : "compras"}`
+          }
+          color={montoSinPagarFase > 0 ? ROJO : undefined}
+          destacado
+        />
+      </div>
+
       <Seccion
         titulo="Compras por tipo de producto"
         descripcion="Cada bloque es un tipo (equipo, materiales, mano de obra) abierto por producto. Se calcula sobre el detalle de las compras."
@@ -133,7 +163,7 @@ export function AnalisisFase({
 
       <Seccion
         titulo="Cobrado del proyecto"
-        descripcion="Cuánto lleva cobrado el proyecto en total, sobre el mismo presupuesto acordado que ves arriba."
+        descripcion="Cuánto lleva cobrado el proyecto en total, sobre el mismo presupuesto acordado de arriba."
       >
         <TarjetaKpi
           valor={`${pctCobradoProyecto.toFixed(1)}%`}

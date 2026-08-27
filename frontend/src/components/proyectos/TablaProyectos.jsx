@@ -72,11 +72,13 @@ export function FilaProyecto({ proyecto, onClick, renderAcciones }) {
       </div>
 
       <div className="panel-tabla-col panel-tabla-col--disponible">
+        <span className="panel-tabla-label-movil label-ficha">Disponible</span>
         <span style={{ color: positivo ? VERDE : ROJO }}>{formatMoneda(proyecto.disponible)}</span>
       </div>
 
       <div className="panel-tabla-col panel-tabla-col--presupuesto">
         <div className="panel-tabla-presupuesto-header">
+          <span className="panel-tabla-label-movil label-ficha">Presupuesto ejecutado</span>
           <span className={excedido ? "panel-proyecto-excedido" : ""}>
             {proyecto.pctPresupuesto.toFixed(0)}%
           </span>

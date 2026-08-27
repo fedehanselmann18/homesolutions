@@ -203,7 +203,7 @@
   letter-spacing: normal;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 900px) and (min-width: 641px) {
   /* Ver la nota equivalente en TablaProyectos.css. */
   .planilla.fases-tabla {
     overflow-x: auto;
@@ -215,5 +215,94 @@
     grid-template-columns: 34px 220px 100px 120px 180px 116px;
     width: max-content;
     min-width: 100%;
+  }
+}
+
+/* Mobile: la planilla pasa a una card por fase (mismo patrón que el mock de
+   "Fases del proyecto" en mobile) en vez de scrollear en horizontal -- la
+   fila deja de ser una grilla de 6 columnas y pasa a dos renglones: arriba
+   #/nombre/estado, abajo el importe con su barra de progreso. Las acciones
+   de admin (reordenar/editar/eliminar) quedan siempre visibles (no sólo en
+   hover, que en touch no existe) en su propio renglón. */
+@media (max-width: 640px) {
+  .planilla.fases-tabla {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .fases-tabla-header {
+    display: none;
+  }
+
+  .fases-tabla-fila {
+    display: grid;
+    grid-template-columns: 22px 1fr auto;
+    grid-template-areas:
+      "num fase estado"
+      ". monto pct"
+      ". acciones acciones";
+    row-gap: var(--space-2);
+    column-gap: var(--space-2-5);
+    background: var(--color-superficie);
+    border: 1px solid var(--color-linea);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .fases-tabla-num {
+    grid-area: num;
+  }
+
+  .fases-tabla-col--fase {
+    grid-area: fase;
+  }
+
+  .fases-tabla-estado {
+    grid-area: estado;
+    justify-self: start;
+  }
+
+  .fases-tabla-col--num {
+    grid-area: monto;
+    text-align: left;
+  }
+
+  .fases-tabla-col--pct {
+    grid-area: pct;
+  }
+
+  .fases-tabla-col--accion {
+    grid-area: acciones;
+    justify-content: flex-end;
+  }
+
+  /* Siempre visibles en touch -- ver docs/DESIGN.md §8 ("acciones de fila
+     siempre visibles, no sólo hover"). */
+  .fases-tabla-acciones {
+    opacity: 1;
+  }
+
+  .fases-tabla-chevron {
+    display: none;
+  }
+
+  .fases-tabla-total {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-1-5);
+  }
+
+  .fases-tabla-total > span:empty {
+    display: none;
+  }
+
+  .fases-tabla-total > span:nth-child(2) {
+    margin-right: auto;
   }
 }

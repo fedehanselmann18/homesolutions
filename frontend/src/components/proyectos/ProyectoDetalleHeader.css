@@ -1,7 +1,7 @@
-/* components/ProyectoDetalleHeader.css — carátula de legajo compacta
-   (dirección 1a "Planilla", mock 2b): sin card flotante ni sombra, la
-   identidad viene de la tipografía y la regla izquierda de color de
-   estado. Breadcrumb + título + meta arriba, cinta de 5 KPIs abajo. */
+/* components/ProyectoDetalleHeader.css — carátula de legajo corta: sin card
+   flotante ni sombra, la identidad viene de la tipografía y la regla
+   izquierda de color de estado. Breadcrumb + título + estado + meta, nada
+   más antes de las tabs (ver docs/DESIGN.md, "headers cortos"). */
 
 .proyecto-header {
   border-left: 4px solid var(--color-tinta-muted);
@@ -32,50 +32,11 @@
   margin: 0;
 }
 
-.proyecto-header__descripcion {
-  font-size: var(--text-base);
-  color: var(--color-tinta-muted);
-  margin: 4px 0 0;
-  max-width: 60ch;
-}
 .proyecto-header__estado {
   flex-shrink: 0;
 }
 
-/* Cinta de 5 KPIs: mismo patrón que .panel-kpis de Dashboard.css (franja
-   de números sin cards, separados por reglas verticales) -- acá vive
-   aparte porque Dashboard.css es específico de la página Panel. */
-.proyecto-header__kpis {
-  display: flex;
-  flex-wrap: wrap;
-  margin: var(--space-4) 0 0;
-  padding: var(--space-4) var(--space-4) var(--space-4) 0;
-  border-top: 1px solid var(--color-linea);
-}
-
-.proyecto-header__kpis > * {
-  flex: 1 1 180px;
-  padding: 0 var(--space-6);
-  border-left: 1px solid var(--color-linea);
-}
-
-.proyecto-header__kpis > *:first-child {
-  padding-left: 0;
-  border-left: none;
-}
-
 @media (max-width: 640px) {
-  .proyecto-header__kpis {
-    flex-direction: column;
-    gap: var(--space-4);
-  }
-
-  .proyecto-header__kpis > * {
-    flex-basis: auto;
-    padding: 0;
-    border-left: none;
-  }
-
   .proyecto-header__top {
     flex-direction: column;
     align-items: flex-start;

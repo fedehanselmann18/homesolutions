@@ -402,70 +402,129 @@ export function ProveedorDetalle() {
         {productos.length === 0 ? (
           <EstadoVacio mensaje="Este proveedor todavía no tiene productos cargados." />
         ) : (
-          <div className="proveedor-detalle-tabla-wrap">
-            <table className="proveedor-detalle-tabla">
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th>Tipo</th>
-                  <th>Categorías</th>
-                  <th>Precio</th>
-                  {canManage && <th />}
-                </tr>
-              </thead>
-              <tbody>
-                {productos.map((producto) => {
-                  const tipo = getTipoProducto(producto.tipo);
-                  return (
-                    <tr key={producto.id}>
-                      <td>
+          <>
+            <div className="proveedor-detalle-tabla-wrap">
+              <table className="proveedor-detalle-tabla">
+                <thead>
+                  <tr>
+                    <th>Producto</th>
+                    <th>Tipo</th>
+                    <th>Categorías</th>
+                    <th>Precio</th>
+                    {canManage && <th />}
+                  </tr>
+                </thead>
+                <tbody>
+                  {productos.map((producto) => {
+                    const tipo = getTipoProducto(producto.tipo);
+                    return (
+                      <tr key={producto.id}>
+                        <td>
+                          {producto.marca} {producto.modelo}
+                        </td>
+                        <td>
+                          <span
+                            className="badge"
+                            style={{
+                              color: tipo.color,
+                              backgroundColor: `${tipo.color}${TINTE_PASTILLA}`,
+                            }}
+                          >
+                            {tipo.icono && <tipo.icono size={12} strokeWidth={2.25} />} {tipo.label}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="proveedor-detalle-chips">
+                            {(producto.categorias ?? []).map((c) => (
+                              <span key={c.id} className="badge badge--neutro">
+                                {c.nombre}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td>{formatMoneda(producto.precio)}</td>
+                        {canManage && (
+                          <td className="proveedor-detalle-tabla-acciones">
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn--sm"
+                              onClick={() => handleEditarProducto(producto)}
+                            >
+                              Editar
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-peligro btn--sm"
+                              onClick={() => setProductoAEliminar(producto)}
+                            >
+                              Eliminar
+                            </button>
+                          </td>
+                        )}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mismo catálogo, en cards -- sólo visible en mobile (ver
+                ProveedorDetalle.css). Evita el scroll horizontal de la tabla
+                de arriba en vez de aplastar sus columnas. */}
+            <div className="proveedor-detalle-catalogo-cards">
+              {productos.map((producto) => {
+                const tipo = getTipoProducto(producto.tipo);
+                return (
+                  <div key={producto.id} className="proveedor-detalle-producto-card">
+                    <div className="proveedor-detalle-producto-card__top">
+                      <span className="proveedor-detalle-producto-card__nombre">
                         {producto.marca} {producto.modelo}
-                      </td>
-                      <td>
-                        <span
-                          className="badge"
-                          style={{
-                            color: tipo.color,
-                            backgroundColor: `${tipo.color}${TINTE_PASTILLA}`,
-                          }}
-                        >
-                          {tipo.icono && <tipo.icono size={12} strokeWidth={2.25} />} {tipo.label}
+                      </span>
+                      <span className="proveedor-detalle-producto-card__precio">
+                        {formatMoneda(producto.precio)}
+                      </span>
+                    </div>
+                    <div className="proveedor-detalle-producto-card__meta">
+                      <span
+                        className="badge badge--neutro"
+                        style={{
+                          color: tipo.color,
+                          backgroundColor: `${tipo.color}${TINTE_PASTILLA}`,
+                        }}
+                      >
+                        {tipo.icono && <tipo.icono size={12} strokeWidth={2.25} />} {tipo.label}
+                      </span>
+                      {(producto.categorias ?? []).map((c) => (
+                        <span key={c.id} className="badge badge--neutro">
+                          {c.nombre}
                         </span>
-                      </td>
-                      <td>
-                        <div className="proveedor-detalle-chips">
-                          {(producto.categorias ?? []).map((c) => (
-                            <span key={c.id} className="badge badge--neutro">
-                              {c.nombre}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td>{formatMoneda(producto.precio)}</td>
+                      ))}
                       {canManage && (
-                        <td className="proveedor-detalle-tabla-acciones">
+                        <span className="proveedor-detalle-producto-card__acciones">
                           <button
                             type="button"
-                            className="btn btn-secondary btn--sm"
+                            className="btn-icono btn-icono--contorno"
+                            aria-label="Editar producto"
                             onClick={() => handleEditarProducto(producto)}
                           >
-                            Editar
+                            <Pencil size={14} strokeWidth={2} />
                           </button>
                           <button
                             type="button"
-                            className="btn btn-peligro btn--sm"
+                            className="btn-icono btn-icono--contorno btn-icono--peligro"
+                            aria-label="Eliminar producto"
                             onClick={() => setProductoAEliminar(producto)}
                           >
-                            Eliminar
+                            <Trash2 size={14} strokeWidth={2} />
                           </button>
-                        </td>
+                        </span>
                       )}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 
