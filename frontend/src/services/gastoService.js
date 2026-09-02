@@ -5,11 +5,6 @@ export const getGastos = async () => {
   return data;
 };
 
-export const getGastoPorId = async (gastoId) => {
-  const { data } = await axiosClient.get(`/gastos/${gastoId}`);
-  return data;
-};
-
 export const getGastosPorProyecto = async (proyectoId) => {
   const { data } = await axiosClient.get(`/gastos/proyectos/${proyectoId}/gastos`);
   return data;

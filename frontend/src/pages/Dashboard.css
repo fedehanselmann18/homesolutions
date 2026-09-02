@@ -154,17 +154,30 @@
 .panel-actividad-item:last-child {
   border-bottom: none;
 }
-/* Ancho fijo para que la columna de tipos alinee aunque las palabras midan
-   distinto ("Cobro" vs "Compra").
+/* Ancho fijo -- no `min-width` -- para que la columna de tipos alinee aunque
+   las palabras midan distinto ("Cobro" vs "Compra") y, sobre todo, para que
+   la descripción de todas las filas arranque siempre en el mismo x.
+
+   El `white-space: normal` es a propósito: `.badge` trae `nowrap`, y con eso
+   "Nota de crédito" / "Nota de débito" -- mucho más largas que el resto -- se
+   salían de la pastilla (el fondo quedaba en 58px y el texto seguía de largo
+   por afuera). Dejándolas envolver, esas dos ocupan dos renglones dentro de
+   la pastilla, pero el texto queda adentro y la columna no se corre de lugar.
 
    Va `justify-content` y no `text-align`: `.badge` es `inline-flex`, así que
    el texto es un ítem flex y lo alinea el eje principal. Con `text-align`
    -- que es lo que había cuando esto era un <span> suelto -- el texto queda
-   pegado a la izquierda de la pastilla. */
+   pegado a la izquierda de la pastilla. El `text-align: center` de acá es
+   para centrar las dos líneas entre sí cuando la etiqueta envuelve. */
 .panel-actividad-tipo {
   flex-shrink: 0;
   width: 58px;
   justify-content: center;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.25;
+  padding-top: 3px;
+  padding-bottom: 3px;
 }
 
 .panel-actividad-texto {

@@ -7,11 +7,6 @@ export const getCompras = async () => {
   return data;
 };
 
-export const getCompraPorId = async (compraId) => {
-  const { data } = await axiosClient.get(`/compras/${compraId}`);
-  return data;
-};
-
 export const getComprasPorFase = async (faseId) => {
   const { data } = await axiosClient.get(`/compras/fases/${faseId}/compras`);
   return data;
@@ -45,29 +40,7 @@ export const eliminarCompra = async (compraId) => {
 
 // --- Detalle de compra (líneas de producto) ---
 
-export const agregarDetalleCompra = async (compraId, detalle) => {
-  // detalle: { producto_id, cantidad, precio_unitario }
-  const { data } = await axiosClient.post(`/compras/${compraId}/detalle`, detalle);
-  return data;
-};
-
-export const eliminarDetalleCompra = async (compraId, detalleId) => {
-  const { data } = await axiosClient.delete(`/compras/${compraId}/detalle/${detalleId}`);
-  return data;
-};
-
 // --- Impuestos aplicados a la compra ---
-
-export const agregarImpuestoCompra = async (compraId, impuesto) => {
-  // impuesto: { impuesto_id, monto }
-  const { data } = await axiosClient.post(`/compras/${compraId}/impuestos`, impuesto);
-  return data;
-};
-
-export const eliminarImpuestoCompra = async (compraId, impuestoAplicadoId) => {
-  const { data } = await axiosClient.delete(`/compras/${compraId}/impuestos/${impuestoAplicadoId}`);
-  return data;
-};
 
 // --- Comprobantes (archivos: factura, remito...) ---
 

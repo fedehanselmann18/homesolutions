@@ -56,21 +56,6 @@
   justify-content: flex-end;
 }
 
-.manager-chip--admin {
-  background: var(--color-terracota-tint);
-  color: var(--color-terracota-dark);
-}
-
-.manager-chip--activo {
-  background: var(--color-musgo-tint);
-  color: var(--color-musgo-dark);
-}
-
-.manager-chip--inactivo {
-  background: var(--color-oxido-tint);
-  color: var(--color-oxido);
-}
-
 .manager-accion {
   display: inline-flex;
   align-items: center;

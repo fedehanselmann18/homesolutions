@@ -24,11 +24,6 @@ export const getUsuarioActual = async () => {
   return data;
 };
 
-export const getUsuarioPorId = async (usuarioId) => {
-  const { data } = await axiosClient.get(`/usuarios/${usuarioId}`);
-  return data;
-};
-
 export const crearUsuario = async (usuario) => {
   // usuario: { nombre_usuario, rol, password }
   const { data } = await axiosClient.post("/usuarios/crear", usuario);

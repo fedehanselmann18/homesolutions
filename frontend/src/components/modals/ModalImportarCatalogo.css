@@ -214,21 +214,6 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
-.catalogo-badge--nuevo {
-  color: var(--color-musgo-dark);
-  background-color: var(--color-musgo-tint);
-}
-
-.catalogo-badge--actualiza {
-  color: var(--color-terracota-dark);
-  background-color: var(--color-terracota-tint);
-}
-
-.catalogo-badge--sin-cambios {
-  color: var(--color-tinta-muted);
-  background-color: var(--color-base-2);
-}
-
 @media (max-width: 640px) {
   .catalogo-proveedor-elegir {
     flex-direction: column;

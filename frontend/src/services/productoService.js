@@ -5,11 +5,6 @@ export const getProductos = async () => {
   return data;
 };
 
-export const getProductoPorId = async (productoId) => {
-  const { data } = await axiosClient.get(`/productos/${productoId}`);
-  return data;
-};
-
 export const getProductosPorProveedor = async (proveedorId) => {
   const { data } = await axiosClient.get(`/productos/proveedores/${proveedorId}/productos`);
   return data;

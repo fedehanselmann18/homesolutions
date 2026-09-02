@@ -224,19 +224,6 @@
   }
 }
 
-/* --- Filtro de estado (Todos / En curso / A iniciar / Terminados) --- Vive
-   acá (no en Dashboard.css) porque tanto el Panel como Proyectos lo usan y
-   cada página se carga con React.lazy por separado: si viviera en
-   Dashboard.css, entrar directo a /proyectos sin haber pasado por el Panel
-   dejaría estas clases sin estilos. */
-
-.panel-filtro-estado-btn--activo,
-.panel-filtro-estado-btn--activo:hover {
-  background: var(--color-oscuro);
-  border-color: var(--color-oscuro);
-  color: var(--color-oscuro-texto);
-}
-
 /* --- Cabecera de grupo (vista "Todos" de Proyectos, dirección 1a): separa
    las 3 secciones (en curso / a iniciar / terminado) dentro de una sola
    planilla, en vez de 3 tablas sueltas -- ver Proyectos.jsx, que compone

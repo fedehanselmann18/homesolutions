@@ -5,11 +5,6 @@ export const getCobros = async () => {
   return data;
 };
 
-export const getCobroPorId = async (cobroId) => {
-  const { data } = await axiosClient.get(`/cobros/${cobroId}`);
-  return data;
-};
-
 export const getCobrosPorProyecto = async (proyectoId) => {
   const { data } = await axiosClient.get(`/cobros/proyectos/${proyectoId}/cobros`);
   return data;
