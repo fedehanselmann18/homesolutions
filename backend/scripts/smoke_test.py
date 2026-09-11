@@ -13,7 +13,7 @@ contra la infraestructura real.
 
 Uso:
     cd backend && python3 scripts/smoke_test.py
-    python3 scripts/smoke_test.py --backend https://otra-url.up.railway.app --frontend https://otra-url.vercel.app
+    python3 scripts/smoke_test.py --backend https://otra-url.example --frontend https://otra-url.example
 
 Se puede correr después de cada deploy nuevo (Railway y/o Vercel) para
 confirmar que todo sigue andando antes de ponerse a probar a mano.
@@ -24,8 +24,8 @@ import sys
 import urllib.error
 import urllib.request
 
-BACKEND_DEFAULT = "https://homesolutions-production.up.railway.app"
-FRONTEND_DEFAULT = "https://homesolutions-gold.vercel.app"
+BACKEND_DEFAULT = "https://api.homesolutions.company"
+FRONTEND_DEFAULT = "https://homesolutions.company"
 
 VERDE = "\033[32m"
 ROJO = "\033[31m"
@@ -53,8 +53,8 @@ def chequeo(nombre, fn):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--backend", default=BACKEND_DEFAULT, help="URL del backend en Railway")
-    parser.add_argument("--frontend", default=FRONTEND_DEFAULT, help="URL del frontend en Vercel")
+    parser.add_argument("--backend", default=BACKEND_DEFAULT, help="URL del backend (default: el dominio propio de producción)")
+    parser.add_argument("--frontend", default=FRONTEND_DEFAULT, help="URL del frontend (default: el dominio propio de producción)")
     args = parser.parse_args()
     backend = args.backend.rstrip("/")
     frontend = args.frontend.rstrip("/")
