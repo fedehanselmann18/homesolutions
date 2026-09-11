@@ -180,13 +180,20 @@
    la red de seguridad, no el parche -- cada overflow real que se encuentra
    se corrige en el elemento que lo causa, esto sólo cubre lo que se escape
    a futuro. */
-html,
-body {
+html {
   overflow-x: hidden;
 }
 
 body {
   margin: 0;
+  /* En el <body> va `clip`, no `hidden`: `hidden` lo convierte en contenedor
+     de scroll propio, y desde ahí todo `position: sticky` de adentro se pega
+     al scrollport del body -- que, al medir lo mismo que su contenido, nunca
+     scrollea -- en vez de al del viewport. Eso era lo que hacía que el sidebar
+     se fuera con el scroll de la página. `clip` recorta igual pero no crea
+     contenedor de scroll. Si un navegador viejo no lo soporta, la declaración
+     se descarta y el recorte lo sigue haciendo el <html> de arriba. */
+  overflow-x: clip;
   background: var(--color-base-1);
   color: var(--color-tinta);
   font-family: var(--font-ui);

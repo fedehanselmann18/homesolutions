@@ -233,6 +233,20 @@ colapsan, se duplican y hay que acordarse de sacar el último.
 `MainLayout` es sidebar fijo + contenido. El contenido tiene
 `padding: --space-8 --space-12` en desktop y `--space-4` en móvil.
 
+El sidebar es `position: sticky` y mide el alto del viewport (`100dvh`, con
+`100vh` de fallback): el único tramo que scrollea por dentro es `.sidebar-nav`,
+así el footer (usuario + cerrar sesión) queda siempre visible. `dvh` y no `vh`
+porque con la barra de direcciones retráctil de Safari/iOS `100vh` es el
+viewport *grande* y el footer cae abajo del borde visible, sin forma de
+alcanzarlo.
+
+**La red de contención de scroll horizontal va `overflow-x: hidden` en `html` y
+`overflow-x: clip` en `body` — nunca `hidden` en los dos.** `hidden` en el
+`body` lo convierte en contenedor de scroll propio, y desde ahí todo
+`position: sticky` de adentro se pega al scrollport del body (que nunca
+scrollea) en vez de al del viewport: el sidebar deja de quedarse fijo. `clip`
+recorta igual sin crear contenedor de scroll.
+
 ### Breakpoints
 
 **Tres, y uno estructural.** Antes había once, y cuatro de ellos (600, 640, 700,

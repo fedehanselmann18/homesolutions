@@ -1,7 +1,12 @@
 .sidebar {
   width: 212px;
   min-width: 212px;
+  /* `dvh` para que la barra de direcciones retráctil de Safari/iOS no deje el
+     footer (usuario + cerrar sesión) abajo del borde visible: con `100vh` el
+     alto es el del viewport grande y el footer queda fuera de alcance para
+     siempre, porque el sidebar es sticky y no scrollea. `100vh` de fallback. */
   height: 100vh;
+  height: 100dvh;
   background: var(--color-oscuro);
   border-right: 1px solid var(--color-oscuro-borde);
   display: flex;
@@ -34,6 +39,7 @@
 
 .sidebar-nav {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   padding: var(--space-3) var(--space-2);
