@@ -38,7 +38,16 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
 )
 
-app = FastAPI()
+# En producción, Swagger UI / ReDoc / el schema OpenAPI quedan apagados:
+# nadie externo consume esta API, y dejarlos públicos le regala de
+# entrada el mapa completo de endpoints y modelos a cualquier bot de
+# reconocimiento (son de las primeras rutas que prueban los scanners).
+# En dev siguen disponibles para laburar cómodo.
+app = FastAPI(
+    docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
+    redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
+    openapi_url="/openapi.json" if settings.ENVIRONMENT != "production" else None,
+)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
