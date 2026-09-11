@@ -49,7 +49,6 @@ MARCA = ASSETS / "marca"
 
 # --- Paleta de marca (manual HS_IID_Manual.pdf) ---------------------------
 OLIVA = colors.HexColor("#6f7f45")
-OLIVA_CLARO = colors.HexColor("#a8b36a")
 GRIS_CLARO = colors.HexColor("#d9d7d2")
 GRIS_OSCURO = colors.HexColor("#5a5a58")
 NEGRO = colors.HexColor("#000000")
