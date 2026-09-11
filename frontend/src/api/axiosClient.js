@@ -45,16 +45,69 @@ export function esRutaPublica(pathname) {
   return RUTAS_PUBLICAS.includes(pathname);
 }
 
+// El access_token dura poco (60 min, ver ACCESS_TOKEN_EXPIRE_MINUTES) pero
+// el login también deja una cookie refresh_token de larga duración (7 días,
+// path="/auth", ver login.py) pensada justo para este momento: antes de
+// tirar a la persona al login por un 401, probamos renovar la sesión sola.
+//
+// Dedupe: si varios pedidos 401ean a la vez (ej. el Sidebar dispara 6
+// queries en paralelo al montar), todos esperan la MISMA promesa en vez de
+// disparar 6 POST /auth/refresh -- refrescoEnCurso vive fuera del
+// interceptor para que sea compartida entre todos los pedidos en vuelo.
+let refrescoEnCurso = null;
+
+function refrescarSesion() {
+  if (!refrescoEnCurso) {
+    refrescoEnCurso = axiosClient
+      .post("/auth/refresh")
+      // El refresh pisa la cookie csrf_token en el backend (ver
+      // _setear_cookies_sesion en login.py), así que el valor que
+      // teníamos en memoria queda vencido -- se vuelve a pedir del mismo
+      // lugar que en el login (GET /usuarios/me, ver useAuthProvider).
+      .then(() => axiosClient.get("/usuarios/me"))
+      .then(({ data }) => setCsrfToken(data.csrf_token))
+      .finally(() => {
+        refrescoEnCurso = null;
+      });
+  }
+  return refrescoEnCurso;
+}
+
 // Si el backend responde 401 en una ruta protegida (token vencido o
-// inválido), mandamos al login. Ya no hay nada que limpiar en localStorage:
-// la cookie la borra el propio backend en /auth/logout, o expira sola.
+// inválido), primero intentamos refrescar la sesión sola; si eso también
+// falla (refresh token vencido, revocado -- B-06, o directamente no hay
+// sesión) recién ahí vamos al login. Ya no hay nada que limpiar en
+// localStorage: las cookies las borra el propio backend en /auth/logout, o
+// expiran solas.
 axiosClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401 && !esRutaPublica(window.location.pathname)) {
-      window.location.href = "/login";
+  async (error) => {
+    const status = error.response?.status;
+    const original = error.config;
+
+    if (status !== 401 || esRutaPublica(window.location.pathname)) {
+      return Promise.reject(error);
     }
-    return Promise.reject(error);
+
+    // Un 401 de una llamada al propio /auth/* (login con credenciales
+    // malas, o el refresh de acá abajo cuando el refresh token también
+    // venció) no se reintenta -- ES el fracaso, no un token de acceso
+    // vencido. Lo mismo si esta request ya pasó por acá una vez: evita
+    // loop infinito si el token nuevo también viniera inválido.
+    if (original?.url?.includes("/auth/") || original?._reintentadoTrasRefresh) {
+      window.location.href = "/login";
+      return Promise.reject(error);
+    }
+
+    try {
+      await refrescarSesion();
+    } catch {
+      window.location.href = "/login";
+      return Promise.reject(error);
+    }
+
+    original._reintentadoTrasRefresh = true;
+    return axiosClient(original);
   }
 );
 
