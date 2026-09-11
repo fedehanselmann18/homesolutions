@@ -185,12 +185,6 @@ class UsuarioAutorizadoOut(BaseModel):
     ya_registrado: bool = False
 
 
-class UsuarioUpdate(BaseModel):
-    nombre_usuario: str | None = None
-    rol: str | None = None
-    password: str | None = None
-
-
 class UsuarioOut(UsuarioBase, TimestampOut):
     model_config = ConfigDict(from_attributes=True)
 

@@ -15,13 +15,9 @@ from app.limiter import limiter
 from app.pagination import ParametrosPaginacion
 from app.schemas import (
     CompraCreate,
-    CompraImpuestoCreate,
-    CompraImpuestoOut,
     CompraOut,
     CompraUpdate,
     ComprobanteCompraOut,
-    DetalleCompraCreate,
-    DetalleCompraOut,
     NotaCompraOut,
 )
 
@@ -346,118 +342,6 @@ def delete_compra(
 
     log_auditoria(db, current_user.id, "delete", "Compra", compra_data.id)
     return compra_data
-
-
-# ---------------------------------------------------------------------------
-# Sub-recurso: Detalle de Compra
-# ---------------------------------------------------------------------------
-
-
-@router.post("/{compra_id}/detalle", response_model=DetalleCompraOut, status_code=status.HTTP_201_CREATED)
-def add_detalle_compra(
-    compra_id: str,
-    detalle: DetalleCompraCreate,
-    db: Session = Depends(get_db),
-    current_user: models.Usuario = Depends(requiere_admin),
-):
-    compra = db.query(models.Compra).filter(models.Compra.id == compra_id).first()
-    if not compra:
-        raise HTTPException(status_code=404, detail="Compra no encontrada")
-
-    producto = db.query(models.Producto).filter(models.Producto.id == detalle.producto_id).first()
-    if not producto:
-        raise HTTPException(status_code=404, detail="Producto no encontrado")
-
-    nueva_linea = models.DetalleCompra(
-        compra_id=compra_id,
-        producto_id=detalle.producto_id,
-        cantidad=detalle.cantidad,
-        precio_unitario=detalle.precio_unitario,
-    )
-    db.add(nueva_linea)
-    db.commit()
-    db.refresh(nueva_linea)
-
-    return nueva_linea
-
-
-@router.delete("/{compra_id}/detalle/{detalle_id}", status_code=status.HTTP_200_OK)
-def delete_detalle_compra(
-    compra_id: str,
-    detalle_id: str,
-    db: Session = Depends(get_db),
-    current_user: models.Usuario = Depends(requiere_admin),
-):
-    linea = (
-        db.query(models.DetalleCompra)
-        .filter(models.DetalleCompra.id == detalle_id, models.DetalleCompra.compra_id == compra_id)
-        .first()
-    )
-    if not linea:
-        raise HTTPException(status_code=404, detail="Línea de detalle no encontrada")
-
-    db.delete(linea)
-    db.commit()
-
-    return {"detail": "Línea de detalle eliminada"}
-
-
-# ---------------------------------------------------------------------------
-# Sub-recurso: Impuestos aplicados a la Compra
-# ---------------------------------------------------------------------------
-
-
-@router.post("/{compra_id}/impuestos", response_model=CompraImpuestoOut, status_code=status.HTTP_201_CREATED)
-def add_impuesto_compra(
-    compra_id: str,
-    impuesto_data: CompraImpuestoCreate,
-    db: Session = Depends(get_db),
-    current_user: models.Usuario = Depends(requiere_admin),
-):
-    compra = db.query(models.Compra).filter(models.Compra.id == compra_id).first()
-    if not compra:
-        raise HTTPException(status_code=404, detail="Compra no encontrada")
-
-    impuesto = db.query(models.Impuesto).filter(models.Impuesto.id == impuesto_data.impuesto_id).first()
-    if not impuesto:
-        raise HTTPException(status_code=404, detail="Impuesto no encontrado")
-
-    nuevo_impuesto_aplicado = models.CompraImpuesto(
-        compra_id=compra_id, impuesto_id=impuesto_data.impuesto_id, monto=impuesto_data.monto
-    )
-
-    try:
-        db.add(nuevo_impuesto_aplicado)
-        db.commit()
-        db.refresh(nuevo_impuesto_aplicado)
-    except IntegrityError:
-        db.rollback()
-        raise HTTPException(status_code=400, detail="Ese impuesto ya fue cargado en esta compra")
-
-    return nuevo_impuesto_aplicado
-
-
-@router.delete("/{compra_id}/impuestos/{impuesto_aplicado_id}", status_code=status.HTTP_200_OK)
-def delete_impuesto_compra(
-    compra_id: str,
-    impuesto_aplicado_id: str,
-    db: Session = Depends(get_db),
-    current_user: models.Usuario = Depends(requiere_admin),
-):
-    impuesto_aplicado = (
-        db.query(models.CompraImpuesto)
-        .filter(
-            models.CompraImpuesto.id == impuesto_aplicado_id, models.CompraImpuesto.compra_id == compra_id
-        )
-        .first()
-    )
-    if not impuesto_aplicado:
-        raise HTTPException(status_code=404, detail="Impuesto aplicado no encontrado")
-
-    db.delete(impuesto_aplicado)
-    db.commit()
-
-    return {"detail": "Impuesto eliminado de la compra"}
 
 
 # ---------------------------------------------------------------------------
