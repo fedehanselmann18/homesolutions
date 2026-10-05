@@ -78,16 +78,36 @@ def _registrar_fuentes() -> None:
     _FUENTES_REGISTRADAS = True
 
 
-def formato_moneda(monto: float) -> str:
-    """$ 1.234.567 -- mismo formato que frontend/src/utils/formato.js (es-AR, sin decimales)."""
+PREFIJO_MONEDA = {"usd": "US$", "ars": "ARS"}
+
+
+def formato_moneda(monto: float | None, moneda: str = "usd") -> str:
+    """US$ 1.234.567 / ARS 1.234.567 -- es-AR, sin decimales, mismo criterio
+    que formatMoneda() en frontend/src/utils/formato.js. None -> "s/d" (ej.
+    el precio acordado en pesos cuando no hay ninguna cotización cargada)."""
+    if monto is None:
+        return f"{PREFIJO_MONEDA[moneda]} s/d"
     monto = round(monto or 0)
     signo = "-" if monto < 0 else ""
     entero = f"{abs(monto):,.0f}".replace(",", ".")
-    return f"{signo}$ {entero}"
+    return f"{signo}{PREFIJO_MONEDA[moneda]} {entero}"
+
+
+def formato_dual(usd: float | None, ars: float | None, separador: str = " ", principal: str = "usd") -> str:
+    """
+    Cada cifra del reporte en las dos monedas (decisión #6): la principal y
+    la otra entre paréntesis. USD principal en todo el reporte salvo la
+    deuda a proveedores, que se debe en pesos (caveat 6.2). `separador`
+    "\n" parte la cifra en dos renglones para las columnas angostas.
+    """
+    if principal == "ars":
+        return f"{formato_moneda(ars, 'ars')}{separador}({formato_moneda(usd, 'usd')})"
+    return f"{formato_moneda(usd, 'usd')}{separador}({formato_moneda(ars, 'ars')})"
 
 
 def formato_moneda_corta(monto: float) -> str:
-    """$500K / $1.2M -- mismo criterio que formatMonedaCorta() del frontend, para ejes y etiquetas de gráficos."""
+    """US$500K / US$1.2M -- mismo criterio que formatMonedaCorta() del frontend,
+    para ejes y etiquetas de gráficos. Los gráficos van siempre en USD."""
     monto = monto or 0
     signo = "-" if monto < 0 else ""
     absoluto = abs(monto)
@@ -97,7 +117,7 @@ def formato_moneda_corta(monto: float) -> str:
         texto = f"{absoluto / 1_000:.0f}K"
     else:
         texto = f"{absoluto:.0f}"
-    return f"{signo}${texto}"
+    return f"{signo}US${texto}"
 
 
 def formato_fecha(fecha: date | None) -> str:
@@ -375,18 +395,23 @@ def _grafico_notas(notas: dict, ancho: float = 260, alto: float = 190) -> Drawin
 # ---------------------------------------------------------------------------
 
 
-def _tabla_totales(analisis: dict) -> Table:
-    t = analisis["totales"]
+def _tabla_totales(reporte: dict) -> Table:
+    t, ta = reporte["usd"]["totales"], reporte["ars"]["totales"]
+
+    def dual(campo):
+        return formato_dual(t[campo], ta[campo])
+
     filas = [
-        ["Precio acordado", formato_moneda(t["precioAcordado"])],
-        ["Cobrado (neto de notas)", formato_moneda(t["cobrado"])],
-        ["Gastado (compras + gastos, neto de notas)", formato_moneda(t["egresos"])],
-        ["Margen bruto", formato_moneda(t["margenBruto"])],
-        ["Ganancia neta / disponible", formato_moneda(t["disponible"])],
+        ["Precio acordado", dual("precioAcordado")],
+        ["Cobrado (neto de notas)", dual("cobrado")],
+        ["Gastado (compras + gastos, neto de notas)", dual("egresos")],
+        ["Margen bruto", dual("margenBruto")],
+        ["Ganancia neta / disponible", dual("disponible")],
+        # Calculados en USD (caveat 6.3): no hay versión en pesos que mostrar.
         ["% cobrado del acordado", formato_pct(t["pctCobrado"])],
         ["% gastado del acordado", formato_pct(t["pctGastado"])],
     ]
-    tabla = Table(filas, colWidths=[110 * mm, 60 * mm])
+    tabla = Table(filas, colWidths=[80 * mm, 90 * mm])
     tabla.setStyle(
         TableStyle(
             [
@@ -397,6 +422,7 @@ def _tabla_totales(analisis: dict) -> Table:
                 ("TEXTCOLOR", (0, 0), (-1, -1), NEGRO),
                 ("LINEBELOW", (0, 0), (-1, -2), 0.5, GRIS_CLARO),
                 ("LINEABOVE", (0, 4), (-1, 4), 0.75, OLIVA),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("TOPPADDING", (0, 0), (-1, -1), 5),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
             ]
@@ -405,24 +431,28 @@ def _tabla_totales(analisis: dict) -> Table:
     return tabla
 
 
-def _tabla_notas(analisis: dict) -> Table:
-    n = analisis["notas"]
+def _tabla_notas(reporte: dict) -> Table:
+    n, na = reporte["usd"]["notas"], reporte["ars"]["notas"]
+
+    def dual(lado, tipo):
+        return formato_dual(n[lado][tipo], na[lado][tipo], separador="\n")
+
     filas = [
         ["", "Nota de crédito", "Nota de débito", "Cantidad"],
         [
             "Compras (proveedores)",
-            formato_moneda(n["compras"]["credito"]),
-            formato_moneda(n["compras"]["debito"]),
+            dual("compras", "credito"),
+            dual("compras", "debito"),
             str(n["compras"]["cantidad"]),
         ],
         [
             "Cobros (cliente)",
-            formato_moneda(n["cobros"]["credito"]),
-            formato_moneda(n["cobros"]["debito"]),
+            dual("cobros", "credito"),
+            dual("cobros", "debito"),
             str(n["cobros"]["cantidad"]),
         ],
     ]
-    tabla = Table(filas, colWidths=[55 * mm, 35 * mm, 35 * mm, 25 * mm])
+    tabla = Table(filas, colWidths=[50 * mm, 45 * mm, 45 * mm, 25 * mm])
     tabla.setStyle(
         TableStyle(
             [
@@ -433,6 +463,7 @@ def _tabla_notas(analisis: dict) -> Table:
                 ("BACKGROUND", (0, 0), (-1, 0), GRIS_OSCURO),
                 ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
                 ("ROWBACKGROUNDS", (0, 1), (-1, -1), [BLANCO, GRIS_CLARO]),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("TOPPADDING", (0, 0), (-1, -1), 5),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
             ]
@@ -441,16 +472,22 @@ def _tabla_notas(analisis: dict) -> Table:
     return tabla
 
 
-def _tabla_fases(analisis: dict) -> Table | None:
-    fases = analisis["fases"]
+def _tabla_fases(reporte: dict) -> Table | None:
+    fases, fases_ars = reporte["usd"]["fases"], reporte["ars"]["fases"]
     if not fases:
         return None
     filas = [["Fase", "Estado", "Gastado", "% presup."]]
-    for f in fases:
+    # Mismo orden en las dos monedas (es el de las fases), se aparean por índice.
+    for f, fa in zip(fases, fases_ars):
         filas.append(
-            [f["nombre"], f["estado"], formato_moneda(f["gastado"]), formato_pct(f["pct_presupuesto"])]
+            [
+                f["nombre"],
+                f["estado"],
+                formato_dual(f["gastado"], fa["gastado"], separador="\n"),
+                formato_pct(f["pct_presupuesto"]),
+            ]
         )
-    tabla = Table(filas, colWidths=[60 * mm, 40 * mm, 40 * mm, 30 * mm])
+    tabla = Table(filas, colWidths=[55 * mm, 35 * mm, 50 * mm, 30 * mm])
     tabla.setStyle(
         TableStyle(
             [
@@ -461,6 +498,7 @@ def _tabla_fases(analisis: dict) -> Table | None:
                 ("BACKGROUND", (0, 0), (-1, 0), OLIVA),
                 ("ALIGN", (2, 0), (-1, -1), "RIGHT"),
                 ("ROWBACKGROUNDS", (0, 1), (-1, -1), [BLANCO, GRIS_CLARO]),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("TOPPADDING", (0, 0), (-1, -1), 5),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
             ]
@@ -469,15 +507,22 @@ def _tabla_fases(analisis: dict) -> Table | None:
     return tabla
 
 
-def _tabla_deuda(analisis: dict) -> Table | None:
-    deuda = analisis["deuda_por_proveedor"]
+def _tabla_deuda(reporte: dict) -> Table | None:
+    deuda, deuda_ars = reporte["usd"]["deuda_por_proveedor"], reporte["ars"]["deuda_por_proveedor"]
     if not deuda:
         return None
+
+    # Al revés que el resto del reporte: una compra impaga se debe en PESOS
+    # (caveat 6.2), así que el peso va como cifra principal y el USD
+    # histórico de referencia. Las dos listas vienen ordenadas por pesos.
+    def dual(usd, ars):
+        return formato_dual(usd, ars, separador="\n", principal="ars")
+
     filas = [["Proveedor", "Compras pendientes", "Monto adeudado"]]
-    for d in deuda:
-        filas.append([d["proveedor"], str(d["compras"]), formato_moneda(d["monto"])])
-    filas.append(["Total", "", formato_moneda(analisis["deuda_total"])])
-    tabla = Table(filas, colWidths=[80 * mm, 40 * mm, 50 * mm])
+    for d, da in zip(deuda, deuda_ars):
+        filas.append([d["proveedor"], str(d["compras"]), dual(d["monto"], da["monto"])])
+    filas.append(["Total", "", dual(reporte["usd"]["deuda_total"], reporte["ars"]["deuda_total"])])
+    tabla = Table(filas, colWidths=[75 * mm, 40 * mm, 55 * mm])
     ultima = len(filas) - 1
     tabla.setStyle(
         TableStyle(
@@ -491,6 +536,7 @@ def _tabla_deuda(analisis: dict) -> Table | None:
                 ("ROWBACKGROUNDS", (0, 1), (-1, ultima - 1), [BLANCO, GRIS_CLARO]),
                 ("FONTNAME", (0, ultima), (-1, ultima), "Marca-Bold"),
                 ("LINEABOVE", (0, ultima), (-1, ultima), 1, ROJO),
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("TOPPADDING", (0, 0), (-1, -1), 5),
                 ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
             ]
@@ -530,10 +576,33 @@ def _header_footer(canvas, doc, proyecto_nombre: str):
     canvas.restoreState()
 
 
+def _nota_moneda(cotizacion) -> str:
+    """Cómo leer las cifras: va arriba de todo, porque un número en dos
+    monedas sin explicación se presta a malentendidos."""
+    base = (
+        "Cifras en dólares (US$) con su equivalente en pesos entre paréntesis. Los pesos son "
+        "nominales históricos: cada movimiento lleva la cotización del día en que se cargó, "
+        "nada se reexpresa a dólar de hoy. Gráficos en US$."
+    )
+    if cotizacion is None:
+        return base + " No hay cotizaciones cargadas: el precio acordado en pesos queda sin dato."
+    valor = f"{float(cotizacion.valor):,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
+    return (
+        base + f" Precio acordado en pesos con la última cotización cargada "
+        f"({cotizacion.tipo}, ARS {valor} del {formato_fecha(cotizacion.fecha)})."
+    )
+
+
 def generar_pdf_proyecto(
-    proyecto, fases: list, gastos: list, cobros: list, compras: list, analisis: dict
+    proyecto, fases: list, gastos: list, cobros: list, compras: list, reporte: dict, cotizacion=None
 ) -> bytes:
-    """Arma el PDF de reporte y devuelve los bytes (para servir como Response)."""
+    """
+    Arma el PDF de reporte y devuelve los bytes (para servir como Response).
+    `reporte` es lo que devuelve calcular_reporte_proyecto (las dos monedas);
+    `cotizacion` es la fila de Cotizacion usada para el precio en pesos, solo
+    para explicarla en el encabezado.
+    """
+    analisis = reporte["usd"]  # gráficos y rankings: siempre en USD
     estilos = _estilos()
     buffer = io.BytesIO()
 
@@ -557,16 +626,18 @@ def generar_pdf_proyecto(
             estilos["subtitulo"],
         )
     )
+    story.append(Spacer(1, 4))
+    story.append(Paragraph(_nota_moneda(cotizacion), estilos["subtitulo"]))
     story.append(Spacer(1, 10))
 
     # --- Resumen ejecutivo: unas frases armadas de los números, antes de cualquier tabla. ---
     story.append(Paragraph("Resumen ejecutivo", estilos["seccion"]))
-    for frase in analisis["resumen_ejecutivo"]:
+    for frase in reporte["resumen_ejecutivo"]:
         story.append(Paragraph(f"•  {frase}", estilos["resumen_item"]))
     story.append(Spacer(1, 6))
 
     story.append(Paragraph("Resumen financiero", estilos["seccion"]))
-    story.append(_tabla_totales(analisis))
+    story.append(_tabla_totales(reporte))
 
     story.append(Paragraph("Cascada de rentabilidad", estilos["seccion"]))
     story.append(_grafico_cascada(analisis["cascada"]))
@@ -574,7 +645,7 @@ def generar_pdf_proyecto(
     story.append(Paragraph("Notas de crédito / débito", estilos["seccion"]))
     story.append(_grafico_notas(analisis["notas"]))
     story.append(Spacer(1, 6))
-    story.append(_tabla_notas(analisis))
+    story.append(_tabla_notas(reporte))
 
     if analisis["gastos_por_categoria"] or analisis["impuestos_por_tipo"]:
         story.append(Paragraph("Gastos e impuestos", estilos["seccion"]))
@@ -605,14 +676,14 @@ def generar_pdf_proyecto(
         story.append(Paragraph("Egresos por fase", estilos["seccion"]))
         story.append(_grafico_barras_horizontal(analisis["egresos_por_fase"], "nombre", "gastado", AZUL))
 
-    tabla_fases = _tabla_fases(analisis)
+    tabla_fases = _tabla_fases(reporte)
     story.append(Paragraph("Estado de las fases", estilos["seccion"]))
     if tabla_fases:
         story.append(tabla_fases)
     else:
         story.append(Paragraph("Este proyecto todavía no tiene fases cargadas.", estilos["vacio"]))
 
-    tabla_deuda = _tabla_deuda(analisis)
+    tabla_deuda = _tabla_deuda(reporte)
     story.append(Paragraph("Deuda pendiente a proveedores", estilos["seccion"]))
     if tabla_deuda:
         story.append(tabla_deuda)

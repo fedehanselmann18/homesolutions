@@ -103,7 +103,10 @@ def _crear_gastos(db_session, usuario_admin, cantidad):
         models.Gasto(
             proyecto_id=proyecto.id,
             usuario_id=usuario_admin.id,
-            monto=1000,
+            monto_ars=1000,
+            monto_usd=1,
+            cotizacion_dolar=1000,
+            tipo_cambio="blue",
             descripcion=f"Gasto {i}",
             fecha=date(2026, 1, 1),
             tipo_factura="factura_b",

@@ -62,7 +62,10 @@ def _comprobante_gasto(db_session, archivo_path, usuario):
     gasto = models.Gasto(
         proyecto=proyecto,
         usuario_id=usuario.id,
-        monto=1000,
+        monto_ars=1000,
+        monto_usd=1,
+        cotizacion_dolar=1000,
+        tipo_cambio="blue",
         descripcion="Gasto de prueba",
         fecha=date(2026, 1, 1),
         tipo_factura="factura_b",

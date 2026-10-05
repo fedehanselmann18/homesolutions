@@ -162,6 +162,18 @@ def headers_lectura(usuario_lectura):
     return _headers_para(usuario_lectura)
 
 
+@pytest.fixture()
+def cotizacion():
+    """
+    Lo que todo movimiento de plata manda al crearse (ver
+    schemas.CotizacionCongeladaIn). 1000 pesos por dólar a propósito: así
+    las cuentas de los asserts se leen de un vistazo (15.000 ARS = 15 USD).
+    Se usa como **cotizacion en el json de los POST, o en el constructor del
+    modelo al armar movimientos directo en la base.
+    """
+    return {"cotizacion_dolar": 1000, "tipo_cambio": "blue"}
+
+
 @pytest.fixture(autouse=True)
 def _resetear_rate_limiter():
     """

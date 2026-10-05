@@ -10,6 +10,18 @@ el análisis en cada escenario:
     - Casa Vicente López ....... terminado y rentable (cobrado al 100%)
     - Salón de eventos Martínez  recién arrancando (solo anticipo)
 
+Doble moneda (ver docs/PLAN_TIPO_CAMBIO.md): los importes de abajo están
+escritos en pesos, como se pensó la demo originalmente. Al cargarlos se
+pasan a como los cargaría Agus hoy:
+    - el precio acordado y los cobros, a dólares con el dólar del día en que
+      arrancó el proyecto (así "cobrado al 100%" sigue dando 100%);
+    - gastos y compras quedan en pesos, cada uno con la cotización de SU
+      fecha, y el USD congelado se calcula igual que en el backend
+      (app/tipo_cambio.py).
+Las cotizaciones blue de COTIZACIONES_DEMO son INVENTADAS para la demo (una
+por mes, en subida), no valores reales del mercado. Se cargan también en la
+tabla cotizaciones, para que el form tenga qué sugerir.
+
 Requiere el catálogo ya cargado (`python -m scripts.seed_catalogo`): los
 productos, proveedores, impuestos y categorías se referencian por nombre,
 no se crean acá.
@@ -32,6 +44,43 @@ from sqlalchemy import update
 from app.db.db import SessionLocal
 from app.db import models
 from app.files.storage import BASE_UPLOAD_DIR, eliminar_comprobante, ruta_absoluta
+from app.tipo_cambio import a_ars, a_usd
+
+# Dólar blue de demo, uno por mes (INVENTADO, ver docstring). Cada movimiento
+# toma el último valor vigente a su fecha.
+COTIZACIONES_DEMO = {
+    date(2026, 1, 1): Decimal("1180"),
+    date(2026, 2, 1): Decimal("1205"),
+    date(2026, 3, 1): Decimal("1230"),
+    date(2026, 4, 1): Decimal("1260"),
+    date(2026, 5, 1): Decimal("1290"),
+    date(2026, 6, 1): Decimal("1320"),
+    date(2026, 7, 1): Decimal("1350"),
+    date(2026, 8, 1): Decimal("1380"),
+    date(2026, 9, 1): Decimal("1415"),
+    date(2026, 10, 1): Decimal("1450"),
+}
+TIPO_CAMBIO_DEMO = "blue"
+
+
+def _cotizacion_a(fecha: date) -> Decimal:
+    vigentes = [f for f in COTIZACIONES_DEMO if f <= fecha]
+    if not vigentes:
+        raise SystemExit(f"No hay cotización de demo para {fecha}: agregala a COTIZACIONES_DEMO.")
+    return COTIZACIONES_DEMO[max(vigentes)]
+
+
+def _sembrar_cotizaciones(db) -> None:
+    """Idempotente: solo agrega las (fecha, tipo) que falten, no pisa nada."""
+    for fecha, valor in COTIZACIONES_DEMO.items():
+        existe = (
+            db.query(models.Cotizacion)
+            .filter(models.Cotizacion.fecha == fecha, models.Cotizacion.tipo == TIPO_CAMBIO_DEMO)
+            .first()
+        )
+        if not existe:
+            db.add(models.Cotizacion(fecha=fecha, tipo=TIPO_CAMBIO_DEMO, valor=valor))
+    db.flush()
 
 # Porcentajes de impuesto sobre el neto de la compra. El monto real se guarda
 # en compra_impuesto.monto (la tabla guarda plata, no alícuotas).
@@ -51,7 +100,7 @@ PROYECTOS = [
         "direccion": "Olleros 1925, CABA",
         "fecha_inicio": date(2026, 3, 10),
         "estado": "en_curso",
-        "precio_acordado_usd": 18_000_000,
+        "precio_acordado_ars": 18_000_000,
         "fases": [
             ("Relevamiento y proyecto", "Visita al edificio, cómputo de equipos y planos de montaje", "auditada"),
             ("Provisión de equipos", "Compra de los splits y su logística hasta la obra", "terminada"),
@@ -150,7 +199,7 @@ PROYECTOS = [
         "direccion": "Av. del Libertador 6420, CABA",
         "fecha_inicio": date(2026, 5, 4),
         "estado": "en_curso",
-        "precio_acordado_usd": 12_000_000,
+        "precio_acordado_ars": 12_000_000,
         "fases": [
             ("Ingeniería y cómputo", "Cálculo de cargas térmicas y selección de equipos", "auditada"),
             ("Compra de equipos", "Adquisición de splits inverter y ventilación", "terminada"),
@@ -229,7 +278,7 @@ PROYECTOS = [
         "direccion": "Malaver 2504, Vicente López",
         "fecha_inicio": date(2026, 1, 15),
         "estado": "terminado",
-        "precio_acordado_usd": 9_000_000,
+        "precio_acordado_ars": 9_000_000,
         "fases": [
             ("Demolición y retiro", "Retiro de revestimientos viejos y contenedor", "auditada"),
             ("Instalación sanitaria y eléctrica", "Recambio de cañerías y tablero", "auditada"),
@@ -311,7 +360,7 @@ PROYECTOS = [
         "direccion": "Av. Fleming 1840, Martínez",
         "fecha_inicio": date(2026, 7, 20),
         "estado": "a_iniciar",
-        "precio_acordado_usd": 22_000_000,
+        "precio_acordado_ars": 22_000_000,
         "fases": [
             ("Relevamiento del salón", "Medición y propuesta técnica de climatización", "en_curso"),
             ("Provisión de equipos", "Compra de equipos de gran porte", "por_empezar"),
@@ -474,12 +523,16 @@ def crear_proyecto(db, usuario, datos: dict) -> dict:
     # Última fecha de negocio cargada contra cada fase (gasto o compra).
     ultima_actividad: dict[str, date] = {}
 
+    # El contrato se "firmó" en dólares con el blue del día de arranque.
+    cotizacion_inicio = _cotizacion_a(datos["fecha_inicio"])
     proyecto = models.Proyecto(
         nombre=datos["nombre"],
         direccion=datos["direccion"],
         fecha_inicio=datos["fecha_inicio"],
         estado=datos["estado"],
-        precio_acordado_usd=datos["precio_acordado_usd"],
+        precio_acordado_usd=a_usd(datos["precio_acordado_ars"], cotizacion_inicio),
+        cotizacion_acordada=cotizacion_inicio,
+        tipo_cambio_acordado=TIPO_CAMBIO_DEMO,
     )
     db.add(proyecto)
     db.flush()
@@ -493,10 +546,17 @@ def crear_proyecto(db, usuario, datos: dict) -> dict:
         resumen["fases"] += 1
 
     for monto, descripcion, fecha, tipo_factura, con_comprobante in datos["cobros"]:
+        # Cobro en dólares (la cuota del contrato en USD), y sus pesos con el
+        # dólar del día en que entró la plata.
+        monto_usd = a_usd(monto, cotizacion_inicio)
+        cotizacion = _cotizacion_a(fecha)
         cobro = models.Cobro(
             proyecto_id=proyecto.id,
             usuario_id=usuario.id,
-            monto=monto,
+            monto_usd=monto_usd,
+            monto_ars=a_ars(monto_usd, cotizacion),
+            cotizacion_dolar=cotizacion,
+            tipo_cambio=TIPO_CAMBIO_DEMO,
             descripcion=descripcion,
             fecha=fecha,
             tipo_factura=tipo_factura,
@@ -506,7 +566,7 @@ def crear_proyecto(db, usuario, datos: dict) -> dict:
         if con_comprobante:
             path = _guardar_comprobante(
                 "comprobantes_cobro", cobro.id,
-                [f"Recibo de cobro - {datos['nombre']}", descripcion, f"Monto: $ {monto:,.2f}", f"Fecha: {fecha}"],
+                [f"Recibo de cobro - {datos['nombre']}", descripcion, f"Monto: US$ {monto_usd:,.2f}", f"Fecha: {fecha}"],
             )
             db.add(models.ComprobanteCobro(cobro_id=cobro.id, archivo_path=path))
         resumen["cobros"] += 1
@@ -516,7 +576,10 @@ def crear_proyecto(db, usuario, datos: dict) -> dict:
             proyecto_id=proyecto.id,
             fase_id=fase_por_nombre[fase_nombre].id if fase_nombre else None,
             usuario_id=usuario.id,
-            monto=monto,
+            monto_ars=monto,
+            monto_usd=a_usd(monto, _cotizacion_a(fecha)),
+            cotizacion_dolar=_cotizacion_a(fecha),
+            tipo_cambio=TIPO_CAMBIO_DEMO,
             descripcion=descripcion,
             fecha=fecha,
             tipo_factura=tipo_factura,
@@ -554,7 +617,10 @@ def crear_proyecto(db, usuario, datos: dict) -> dict:
             proveedor_id=proveedor.id,
             usuario_id=usuario.id,
             descripcion=datos_compra["descripcion"],
-            precio_neto=_redondear(neto),
+            precio_neto_ars=_redondear(neto),
+            precio_neto_usd=a_usd(_redondear(neto), _cotizacion_a(datos_compra["fecha"])),
+            cotizacion_dolar=_cotizacion_a(datos_compra["fecha"]),
+            tipo_cambio=TIPO_CAMBIO_DEMO,
             tipo_factura=datos_compra["tipo_factura"],
             fecha=datos_compra["fecha"],
             condicion_pago=datos_compra["condicion_pago"],
@@ -609,6 +675,8 @@ def main():
         usuario = db.query(models.Usuario).filter(models.Usuario.rol == "admin").first()
         if not usuario:
             raise SystemExit("No hay ningún usuario admin en la base: creá uno antes de correr la demo.")
+
+        _sembrar_cotizaciones(db)
 
         for datos in PROYECTOS:
             recreado = _borrar_proyecto_existente(db, datos["nombre"])

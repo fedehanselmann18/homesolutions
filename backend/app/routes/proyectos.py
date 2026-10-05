@@ -7,8 +7,9 @@ from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db import models
 from app.db.db import get_db
 from app.files.storage import eliminar_comprobante
-from app.reportes.calculos import calcular_analisis_proyecto
+from app.reportes.calculos import calcular_reporte_proyecto
 from app.reportes.pdf_proyecto import generar_pdf_proyecto
+from app.routes.cotizaciones import ultima_cotizacion
 from app.schemas import ProyectoCreate, ProyectoOut, ProyectoUpdate
 
 router = APIRouter(tags=["Proyectos"], prefix="/proyectos")
@@ -51,6 +52,8 @@ def create_project(
         fecha_inicio=proyecto.fecha_inicio,
         estado=proyecto.estado,
         precio_acordado_usd=proyecto.precio_acordado_usd,
+        cotizacion_acordada=proyecto.cotizacion_acordada,
+        tipo_cambio_acordado=proyecto.tipo_cambio_acordado,
     )
     try:
         db.add(nuevo_proyecto)
@@ -157,7 +160,7 @@ def get_reporte_pdf_proyecto(
         db.query(models.Compra)
         .join(models.Fase)
         .options(
-            joinedload(models.Compra.impuestos_aplicados),
+            joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
             joinedload(models.Compra.notas),
             joinedload(models.Compra.proveedor),
         )
@@ -165,8 +168,15 @@ def get_reporte_pdf_proyecto(
         .all()
     )
 
-    analisis = calcular_analisis_proyecto(proyecto, fases, gastos, cobros, compras)
-    pdf_bytes = generar_pdf_proyecto(proyecto, fases, gastos, cobros, compras, analisis)
+    # El precio acordado en pesos es lo único sin cifra congelada: se pasa
+    # con la última cotización cargada (decisión #8). Del mismo tipo de
+    # dólar con que se acordó el proyecto si se registró y hay alguna; si
+    # no, la última de cualquier tipo -- mismo criterio que usa el front.
+    cotizacion = ultima_cotizacion(db, proyecto.tipo_cambio_acordado) or ultima_cotizacion(db)
+    reporte = calcular_reporte_proyecto(
+        proyecto, fases, gastos, cobros, compras, float(cotizacion.valor) if cotizacion else None
+    )
+    pdf_bytes = generar_pdf_proyecto(proyecto, fases, gastos, cobros, compras, reporte, cotizacion)
 
     nombre_archivo = f"reporte-{proyecto.nombre}.pdf".replace(" ", "-").replace("/", "-")
     return Response(

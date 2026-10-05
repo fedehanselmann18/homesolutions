@@ -19,7 +19,9 @@ from app.schemas import (
     CompraUpdate,
     ComprobanteCompraOut,
     NotaCompraOut,
+    TipoCambio,
 )
+from app.tipo_cambio import a_usd
 
 router = APIRouter(prefix="/compras", tags=["compras"])
 
@@ -159,7 +161,12 @@ def create_compra(
         proveedor_id=compra.proveedor_id,
         usuario_id=current_user.id,  # del JWT, nunca del body
         descripcion=compra.descripcion,
-        precio_neto=compra.precio_neto,
+        precio_neto_ars=compra.precio_neto_ars,
+        # Congelado acá, siempre: el front no manda (ni puede pisar) el USD.
+        # Los impuestos no guardan USD propio: heredan esta cotización.
+        precio_neto_usd=a_usd(compra.precio_neto_ars, compra.cotizacion_dolar),
+        cotizacion_dolar=compra.cotizacion_dolar,
+        tipo_cambio=compra.tipo_cambio,
         tipo_factura=compra.tipo_factura,
         fecha=compra.fecha,
         condicion_pago=compra.condicion_pago,
@@ -299,6 +306,13 @@ def update_compra(
 
     for key, value in datos.items():
         setattr(compra_existente, key, value)
+
+    # Neto o cotización nuevos -> se recongela el USD del neto. Sus notas NO
+    # se tocan: cada una quedó con la cotización de su propia fecha.
+    if "precio_neto_ars" in datos or "cotizacion_dolar" in datos:
+        compra_existente.precio_neto_usd = a_usd(
+            compra_existente.precio_neto_ars, compra_existente.cotizacion_dolar
+        )
 
     if lineas_detalle is not None:
         _reconciliar_detalle(db, compra_existente, compra.detalle)
@@ -446,10 +460,13 @@ def crear_nota_compra(
     tipo_factura: str = Form(...),  # SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro)
     descripcion: str = Form(...),
     fecha: date = Form(...),
+    # La de la fecha de la nota, no la de su compra: es otro día, otro dólar.
+    cotizacion_dolar: float = Form(..., gt=0),
+    tipo_cambio: TipoCambio = Form(...),
     origen: str | None = Form(
         None
     ),  # "devolucion_producto" | "reposicion_producto" | "acuerdo_comercial" | "otro"
-    monto: float | None = Form(
+    monto_ars: float | None = Form(
         None
     ),  # obligatorio salvo devolucion_producto/reposicion_producto (se calcula solo)
     detalles_json: str | None = Form(
@@ -482,7 +499,10 @@ def crear_nota_compra(
         tipo=tipo,
         origen=origen,
         tipo_factura=tipo_factura,
-        monto=0,  # se pisa más abajo (calculado o manual)
+        monto_ars=0,  # se pisan más abajo (calculado o manual)
+        monto_usd=0,
+        cotizacion_dolar=cotizacion_dolar,
+        tipo_cambio=tipo_cambio,
         descripcion=descripcion,
         fecha=fecha,
         archivo_path=path,
@@ -566,12 +586,16 @@ def crear_nota_compra(
             )
             total_impuestos += float(monto_imp)
 
-        nueva_nota.monto = total_lineas + total_impuestos
+        nueva_nota.monto_ars = total_lineas + total_impuestos
     else:
         # acuerdo_comercial / otro (crédito o débito, sin producto puntual): monto tipeado a mano.
-        if monto is None:
-            raise HTTPException(status_code=400, detail="monto es obligatorio para este origen")
-        nueva_nota.monto = monto
+        if monto_ars is None:
+            raise HTTPException(status_code=400, detail="El monto es obligatorio para este origen")
+        nueva_nota.monto_ars = monto_ars
+
+    # Los productos devueltos salen a precio de la compra original (pesos
+    # congelados), pero el USD de la nota es con SU cotización.
+    nueva_nota.monto_usd = a_usd(nueva_nota.monto_ars, cotizacion_dolar)
 
     db.add(nueva_nota)
     db.commit()

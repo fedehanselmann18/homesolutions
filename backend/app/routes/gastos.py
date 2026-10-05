@@ -10,6 +10,7 @@ from app.files.storage import eliminar_comprobante, subir_comprobante, ver_compr
 from app.limiter import limiter
 from app.pagination import ParametrosPaginacion
 from app.schemas import ComprobanteGastoOut, GastoCreate, GastoOut, GastoUpdate
+from app.tipo_cambio import a_usd
 
 router = APIRouter(prefix="/gastos", tags=["gastos"])
 
@@ -109,7 +110,11 @@ def create_gasto(
         proyecto_id=gasto.proyecto_id,
         fase_id=gasto.fase_id,
         usuario_id=current_user.id,  # del JWT, nunca del body
-        monto=gasto.monto,
+        monto_ars=gasto.monto_ars,
+        # Congelado acá, siempre: el front no manda (ni puede pisar) el USD.
+        monto_usd=a_usd(gasto.monto_ars, gasto.cotizacion_dolar),
+        cotizacion_dolar=gasto.cotizacion_dolar,
+        tipo_cambio=gasto.tipo_cambio,
         descripcion=gasto.descripcion,
         fecha=gasto.fecha,
         tipo_factura=gasto.tipo_factura,
@@ -155,6 +160,11 @@ def update_gasto(
 
     for key, value in datos.items():
         setattr(gasto_existente, key, value)
+
+    # Si cambió el monto o la cotización, el USD congelado se recalcula con
+    # los valores que quedaron (uno puede venir nuevo y el otro ser el de antes).
+    if "monto_ars" in datos or "cotizacion_dolar" in datos:
+        gasto_existente.monto_usd = a_usd(gasto_existente.monto_ars, gasto_existente.cotizacion_dolar)
 
     try:
         db.commit()

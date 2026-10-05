@@ -58,7 +58,9 @@ def _validar_cuit(valor: str | None) -> str | None:
 
     coincidencia = _CUIT_REGEX.match(valor.strip())
     if not coincidencia:
-        raise ValueError("El CUIT/CUIL tiene que tener el formato XX-XXXXXXXX-X (11 dígitos, con o sin guiones)")
+        raise ValueError(
+            "El CUIT/CUIL tiene que tener el formato XX-XXXXXXXX-X (11 dígitos, con o sin guiones)"
+        )
 
     digitos = "".join(coincidencia.groups())
     suma = sum(int(d) * m for d, m in zip(digitos[:10], _CUIT_MULTIPLICADORES))
@@ -379,6 +381,42 @@ class CotizacionOut(CotizacionBase, TimestampOut):
     id: uuid.UUID
 
 
+class CotizacionCongeladaIn(BaseModel):
+    """
+    Lo que todo movimiento de plata manda al crearse: con qué dólar se cargó.
+    Las DOS cifras no viajan acá: el front manda solo la que se tipea (ARS en
+    compras/gastos, USD en cobros) y la otra la calcula el backend siempre --
+    si el front igual la mandara, Pydantic la descarta (no es un campo de
+    estos schemas), así que no hay forma de pisar el congelado desde afuera.
+    """
+
+    cotizacion_dolar: float
+    tipo_cambio: TipoCambio
+
+    @field_validator("cotizacion_dolar")
+    @classmethod
+    def cotizacion_positiva(cls, valor: float) -> float:
+        return _validar_cotizacion(valor)
+
+
+class CotizacionCongeladaUpdate(BaseModel):
+    """Versión opcional para los PUT parciales: cambiar la cotización de un
+    movimiento ya cargado (ej. se tipeó mal) recalcula su cifra congelada."""
+
+    cotizacion_dolar: float | None = None
+    tipo_cambio: TipoCambio | None = None
+
+    @field_validator("cotizacion_dolar")
+    @classmethod
+    def cotizacion_positiva(cls, valor: float | None) -> float | None:
+        return _validar_cotizacion(valor)
+
+
+class CotizacionCongeladaOut(BaseModel):
+    cotizacion_dolar: float
+    tipo_cambio: str
+
+
 # ---------------------------------------------------------------------------
 # Proyecto / Fase
 # ---------------------------------------------------------------------------
@@ -390,10 +428,17 @@ class ProyectoBase(BaseModel):
     fecha_inicio: date
     estado: str  # a_iniciar/en_curso/terminado
     precio_acordado_usd: float
+    # Dólar del día de la firma: solo trazabilidad, no entra en ninguna
+    # cuenta (ver models.Proyecto). Opcional.
+    cotizacion_acordada: float | None = None
+    tipo_cambio_acordado: TipoCambio | None = None
 
 
 class ProyectoCreate(ProyectoBase):
-    pass
+    @field_validator("cotizacion_acordada")
+    @classmethod
+    def cotizacion_positiva(cls, valor: float | None) -> float | None:
+        return _validar_cotizacion(valor)
 
 
 class ProyectoUpdate(BaseModel):
@@ -402,6 +447,13 @@ class ProyectoUpdate(BaseModel):
     fecha_inicio: date | None = None
     estado: str | None = None
     precio_acordado_usd: float | None = None
+    cotizacion_acordada: float | None = None
+    tipo_cambio_acordado: TipoCambio | None = None
+
+    @field_validator("cotizacion_acordada")
+    @classmethod
+    def cotizacion_positiva(cls, valor: float | None) -> float | None:
+        return _validar_cotizacion(valor)
 
 
 class ProyectoOut(ProyectoBase, TimestampOut):
@@ -647,7 +699,10 @@ class NotaCompraOut(TimestampOut):
     tipo: str  # "nota_credito" | "nota_debito"
     origen: str | None = None  # "devolucion_producto" | "acuerdo_comercial" | "otro"
     tipo_factura: str  # SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro)
-    monto: float
+    monto_ars: float
+    monto_usd: float  # congelado con la cotización de LA NOTA, no la de su compra
+    cotizacion_dolar: float
+    tipo_cambio: str
     descripcion: str
     fecha: date
     archivo_path: str
@@ -657,7 +712,7 @@ class NotaCompraOut(TimestampOut):
 
 class CompraBase(BaseModel):
     descripcion: str
-    precio_neto: float
+    precio_neto_ars: float  # se tipea en pesos; el USD lo congela el backend
     tipo_factura: str
     fecha: date
     condicion_pago: str
@@ -665,7 +720,7 @@ class CompraBase(BaseModel):
     estado_envio: str  # pedido/entregado
 
 
-class CompraCreate(CompraBase):
+class CompraCreate(CompraBase, CotizacionCongeladaIn):
     fase_id: uuid.UUID
     proveedor_id: uuid.UUID
     # CORREGIDO: se saca usuario_id — lo asigna el service desde el JWT (DatosToken.user_id),
@@ -675,12 +730,12 @@ class CompraCreate(CompraBase):
     # los comprobantes (archivos) se suben aparte, en un endpoint propio multipart/form-data
 
 
-class CompraUpdate(BaseModel):
+class CompraUpdate(CotizacionCongeladaUpdate):
     fase_id: uuid.UUID | None = None
     proveedor_id: uuid.UUID | None = None
     # CORREGIDO: se saca usuario_id — no se reasigna la autoría de una Compra vía PATCH.
     descripcion: str | None = None
-    precio_neto: float | None = None
+    precio_neto_ars: float | None = None
     tipo_factura: str | None = None
     fecha: date | None = None
     condicion_pago: str | None = None
@@ -689,7 +744,7 @@ class CompraUpdate(BaseModel):
     # El modal de edición manda la compra entera: es un formulario, así que lo
     # que quedó en pantalla es lo que tiene que quedar guardado. Sin estos dos
     # campos Pydantic los descartaba en silencio y editar un producto o un
-    # impuesto no hacía nada (peor todavía: precio_neto SÍ se guardaba, así
+    # impuesto no hacía nada (peor todavía: precio_neto_ars SÍ se guardaba, así
     # que el neto terminaba sin coincidir con su propio detalle).
     #
     # Son opcionales y se distinguen de "no los mandé" por exclude_unset: quien
@@ -700,14 +755,18 @@ class CompraUpdate(BaseModel):
     impuestos: list[CompraImpuestoCreate] | None = None
 
 
-class CompraOut(CompraBase, TimestampOut):
+class CompraOut(CompraBase, CotizacionCongeladaOut, TimestampOut):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     fase_id: uuid.UUID
     proveedor_id: uuid.UUID
     usuario_id: uuid.UUID  # se mantiene en el Out: es dato legítimo de lectura (autoría)
-    precio_total: float  # calculado (precio_neto + impuestos - NC + ND), no se carga a mano
+    precio_neto_usd: float  # congelado por el backend
+    # Calculados (neto + impuestos - NC + ND), no se cargan a mano. El USD
+    # suma cada nota con SU cotización, por eso no es total_ars / cotización.
+    precio_total_ars: float
+    precio_total_usd: float
     categorias: list[CategoriaOut] = []  # derivadas del detalle de productos, no se cargan a mano
     tipos_compra: list[str] = []  # derivados del tipo de cada producto en el detalle, no se cargan a mano
     detalle: list[DetalleCompraOut] = []
@@ -729,33 +788,34 @@ class ComprobanteGastoOut(TimestampOut):
 
 
 class GastoBase(BaseModel):
-    monto: float
+    monto_ars: float  # se tipea en pesos; el USD lo congela el backend
     descripcion: str
     fecha: date
     tipo_factura: str
 
 
-class GastoCreate(GastoBase):
+class GastoCreate(GastoBase, CotizacionCongeladaIn):
     proyecto_id: uuid.UUID
     fase_id: uuid.UUID | None = None
     # CORREGIDO: se saca usuario_id — lo asigna el service desde el JWT.
     categoria_gasto_ids: list[uuid.UUID] = []
 
 
-class GastoUpdate(BaseModel):
+class GastoUpdate(CotizacionCongeladaUpdate):
     fase_id: uuid.UUID | None = None
     # CORREGIDO: se saca usuario_id.
-    monto: float | None = None
+    monto_ars: float | None = None
     descripcion: str | None = None
     fecha: date | None = None
     tipo_factura: str | None = None
     categoria_gasto_ids: list[uuid.UUID] | None = None
 
 
-class GastoOut(GastoBase, TimestampOut):
+class GastoOut(GastoBase, CotizacionCongeladaOut, TimestampOut):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
+    monto_usd: float  # congelado por el backend
     proyecto_id: uuid.UUID
     fase_id: uuid.UUID | None = None
     usuario_id: uuid.UUID
@@ -789,39 +849,46 @@ class NotaCobroOut(TimestampOut):
     tipo: str  # "nota_credito" | "nota_debito"
     origen: str | None = None  # "ajuste_precio" | "acuerdo_comercial" | "otro"
     tipo_factura: str  # SIEMPRE obligatorio, ver NotaCompraOut
-    monto: float
+    monto_usd: float  # se tipea en dólares, como el cobro
+    monto_ars: float  # congelado con la cotización de LA NOTA
+    cotizacion_dolar: float
+    tipo_cambio: str
     descripcion: str
     fecha: date
     archivo_path: str
 
 
 class CobroBase(BaseModel):
-    monto: float
+    monto_usd: float  # el cliente paga en dólares; el ARS lo congela el backend
     descripcion: str
     fecha: date
     tipo_factura: str
 
 
-class CobroCreate(CobroBase):
+class CobroCreate(CobroBase, CotizacionCongeladaIn):
     proyecto_id: uuid.UUID
     # CORREGIDO: se saca usuario_id — lo asigna el service desde el JWT.
 
 
-class CobroUpdate(BaseModel):
+class CobroUpdate(CotizacionCongeladaUpdate):
     # CORREGIDO: se saca usuario_id.
-    monto: float | None = None
+    monto_usd: float | None = None
     descripcion: str | None = None
     fecha: date | None = None
     tipo_factura: str | None = None
 
 
-class CobroOut(CobroBase, TimestampOut):
+class CobroOut(CobroBase, CotizacionCongeladaOut, TimestampOut):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     proyecto_id: uuid.UUID
     usuario_id: uuid.UUID
-    monto_neto: float  # calculado (monto - NC + ND), no se carga a mano
+    monto_ars: float  # congelado por el backend
+    # Calculados (bruto - NC + ND), no se cargan a mano. Cada nota suma con
+    # SU cotización, por eso el ARS no es monto_neto_usd * cotización.
+    monto_neto_usd: float
+    monto_neto_ars: float
     comprobantes: list[ComprobanteCobroOut] = []
     notas: list[NotaCobroOut] = []  # cuenta corriente: notas de crédito/débito
 

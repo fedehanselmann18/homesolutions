@@ -12,6 +12,10 @@ from sqlalchemy.orm import joinedload
 from app.db import models
 from app.routes import compras as ruta_compras
 
+# Mismo valor que el fixture `cotizacion` de conftest.py; acá va como
+# constante porque lo usan helpers que no reciben fixtures.
+COTIZACION = {"cotizacion_dolar": 1000, "tipo_cambio": "blue"}
+
 
 def _crear_proveedor(db_session):
     proveedor = models.Proveedor(nombre="Proveedor Test", cuit="20-12345678-9")
@@ -70,7 +74,8 @@ def test_crear_compra_con_detalle_e_impuestos(client, db_session, headers_admin)
             "fase_id": str(fase.id),
             "proveedor_id": str(proveedor.id),
             "descripcion": "Compra de aires",
-            "precio_neto": 100000,
+            "precio_neto_ars": 100000,
+            **COTIZACION,
             "tipo_factura": "factura_a",
             "fecha": "2026-01-15",
             "condicion_pago": "contado",
@@ -84,7 +89,9 @@ def test_crear_compra_con_detalle_e_impuestos(client, db_session, headers_admin)
 
     assert respuesta.status_code == 201
     cuerpo = respuesta.json()
-    assert cuerpo["precio_total"] == 121000.0  # 100000 neto + 21000 IVA
+    assert cuerpo["precio_total_ars"] == 121000.0  # 100000 neto + 21000 IVA
+    assert cuerpo["precio_neto_usd"] == 100.0  # congelado por el backend
+    assert cuerpo["precio_total_usd"] == 121.0  # el IVA hereda la cotización de la compra
     assert len(cuerpo["detalle"]) == 1
     assert len(cuerpo["impuestos_aplicados"]) == 1
     assert cuerpo["tipos_compra"] == ["equipo"]  # derivado del producto
@@ -101,7 +108,8 @@ def _crear_compra_con_detalle(client, db_session, headers_admin, precio_unitario
             "fase_id": str(fase.id),
             "proveedor_id": str(proveedor.id),
             "descripcion": "Compra de materiales",
-            "precio_neto": precio_unitario * cantidad,
+            "precio_neto_ars": precio_unitario * cantidad,
+            **COTIZACION,
             "tipo_factura": "factura_a",
             "fecha": "2026-01-15",
             "condicion_pago": "contado",
@@ -143,7 +151,8 @@ def test_crear_compra_sin_ser_admin_es_rechazado(client, db_session, headers_lec
             "fase_id": str(fase.id),
             "proveedor_id": str(proveedor.id),
             "descripcion": "Compra",
-            "precio_neto": 1000,
+            "precio_neto_ars": 1000,
+            **COTIZACION,
             "tipo_factura": "factura_a",
             "fecha": "2026-01-15",
             "condicion_pago": "contado",
@@ -179,6 +188,9 @@ def test_crear_nota_compra_devolucion_producto_actualiza_precio_total(
             "descripcion": "Devolución de 1 unidad fallada",
             "fecha": "2026-01-20",
             "origen": "devolucion_producto",
+            # La nota es de otro día: otro dólar que el de su compra (1000).
+            "cotizacion_dolar": 1250,
+            "tipo_cambio": "blue",
             "detalles_json": f'[{{"detalle_compra_id": "{detalle_compra_id}", "cantidad": 1}}]',
         },
         files={"archivo": ("nota.pdf", b"%PDF-1.4 fake", "application/pdf")},
@@ -187,10 +199,14 @@ def test_crear_nota_compra_devolucion_producto_actualiza_precio_total(
 
     assert respuesta.status_code == 201
     nota = respuesta.json()
-    assert nota["monto"] == 100000.0  # 1 unidad * 100000 frozen
+    assert nota["monto_ars"] == 100000.0  # 1 unidad * 100000 frozen
+    assert nota["monto_usd"] == 80.0  # 100000 / 1250: con la cotización de la NOTA
 
     compra_actualizada = client.get(f"/compras/{compra['id']}", headers=headers_admin).json()
-    assert compra_actualizada["precio_total"] == 100000.0  # 200000 neto - 100000 nota_credito
+    assert compra_actualizada["precio_total_ars"] == 100000.0  # 200000 neto - 100000 nota_credito
+    # 200 USD del neto (a 1000) - 80 USD de la nota (a 1250). NO es 100000 / 1000:
+    # por eso se persisten las dos cifras (PLAN_TIPO_CAMBIO.md §3).
+    assert compra_actualizada["precio_total_usd"] == 120.0
 
 
 def test_crear_nota_compra_devolucion_supera_cantidad_comprada_es_rechazado(
@@ -211,6 +227,7 @@ def test_crear_nota_compra_devolucion_supera_cantidad_comprada_es_rechazado(
             "descripcion": "Devolución de más de lo comprado",
             "fecha": "2026-01-20",
             "origen": "devolucion_producto",
+            **COTIZACION,
             "detalles_json": f'[{{"detalle_compra_id": "{detalle_compra_id}", "cantidad": 5}}]',
         },
         files={"archivo": ("nota.pdf", b"%PDF-1.4 fake", "application/pdf")},
@@ -244,7 +261,8 @@ def test_crear_nota_compra_con_integridad_de_proveedor_rota_es_rechazada(
             "tipo_factura": "nota_debito_a",
             "descripcion": "Ajuste",
             "fecha": "2026-01-20",
-            "monto": 1000,
+            "monto_ars": 1000,
+            **COTIZACION,
         },
         files={"archivo": ("nota.pdf", b"%PDF-1.4 fake", "application/pdf")},
         headers=headers_admin,
@@ -279,7 +297,9 @@ def test_precio_total_con_impuestos_y_notas_eager_loaded_desde_la_db(
         proveedor_id=proveedor.id,
         usuario_id=usuario_admin.id,
         descripcion="Compra test",
-        precio_neto=Decimal("100000"),
+        precio_neto_ars=Decimal("100000"),
+        precio_neto_usd=Decimal("100"),
+        **COTIZACION,
         tipo_factura="factura_a",
         fecha=date(2026, 1, 1),
         condicion_pago="contado",
@@ -300,7 +320,10 @@ def test_precio_total_con_impuestos_y_notas_eager_loaded_desde_la_db(
             usuario_id=usuario_admin.id,
             tipo="nota_credito",
             tipo_factura="nota_credito_a",
-            monto=Decimal("10000"),
+            monto_ars=Decimal("10000"),
+            monto_usd=Decimal("8"),
+            cotizacion_dolar=1250,
+            tipo_cambio="blue",
             descripcion="Devolución",
             fecha=date(2026, 1, 15),
             archivo_path="x.pdf",
@@ -323,7 +346,8 @@ def test_precio_total_con_impuestos_y_notas_eager_loaded_desde_la_db(
         .one()
     )
 
-    assert compra_recargada.precio_total == 111000.0  # 100000 + 21000 - 10000
+    assert compra_recargada.precio_total_ars == 111000.0  # 100000 + 21000 - 10000
+    assert compra_recargada.precio_total_usd == 113.0  # 100 + 21 - 8 (la nota con su dólar)
 
 
 # ---------------------------------------------------------------------------
@@ -348,7 +372,8 @@ def test_actualizar_compra_agrega_un_impuesto(client, db_session, headers_admin)
     assert len(cuerpo["impuestos_aplicados"]) == 1
     assert cuerpo["impuestos_aplicados"][0]["monto"] == 42000
     # precio_total = neto + impuestos
-    assert cuerpo["precio_total"] == compra["precio_neto"] + 42000
+    assert cuerpo["precio_total_ars"] == compra["precio_neto_ars"] + 42000
+    assert cuerpo["precio_total_usd"] == compra["precio_neto_usd"] + 42
 
 
 def test_actualizar_compra_quita_un_impuesto(client, db_session, headers_admin):
@@ -375,7 +400,7 @@ def test_actualizar_compra_cambia_la_cantidad_del_detalle(client, db_session, he
     respuesta = client.put(
         f"/compras/{compra['id']}",
         json={
-            "precio_neto": 500000,
+            "precio_neto_ars": 500000,
             "detalle": [
                 {
                     "producto_id": linea["producto_id"],
@@ -391,7 +416,8 @@ def test_actualizar_compra_cambia_la_cantidad_del_detalle(client, db_session, he
     cuerpo = respuesta.json()
     assert len(cuerpo["detalle"]) == 1
     assert cuerpo["detalle"][0]["cantidad"] == 5
-    assert cuerpo["precio_neto"] == 500000
+    assert cuerpo["precio_neto_ars"] == 500000
+    assert cuerpo["precio_neto_usd"] == 500.0  # recongelado al cambiar el neto
 
 
 def test_editar_una_compra_no_desvincula_los_productos_de_sus_notas(client, db_session, headers_admin):

@@ -42,7 +42,7 @@ def test_escritura_requiere_admin(client, headers_lectura, prefijo, extra, _mens
     assert respuesta.status_code == 403
 
 
-def test_borrar_categoria_de_gasto_en_uso_explica_el_motivo(client, db_session, headers_admin):
+def test_borrar_categoria_de_gasto_en_uso_explica_el_motivo(client, db_session, headers_admin, cotizacion):
     proyecto = models.Proyecto(
         nombre="Proyecto Test",
         direccion="Calle Falsa 123",
@@ -57,7 +57,8 @@ def test_borrar_categoria_de_gasto_en_uso_explica_el_motivo(client, db_session, 
         "/gastos/crear",
         json={
             "proyecto_id": str(proyecto.id),
-            "monto": 15000,
+            "monto_ars": 15000,
+            **cotizacion,
             "descripcion": "Flete de materiales",
             "fecha": "2026-01-15",
             "tipo_factura": "factura_b",

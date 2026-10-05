@@ -11,7 +11,8 @@ from app.db.db import get_db
 from app.files.storage import eliminar_comprobante, subir_comprobante, ver_comprobante
 from app.limiter import limiter
 from app.pagination import ParametrosPaginacion
-from app.schemas import CobroCreate, CobroOut, CobroUpdate, ComprobanteCobroOut, NotaCobroOut
+from app.schemas import CobroCreate, CobroOut, CobroUpdate, ComprobanteCobroOut, NotaCobroOut, TipoCambio
+from app.tipo_cambio import a_ars
 
 router = APIRouter(prefix="/cobros", tags=["cobros"])
 
@@ -68,7 +69,11 @@ def create_cobro(
     nuevo_cobro = models.Cobro(
         proyecto_id=cobro.proyecto_id,
         usuario_id=current_user.id,  # del JWT, nunca del body
-        monto=cobro.monto,
+        monto_usd=cobro.monto_usd,
+        # Al revés que gasto/compra: se cobra en USD y el ARS se congela acá.
+        monto_ars=a_ars(cobro.monto_usd, cobro.cotizacion_dolar),
+        cotizacion_dolar=cobro.cotizacion_dolar,
+        tipo_cambio=cobro.tipo_cambio,
         descripcion=cobro.descripcion,
         fecha=cobro.fecha,
         tipo_factura=cobro.tipo_factura,
@@ -97,8 +102,12 @@ def update_cobro(
     if not cobro_existente:
         raise HTTPException(status_code=404, detail="Cobro no encontrado")
 
-    for key, value in cobro.model_dump(exclude_unset=True).items():
+    datos = cobro.model_dump(exclude_unset=True)
+    for key, value in datos.items():
         setattr(cobro_existente, key, value)
+
+    if "monto_usd" in datos or "cotizacion_dolar" in datos:
+        cobro_existente.monto_ars = a_ars(cobro_existente.monto_usd, cobro_existente.cotizacion_dolar)
 
     try:
         db.commit()
@@ -211,7 +220,9 @@ def crear_nota_cobro(
     archivo: UploadFile = File(...),
     tipo: str = Form(...),  # "nota_credito" | "nota_debito"
     tipo_factura: str = Form(...),  # SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro)
-    monto: float = Form(...),
+    monto_usd: float = Form(...),  # en dólares, como el cobro; el ARS se congela acá
+    cotizacion_dolar: float = Form(..., gt=0),  # la de la fecha de la nota, no la del cobro
+    tipo_cambio: TipoCambio = Form(...),
     descripcion: str = Form(...),
     fecha: date = Form(...),
     origen: str | None = Form(None),  # "ajuste_precio" | "acuerdo_comercial" | "otro"
@@ -234,7 +245,10 @@ def crear_nota_cobro(
         tipo=tipo,
         origen=origen,
         tipo_factura=tipo_factura,
-        monto=monto,
+        monto_usd=monto_usd,
+        monto_ars=a_ars(monto_usd, cotizacion_dolar),
+        cotizacion_dolar=cotizacion_dolar,
+        tipo_cambio=tipo_cambio,
         descripcion=descripcion,
         fecha=fecha,
         archivo_path=path,

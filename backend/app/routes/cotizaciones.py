@@ -28,7 +28,9 @@ router = APIRouter(prefix="/cotizaciones", tags=["cotizaciones"])
 _MENSAJE_REPETIDA = "Ya hay una cotización de ese tipo cargada para esa fecha"
 
 
-def ultima_cotizacion(db: Session, tipo: str | None = None, hasta: date | None = None) -> models.Cotizacion | None:
+def ultima_cotizacion(
+    db: Session, tipo: str | None = None, hasta: date | None = None
+) -> models.Cotizacion | None:
     """
     La cotización más reciente con fecha <= `hasta` (hoy si no viene),
     opcionalmente de un tipo. None si no hay ninguna -- no es un error: la
@@ -72,7 +74,9 @@ def get_ultima_cotizacion(
 
 @router.get("/{cotizacion_id}", response_model=CotizacionOut, status_code=status.HTTP_200_OK)
 def get_cotizacion_by_id(
-    cotizacion_id: str, db: Session = Depends(get_db), current_user: models.Usuario = Depends(get_current_user)
+    cotizacion_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.Usuario = Depends(get_current_user),
 ):
     cotizacion = db.query(models.Cotizacion).filter(models.Cotizacion.id == cotizacion_id).first()
     if not cotizacion:

@@ -6,10 +6,14 @@ Convenciones:
 - Los campos "tipo select" (estado, tipo_factura, condicion_pago, etc.) son
   String simple, sin Enum/CHECK — la validación de esos valores la maneja
   el front (ya definido así en el modelado con Agus).
-- precio_total de Compra NO se guarda: es precio_neto + suma de sus impuestos.
-  precio_neto SÍ se carga a mano (puede haber descuentos/redondeos que no
-  coincidan exacto con la suma del detalle — eso se valida en el service,
-  no se fuerza en el modelo).
+- precio_total_ars/_usd de Compra NO se guardan: son precio_neto + impuestos
+  +- notas. precio_neto_ars SÍ se carga a mano (puede haber descuentos/redondeos
+  que no coincidan exacto con la suma del detalle — eso se valida en el
+  service, no se fuerza en el modelo).
+- Doble moneda (ver docs/PLAN_TIPO_CAMBIO.md): nombre pelado (monto, precio,
+  precio_unitario) = una sola moneda, pesos. Sufijo _ars/_usd = doble
+  registro, las dos cifras persistidas con la cotización congelada del
+  movimiento (CotizacionCongeladaMixin).
 - El rol de Usuario (admin/lectura) es un dato de la tabla; el chequeo de
   permisos real se hace en el service layer contra el JWT, no acá.
 - Todas las tablas tienen fecha_creacion/fecha_actualizacion AUTOMÁTICAS
@@ -242,6 +246,30 @@ class Cotizacion(TimestampMixin, Base):
     valor: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
 
 
+class CotizacionCongeladaMixin:
+    """
+    La cotización con la que se cargó un movimiento de plata (compra, gasto,
+    cobro, notas), copiada en el momento de la carga. Es la que vale para
+    ese movimiento para siempre: una compra de marzo sigue valiendo lo que
+    valió aunque después cambie el dólar o se edite la tabla cotizaciones.
+
+    Convive con las DOS cifras persistidas del movimiento (sufijos _ars/_usd,
+    ver la regla de nombres en PLAN_TIPO_CAMBIO.md §3): una la tipea el
+    usuario y la otra la calcula el backend con app/tipo_cambio.py.
+    """
+
+    cotizacion_dolar: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)  # pesos por dólar
+    tipo_cambio: Mapped[str] = mapped_column(String(20), nullable=False)  # oficial | blue | otro
+
+
+def _ajuste_notas(notas: list, campo: str) -> float:
+    """Débito - crédito de una lista de notas (NotaCompra o NotaCobro), en la
+    moneda que diga `campo` ("monto_ars" | "monto_usd")."""
+    credito = sum(float(getattr(n, campo)) for n in notas if n.tipo == "nota_credito")
+    debito = sum(float(getattr(n, campo)) for n in notas if n.tipo == "nota_debito")
+    return debito - credito
+
+
 # ---------------------------------------------------------------------------
 # Proyecto / Fase
 # ---------------------------------------------------------------------------
@@ -255,7 +283,14 @@ class Proyecto(TimestampMixin, Base):
     direccion: Mapped[str] = mapped_column(String(255), nullable=False)
     fecha_inicio: Mapped[date] = mapped_column(nullable=False)  # fecha de negocio, se carga a mano
     estado: Mapped[str] = mapped_column(String(20), nullable=False)  # a_iniciar/en_curso/terminado
+    # El precio se acuerda con el cliente en dólares. Su equivalente en pesos
+    # NO se persiste: se calcula al leer con la última cotización cargada
+    # ("cuánto vale hoy el contrato", ver PLAN_TIPO_CAMBIO.md decisión #8).
     precio_acordado_usd: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    # El dólar del día de la firma, como trazabilidad. Nullable y fuera de
+    # toda cuenta: un proyecto cargado tiempo después puede no tenerlo.
+    cotizacion_acordada: Mapped[float | None] = mapped_column(Numeric(12, 4))
+    tipo_cambio_acordado: Mapped[str | None] = mapped_column(String(20))
 
     fases: Mapped[list["Fase"]] = relationship(back_populates="proyecto", cascade="all, delete-orphan")
     gastos: Mapped[list["Gasto"]] = relationship(back_populates="proyecto", cascade="all, delete-orphan")
@@ -376,7 +411,7 @@ class Producto(TimestampMixin, Base):
 # ---------------------------------------------------------------------------
 
 
-class Compra(TimestampMixin, Base):
+class Compra(CotizacionCongeladaMixin, TimestampMixin, Base):
     __tablename__ = "compras"
 
     id: Mapped[uuid.UUID] = uuid_pk()
@@ -394,9 +429,10 @@ class Compra(TimestampMixin, Base):
     )
 
     descripcion: Mapped[str] = mapped_column(String(500), nullable=False)
-    precio_neto: Mapped[float] = mapped_column(
-        Numeric(12, 2), nullable=False
-    )  # sin impuestos, se carga a mano
+    # Sin impuestos. Se carga en pesos; el USD lo congela el backend con
+    # cotizacion_dolar (ver app/tipo_cambio.py).
+    precio_neto_ars: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
+    precio_neto_usd: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     tipo_factura: Mapped[str] = mapped_column(String(30), nullable=False)
     fecha: Mapped[date] = mapped_column(nullable=False)  # fecha de negocio, se carga a mano
     condicion_pago: Mapped[str] = mapped_column(String(30), nullable=False)
@@ -425,10 +461,20 @@ class Compra(TimestampMixin, Base):
     notas: Mapped[list["NotaCompra"]] = relationship(back_populates="compra", cascade="all, delete-orphan")
 
     @property
-    def precio_total(self) -> float:
+    def impuestos_ars(self) -> float:
+        return sum(float(ci.monto) for ci in self.impuestos_aplicados)
+
+    @property
+    def impuestos_usd(self) -> float:
+        """Los impuestos no guardan USD propio: se pagan con la factura, así
+        que heredan la cotización congelada de SU compra."""
+        return sum(ci.monto_usd for ci in self.impuestos_aplicados)
+
+    @property
+    def precio_total_ars(self) -> float:
         """
-        precio_neto + suma de todos los impuestos aplicados - notas de crédito
-        + notas de débito (ver NotaCompra). No se persiste.
+        precio_neto_ars + impuestos - notas de crédito + notas de débito (ver
+        NotaCompra). No se persiste.
 
         B-04: requiere que impuestos_aplicados y notas vengan eager-loaded
         (ver joinedload(Compra.impuestos_aplicados) y
@@ -438,14 +484,17 @@ class Compra(TimestampMixin, Base):
         lazy load fila por fila. detalle NO hace falta para ESTE cálculo
         (sí lo usan categorias/tipos_compra, más abajo).
         """
-        notas_credito = sum(float(n.monto) for n in self.notas if n.tipo == "nota_credito")
-        notas_debito = sum(float(n.monto) for n in self.notas if n.tipo == "nota_debito")
-        return (
-            float(self.precio_neto)
-            + sum(float(ci.monto) for ci in self.impuestos_aplicados)
-            - notas_credito
-            + notas_debito
-        )
+        return float(self.precio_neto_ars) + self.impuestos_ars + _ajuste_notas(self.notas, "monto_ars")
+
+    @property
+    def precio_total_usd(self) -> float:
+        """
+        Mismo criterio que precio_total_ars, pero cada nota suma con SU
+        propio USD congelado: una nota tiene fecha propia, o sea otro dólar.
+        Por eso esto NO es precio_total_ars / cotizacion_dolar (ver
+        PLAN_TIPO_CAMBIO.md §3).
+        """
+        return float(self.precio_neto_usd) + self.impuestos_usd + _ajuste_notas(self.notas, "monto_usd")
 
     @property
     def categorias(self) -> list["Categoria"]:
@@ -517,10 +566,18 @@ class CompraImpuesto(TimestampMixin, Base):
     impuesto_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("impuestos.id", ondelete="RESTRICT"), nullable=False
     )
-    monto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    # Pesos (nombre pelado = una sola moneda, ver PLAN_TIPO_CAMBIO.md §3).
+    monto: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
 
     compra: Mapped["Compra"] = relationship(back_populates="impuestos_aplicados")
     impuesto: Mapped["Impuesto"] = relationship()
+
+    @property
+    def monto_usd(self) -> float:
+        """Hereda la cotización congelada de su compra. Sin redondear: se
+        redondea al mostrar, así la suma de varios impuestos no acumula
+        error de centavos."""
+        return float(self.monto) / float(self.compra.cotizacion_dolar)
 
 
 class ComprobanteCompra(TimestampMixin, Base):
@@ -536,7 +593,7 @@ class ComprobanteCompra(TimestampMixin, Base):
     compra: Mapped["Compra"] = relationship(back_populates="comprobantes")
 
 
-class NotaCompra(TimestampMixin, Base):
+class NotaCompra(CotizacionCongeladaMixin, TimestampMixin, Base):
     """
     Movimiento de cuenta corriente con un Proveedor: nota de crédito o de
     débito. Por ahora siempre nace de adentro de una Compra puntual (CASCADE +
@@ -558,10 +615,12 @@ class NotaCompra(TimestampMixin, Base):
       misma compra a la vez.
     - impuestos_aplicados: impuestos que se suman a la devolución (ver
       NotaCompraImpuesto), mismo criterio que CompraImpuesto.
-    - monto: totalizador FROZEN calculado en el momento de creación (suma de
+    - monto_ars: totalizador FROZEN calculado en el momento de creación (suma de
       detalles + impuestos, o tipeado a mano si es acuerdo_comercial/otro/débito).
       No se recalcula después: si se borra un detalle o cambia el precio del
       producto, esta nota sigue reflejando lo que efectivamente se acreditó.
+    - monto_usd: monto_ars con la cotización de LA NOTA (no la de su compra:
+      tiene fecha propia, o sea otro dólar). Lo congela el backend.
     """
 
     __tablename__ = "notas_compra"
@@ -578,7 +637,8 @@ class NotaCompra(TimestampMixin, Base):
     tipo: Mapped[str] = mapped_column(String(20), nullable=False)  # nota_credito | nota_debito
     origen: Mapped[str | None] = mapped_column(String(30), nullable=True)
     tipo_factura: Mapped[str] = mapped_column(String(30), nullable=False)
-    monto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    monto_ars: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
+    monto_usd: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     descripcion: Mapped[str] = mapped_column(String(500), nullable=False)  # motivo
     fecha: Mapped[date] = mapped_column(nullable=False)
     archivo_path: Mapped[str] = mapped_column(String(500), nullable=False)  # el comprobante que te dan
@@ -653,7 +713,9 @@ class NotaCompraImpuesto(TimestampMixin, Base):
     impuesto_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("impuestos.id", ondelete="RESTRICT"), nullable=False
     )
-    monto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    # Pesos. Ya está sumado dentro de NotaCompra.monto_ars/monto_usd, así que
+    # no necesita USD propio: si hiciera falta, hereda la cotización de su nota.
+    monto: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
 
     nota: Mapped["NotaCompra"] = relationship(back_populates="impuestos_aplicados")
     impuesto: Mapped["Impuesto"] = relationship()
@@ -671,7 +733,7 @@ gasto_categoria = Table(
 )
 
 
-class Gasto(TimestampMixin, Base):
+class Gasto(CotizacionCongeladaMixin, TimestampMixin, Base):
     __tablename__ = "gastos"
 
     id: Mapped[uuid.UUID] = uuid_pk()
@@ -686,7 +748,9 @@ class Gasto(TimestampMixin, Base):
         ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False, index=True
     )
 
-    monto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    # Se carga en pesos; el USD lo congela el backend (ver app/tipo_cambio.py).
+    monto_ars: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
+    monto_usd: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     descripcion: Mapped[str] = mapped_column(String(500), nullable=False)
     fecha: Mapped[date] = mapped_column(nullable=False)  # fecha de negocio, se carga a mano
     tipo_factura: Mapped[str] = mapped_column(String(30), nullable=False)
@@ -715,7 +779,7 @@ class ComprobanteGasto(TimestampMixin, Base):
 # ---------------------------------------------------------------------------
 
 
-class Cobro(TimestampMixin, Base):
+class Cobro(CotizacionCongeladaMixin, TimestampMixin, Base):
     __tablename__ = "cobros"
 
     id: Mapped[uuid.UUID] = uuid_pk()
@@ -726,7 +790,10 @@ class Cobro(TimestampMixin, Base):
         ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False, index=True
     )
 
-    monto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    # Al revés que Gasto/Compra: el cliente paga en dólares, así que el USD
+    # se tipea y el ARS lo congela el backend (ver app/tipo_cambio.py).
+    monto_usd: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    monto_ars: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     descripcion: Mapped[str] = mapped_column(String(500), nullable=False)
     fecha: Mapped[date] = mapped_column(nullable=False)  # fecha de negocio, se carga a mano
     tipo_factura: Mapped[str] = mapped_column(String(30), nullable=False)
@@ -741,14 +808,17 @@ class Cobro(TimestampMixin, Base):
     notas: Mapped[list["NotaCobro"]] = relationship(back_populates="cobro", cascade="all, delete-orphan")
 
     @property
-    def monto_neto(self) -> float:
+    def monto_neto_usd(self) -> float:
         """
-        monto - notas de crédito + notas de débito (ver NotaCobro). `monto`
-        sigue siendo el bruto cargado a mano; esto es lo calculado, no se persiste.
+        monto_usd - notas de crédito + notas de débito (ver NotaCobro).
+        monto_usd sigue siendo el bruto cargado a mano; esto es lo calculado,
+        no se persiste. Cada nota suma con SU cotización, no la del cobro.
         """
-        notas_credito = sum(float(n.monto) for n in self.notas if n.tipo == "nota_credito")
-        notas_debito = sum(float(n.monto) for n in self.notas if n.tipo == "nota_debito")
-        return float(self.monto) - notas_credito + notas_debito
+        return float(self.monto_usd) + _ajuste_notas(self.notas, "monto_usd")
+
+    @property
+    def monto_neto_ars(self) -> float:
+        return float(self.monto_ars) + _ajuste_notas(self.notas, "monto_ars")
 
 
 class ComprobanteCobro(TimestampMixin, Base):
@@ -764,11 +834,14 @@ class ComprobanteCobro(TimestampMixin, Base):
     cobro: Mapped["Cobro"] = relationship(back_populates="comprobantes")
 
 
-class NotaCobro(TimestampMixin, Base):
+class NotaCobro(CotizacionCongeladaMixin, TimestampMixin, Base):
     """
     Movimiento de cuenta corriente con un "cliente" (Proyecto): nota de
     crédito o de débito. Mismo criterio que NotaCompra pero del lado Cobro --
     sin detalle_compra_id porque Cobro no tiene líneas de producto.
+
+    Como el cobro, se tipea en USD (ajusta un precio acordado en dólares) y
+    el ARS lo congela el backend con la cotización de la nota.
     """
 
     __tablename__ = "notas_cobro"
@@ -789,7 +862,8 @@ class NotaCobro(TimestampMixin, Base):
     tipo_factura: Mapped[str] = mapped_column(
         String(30), nullable=False
     )  # SIEMPRE obligatorio, ver NotaCompra
-    monto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    monto_usd: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    monto_ars: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     descripcion: Mapped[str] = mapped_column(String(500), nullable=False)
     fecha: Mapped[date] = mapped_column(nullable=False)
     archivo_path: Mapped[str] = mapped_column(String(500), nullable=False)
