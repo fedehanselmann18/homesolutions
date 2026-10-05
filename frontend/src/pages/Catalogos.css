@@ -1,0 +1,6 @@
+.catalogos {
+  font-family: var(--font-ui);
+}
+
+/* El encabezado, las pestañas y la lista no viven acá: son PageHeader, Tabs
+   y SeccionCatalogo (components/catalogos/). */

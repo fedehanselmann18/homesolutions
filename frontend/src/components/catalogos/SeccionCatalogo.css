@@ -1,0 +1,84 @@
+.seccion-catalogo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.seccion-catalogo__barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.seccion-catalogo__descripcion {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+/* Doble clase para ganarle a `.planilla` sin depender del orden del bundle
+   (ver docs/DESIGN.md §13). Las filas no navegan a ningún lado, así que no
+   llevan el cursor de link que trae la utilidad. */
+.planilla.seccion-catalogo__tabla .planilla__header,
+.planilla.seccion-catalogo__tabla .planilla__fila {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.planilla.seccion-catalogo__tabla .planilla__fila {
+  cursor: default;
+}
+
+.planilla.seccion-catalogo__tabla--con-tipo .planilla__header,
+.planilla.seccion-catalogo__tabla--con-tipo .planilla__fila {
+  grid-template-columns: minmax(0, 1fr) 140px;
+}
+
+.planilla.seccion-catalogo__tabla--con-acciones .planilla__header,
+.planilla.seccion-catalogo__tabla--con-acciones .planilla__fila {
+  grid-template-columns: minmax(0, 1fr) 72px;
+}
+
+.planilla.seccion-catalogo__tabla--con-tipo.seccion-catalogo__tabla--con-acciones .planilla__header,
+.planilla.seccion-catalogo__tabla--con-tipo.seccion-catalogo__tabla--con-acciones .planilla__fila {
+  grid-template-columns: minmax(0, 1fr) 140px 72px;
+}
+
+.seccion-catalogo__nombre {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-tinta);
+  overflow-wrap: anywhere;
+}
+
+.seccion-catalogo__tipo {
+  justify-self: start;
+}
+
+.seccion-catalogo__col-acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-1-5);
+}
+
+@media (max-width: 640px) {
+  .seccion-catalogo__barra {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* El badge de tipo ocupa menos que la columna de desktop: a 640 los 140px
+     le comían la mitad del ancho al nombre. */
+  .planilla.seccion-catalogo__tabla--con-tipo .planilla__header,
+  .planilla.seccion-catalogo__tabla--con-tipo .planilla__fila {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .planilla.seccion-catalogo__tabla--con-tipo.seccion-catalogo__tabla--con-acciones
+    .planilla__header,
+  .planilla.seccion-catalogo__tabla--con-tipo.seccion-catalogo__tabla--con-acciones
+    .planilla__fila {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+}
