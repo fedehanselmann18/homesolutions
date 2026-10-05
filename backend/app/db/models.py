@@ -210,6 +210,39 @@ class Configuracion(Base):
 
 
 # ---------------------------------------------------------------------------
+# Cotización del dólar
+# ---------------------------------------------------------------------------
+
+# Tipos de dólar con los que se puede cargar un movimiento (ver
+# docs/PLAN_TIPO_CAMBIO.md, decisión #3). A diferencia del resto de los
+# "tipo select" de este archivo, este SÍ se valida en el backend (Literal en
+# schemas.py): define con qué cotización se congela plata, no es una etiqueta.
+TIPOS_CAMBIO = ("oficial", "blue", "otro")
+
+
+class Cotizacion(TimestampMixin, Base):
+    """
+    Histórico del dólar (pesos por dólar) por fecha y tipo. Es una FUENTE DE
+    SUGERENCIA, no la verdad de ningún movimiento: el form de carga precarga
+    de acá el valor del día (o el último cargado), y lo que vale es la
+    cotización que quedó congelada en el movimiento (cotizacion_dolar en
+    Compra, Gasto, Cobro y las notas). Editar o borrar una fila de esta tabla
+    NO reescribe la historia de lo ya cargado.
+
+    Una sola fila por (fecha, tipo): el dólar blue de un día es uno solo.
+    """
+
+    __tablename__ = "cotizaciones"
+    __table_args__ = (UniqueConstraint("fecha", "tipo", name="uq_cotizacion_fecha_tipo"),)
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    fecha: Mapped[date] = mapped_column(nullable=False, index=True)
+    tipo: Mapped[str] = mapped_column(String(20), nullable=False)  # oficial | blue | otro
+    # Numeric(12,4): aguanta 1487.3456 con margen (ver PLAN_TIPO_CAMBIO.md, 6.6).
+    valor: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
+
+
+# ---------------------------------------------------------------------------
 # Proyecto / Fase
 # ---------------------------------------------------------------------------
 

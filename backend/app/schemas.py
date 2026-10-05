@@ -329,6 +329,57 @@ class PurgarHuerfanosResultado(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Cotización del dólar
+# ---------------------------------------------------------------------------
+
+# Mismo set que models.TIPOS_CAMBIO. Literal y no str (a diferencia del resto
+# de los "tipo select"): con qué dólar se congela la plata no es una etiqueta
+# libre, y un valor inválido tiene que frenarse acá con un 422.
+TipoCambio = Literal["oficial", "blue", "otro"]
+
+
+def _validar_cotizacion(valor: float | None) -> float | None:
+    """Pesos por dólar: tiene que ser > 0. Un cero dividiría por cero al
+    congelar el USD y un negativo no significa nada. None pasa (campo
+    opcional en los Update o en el proyecto)."""
+    if valor is not None and valor <= 0:
+        raise ValueError("La cotización del dólar tiene que ser mayor a 0")
+    return valor
+
+
+class CotizacionBase(BaseModel):
+    fecha: date
+    tipo: TipoCambio
+    valor: float  # pesos por dólar
+
+    @field_validator("valor")
+    @classmethod
+    def valor_positivo(cls, valor: float) -> float:
+        return _validar_cotizacion(valor)
+
+
+class CotizacionCreate(CotizacionBase):
+    pass
+
+
+class CotizacionUpdate(BaseModel):
+    fecha: date | None = None
+    tipo: TipoCambio | None = None
+    valor: float | None = None
+
+    @field_validator("valor")
+    @classmethod
+    def valor_positivo(cls, valor: float | None) -> float | None:
+        return _validar_cotizacion(valor)
+
+
+class CotizacionOut(CotizacionBase, TimestampOut):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+
+
+# ---------------------------------------------------------------------------
 # Proyecto / Fase
 # ---------------------------------------------------------------------------
 

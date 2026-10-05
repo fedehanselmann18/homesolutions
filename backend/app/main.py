@@ -20,6 +20,7 @@ from app.routes import (
     cobros,
     compras,
     configuracion,
+    cotizaciones,
     fases,
     gastos,
     ia,
@@ -114,6 +115,7 @@ app.include_router(proyectos.router)
 app.include_router(categorias.router)
 app.include_router(categoriagasto.router)
 app.include_router(impuestos.router)
+app.include_router(cotizaciones.router)
 app.include_router(proveedores.router)
 app.include_router(fases.router)
 app.include_router(productos.router)
