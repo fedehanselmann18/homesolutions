@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Building2,
   Truck,
+  Tags,
   GitCompare,
   Users,
   UserPlus,
@@ -36,6 +37,7 @@ const ITEMS_NAV = [
   { to: "/", label: "Panel", icono: LayoutDashboard, contador: null },
   { to: "/proyectos", label: "Proyectos", icono: Building2, contador: (c) => c.proyectos },
   { to: "/proveedores", label: "Proveedores", icono: Truck, contador: (c) => c.proveedores },
+  { to: "/catalogos", label: "Catálogos", icono: Tags, contador: null },
   { to: "/comparador", label: "Comparador", icono: GitCompare, contador: null },
 ];
 

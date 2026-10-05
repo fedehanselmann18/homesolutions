@@ -17,6 +17,7 @@ const ProyectoDetalle = lazy(() => import("../pages/ProyectoDetalle"));
 const FaseDetalle = lazy(() => import("../pages/FaseDetalle"));
 const Proveedores = lazy(() => import("../pages/Proveedores"));
 const ProveedorDetalle = lazy(() => import("../pages/ProveedorDetalle"));
+const Catalogos = lazy(() => import("../pages/Catalogos"));
 // Subárbol exclusivo de la cuenta "Manager" (ver constants/manager.js): una
 // página por sección en vez de una sola pantalla con todas apiladas.
 const GestionEquipo = lazy(() => import("../pages/manager/GestionEquipo"));
@@ -48,6 +49,9 @@ export function AppRouter() {
             <Route path="/proyectos/:proyectoId/fases/:faseId" element={<FaseDetalle />} />
             <Route path="/proveedores" element={<Proveedores />} />
             <Route path="/proveedores/:id" element={<ProveedorDetalle />} />
+            {/* Fuera del subárbol de Manager a propósito: lo usa un admin que
+                no es Manager (ver comentario en pages/Catalogos.jsx). */}
+            <Route path="/catalogos" element={<Catalogos />} />
             <Route path="/comparador" element={<Comparador />} />
             {/* Solo la cuenta "Manager" llega a este subárbol: ProtectedRoute
                 saca de acá a cualquier otro usuario (y encierra a Manager
