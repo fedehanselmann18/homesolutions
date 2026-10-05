@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db import models
 from app.db.db import get_db
+from app.db.errores import es_violacion_unicidad
 from app.schemas import ImpuestoCreate, ImpuestoOut, ImpuestoUpdate
 
 router = APIRouter(prefix="/impuestos", tags=["impuestos"])
@@ -46,8 +47,10 @@ def create_impuesto(
         db.add(nuevo_impuesto)
         db.commit()
         db.refresh(nuevo_impuesto)
-    except IntegrityError:
+    except IntegrityError as e:
         db.rollback()
+        if es_violacion_unicidad(e):
+            raise HTTPException(status_code=400, detail="Ya existe un impuesto con ese nombre")
         raise HTTPException(status_code=400, detail="Error al crear el impuesto: datos inválidos")
 
     return nuevo_impuesto
@@ -70,8 +73,10 @@ def update_impuesto(
     try:
         db.commit()
         db.refresh(impuesto_existente)
-    except IntegrityError:
+    except IntegrityError as e:
         db.rollback()
+        if es_violacion_unicidad(e):
+            raise HTTPException(status_code=400, detail="Ya existe un impuesto con ese nombre")
         raise HTTPException(status_code=400, detail="Error al actualizar el impuesto: datos inválidos")
 
     return impuesto_existente

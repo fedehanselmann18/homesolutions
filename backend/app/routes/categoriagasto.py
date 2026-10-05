@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db import models
 from app.db.db import get_db
+from app.db.errores import es_violacion_unicidad
 from app.schemas import CategoriaGastoCreate, CategoriaGastoOut, CategoriaGastoUpdate
 
 router = APIRouter(prefix="/categorias-gasto", tags=["categorias_gasto"])
@@ -48,8 +49,10 @@ def create_category_gasto(
         db.add(nueva_categoria)
         db.commit()
         db.refresh(nueva_categoria)
-    except IntegrityError:
+    except IntegrityError as e:
         db.rollback()
+        if es_violacion_unicidad(e):
+            raise HTTPException(status_code=400, detail="Ya existe una categoría de gasto con ese nombre")
         raise HTTPException(status_code=400, detail="Error al crear la categoría de gasto: datos inválidos")
 
     return nueva_categoria
@@ -74,8 +77,10 @@ def update_category_gasto(
     try:
         db.commit()
         db.refresh(categoria_existente)
-    except IntegrityError:
+    except IntegrityError as e:
         db.rollback()
+        if es_violacion_unicidad(e):
+            raise HTTPException(status_code=400, detail="Ya existe una categoría de gasto con ese nombre")
         raise HTTPException(
             status_code=400, detail="Error al actualizar la categoría de gasto: datos inválidos"
         )
