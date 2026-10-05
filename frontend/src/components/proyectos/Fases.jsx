@@ -123,7 +123,7 @@ export function Fases({ proyectoId }) {
     return { porFase, totales: analisis.totales };
   }, [proyectoQuery.data, fasesQuery.data, gastosQuery.data, comprasQuery.data]);
 
-  const precioAcordado = Number(proyectoQuery.data?.precio_acordado ?? 0);
+  const precioAcordado = Number(proyectoQuery.data?.precio_acordado_usd ?? 0);
 
   return (
     <div>

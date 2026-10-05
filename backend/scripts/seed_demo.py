@@ -51,7 +51,7 @@ PROYECTOS = [
         "direccion": "Olleros 1925, CABA",
         "fecha_inicio": date(2026, 3, 10),
         "estado": "en_curso",
-        "precio_acordado": 18_000_000,
+        "precio_acordado_usd": 18_000_000,
         "fases": [
             ("Relevamiento y proyecto", "Visita al edificio, cómputo de equipos y planos de montaje", "auditada"),
             ("Provisión de equipos", "Compra de los splits y su logística hasta la obra", "terminada"),
@@ -150,7 +150,7 @@ PROYECTOS = [
         "direccion": "Av. del Libertador 6420, CABA",
         "fecha_inicio": date(2026, 5, 4),
         "estado": "en_curso",
-        "precio_acordado": 12_000_000,
+        "precio_acordado_usd": 12_000_000,
         "fases": [
             ("Ingeniería y cómputo", "Cálculo de cargas térmicas y selección de equipos", "auditada"),
             ("Compra de equipos", "Adquisición de splits inverter y ventilación", "terminada"),
@@ -229,7 +229,7 @@ PROYECTOS = [
         "direccion": "Malaver 2504, Vicente López",
         "fecha_inicio": date(2026, 1, 15),
         "estado": "terminado",
-        "precio_acordado": 9_000_000,
+        "precio_acordado_usd": 9_000_000,
         "fases": [
             ("Demolición y retiro", "Retiro de revestimientos viejos y contenedor", "auditada"),
             ("Instalación sanitaria y eléctrica", "Recambio de cañerías y tablero", "auditada"),
@@ -311,7 +311,7 @@ PROYECTOS = [
         "direccion": "Av. Fleming 1840, Martínez",
         "fecha_inicio": date(2026, 7, 20),
         "estado": "a_iniciar",
-        "precio_acordado": 22_000_000,
+        "precio_acordado_usd": 22_000_000,
         "fases": [
             ("Relevamiento del salón", "Medición y propuesta técnica de climatización", "en_curso"),
             ("Provisión de equipos", "Compra de equipos de gran porte", "por_empezar"),
@@ -479,7 +479,7 @@ def crear_proyecto(db, usuario, datos: dict) -> dict:
         direccion=datos["direccion"],
         fecha_inicio=datos["fecha_inicio"],
         estado=datos["estado"],
-        precio_acordado=datos["precio_acordado"],
+        precio_acordado_usd=datos["precio_acordado_usd"],
     )
     db.add(proyecto)
     db.flush()

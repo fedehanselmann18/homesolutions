@@ -338,7 +338,7 @@ class ProyectoBase(BaseModel):
     direccion: str
     fecha_inicio: date
     estado: str  # a_iniciar/en_curso/terminado
-    precio_acordado: float
+    precio_acordado_usd: float
 
 
 class ProyectoCreate(ProyectoBase):
@@ -350,7 +350,7 @@ class ProyectoUpdate(BaseModel):
     direccion: str | None = None
     fecha_inicio: date | None = None
     estado: str | None = None
-    precio_acordado: float | None = None
+    precio_acordado_usd: float | None = None
 
 
 class ProyectoOut(ProyectoBase, TimestampOut):

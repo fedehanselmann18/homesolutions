@@ -75,7 +75,7 @@ export function useFaseDetalle(faseId) {
       sumar(gastosFase, (g) => g.monto) + sumar(comprasFase, (c) => c.precio_total);
     const totalGastoProyecto =
       sumar(gastosProyecto, (g) => g.monto) + sumar(comprasProyecto, (c) => c.precio_total);
-    const precioAcordado = Number(proyecto.precio_acordado ?? 0);
+    const precioAcordado = Number(proyecto.precio_acordado_usd ?? 0);
 
     const notasFase = notasDeCompras(comprasFase);
 

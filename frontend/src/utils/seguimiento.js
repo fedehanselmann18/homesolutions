@@ -142,7 +142,7 @@ export function calcularSeguimiento({
   // que el Análisis General: cobrado es la suma de los cobros NETA de notas
   // de crédito/débito (monto_neto, ver Cobro.monto_neto en el backend) y el
   // pendiente nunca es negativo (si se cobró de más, queda en 0).
-  const precioAcordado = Number(proyecto?.precio_acordado ?? 0);
+  const precioAcordado = Number(proyecto?.precio_acordado_usd ?? 0);
   const cobrado = cobros.reduce((acc, c) => acc + (c.monto_neto ?? c.monto), 0);
   const ultimoCobro = cobros.reduce(
     (masReciente, cobro) => (!masReciente || cobro.fecha > masReciente.fecha ? cobro : masReciente),

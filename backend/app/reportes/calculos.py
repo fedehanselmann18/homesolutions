@@ -216,7 +216,7 @@ def calcular_analisis_proyecto(
     disponible = total_cobrado - total_egresos
     margen_bruto = total_cobrado - total_gastos - total_compras_neto - ajuste_notas_compras
 
-    precio_acordado = _num(proyecto.precio_acordado)
+    precio_acordado_usd = _num(proyecto.precio_acordado_usd)
 
     cascada = _armar_cascada(
         [
@@ -242,7 +242,7 @@ def calcular_analisis_proyecto(
                 "nombre": fase.nombre,
                 "estado": ESTADO_FASE_LABELS.get(fase.estado, fase.estado),
                 "gastado": gastado_fase,
-                "pct_presupuesto": _porcentaje(gastado_fase, precio_acordado),
+                "pct_presupuesto": _porcentaje(gastado_fase, precio_acordado_usd),
             }
         )
     egresos_por_fase = sorted(
@@ -282,9 +282,9 @@ def calcular_analisis_proyecto(
         "egresos": total_egresos,
         "disponible": disponible,
         "margenBruto": margen_bruto,
-        "precioAcordado": precio_acordado,
-        "pctCobrado": _porcentaje(total_cobrado, precio_acordado),
-        "pctGastado": _porcentaje(total_egresos, precio_acordado),
+        "precioAcordado": precio_acordado_usd,
+        "pctCobrado": _porcentaje(total_cobrado, precio_acordado_usd),
+        "pctGastado": _porcentaje(total_egresos, precio_acordado_usd),
     }
     deuda_total = sum(d["monto"] for d in deuda_lista)
 

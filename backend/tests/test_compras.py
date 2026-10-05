@@ -49,7 +49,7 @@ def _crear_fase(db_session):
         direccion="Calle Falsa 123",
         fecha_inicio=date(2026, 1, 1),
         estado="en_curso",
-        precio_acordado=1000000,
+        precio_acordado_usd=1000000,
     )
     fase = models.Fase(nombre="Fase Test", estado="en_curso", proyecto=proyecto)
     db_session.add_all([proyecto, fase])

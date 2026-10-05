@@ -50,7 +50,7 @@ def create_project(
         direccion=proyecto.direccion,
         fecha_inicio=proyecto.fecha_inicio,
         estado=proyecto.estado,
-        precio_acordado=proyecto.precio_acordado,
+        precio_acordado_usd=proyecto.precio_acordado_usd,
     )
     try:
         db.add(nuevo_proyecto)

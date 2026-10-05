@@ -16,7 +16,7 @@ export function ModalProyecto({ proyecto, onGuardar, onCerrar }) {
     direccion: "",
     fecha_inicio: "",
     estado: "a_iniciar",
-    precio_acordado: "",
+    precio_acordado_usd: "",
   });
   const [guardando, setGuardando] = useState(false);
 
@@ -27,7 +27,7 @@ export function ModalProyecto({ proyecto, onGuardar, onCerrar }) {
         direccion: proyecto.direccion ?? "",
         fecha_inicio: proyecto.fecha_inicio ?? "",
         estado: proyecto.estado ?? "a_iniciar",
-        precio_acordado: proyecto.precio_acordado ?? "",
+        precio_acordado_usd: proyecto.precio_acordado_usd ?? "",
       });
     }
   }, [proyecto]);
@@ -43,7 +43,7 @@ export function ModalProyecto({ proyecto, onGuardar, onCerrar }) {
     try {
       await onGuardar({
         ...form,
-        precio_acordado: Number(form.precio_acordado),
+        precio_acordado_usd: Number(form.precio_acordado_usd),
       });
     } finally {
       setGuardando(false);
@@ -123,8 +123,8 @@ export function ModalProyecto({ proyecto, onGuardar, onCerrar }) {
         Precio acordado
         <input
           type="number"
-          name="precio_acordado"
-          value={form.precio_acordado}
+          name="precio_acordado_usd"
+          value={form.precio_acordado_usd}
           onChange={handleChange}
           min="0"
           step="0.01"

@@ -40,7 +40,7 @@ describe("calcularPanel", () => {
 
   it("agrupa compras por fase -> proyecto usando fase.proyecto_id (no compra.proyecto_id)", () => {
     const resultado = calcularPanel({
-      proyectos: [{ id: 1, estado: "en_curso", precio_acordado: 10000 }],
+      proyectos: [{ id: 1, estado: "en_curso", precio_acordado_usd: 10000 }],
       fases: [{ id: 10, proyecto_id: 1 }],
       compras: [
         { fase_id: 10, precio_neto: 500, impuestos_aplicados: [], notas: [], fecha: "2026-08-01" },
@@ -52,7 +52,7 @@ describe("calcularPanel", () => {
 
   it("una compra con fase_id que no matchea ninguna fase no rompe el agrupado (queda huérfana)", () => {
     const resultado = calcularPanel({
-      proyectos: [{ id: 1, estado: "en_curso", precio_acordado: 10000 }],
+      proyectos: [{ id: 1, estado: "en_curso", precio_acordado_usd: 10000 }],
       fases: [{ id: 10, proyecto_id: 1 }],
       compras: [
         { fase_id: 999, precio_neto: 500, impuestos_aplicados: [], notas: [], fecha: "2026-08-01" },
@@ -65,8 +65,8 @@ describe("calcularPanel", () => {
   it("pendienteDeCobrar nunca es negativo: un proyecto que cobró de más no compensa a otro que debe", () => {
     const resultado = calcularPanel({
       proyectos: [
-        { id: 1, estado: "en_curso", precio_acordado: 1000 },
-        { id: 2, estado: "en_curso", precio_acordado: 1000 },
+        { id: 1, estado: "en_curso", precio_acordado_usd: 1000 },
+        { id: 2, estado: "en_curso", precio_acordado_usd: 1000 },
       ],
       cobros: [
         { proyecto_id: 1, monto_neto: 1500, fecha: "2026-06-01" }, // cobró de más
@@ -114,9 +114,9 @@ describe("calcularPanel", () => {
   it("proyectosActivos solo incluye proyectos en_curso, ordenados por % de presupuesto gastado desc", () => {
     const resultado = calcularPanel({
       proyectos: [
-        { id: 1, estado: "en_curso", precio_acordado: 1000 },
-        { id: 2, estado: "en_curso", precio_acordado: 1000 },
-        { id: 3, estado: "terminado", precio_acordado: 1000 },
+        { id: 1, estado: "en_curso", precio_acordado_usd: 1000 },
+        { id: 2, estado: "en_curso", precio_acordado_usd: 1000 },
+        { id: 3, estado: "terminado", precio_acordado_usd: 1000 },
       ],
       gastos: [
         { proyecto_id: 1, monto: 100, fecha: "2026-08-01" },

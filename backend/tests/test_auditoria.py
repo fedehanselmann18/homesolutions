@@ -65,7 +65,7 @@ def _proyecto_payload(**overrides):
         "direccion": "Rivadavia 1234",
         "fecha_inicio": "2026-01-01",
         "estado": "en_curso",
-        "precio_acordado": 5000000,
+        "precio_acordado_usd": 5000000,
     }
     payload.update(overrides)
     return payload

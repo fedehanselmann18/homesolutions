@@ -48,7 +48,7 @@ def test_borrar_categoria_de_gasto_en_uso_explica_el_motivo(client, db_session, 
         direccion="Calle Falsa 123",
         fecha_inicio=date(2026, 1, 1),
         estado="en_curso",
-        precio_acordado=1000000,
+        precio_acordado_usd=1000000,
     )
     db_session.add(proyecto)
     db_session.commit()

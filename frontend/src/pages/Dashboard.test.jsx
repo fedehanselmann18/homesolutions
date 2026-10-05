@@ -53,7 +53,7 @@ describe("Dashboard", () => {
     mockQueries({
       isLoading: false,
       data: {
-        proyectos: [{ id: 1, estado: "en_curso", precio_acordado: 10000, nombre: "Depto Centro" }],
+        proyectos: [{ id: 1, estado: "en_curso", precio_acordado_usd: 10000, nombre: "Depto Centro" }],
         fases: [],
         gastos: [],
         cobros: [],

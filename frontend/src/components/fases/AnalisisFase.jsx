@@ -16,7 +16,7 @@ import {
 /**
  * Tab "Análisis de la fase" de FaseDetalle.jsx -- reusa calcularAnalisis
  * (utils/analisis.js) scopeado a compras/gastos de esta fase, con `proyecto`
- * completo (hace falta precio_acordado) y `cobros: []` (una fase no tiene
+ * completo (hace falta precio_acordado_usd) y `cobros: []` (una fase no tiene
  * cobros propios). No renderiza la cascada de rentabilidad ni el resto de
  * secciones a nivel proyecto -- ver docs/redesign/11_fase_detalle_tabs.md.
  */
@@ -50,7 +50,7 @@ export function AnalisisFase({
   // % cobrado del proyecto -- mismo cálculo que totales.pctCobrado de
   // AnalisisGeneral.jsx, pero sobre los cobros del proyecto entero (una fase
   // no tiene cobros propios), no sobre `cobros: []` de este análisis.
-  const precioAcordado = Number(proyecto?.precio_acordado ?? 0);
+  const precioAcordado = Number(proyecto?.precio_acordado_usd ?? 0);
   const totalCobradoProyecto = cobrosProyecto.reduce(
     (acc, c) => acc + (c.monto_neto ?? c.monto ?? 0),
     0
@@ -65,7 +65,7 @@ export function AnalisisFase({
           titulo="% del presupuesto del proyecto"
           valor={`${kpisFase.pctPresupuesto.toFixed(1)}%`}
           porcentaje={kpisFase.pctPresupuesto}
-          detalle={`${formatMoneda(proyecto.precio_acordado)} acordados`}
+          detalle={`${formatMoneda(proyecto.precio_acordado_usd)} acordados`}
           color={kpisFase.pctPresupuesto > 100 ? ROJO : undefined}
         />
         <TarjetaKpi

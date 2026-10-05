@@ -11,7 +11,7 @@ export const getProyectoPorId = async (proyectoId) => {
 };
 
 export const crearProyecto = async (proyecto) => {
-  // proyecto: { nombre, direccion, fecha_inicio, estado, precio_acordado }
+  // proyecto: { nombre, direccion, fecha_inicio, estado, precio_acordado_usd }
   const { data } = await axiosClient.post("/proyectos/crear", proyecto);
   return data;
 };

@@ -54,7 +54,7 @@ def _comprobante_gasto(db_session, archivo_path, usuario):
         direccion="Calle Falsa 123",
         fecha_inicio=date(2026, 1, 1),
         estado="en_curso",
-        precio_acordado=1000000,
+        precio_acordado_usd=1000000,
     )
     db_session.add(proyecto)
     db_session.flush()

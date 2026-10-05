@@ -21,7 +21,7 @@ def _proyecto_payload(**overrides):
         "direccion": "Rivadavia 1234",
         "fecha_inicio": "2026-01-01",
         "estado": "en_curso",
-        "precio_acordado": 5000000,
+        "precio_acordado_usd": 5000000,
     }
     payload.update(overrides)
     return payload
@@ -47,7 +47,7 @@ def test_actualizar_proyecto_solo_pisa_los_campos_enviados(client, db_session, h
         direccion="Calle Falsa 123",
         fecha_inicio=date(2026, 1, 1),
         estado="a_iniciar",
-        precio_acordado=1000000,
+        precio_acordado_usd=1000000,
     )
     db_session.add(proyecto)
     db_session.commit()
@@ -74,7 +74,7 @@ def _armar_arbol_completo(db_session, usuario, proveedor):
         direccion="Calle 1",
         fecha_inicio=date(2026, 1, 1),
         estado="en_curso",
-        precio_acordado=1000000,
+        precio_acordado_usd=1000000,
     )
     fase = models.Fase(nombre="Fase 1", estado="en_curso", proyecto=proyecto)
     compra = models.Compra(
@@ -158,7 +158,7 @@ def test_eliminar_proyecto_sin_ser_admin_es_rechazado(client, db_session, header
         direccion="Calle 1",
         fecha_inicio=date(2026, 1, 1),
         estado="a_iniciar",
-        precio_acordado=1000000,
+        precio_acordado_usd=1000000,
     )
     db_session.add(proyecto)
     db_session.commit()

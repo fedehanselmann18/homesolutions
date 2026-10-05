@@ -17,7 +17,7 @@ describe("calcularAnalisis", () => {
 
   it("calcula cobrado usando monto_neto cuando está presente (ajustado por notas)", () => {
     const resultado = calcularAnalisis({
-      proyecto: { precio_acordado: 100000 },
+      proyecto: { precio_acordado_usd: 100000 },
       cobros: [{ monto: 10000, monto_neto: 9000 }],
     });
     expect(resultado.totales.cobrado).toBe(9000);
@@ -88,7 +88,7 @@ describe("calcularAnalisis", () => {
 
   it("pctCobrado y pctGastado se calculan sobre el precio acordado", () => {
     const resultado = calcularAnalisis({
-      proyecto: { precio_acordado: 20000 },
+      proyecto: { precio_acordado_usd: 20000 },
       cobros: [{ monto_neto: 10000 }],
       gastos: [{ monto: 5000, categorias: [] }],
     });

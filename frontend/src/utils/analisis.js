@@ -250,7 +250,7 @@ export function calcularAnalisis({
   const disponible = totalCobrado - totalEgresos;
   const margenBruto = totalCobrado - totalGastos - totalComprasNeto - ajusteNotasCompras;
 
-  const precioAcordado = proyecto?.precio_acordado ?? 0;
+  const precioAcordado = proyecto?.precio_acordado_usd ?? 0;
 
   const categorias = gastosPorCategoria(gastos);
   const impuestos = impuestosPorTipo(compras);

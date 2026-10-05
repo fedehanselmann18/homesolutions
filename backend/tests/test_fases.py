@@ -29,7 +29,7 @@ def _crear_proyecto(db_session, nombre="Proyecto Fases"):
         direccion="Calle 1",
         fecha_inicio=date(2026, 1, 1),
         estado="en_curso",
-        precio_acordado=1000000,
+        precio_acordado_usd=1000000,
     )
     db_session.add(proyecto)
     db_session.commit()

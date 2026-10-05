@@ -222,7 +222,7 @@ class Proyecto(TimestampMixin, Base):
     direccion: Mapped[str] = mapped_column(String(255), nullable=False)
     fecha_inicio: Mapped[date] = mapped_column(nullable=False)  # fecha de negocio, se carga a mano
     estado: Mapped[str] = mapped_column(String(20), nullable=False)  # a_iniciar/en_curso/terminado
-    precio_acordado: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    precio_acordado_usd: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
 
     fases: Mapped[list["Fase"]] = relationship(back_populates="proyecto", cascade="all, delete-orphan")
     gastos: Mapped[list["Gasto"]] = relationship(back_populates="proyecto", cascade="all, delete-orphan")
