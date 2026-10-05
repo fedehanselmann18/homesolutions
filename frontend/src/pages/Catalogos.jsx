@@ -18,18 +18,21 @@ import {
 import { PageHeader } from "../components/shared/PageHeader";
 import { Tabs } from "../components/shared/Tabs";
 import { SeccionCatalogo } from "../components/catalogos/SeccionCatalogo";
+import { SeccionCotizaciones } from "../components/catalogos/SeccionCotizaciones";
 import "./Catalogos.css";
 
 const TABS = [
   { key: "impuestos", label: "Impuestos" },
   { key: "categoriasGasto", label: "Categorías de gasto" },
   { key: "categorias", label: "Categorías de producto" },
+  { key: "cotizaciones", label: "Cotizaciones" },
 ];
 
 /**
  * Alta, edición y borrado de los catálogos que usan los formularios de carga:
  * impuestos (ModalCompra), categorías de gasto (ModalGasto) y categorías de
- * producto (ModalProducto, importar catálogo).
+ * producto (ModalProducto, importar catálogo). Y la tabla de cotizaciones del
+ * dólar, de la que los forms de carga sugieren el valor del día.
  *
  * Vive en el árbol protegido normal y NO en el panel Manager: ese subárbol se
  * reserva por nombre de usuario (constants/manager.js) y Agus, que es quien
@@ -48,7 +51,7 @@ export function Catalogos() {
     <div className="catalogos">
       <PageHeader
         titulo="Catálogos"
-        subtitulo="Impuestos y categorías que se eligen al cargar compras, gastos y productos."
+        subtitulo="Impuestos, categorías y cotizaciones del dólar que se usan al cargar compras, gastos y cobros."
       />
 
       <Tabs tabs={TABS} activa={tabActiva} onCambiar={setTabActiva} etiqueta="Catálogos" />
@@ -120,6 +123,7 @@ export function Catalogos() {
           }}
         />
       )}
+      {tabActiva === "cotizaciones" && <SeccionCotizaciones />}
     </div>
   );
 }

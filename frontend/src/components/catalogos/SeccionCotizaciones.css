@@ -1,0 +1,35 @@
+/* Mismas filas que SeccionCatalogo (la receta de la planilla vive ahí y en
+   index.css); acá solo cambia la grilla, porque una cotización tiene tres
+   columnas propias en vez de un nombre. Doble clase para ganarle a
+   `.planilla` (DESIGN.md §13). */
+.planilla.seccion-cotizaciones__tabla .planilla__header,
+.planilla.seccion-cotizaciones__tabla .planilla__fila {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 140px;
+}
+
+.planilla.seccion-cotizaciones__tabla .planilla__fila {
+  cursor: default;
+}
+
+.planilla.seccion-cotizaciones__tabla--con-acciones .planilla__header,
+.planilla.seccion-cotizaciones__tabla--con-acciones .planilla__fila {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 140px 72px;
+}
+
+/* La cifra se alinea a la derecha, como en el resto de las planillas de plata. */
+.seccion-cotizaciones__col-valor {
+  justify-self: end;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .planilla.seccion-cotizaciones__tabla .planilla__header,
+  .planilla.seccion-cotizaciones__tabla .planilla__fila {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+  }
+
+  .planilla.seccion-cotizaciones__tabla--con-acciones .planilla__header,
+  .planilla.seccion-cotizaciones__tabla--con-acciones .planilla__fila {
+    grid-template-columns: minmax(0, 1fr) auto auto auto;
+  }
+}

@@ -7,8 +7,9 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { Catalogos } from "./Catalogos";
-import { useCategorias, useCategoriasGasto, useImpuestos } from "../hooks/queries";
+import { useCategorias, useCategoriasGasto, useCotizaciones, useImpuestos } from "../hooks/queries";
 import { eliminarImpuesto } from "../services/impuestosService";
+import { crearCotizacion } from "../services/cotizacionService";
 
 let rolActual = "admin";
 const toastError = vi.fn();
@@ -17,6 +18,7 @@ vi.mock("../hooks/queries");
 vi.mock("../services/impuestosService");
 vi.mock("../services/categoriaGastoService");
 vi.mock("../services/categoriaService");
+vi.mock("../services/cotizacionService");
 vi.mock("../context/useAuth", () => ({
   default: () => ({ usuario: { rol: rolActual } }),
   useAuth: () => ({ usuario: { rol: rolActual } }),
@@ -40,6 +42,9 @@ beforeEach(() => {
   useImpuestos.mockReturnValue(ok([{ id: "i1", nombre: "IVA 21%" }]));
   useCategoriasGasto.mockReturnValue(ok([{ id: "g1", nombre: "Flete" }]));
   useCategorias.mockReturnValue(ok([{ id: "c1", nombre: "Cables", tipo: "materiales" }]));
+  useCotizaciones.mockReturnValue(
+    ok([{ id: "q1", fecha: "2026-10-01", tipo: "blue", valor: 1450 }])
+  );
 });
 
 describe("Catalogos", () => {
@@ -96,5 +101,43 @@ describe("Catalogos", () => {
     await userEvent.click(screen.getByRole("tab", { name: "Categorías de gasto" }));
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.getByText("Todavía no hay categorías de gasto cargadas.")).toBeInTheDocument();
+  });
+
+  describe("pestaña Cotizaciones", () => {
+    it("lista el dólar de cada día con su tipo y su valor con centavos", async () => {
+      renderCatalogos();
+      await userEvent.click(screen.getByRole("tab", { name: "Cotizaciones" }));
+
+      expect(screen.getByText("01/10/2026")).toBeInTheDocument();
+      expect(screen.getByText("Blue")).toBeInTheDocument();
+      expect(
+        screen.getByText((_, e) => e?.textContent.replace(/\u00a0/g, " ") === "$ 1.450,00")
+      ).toBeInTheDocument();
+    });
+
+    it("el alta manda fecha, tipo y valor numérico", async () => {
+      crearCotizacion.mockResolvedValue({});
+      renderCatalogos();
+      await userEvent.click(screen.getByRole("tab", { name: "Cotizaciones" }));
+      await userEvent.click(screen.getByRole("button", { name: /nueva cotización/i }));
+
+      const dialogo = screen.getByRole("dialog");
+      await userEvent.type(within(dialogo).getByRole("spinbutton"), "1487.5");
+      await userEvent.selectOptions(within(dialogo).getByRole("combobox"), "oficial");
+      await userEvent.click(within(dialogo).getByRole("button", { name: "Crear" }));
+
+      expect(crearCotizacion).toHaveBeenCalledWith(
+        expect.objectContaining({ tipo: "oficial", valor: 1487.5 })
+      );
+    });
+
+    it("el rol lectura ve las cotizaciones sin controles de escritura", async () => {
+      rolActual = "lectura";
+      renderCatalogos();
+      await userEvent.click(screen.getByRole("tab", { name: "Cotizaciones" }));
+
+      expect(screen.getByText("01/10/2026")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /nueva|editar|eliminar/i })).toBeNull();
+    });
   });
 });
