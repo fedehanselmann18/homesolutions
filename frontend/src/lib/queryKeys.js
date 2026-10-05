@@ -32,6 +32,9 @@ export const queryKeys = {
   proveedores: {
     all: ["proveedores"],
   },
+  categorias: {
+    all: ["categorias"],
+  },
   categoriasGasto: {
     all: ["categoriasGasto"],
   },

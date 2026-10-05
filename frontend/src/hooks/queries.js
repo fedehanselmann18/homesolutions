@@ -11,6 +11,7 @@ import { getCobros, getCobrosPorProyecto } from "../services/cobroService";
 import { getCompras, getComprasPorProyecto, getComprasPorFase } from "../services/compraService";
 import { getProductos } from "../services/productoService";
 import { getProveedores } from "../services/proveedorService";
+import { getCategorias } from "../services/categoriaService";
 import { getCategoriasGasto } from "../services/categoriaGastoService";
 import { getImpuestos } from "../services/impuestosService";
 import { queryKeys } from "../lib/queryKeys";
@@ -87,6 +88,9 @@ export const useProductos = () =>
 
 export const useProveedores = () =>
   useQuery({ queryKey: queryKeys.proveedores.all, queryFn: getProveedores });
+
+export const useCategorias = () =>
+  useQuery({ queryKey: queryKeys.categorias.all, queryFn: getCategorias });
 
 export const useCategoriasGasto = () =>
   useQuery({ queryKey: queryKeys.categoriasGasto.all, queryFn: getCategoriasGasto });
