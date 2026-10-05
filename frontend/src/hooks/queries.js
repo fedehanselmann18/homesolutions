@@ -14,6 +14,7 @@ import { getProveedores } from "../services/proveedorService";
 import { getCategorias } from "../services/categoriaService";
 import { getCategoriasGasto } from "../services/categoriaGastoService";
 import { getImpuestos } from "../services/impuestosService";
+import { getCotizaciones, getUltimaCotizacion } from "../services/cotizacionService";
 import { queryKeys } from "../lib/queryKeys";
 
 export const useProyectos = () =>
@@ -97,3 +98,31 @@ export const useCategoriasGasto = () =>
 
 export const useImpuestos = () =>
   useQuery({ queryKey: queryKeys.impuestos.all, queryFn: getImpuestos });
+
+export const useCotizaciones = () =>
+  useQuery({ queryKey: queryKeys.cotizaciones.all, queryFn: getCotizaciones });
+
+/**
+ * La última cotización cargada hasta `fecha` (hoy si no viene). `tipo` es
+ * opcional. Sirve para dos cosas: precargar el dólar del día en los forms
+ * (ver useCotizacionDia) y pasar a pesos el precio acordado ("cuánto vale hoy
+ * el contrato", decisión #8 de PLAN_TIPO_CAMBIO.md).
+ */
+export const useUltimaCotizacion = ({ tipo, fecha } = {}) =>
+  useQuery({
+    queryKey: queryKeys.cotizaciones.ultima({ tipo, fecha }),
+    queryFn: () => getUltimaCotizacion({ tipo, fecha }),
+  });
+
+/**
+ * Cotización de referencia para mostrar el precio acordado de un proyecto en
+ * pesos: la última del tipo de dólar con que se acordó (si se registró y hay
+ * alguna), si no la última de cualquier tipo. Mismo criterio que el PDF
+ * (routes/proyectos.py), así la app y el reporte muestran el mismo número.
+ */
+export function useCotizacionActual(proyecto) {
+  const tipo = proyecto?.tipo_cambio_acordado ?? null;
+  const delTipo = useUltimaCotizacion({ tipo });
+  const cualquiera = useUltimaCotizacion();
+  return (tipo ? delTipo.data : null) ?? cualquiera.data ?? null;
+}

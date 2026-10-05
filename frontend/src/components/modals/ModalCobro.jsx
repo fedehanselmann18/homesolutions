@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { ComprobantesUploader } from "../shared/ComprobantesUploader";
 import { SeccionNotas } from "../shared/SeccionNotas";
-import { formatFecha } from "../../utils/formato";
+import { formatFecha, formatMoneda } from "../../utils/formato";
 import { TIPOS_FACTURA, getTipoFacturaLabel } from "../../constants/tipoFactura";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
@@ -12,6 +12,8 @@ import { BarraComposicion } from "./PiezasDetalle";
 import { EditarShell, SeccionForm, TotalRiel } from "./PiezasEditar";
 import { PasoComprobante, BannerIA, ResumenValidacion, MarcaIA } from "./PiezasIA";
 import { LogoCargando } from "../shared/LogoCargando";
+import { CamposCotizacion } from "./CamposCotizacion";
+import { useCotizacionDia } from "../../hooks/useCotizacionDia";
 
 const validarCampo = (name, value) => {
   if (name === "descripcion") return validarRequerido(value, "La descripción es obligatoria.");
@@ -42,6 +44,10 @@ export function ModalCobro({
   const [errores, setErrores] = useState({});
   const { extraer, extrayendo } = useExtraccionIA();
   const toast = useToast();
+  // El cliente paga en dólares: el monto se tipea en USD y los pesos los
+  // congela el backend con esta cotización (ver docs/PLAN_TIPO_CAMBIO.md).
+  const cotizacion = useCotizacionDia({ fecha: form.fecha, inicial: cobro });
+  const [intentoGuardar, setIntentoGuardar] = useState(false);
 
   // Flujo "IA primero" (dirección 5c): ver el comentario equivalente en
   // ModalCompra.jsx.
@@ -54,7 +60,7 @@ export function ModalCobro({
     if (cobro) {
       setForm({
         descripcion: cobro.descripcion ?? "",
-        monto: cobro.monto ?? "",
+        monto: cobro.monto_usd ?? "",
         fecha: cobro.fecha ?? "",
         tipo_factura: cobro.tipo_factura ?? "",
         proyecto_id: cobro.proyecto_id ?? "",
@@ -78,17 +84,37 @@ export function ModalCobro({
     try {
       const resultado = await extraer(archivo, "cobro", {});
 
+      // La IA lee el comprobante, que está en pesos (caveat 6.4 del plan),
+      // pero el cobro se tipea en dólares: se convierte con la cotización
+      // que tiene el form. Sin cotización no se puede convertir, así que el
+      // monto queda sin completar en vez de meter pesos donde van dólares.
+      const cotizacionForm = Number(cotizacion.valor);
+      const montoUsd =
+        resultado.monto && cotizacionForm > 0
+          ? Math.round((resultado.monto / cotizacionForm) * 100) / 100
+          : null;
+
       const leidos = new Set();
       if (resultado.descripcion) leidos.add("descripcion");
-      if (resultado.monto) leidos.add("monto");
+      if (montoUsd) leidos.add("monto");
       if (resultado.fecha) leidos.add("fecha");
       if (resultado.tipo_factura) leidos.add("tipo_factura");
       setCamposIA(leidos);
 
+      if (resultado.monto && !montoUsd) {
+        toast.error(
+          `El comprobante dice ${formatMoneda(resultado.monto)}: cargá la cotización para pasarlo a dólares.`
+        );
+      } else if (montoUsd) {
+        toast.success(
+          `El comprobante dice ${formatMoneda(resultado.monto)}: se pasó a dólares con la cotización del form. Revisala.`
+        );
+      }
+
       setForm((prev) => ({
         ...prev,
         descripcion: resultado.descripcion ?? prev.descripcion,
-        monto: resultado.monto ?? prev.monto,
+        monto: montoUsd ?? prev.monto,
         fecha: resultado.fecha ?? prev.fecha,
         tipo_factura: resultado.tipo_factura ?? prev.tipo_factura,
       }));
@@ -115,11 +141,13 @@ export function ModalCobro({
       fecha: validarCampo("fecha", form.fecha),
     };
     setErrores(nuevosErrores);
-    if (Object.values(nuevosErrores).some(Boolean)) return;
+    setIntentoGuardar(true);
+    if (Object.values(nuevosErrores).some(Boolean) || cotizacion.error) return;
 
     const payload = {
       descripcion: form.descripcion,
-      monto: Number(form.monto),
+      monto_usd: Number(form.monto),
+      ...cotizacion.payload,
       fecha: form.fecha,
       tipo_factura: form.tipo_factura,
     };
@@ -142,6 +170,7 @@ export function ModalCobro({
     !form.monto ? "Monto" : null,
     !form.fecha ? "Fecha" : null,
     !form.tipo_factura ? "Tipo de factura" : null,
+    cotizacion.error ? "Cotización" : null,
   ].filter(Boolean);
 
   const uploader = (
@@ -160,10 +189,14 @@ export function ModalCobro({
   // se borran desde la ficha de detalle, mismo criterio que en Compra: una
   // nota impacta contra la API al instante y "Cancelar" dejaría de cancelar.
   const notas = cobro?.notas ?? [];
-  const notasCredito = totalNotasCredito(notas);
-  const notasDebito = totalNotasDebito(notas);
+  const notasCredito = totalNotasCredito(notas, "usd");
+  const notasDebito = totalNotasDebito(notas, "usd");
   const montoBruto = Number(form.monto) || 0;
   const montoNeto = montoBruto - notasCredito + notasDebito;
+  // Preview en pesos: el bruto con la cotización del form y cada nota con la
+  // suya (ya congelada). La cifra que se guarda la calcula el backend.
+  const brutoArs = montoBruto * (Number(cotizacion.valor) || 0);
+  const netoArs = brutoArs - totalNotasCredito(notas, "ars") + totalNotasDebito(notas, "ars");
 
   const contexto = [
     getTipoFacturaLabel(form.tipo_factura),
@@ -277,7 +310,7 @@ export function ModalCobro({
 
               <div className="mov-edit__campos">
                 <label className={`mov-edit__campo ${claseIA("monto")}`}>
-                  Monto
+                  Monto (US$)
                   <input
                     type="number"
                     name="monto"
@@ -304,6 +337,16 @@ export function ModalCobro({
                   {camposIA.has("fecha") && !errores.fecha && <MarcaIA />}
                 </label>
               </div>
+
+              <CamposCotizacion
+                cotizacion={cotizacion}
+                monto={form.monto}
+                monedaMonto="usd"
+                claseFila="mov-edit__campos"
+                claseCampo="mov-edit__campo"
+                mostrarError={intentoGuardar}
+                disabled={guardando}
+              />
 
               <label
                 className={`mov-edit__campo mov-edit__campo--corto ${claseIA("tipo_factura")}`}
@@ -332,10 +375,13 @@ export function ModalCobro({
             <TotalRiel
               label={notas.length > 0 ? "Neto" : "Monto"}
               monto={montoNeto}
+              moneda="usd"
+              secundario={netoArs > 0 ? `≈ ${formatMoneda(netoArs)}` : null}
               color={TIPOS_MOVIMIENTO.cobro.color}
             />
 
             <BarraComposicion
+              moneda="usd"
               segmentos={[
                 { label: "Bruto", monto: montoBruto, color: TIPOS_MOVIMIENTO.cobro.color },
                 {

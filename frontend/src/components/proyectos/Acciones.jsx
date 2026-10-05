@@ -165,7 +165,9 @@ export function Acciones({ proyectoId, proyectoNombre }) {
     setConfirmarEliminar({
       tipo: "cobro",
       id: cobroId,
-      nombre: cobro ? `${formatMoneda(cobro.monto)} del ${formatFecha(cobro.fecha)}` : undefined,
+      nombre: cobro
+        ? `${formatMoneda(cobro.monto_usd, "usd")} del ${formatFecha(cobro.fecha)}`
+        : undefined,
     });
   };
 

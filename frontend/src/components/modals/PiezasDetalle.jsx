@@ -24,6 +24,10 @@ export function DetalleShell({
   subtitulo,
   totalLabel = "Total",
   total,
+  // Doble moneda: la moneda en que se cargó el movimiento va como cifra
+  // principal; `totalSecundario` es la otra, congelada, ya formateada.
+  totalMoneda = "ars",
+  totalSecundario,
   totalColor,
   onCerrar,
   // Opcional: pasar de "ver" a "editar" sin volver a la lista. Es una prop y
@@ -77,8 +81,11 @@ export function DetalleShell({
                 className="detalle__total-monto"
                 style={totalColor ? { color: totalColor } : undefined}
               >
-                {formatMoneda(total)}
+                {formatMoneda(total, totalMoneda)}
               </span>
+              {totalSecundario && (
+                <span className="detalle__total-secundario">{totalSecundario}</span>
+              )}
             </div>
           </div>
 
@@ -107,7 +114,7 @@ export function DetalleShell({
  * importe en rojo con el menos adelante (notas de crédito), +1 en naranja con
  * el más (notas de débito), y sin signo queda neutro (neto, impuestos).
  */
-export function BarraComposicion({ segmentos }) {
+export function BarraComposicion({ segmentos, moneda = "ars" }) {
   const visibles = segmentos.filter((s) => Math.abs(s.monto) > 0);
   if (visibles.length === 0) return null;
 
@@ -120,7 +127,7 @@ export function BarraComposicion({ segmentos }) {
           <span
             key={s.label}
             style={{ width: `${(Math.abs(s.monto) / suma) * 100}%`, background: s.color }}
-            title={`${s.label} ${formatMoneda(s.monto)}`}
+            title={`${s.label} ${formatMoneda(s.monto, moneda)}`}
           />
         ))}
       </div>
@@ -139,7 +146,7 @@ export function BarraComposicion({ segmentos }) {
               }`}
             >
               {s.signo === -1 ? "-" : s.signo === 1 ? "+" : ""}
-              {formatMoneda(Math.abs(s.monto))}
+              {formatMoneda(Math.abs(s.monto), moneda)}
             </strong>
           </span>
         ))}

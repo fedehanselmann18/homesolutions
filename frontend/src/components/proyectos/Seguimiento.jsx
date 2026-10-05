@@ -31,6 +31,7 @@ import ModalGasto from "../modals/ModalGasto";
 import ModalCobro from "../modals/ModalCobro";
 import { calcularSeguimiento, DIAS_FASE_ESTANCADA } from "../../utils/seguimiento";
 import { formatMoneda, formatFecha } from "../../utils/formato";
+import { formatMontoDeItem } from "../../utils/moneda";
 import { getCondicionPagoLabel } from "../../constants/estadoCompra";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
 import { VERDE, ROJO, NARANJA, GRIS } from "../../constants/colores";
@@ -204,16 +205,19 @@ export function Seguimiento({ proyectoId, onIrATab }) {
         }
       >
         <div className="seguimiento-cobranza">
-          <TarjetaKpi titulo="Precio acordado" valor={formatMoneda(cobranza.precioAcordado)} />
+          <TarjetaKpi
+            titulo="Precio acordado"
+            valor={formatMoneda(cobranza.precioAcordado, "usd")}
+          />
           <TarjetaKpi
             titulo="Cobrado"
-            valor={formatMoneda(cobranza.cobrado)}
+            valor={formatMoneda(cobranza.cobrado, "usd")}
             porcentaje={cobranza.pctCobrado}
             detalle={`${cobranza.pctCobrado.toFixed(1)}% de lo acordado`}
           />
           <TarjetaKpi
             titulo="Queda por cobrar"
-            valor={formatMoneda(cobranza.pendiente)}
+            valor={formatMoneda(cobranza.pendiente, "usd")}
             detalle="Precio acordado − cobros cargados"
             color={cobranza.pendiente > 0 ? NARANJA : VERDE}
             destacado
@@ -251,7 +255,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                     fecha={formatFecha(compra.fecha)}
                     badges={badgesCompra(compra)}
                     etiqueta={diasTexto(compra.dias)}
-                    monto={formatMoneda(compra.monto)}
+                    monto={formatMontoDeItem(compra)}
                     color={ROJO}
                     onClick={() => abrirDetalleCompra(compra.id)}
                   />
@@ -259,7 +263,14 @@ export function Seguimiento({ proyectoId, onIrATab }) {
               </div>
             )}
             {comprasImpagas.length > 0 && (
-              <AlertaColumna>{formatMoneda(totales.deudaTotal)} sin pagar</AlertaColumna>
+              <AlertaColumna>
+                {formatMontoDeItem({
+                  monto: totales.deudaTotal,
+                  montoOtra: totales.deudaTotalOtra,
+                  moneda: "ars",
+                })}{" "}
+                sin pagar
+              </AlertaColumna>
             )}
           </div>
 
@@ -315,7 +326,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                     productos={compra.productos}
                     fecha={formatFecha(compra.fecha)}
                     badges={badgesCompra(compra)}
-                    monto={formatMoneda(compra.monto)}
+                    monto={formatMontoDeItem(compra)}
                     color={GRIS}
                     onClick={() => abrirDetalleCompra(compra.id)}
                   />
@@ -335,7 +346,11 @@ export function Seguimiento({ proyectoId, onIrATab }) {
         titulo="Gastos sin comprobante"
         descripcion={
           gastosSinComprobante.length > 0
-            ? `${formatMoneda(totales.montoSinComprobante)} sin respaldo cargado`
+            ? `${formatMontoDeItem({
+                monto: totales.montoSinComprobante,
+                montoOtra: totales.montoSinComprobanteOtra,
+                moneda: "ars",
+              })} sin respaldo cargado`
             : undefined
         }
         cantidad={gastosSinComprobante.length}
@@ -349,7 +364,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                 key={gasto.id}
                 titulo={gasto.descripcion}
                 subtitulo={`Cargado el ${formatFecha(gasto.fecha)}`}
-                monto={formatMoneda(gasto.monto)}
+                monto={formatMontoDeItem(gasto)}
                 color={GRIS}
                 onClick={() => abrirDetalleGasto(gasto.id)}
               />
@@ -362,7 +377,11 @@ export function Seguimiento({ proyectoId, onIrATab }) {
         titulo="Cobros sin comprobante"
         descripcion={
           cobrosSinComprobante.length > 0
-            ? `${formatMoneda(totales.montoCobrosSinComprobante)} sin respaldo cargado`
+            ? `${formatMontoDeItem({
+                monto: totales.montoCobrosSinComprobante,
+                montoOtra: totales.montoCobrosSinComprobanteOtra,
+                moneda: "usd",
+              })} sin respaldo cargado`
             : undefined
         }
         cantidad={cobrosSinComprobante.length}
@@ -376,7 +395,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                 key={cobro.id}
                 titulo={cobro.descripcion}
                 subtitulo={`Cargado el ${formatFecha(cobro.fecha)}`}
-                monto={formatMoneda(cobro.monto)}
+                monto={formatMontoDeItem(cobro)}
                 color={GRIS}
                 onClick={() => abrirDetalleCobro(cobro.id)}
               />
@@ -426,7 +445,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
                 <tr key={fila.proveedor}>
                   <td>{fila.proveedor}</td>
                   <td>{fila.compras}</td>
-                  <td className="seguimiento-tabla-monto">{formatMoneda(fila.monto)}</td>
+                  <td className="seguimiento-tabla-monto">{formatMontoDeItem(fila)}</td>
                 </tr>
               ))}
             </tbody>
@@ -434,7 +453,13 @@ export function Seguimiento({ proyectoId, onIrATab }) {
               <tr>
                 <td>Total</td>
                 <td>{comprasImpagas.length}</td>
-                <td className="seguimiento-tabla-monto">{formatMoneda(totales.deudaTotal)}</td>
+                <td className="seguimiento-tabla-monto">
+                  {formatMontoDeItem({
+                    monto: totales.deudaTotal,
+                    montoOtra: totales.deudaTotalOtra,
+                    moneda: "ars",
+                  })}
+                </td>
               </tr>
             </tfoot>
           </table>

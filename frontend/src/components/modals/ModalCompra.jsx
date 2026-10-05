@@ -17,6 +17,8 @@ import { EditarShell, SeccionForm, TotalRiel } from "./PiezasEditar";
 import { PasoComprobante, BannerIA, ResumenValidacion, MarcaIA } from "./PiezasIA";
 import { TINTE_PASTILLA } from "../../constants/tipoMovimiento";
 import { LogoCargando } from "../shared/LogoCargando";
+import { CamposCotizacion } from "./CamposCotizacion";
+import { useCotizacionDia } from "../../hooks/useCotizacionDia";
 
 const validarCampo = (name, value) => {
   if (name === "descripcion") return validarRequerido(value, "La descripción es obligatoria.");
@@ -60,6 +62,11 @@ export function ModalCompra({
   const [errores, setErrores] = useState({});
   const { extraer, extrayendo } = useExtraccionIA();
   const toast = useToast();
+  // La compra se paga en pesos (el catálogo del proveedor está en pesos): el
+  // neto se arma en ARS y el USD lo congela el backend con esta cotización.
+  // Los impuestos heredan la misma (ver docs/PLAN_TIPO_CAMBIO.md).
+  const cotizacion = useCotizacionDia({ fecha: form.fecha, inicial: compra });
+  const [intentoGuardar, setIntentoGuardar] = useState(false);
 
   // Flujo "IA primero" (dirección 5c): una compra nueva arranca mostrando sólo
   // la zona de carga del comprobante; el formulario aparece cuando la IA lo
@@ -124,6 +131,15 @@ export function ModalCompra({
   const notasCredito = totalNotasCredito(notas);
   const notasDebito = totalNotasDebito(notas);
   const precioTotal = precioNeto + totalImpuestos - notasCredito + notasDebito;
+  // Preview en dólares: neto e impuestos con la cotización del form, y cada
+  // nota con la suya (ya congelada). La cifra que vale la arma el backend.
+  const cotizacionNumero = Number(cotizacion.valor);
+  const precioTotalUsd =
+    cotizacionNumero > 0
+      ? (precioNeto + totalImpuestos) / cotizacionNumero -
+        totalNotasCredito(notas, "usd") +
+        totalNotasDebito(notas, "usd")
+      : null;
 
   // Qué producto (y cuánto) devuelve cada nota -- mismo criterio que
   // ModalDetalleCompra, para que la nota no sea un monto suelto.
@@ -295,16 +311,18 @@ export function ModalCompra({
       fecha: validarCampo("fecha", form.fecha),
     };
     setErrores(nuevosErrores);
-    if (Object.values(nuevosErrores).some(Boolean)) return;
+    setIntentoGuardar(true);
+    if (Object.values(nuevosErrores).some(Boolean) || cotizacion.error) return;
 
     setGuardando(true);
     try {
       await onGuardar(
         {
           ...form,
+          ...cotizacion.payload,
           fase_id: faseFija?.id ?? form.fase_id,
           proveedor_id: proveedorFijo?.id ?? form.proveedor_id,
-          precio_neto: precioNeto,
+          precio_neto_ars: precioNeto,
           detalle: detalle
             .filter((f) => f.producto_id)
             .map((f) => ({
@@ -333,6 +351,7 @@ export function ModalCompra({
     !form.fecha ? "Fecha" : null,
     !form.tipo_factura ? "Tipo de factura" : null,
     !form.condicion_pago ? "Condición de pago" : null,
+    cotizacion.error ? "Cotización" : null,
   ].filter(Boolean);
 
   // El contexto del header se arma de lo que está elegido ahora (no sólo de
@@ -516,6 +535,16 @@ export function ModalCompra({
                 {errores.fecha && <p className="campo-error">{errores.fecha}</p>}
                 {camposIA.has("fecha") && !errores.fecha && <MarcaIA />}
               </label>
+
+              <CamposCotizacion
+                cotizacion={cotizacion}
+                monto={precioNeto + totalImpuestos}
+                monedaMonto="ars"
+                claseFila="mov-edit__campos"
+                claseCampo="mov-edit__campo"
+                mostrarError={intentoGuardar}
+                disabled={guardando}
+              />
             </SeccionForm>
 
             <SeccionForm titulo="Condiciones">
@@ -717,7 +746,10 @@ export function ModalCompra({
           </div>
 
           <aside className="mov-edit__riel">
-            <TotalRiel monto={precioTotal} />
+            <TotalRiel
+              monto={precioTotal}
+              secundario={precioTotalUsd > 0 ? `≈ ${formatMoneda(precioTotalUsd, "usd")}` : null}
+            />
 
             <BarraComposicion
               segmentos={[

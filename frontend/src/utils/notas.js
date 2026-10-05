@@ -31,16 +31,19 @@ export function notasDeCobros(cobros = []) {
   );
 }
 
-export function totalNotasCredito(notas = []) {
+// Cada nota guarda sus dos cifras con SU cotización (monto_ars/monto_usd):
+// `moneda` elige cuál sumar. Pesos por default, que es como se cargan las de
+// compra; las de cobro se cargan en dólares.
+export function totalNotasCredito(notas = [], moneda = "ars") {
   return notas
     .filter((n) => n.tipo === "nota_credito")
-    .reduce((acc, n) => acc + (Number(n.monto) || 0), 0);
+    .reduce((acc, n) => acc + (Number(n[`monto_${moneda}`]) || 0), 0);
 }
 
-export function totalNotasDebito(notas = []) {
+export function totalNotasDebito(notas = [], moneda = "ars") {
   return notas
     .filter((n) => n.tipo === "nota_debito")
-    .reduce((acc, n) => acc + (Number(n.monto) || 0), 0);
+    .reduce((acc, n) => acc + (Number(n[`monto_${moneda}`]) || 0), 0);
 }
 
 /**

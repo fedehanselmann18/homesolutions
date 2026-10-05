@@ -25,7 +25,9 @@ import { LogoCargando } from "../shared/LogoCargando";
  * puede ser el paso inicial de "IA primero" o el layout con riel.
  *
  * `total` sólo se usa en los modales SIN riel (Gasto): cuando hay riel, el
- * total vive ahí arriba y repetirlo abajo sería ruido.
+ * total vive ahí arriba y repetirlo abajo sería ruido. `totalMoneda` es la
+ * moneda en que se tipea el monto y `totalSecundario` el equivalente en la
+ * otra, ya formateado (preview: la cifra que se guarda la calcula el backend).
  */
 export function EditarShell({
   tipo,
@@ -40,6 +42,8 @@ export function EditarShell({
   aviso,
   totalLabel = "Total",
   total,
+  totalMoneda = "ars",
+  totalSecundario,
   totalColor,
   textoGuardar,
   guardarDeshabilitado = false,
@@ -90,8 +94,11 @@ export function EditarShell({
                 className="mov-edit__footer-total-monto"
                 style={totalColor ? { color: totalColor } : undefined}
               >
-                {formatMoneda(total)}
+                {formatMoneda(total, totalMoneda)}
               </span>
+              {totalSecundario && (
+                <span className="mov-edit__footer-total-secundario">{totalSecundario}</span>
+              )}
             </div>
           )}
           {aviso && <span className="mov-edit__aviso">{aviso}</span>}
@@ -139,14 +146,18 @@ export function SeccionForm({ titulo, accion, children }) {
   );
 }
 
-/** Total grande del riel, con su label arriba. */
-export function TotalRiel({ label = "Total", monto, color }) {
+/**
+ * Total grande del riel, con su label arriba. `secundario` es el equivalente
+ * en la otra moneda ya formateado, debajo y más chico.
+ */
+export function TotalRiel({ label = "Total", monto, moneda = "ars", secundario, color }) {
   return (
     <div className="mov-edit__total">
       <span className="mov-edit__total-label">{label}</span>
       <span className="mov-edit__total-monto" style={color ? { color } : undefined}>
-        {formatMoneda(monto)}
+        {formatMoneda(monto, moneda)}
       </span>
+      {secundario && <span className="mov-edit__total-secundario">{secundario}</span>}
     </div>
   );
 }

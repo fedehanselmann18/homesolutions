@@ -144,6 +144,16 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* La otra moneda del movimiento (congelada), debajo del total: misma
+   receta que el equivalente de los modales de edición (ModalEditar.css). */
+.detalle__total-secundario {
+  margin-top: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-tinta-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 /* --- barra de composición del total --- */
 
 .detalle__composicion {

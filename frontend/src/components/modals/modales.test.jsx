@@ -16,6 +16,13 @@ vi.mock("../../context/useToast", () => ({
 vi.mock("../../hooks/useExtraccionIA", () => ({
   useExtraccionIA: () => ({ extraer: vi.fn(), extrayendo: false }),
 }));
+// La sugerencia del dólar del día (useCotizacionDia): una fija, sin servidor.
+vi.mock("../../hooks/queries", () => ({
+  useUltimaCotizacion: () => ({
+    isLoading: false,
+    data: { id: "c1", fecha: "2026-03-01", tipo: "blue", valor: 1250 },
+  }),
+}));
 
 import ModalCompra from "./ModalCompra";
 import ModalGasto from "./ModalGasto";
@@ -40,8 +47,14 @@ const compra = {
   condicion_pago: "cuenta_corriente",
   estado_pago: "pendiente",
   estado_envio: "entregado",
-  precio_neto: 1842300,
-  precio_total: 2109183,
+  // Doble moneda: pesos tipeados, USD congelado por el backend a 1250 (la nota
+  // de crédito, de otro día, con su propio dólar a 1500).
+  precio_neto_ars: 1842300,
+  precio_neto_usd: 1473.84,
+  precio_total_ars: 2109183,
+  precio_total_usd: 1702.35,
+  cotizacion_dolar: 1250,
+  tipo_cambio: "blue",
   proveedor_id: 3,
   fase_id: 2,
   detalle: [{ id: 1, producto_id: 7, cantidad: 12, precio_unitario: 107000 }],
@@ -50,7 +63,10 @@ const compra = {
     {
       id: 1,
       tipo: "nota_credito",
-      monto: 120000,
+      monto_ars: 120000,
+      monto_usd: 80,
+      cotizacion_dolar: 1500,
+      tipo_cambio: "blue",
       descripcion: "Devolución 2 rollos",
       origen: "devolucion_producto",
       fecha: "2026-03-14",
@@ -63,7 +79,10 @@ const gasto = {
   id: 2,
   descripcion: "Flete y descarga",
   fecha: "2026-03-09",
-  monto: 84500,
+  monto_ars: 84500,
+  monto_usd: 67.6,
+  cotizacion_dolar: 1250,
+  tipo_cambio: "blue",
   tipo_factura: "factura_b",
   categorias: [{ id: 1, nombre: "Logística" }],
   comprobantes: [],
@@ -72,10 +91,25 @@ const cobro = {
   id: 3,
   descripcion: "Anticipo 40%",
   fecha: "2026-03-05",
-  monto: 3200000,
-  monto_neto: 3050000,
+  // Se cobra en dólares: 3200 USD a 1000, con una nota de crédito de 150 USD.
+  monto_usd: 3200,
+  monto_ars: 3200000,
+  monto_neto_usd: 3050,
+  monto_neto_ars: 3050000,
+  cotizacion_dolar: 1000,
+  tipo_cambio: "blue",
   tipo_factura: "factura_a",
-  notas: [{ id: 2, tipo: "nota_credito", monto: 150000, descripcion: "Ajuste" }],
+  notas: [
+    {
+      id: 2,
+      tipo: "nota_credito",
+      monto_usd: 150,
+      monto_ars: 150000,
+      cotizacion_dolar: 1000,
+      tipo_cambio: "blue",
+      descripcion: "Ajuste",
+    },
+  ],
   comprobantes: [],
 };
 const productos = [
@@ -185,9 +219,36 @@ describe("smoke de modales", () => {
     expect(screen.getByText("IVA 21%")).toBeInTheDocument();
     expect(screen.getByText("Notas de crédito")).toBeInTheDocument();
     expect(screen.getAllByText("Total").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("$ 1.842.300").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("-$ 120.000").length).toBeGreaterThan(0);
-    expect(screen.getAllByText("$ 2.109.183").length).toBeGreaterThan(0);
+    // Pesos primero (se pagó en pesos) y el USD congelado entre paréntesis.
+    const textos = [...document.querySelectorAll("span")].map((n) =>
+      n.textContent.replace(/\u00a0/g, " ")
+    );
+    expect(textos).toContain("$ 1.842.300 (US$ 1.474)");
+    expect(textos).toContain("-$ 120.000 (US$ 80)");
+    expect(textos).toContain("$ 2.109.183 (US$ 1.702)");
+  });
+
+  it("ModalDetalleCompra muestra el USD congelado y la cotización debajo del total", () => {
+    const { container } = render(
+      <ModalDetalleCompra compra={compra} productos={productos} onCerrar={noop} />
+    );
+    const secundario = container.querySelector(".detalle__total-secundario");
+    expect(secundario).toHaveTextContent("US$ 1.702");
+    expect(secundario).toHaveTextContent("dólar blue $ 1.250,00");
+  });
+
+  it("un gasto nuevo precarga la cotización sugerida del día", async () => {
+    const { container } = render(<ModalGasto onGuardar={noop} onCerrar={noop} />);
+    // Gasto nuevo arranca en el paso del comprobante: se pasa a mano.
+    await userEvent.click(screen.getByRole("button", { name: /cargar los datos a mano/i }));
+
+    expect(container.querySelector('input[name="cotizacion_dolar"]')).toHaveValue(1250);
+    expect(screen.getByText(/Sugerido: blue \$\s1\.250,00 del 01\/03\/2026/)).toBeInTheDocument();
+  });
+
+  it("al editar, la cotización es la congelada del movimiento, no la sugerida", () => {
+    const { container } = render(<ModalCobro cobro={cobro} onGuardar={noop} onCerrar={noop} />);
+    expect(container.querySelector('input[name="cotizacion_dolar"]')).toHaveValue(1000);
   });
 
   it("ModalDetalleCompra muestra qué productos devuelve cada nota", () => {
@@ -247,17 +308,21 @@ describe("smoke de modales", () => {
 
     expect(container.querySelector(".mov-edit__riel")).toBeNull();
     expect(container.querySelector(".mov-edit__footer-total-monto")).toHaveTextContent("$ 84.500");
+    // Equivalente en USD con la cotización que quedó congelada (1250).
+    expect(container.querySelector(".mov-edit__footer-total-secundario")).toHaveTextContent(
+      "US$ 68"
+    );
   });
 
   it("ModalCobro muestra en el riel el neto y las notas que lo explican", () => {
-    // El cobro de la fixture es 3.200.000 bruto con una nota de crédito de
-    // 150.000 -> neto 3.050.000.
+    // El cobro de la fixture es 3200 USD bruto con una nota de crédito de
+    // 150 USD -> neto 3050 USD.
     const { container } = render(<ModalCobro cobro={cobro} onGuardar={noop} onCerrar={noop} />);
 
     const riel = container.querySelector(".mov-edit__riel");
     expect(riel).toBeTruthy();
     expect(riel).toHaveTextContent("Neto");
-    expect(riel).toHaveTextContent("$ 3.050.000");
+    expect(riel).toHaveTextContent("US$ 3.050");
     // La nota va desplegada, sin toggle, igual que en Compra.
     expect(riel).toHaveTextContent("Ajuste");
     expect(container.querySelector(".seccion-notas-item-toggle")).toBeNull();
@@ -268,7 +333,7 @@ describe("smoke de modales", () => {
     const { container } = render(<ModalCobro cobro={sinNotas} onGuardar={noop} onCerrar={noop} />);
 
     expect(container.querySelector(".mov-edit__notas")).toBeNull();
-    expect(container.querySelector(".mov-edit__riel")).toHaveTextContent("$ 3.200.000");
+    expect(container.querySelector(".mov-edit__riel")).toHaveTextContent("US$ 3.200");
   });
 
   it("ModalCompra nuevo arranca en el paso del comprobante", () => {

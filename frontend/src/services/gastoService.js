@@ -16,8 +16,9 @@ export const getGastosPorFase = async (faseId) => {
 };
 
 export const crearGasto = async (gasto) => {
-  // gasto: { proyecto_id, fase_id (opcional), monto, descripcion, fecha,
-  //          tipo_factura, categoria_gasto_ids: [] }
+  // gasto: { proyecto_id, fase_id (opcional), monto_ars, cotizacion_dolar,
+  //          tipo_cambio, descripcion, fecha, tipo_factura,
+  //          categoria_gasto_ids: [] } -- monto_usd NO: lo congela el backend
   const { data } = await axiosClient.post("/gastos/crear", gasto);
   return data;
 };

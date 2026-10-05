@@ -2,7 +2,9 @@ import { Fragment, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Pencil, Trash2 } from "lucide-react";
 import { useProyectos } from "../hooks/useProyectos";
-import { useFases, useGastos, useCobros, useCompras } from "../hooks/queries";
+import { useFases, useGastos, useCobros, useCompras, useUltimaCotizacion } from "../hooks/queries";
+import { useMonedaAnalisis } from "../hooks/useMonedaAnalisis";
+import { SelectorMoneda } from "../components/shared/SelectorMoneda";
 import { calcularPanel } from "../utils/panel";
 import { TablaProyectos, FilaProyecto } from "../components/proyectos/TablaProyectos";
 import ModalProyecto from "../components/modals/ModalProyecto";
@@ -58,6 +60,10 @@ export function Proyectos() {
   const gastosQuery = useGastos();
   const cobrosQuery = useCobros();
   const comprasQuery = useCompras();
+  // Misma moneda que el Panel y los análisis (elección global); el precio
+  // acordado en pesos sale de la última cotización cargada.
+  const [moneda] = useMonedaAnalisis();
+  const cotizacionActual = useUltimaCotizacion().data ?? null;
 
   const [modalAbierto, setModalAbierto] = useState(false);
   const [proyectoSeleccionado, setProyectoSeleccionado] = useState(null);
@@ -83,10 +89,14 @@ export function Proyectos() {
       gastos: gastosQuery.data,
       cobros: cobrosQuery.data,
       compras: comprasQuery.data,
+      moneda,
+      cotizacionActual,
     });
   }, [
     cargando,
     errorCarga,
+    moneda,
+    cotizacionActual,
     proyectos,
     fasesQuery.data,
     gastosQuery.data,
@@ -223,6 +233,8 @@ export function Proyectos() {
               etiqueta="Filtrar proyectos por estado"
               onCambiar={setFiltroEstado}
             />
+
+            <SelectorMoneda />
 
             <label className="proyectos-orden">
               <span className="label-ficha">Ordenar por</span>

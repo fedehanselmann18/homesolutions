@@ -1,6 +1,7 @@
 // Cálculos derivados de Proveedor para el listado y el detalle. Se separa acá
 // para que el listado (tarjetas) y el detalle usen siempre el mismo criterio.
 import { esCompraImpaga } from "./seguimiento";
+import { precioTotalCompra } from "./moneda";
 import {
   notasDeCompras,
   totalNotasCredito as sumarNotasCredito,
@@ -39,6 +40,9 @@ export function rubroPrincipal(productosDelProveedor, getTipoProducto) {
  * Resumen por proveedor para el listado: cantidad de productos, total
  * histórico comprado (todas las compras, todos los proyectos) y deuda
  * pendiente (mismo criterio que "compras pendientes de pago" de Seguimiento).
+ *
+ * Todo en PESOS: con un proveedor se compra y se debe en pesos (catálogo en
+ * pesos, decisión #4 de docs/PLAN_TIPO_CAMBIO.md, y caveat 6.2 para la deuda).
  */
 export function calcularResumenProveedor(proveedor, { productos = [], compras = [] } = {}) {
   const productosDelProveedor = productos.filter((p) => p.proveedor_id === proveedor.id);
@@ -51,8 +55,8 @@ export function calcularResumenProveedor(proveedor, { productos = [], compras = 
     productosDelProveedor,
     comprasDelProveedor,
     cantidadProductos: productosDelProveedor.length,
-    totalComprado: sumar(comprasDelProveedor, (c) => c.precio_total),
-    deuda: sumar(comprasDelProveedor.filter(esCompraImpaga), (c) => c.precio_total),
+    totalComprado: sumar(comprasDelProveedor, (c) => precioTotalCompra(c, "ars")),
+    deuda: sumar(comprasDelProveedor.filter(esCompraImpaga), (c) => precioTotalCompra(c, "ars")),
     notas,
     totalNotasCredito: sumarNotasCredito(notas),
     totalNotasDebito: sumarNotasDebito(notas),

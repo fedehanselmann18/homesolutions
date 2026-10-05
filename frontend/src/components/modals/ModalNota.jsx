@@ -9,6 +9,8 @@ import { obtenerMensajeError } from "../../utils/errorHandling";
 import "./ModalNota.css";
 import ModalShell from "./ModalShell";
 import { LogoCargando } from "../shared/LogoCargando";
+import { CamposCotizacion } from "./CamposCotizacion";
+import { useCotizacionDia } from "../../hooks/useCotizacionDia";
 
 const EXTENSIONES_PERMITIDAS = ".pdf,.jpg,.jpeg,.png";
 
@@ -36,6 +38,11 @@ const nuevaFilaId = () => `tmp-${++contadorFilaTemp}`;
  *
  * tipo_factura es SIEMPRE obligatorio, sin importar tipo/origen.
  *
+ * Doble moneda (ver docs/PLAN_TIPO_CAMBIO.md): la nota lleva SU cotización,
+ * la de su fecha, no la de la compra o el cobro que ajusta. Las de compra se
+ * cargan en pesos (los productos devueltos salen a precio de la compra
+ * original, en pesos); las de cobro en dólares, como el cobro.
+ *
  * Props:
  * - contexto: "compra" | "cobro"
  * - entidad: la Compra o el Cobro sobre el que se carga la nota.
@@ -43,7 +50,8 @@ const nuevaFilaId = () => `tmp-${++contadorFilaTemp}`;
  *   de detalle de la compra). Solo se usa si contexto="compra".
  * - impuestosDisponibles: catálogo de Impuesto, para las líneas de impuesto
  *   de una devolución. Solo se usa si contexto="compra".
- * - onGuardar({ archivo, tipo, tipo_factura, origen, descripcion, fecha, monto? , detalles?, impuestos? }) => Promise
+ * - onGuardar({ archivo, tipo, tipo_factura, origen, descripcion, fecha,
+ *     cotizacion_dolar, tipo_cambio, monto_ars? | monto_usd?, detalles?, impuestos? }) => Promise
  * - onCerrar: () => void
  */
 export function ModalNota({
@@ -69,6 +77,10 @@ export function ModalNota({
   const [impuestos, setImpuestos] = useState([]); // impuestos de la devolución
   const [error, setError] = useState("");
   const [guardando, setGuardando] = useState(false);
+  const [intentoGuardar, setIntentoGuardar] = useState(false);
+
+  const monedaMonto = contexto === "cobro" ? "usd" : "ars";
+  const cotizacion = useCotizacionDia({ fecha: form.fecha });
 
   const esDevolucion = form.origen === "devolucion_producto";
   const esReposicion = form.origen === "reposicion_producto";
@@ -169,6 +181,12 @@ export function ModalNota({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setIntentoGuardar(true);
+
+    if (cotizacion.error) {
+      setError(cotizacion.error);
+      return;
+    }
 
     if (!archivo) {
       setError("Adjuntá el comprobante de la nota.");
@@ -205,7 +223,7 @@ export function ModalNota({
           .map((f) => ({ impuesto_id: f.impuesto_id, monto: Number(f.monto) })),
       };
     } else {
-      payloadExtra = { monto: Number(form.monto) };
+      payloadExtra = { [`monto_${monedaMonto}`]: Number(form.monto) };
     }
 
     setGuardando(true);
@@ -217,6 +235,7 @@ export function ModalNota({
         origen: form.origen || undefined,
         descripcion: form.descripcion,
         fecha: form.fecha,
+        ...cotizacion.payload,
         ...payloadExtra,
       });
     } catch (err) {
@@ -471,7 +490,7 @@ export function ModalNota({
         </>
       ) : (
         <label>
-          Monto
+          Monto ({monedaMonto === "usd" ? "US$" : "$"})
           <input
             type="number"
             name="monto"
@@ -483,6 +502,15 @@ export function ModalNota({
           />
         </label>
       )}
+
+      <CamposCotizacion
+        cotizacion={cotizacion}
+        monto={usaSelectorProducto ? montoDevolucion : form.monto}
+        monedaMonto={monedaMonto}
+        claseFila="modal-form-fila"
+        mostrarError={intentoGuardar}
+        disabled={guardando}
+      />
 
       <label>
         Motivo

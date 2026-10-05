@@ -50,9 +50,9 @@ describe("notasDeCobros", () => {
 
 describe("totalNotasCredito / totalNotasDebito", () => {
   const notas = [
-    { tipo: "nota_credito", monto: 100 },
-    { tipo: "nota_credito", monto: 50 },
-    { tipo: "nota_debito", monto: 30 },
+    { tipo: "nota_credito", monto_ars: 100, monto_usd: 1 },
+    { tipo: "nota_credito", monto_ars: 50, monto_usd: 0.5 },
+    { tipo: "nota_debito", monto_ars: 30, monto_usd: 0.3 },
   ];
 
   it("suma solo las notas de crédito", () => {
@@ -63,8 +63,13 @@ describe("totalNotasCredito / totalNotasDebito", () => {
     expect(totalNotasDebito(notas)).toBe(30);
   });
 
+  it("suma la moneda que se le pida (pesos por default), cada nota con su cifra congelada", () => {
+    expect(totalNotasCredito(notas, "usd")).toBe(1.5);
+    expect(totalNotasDebito(notas, "usd")).toBe(0.3);
+  });
+
   it("ignora montos no numéricos en vez de romper", () => {
-    const notasConBasura = [{ tipo: "nota_credito", monto: "no-es-un-numero" }];
+    const notasConBasura = [{ tipo: "nota_credito", monto_ars: "no-es-un-numero" }];
     expect(totalNotasCredito(notasConBasura)).toBe(0);
   });
 });

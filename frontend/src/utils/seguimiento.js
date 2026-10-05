@@ -1,3 +1,5 @@
+import { montoCobroNeto, montoGasto, precioTotalCompra } from "./moneda";
+
 // Lo que necesita atención dentro de UN proyecto. La lógica venía de la
 // sección "Necesita atención" del Panel (utils/panel.js), que agrupaba por
 // proyecto y mostraba un renglón por grupo ("2 compras pendientes de pago").
@@ -6,6 +8,12 @@
 
 // Una fase "en curso" que hace este tiempo que no se toca se marca como
 // estancada. Ajustable de una sola línea si a Agus le queda corto o largo.
+//
+// Doble moneda (ver docs/PLAN_TIPO_CAMBIO.md): cada item lleva `monto` en la
+// moneda en que se cargó (`moneda`) y `montoOtra` en la otra, congelada. Lo
+// que se debe a proveedores va en pesos primero (caveat 6.2: una compra
+// impaga es una obligación en pesos); la cobranza, en dólares (el contrato y
+// los cobros son en USD).
 export const DIAS_FASE_ESTANCADA = 30;
 
 const MS_POR_DIA = 1000 * 60 * 60 * 24;
@@ -50,7 +58,9 @@ function describirCompra(compra, productos, proveedores, hoy) {
     proveedor: nombreProveedor(compra, proveedores),
     productos: describirProductos(compra, productos),
     descripcion: compra.descripcion,
-    monto: compra.precio_total,
+    moneda: "ars",
+    monto: precioTotalCompra(compra, "ars"),
+    montoOtra: precioTotalCompra(compra, "usd"),
     fecha: compra.fecha,
     condicionPago: compra.condicion_pago,
     tipoFactura: compra.tipo_factura,
@@ -96,7 +106,9 @@ export function calcularSeguimiento({
     .map((g) => ({
       id: g.id,
       descripcion: g.descripcion,
-      monto: g.monto,
+      moneda: "ars",
+      monto: montoGasto(g, "ars"),
+      montoOtra: montoGasto(g, "usd"),
       fecha: g.fecha,
       dias: diasDesde(g.fecha, hoy),
     }))
@@ -107,7 +119,9 @@ export function calcularSeguimiento({
     .map((c) => ({
       id: c.id,
       descripcion: c.descripcion,
-      monto: c.monto,
+      moneda: "usd",
+      monto: Number(c.monto_usd) || 0,
+      montoOtra: Number(c.monto_ars) || 0,
       fecha: c.fecha,
       dias: diasDesde(c.fecha, hoy),
     }))
@@ -127,23 +141,28 @@ export function calcularSeguimiento({
   comprasImpagas.forEach((compra) => {
     const actual = deuda.get(compra.proveedor) ?? {
       proveedor: compra.proveedor,
+      moneda: "ars",
       monto: 0,
+      montoOtra: 0,
       compras: 0,
     };
     actual.monto += compra.monto;
+    actual.montoOtra += compra.montoOtra;
     actual.compras += 1;
     deuda.set(compra.proveedor, actual);
   });
   const deudaPorProveedor = [...deuda.values()].sort((a, b) => b.monto - a.monto);
 
   const sumar = (items) => items.reduce((acc, i) => acc + i.monto, 0);
+  const sumarOtra = (items) => items.reduce((acc, i) => acc + i.montoOtra, 0);
 
-  // Cuánto falta cobrar de lo que se acordó con el cliente. Mismo criterio
-  // que el Análisis General: cobrado es la suma de los cobros NETA de notas
-  // de crédito/débito (monto_neto, ver Cobro.monto_neto en el backend) y el
-  // pendiente nunca es negativo (si se cobró de más, queda en 0).
+  // Cuánto falta cobrar de lo que se acordó con el cliente, en DÓLARES: el
+  // contrato y los cobros son en USD. Mismo criterio que el Análisis General:
+  // cobrado es la suma de los cobros NETA de notas de crédito/débito
+  // (monto_neto_usd, lo calcula el backend) y el pendiente nunca es negativo
+  // (si se cobró de más, queda en 0).
   const precioAcordado = Number(proyecto?.precio_acordado_usd ?? 0);
-  const cobrado = cobros.reduce((acc, c) => acc + (c.monto_neto ?? c.monto), 0);
+  const cobrado = cobros.reduce((acc, c) => acc + montoCobroNeto(c, "usd"), 0);
   const ultimoCobro = cobros.reduce(
     (masReciente, cobro) => (!masReciente || cobro.fecha > masReciente.fecha ? cobro : masReciente),
     null
@@ -158,7 +177,7 @@ export function calcularSeguimiento({
     ultimoCobro: ultimoCobro
       ? {
           fecha: ultimoCobro.fecha,
-          monto: ultimoCobro.monto_neto ?? ultimoCobro.monto,
+          monto: montoCobroNeto(ultimoCobro, "usd"),
           dias: diasDesde(ultimoCobro.fecha, hoy),
         }
       : null,
@@ -173,11 +192,16 @@ export function calcularSeguimiento({
     cobrosSinComprobante,
     fasesEstancadas,
     deudaPorProveedor,
+    // Cada total en la moneda de sus items (ver arriba) + `*Otra` en la otra.
     totales: {
       deudaTotal: sumar(comprasImpagas),
+      deudaTotalOtra: sumarOtra(comprasImpagas),
       montoSinComprobante: sumar(gastosSinComprobante),
+      montoSinComprobanteOtra: sumarOtra(gastosSinComprobante),
       montoComprasSinComprobante: sumar(comprasSinComprobante),
+      montoComprasSinComprobanteOtra: sumarOtra(comprasSinComprobante),
       montoCobrosSinComprobante: sumar(cobrosSinComprobante),
+      montoCobrosSinComprobanteOtra: sumarOtra(cobrosSinComprobante),
     },
     // Cuántas cosas hay para revisar en total (para el contador de la pestaña).
     pendientes:

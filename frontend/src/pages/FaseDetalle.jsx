@@ -10,6 +10,7 @@ import { getEstadoLabel } from "../constants/estados";
 import { diasDesde, esCompraImpaga } from "../utils/seguimiento";
 import { formatFecha } from "../utils/formato";
 import { useFaseDetalle } from "../hooks/useFaseDetalle";
+import { precioTotalCompra } from "../utils/moneda";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 import ModalGasto from "../components/modals/ModalGasto";
@@ -232,7 +233,12 @@ export function FaseDetalle() {
     canManage && fase.estado !== "terminada" && fase.estado !== "auditada";
 
   const comprasImpagasFase = comprasFase.filter(esCompraImpaga);
-  const montoSinPagarFase = comprasImpagasFase.reduce((acc, c) => acc + c.precio_total, 0);
+  // Lo que se debe, en las dos monedas: la deuda es en pesos (caveat 6.2 de
+  // PLAN_TIPO_CAMBIO.md) y el USD congelado va de referencia.
+  const montoSinPagarFase = {
+    ars: comprasImpagasFase.reduce((acc, c) => acc + precioTotalCompra(c, "ars"), 0),
+    usd: comprasImpagasFase.reduce((acc, c) => acc + precioTotalCompra(c, "usd"), 0),
+  };
 
   return (
     <div className="fase-detalle">

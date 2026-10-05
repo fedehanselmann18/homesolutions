@@ -41,4 +41,10 @@ export const queryKeys = {
   impuestos: {
     all: ["impuestos"],
   },
+  cotizaciones: {
+    all: ["cotizaciones"],
+    // Prefijo común a propósito: crear/editar una cotización invalida
+    // `all` y arrastra todas las "última a tal fecha" que quedaron viejas.
+    ultima: ({ tipo = null, fecha = null } = {}) => ["cotizaciones", "ultima", tipo, fecha],
+  },
 };

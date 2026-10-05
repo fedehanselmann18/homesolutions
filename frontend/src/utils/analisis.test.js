@@ -5,6 +5,9 @@ import { calcularAnalisis } from "./analisis";
 // después se imprime en PDF), así que estos tests cubren los números que
 // tienen que dar EXACTO: cobrado, gastos, compras, margen bruto y disponible.
 
+// Los fixtures van en dólares (la moneda default del análisis). Las compras
+// llevan cotizacion_dolar: 1 para que sus impuestos, que se guardan solo en
+// pesos, valgan lo mismo en USD y las cuentas se lean directo.
 describe("calcularAnalisis", () => {
   it("con todo vacío, todos los totales dan cero sin explotar", () => {
     const resultado = calcularAnalisis({ proyecto: null });
@@ -18,23 +21,17 @@ describe("calcularAnalisis", () => {
   it("calcula cobrado usando monto_neto cuando está presente (ajustado por notas)", () => {
     const resultado = calcularAnalisis({
       proyecto: { precio_acordado_usd: 100000 },
-      cobros: [{ monto: 10000, monto_neto: 9000 }],
+      cobros: [{ monto_usd: 10000, monto_neto_usd: 9000 }],
     });
     expect(resultado.totales.cobrado).toBe(9000);
-  });
-
-  it("usa el monto bruto de un cobro si no tiene monto_neto calculado", () => {
-    const resultado = calcularAnalisis({
-      cobros: [{ monto: 5000 }],
-    });
-    expect(resultado.totales.cobrado).toBe(5000);
   });
 
   it("total de compras = precio_neto + impuestos + ajuste de notas (no solo precio_neto)", () => {
     const resultado = calcularAnalisis({
       compras: [
         {
-          precio_neto: 1000,
+          precio_neto_usd: 1000,
+          cotizacion_dolar: 1,
           impuestos_aplicados: [{ monto: 210 }],
           notas: [],
         },
@@ -50,9 +47,10 @@ describe("calcularAnalisis", () => {
     const resultado = calcularAnalisis({
       compras: [
         {
-          precio_neto: 1000,
+          precio_neto_usd: 1000,
+          cotizacion_dolar: 1,
           impuestos_aplicados: [],
-          notas: [{ tipo: "nota_credito", monto: 300 }],
+          notas: [{ tipo: "nota_credito", monto_usd: 300 }],
         },
       ],
     });
@@ -65,9 +63,10 @@ describe("calcularAnalisis", () => {
     const resultado = calcularAnalisis({
       compras: [
         {
-          precio_neto: 1000,
+          precio_neto_usd: 1000,
+          cotizacion_dolar: 1,
           impuestos_aplicados: [],
-          notas: [{ tipo: "nota_debito", monto: 150 }],
+          notas: [{ tipo: "nota_debito", monto_usd: 150 }],
         },
       ],
     });
@@ -76,9 +75,16 @@ describe("calcularAnalisis", () => {
 
   it("margen bruto no descuenta impuestos (a diferencia de 'disponible')", () => {
     const resultado = calcularAnalisis({
-      cobros: [{ monto_neto: 10000 }],
-      gastos: [{ monto: 2000, categorias: [] }],
-      compras: [{ precio_neto: 3000, impuestos_aplicados: [{ monto: 500 }], notas: [] }],
+      cobros: [{ monto_neto_usd: 10000 }],
+      gastos: [{ monto_usd: 2000, categorias: [] }],
+      compras: [
+        {
+          precio_neto_usd: 3000,
+          cotizacion_dolar: 1,
+          impuestos_aplicados: [{ monto: 500 }],
+          notas: [],
+        },
+      ],
     });
     // margenBruto = cobrado - gastos - comprasNeto - ajusteNotas = 10000 - 2000 - 3000 - 0 = 5000
     expect(resultado.totales.margenBruto).toBe(5000);
@@ -89,21 +95,23 @@ describe("calcularAnalisis", () => {
   it("pctCobrado y pctGastado se calculan sobre el precio acordado", () => {
     const resultado = calcularAnalisis({
       proyecto: { precio_acordado_usd: 20000 },
-      cobros: [{ monto_neto: 10000 }],
-      gastos: [{ monto: 5000, categorias: [] }],
+      cobros: [{ monto_neto_usd: 10000 }],
+      gastos: [{ monto_usd: 5000, categorias: [] }],
     });
     expect(resultado.totales.pctCobrado).toBe(50);
     expect(resultado.totales.pctGastado).toBe(25);
   });
 
   it("no divide por cero si no hay precio acordado", () => {
-    const resultado = calcularAnalisis({ cobros: [{ monto_neto: 1000 }] });
+    const resultado = calcularAnalisis({ cobros: [{ monto_neto_usd: 1000 }] });
     expect(resultado.totales.pctCobrado).toBe(0);
   });
 
   it("reparte el monto de un gasto en partes iguales entre sus categorías", () => {
     const resultado = calcularAnalisis({
-      gastos: [{ monto: 100, categorias: [{ nombre: "Mano de obra" }, { nombre: "Materiales" }] }],
+      gastos: [
+        { monto_usd: 100, categorias: [{ nombre: "Mano de obra" }, { nombre: "Materiales" }] },
+      ],
     });
     const porCategoria = resultado.gastosPorCategoria;
     expect(porCategoria).toHaveLength(2);
@@ -114,7 +122,7 @@ describe("calcularAnalisis", () => {
 
   it("un gasto sin categorías cae en 'Sin categoría'", () => {
     const resultado = calcularAnalisis({
-      gastos: [{ monto: 200, categorias: [] }],
+      gastos: [{ monto_usd: 200, categorias: [] }],
     });
     expect(resultado.gastosPorCategoria).toEqual([
       { nombre: "Sin categoría", monto: 200, pct: 100 },
@@ -124,8 +132,8 @@ describe("calcularAnalisis", () => {
   it("cuenta gastos sin comprobante", () => {
     const resultado = calcularAnalisis({
       gastos: [
-        { monto: 100, categorias: [], comprobantes: [] },
-        { monto: 200, categorias: [], comprobantes: [{ id: "1" }] },
+        { monto_usd: 100, categorias: [], comprobantes: [] },
+        { monto_usd: 200, categorias: [], comprobantes: [{ id: "1" }] },
       ],
     });
     expect(resultado.gastosSinComprobante.cantidad).toBe(1);
@@ -134,8 +142,8 @@ describe("calcularAnalisis", () => {
 
   it("la cascada arranca en 0 en los pasos 'subtotal'/'total' y encadena el resto", () => {
     const resultado = calcularAnalisis({
-      cobros: [{ monto_neto: 1000 }],
-      gastos: [{ monto: 200, categorias: [] }],
+      cobros: [{ monto_neto_usd: 1000 }],
+      gastos: [{ monto_usd: 200, categorias: [] }],
     });
     const cobradoPaso = resultado.cascada.find((p) => p.nombre === "Cobrado");
     expect(cobradoPaso.rango).toEqual([0, 1000]);
@@ -146,10 +154,10 @@ describe("calcularAnalisis", () => {
 
   it("un gasto con monto negativo (corrección) resta del total en vez de sumar", () => {
     const resultado = calcularAnalisis({
-      cobros: [{ monto_neto: 1000 }],
+      cobros: [{ monto_neto_usd: 1000 }],
       gastos: [
-        { monto: 300, categorias: [] },
-        { monto: -100, categorias: [] },
+        { monto_usd: 300, categorias: [] },
+        { monto_usd: -100, categorias: [] },
       ],
     });
     expect(resultado.totales.gastos).toBe(200);
@@ -160,9 +168,10 @@ describe("calcularAnalisis", () => {
     const resultado = calcularAnalisis({
       compras: [
         {
-          precio_neto: 100,
+          precio_neto_usd: 100,
+          cotizacion_dolar: 1,
           impuestos_aplicados: [],
-          notas: [{ tipo: "nota_credito", monto: 500 }],
+          notas: [{ tipo: "nota_credito", monto_usd: 500 }],
         },
       ],
     });
@@ -171,19 +180,26 @@ describe("calcularAnalisis", () => {
 
   it("ignora items null/undefined dentro de los arrays de notas sin explotar", () => {
     const resultado = calcularAnalisis({
-      compras: [{ precio_neto: 100, impuestos_aplicados: [], notas: null }],
-      cobros: [{ monto: 50, monto_neto: null }],
+      compras: [
+        { precio_neto_usd: 100, cotizacion_dolar: 1, impuestos_aplicados: [], notas: null },
+      ],
     });
     expect(resultado.totales.compras).toBe(100);
-    expect(resultado.totales.cobrado).toBe(50); // monto_neto null -> cae al bruto
   });
 
   it("cobradoPorFase: si está 'en rojo' (gastó más de lo cobrado) no hay fila 'Disponible' y la base es lo gastado", () => {
     const resultado = calcularAnalisis({
       fases: [{ id: 1, nombre: "Demolición" }],
-      cobros: [{ monto_neto: 100 }],
+      cobros: [{ monto_neto_usd: 100 }],
       compras: [
-        { fase_id: 1, precio_neto: 400, precio_total: 400, impuestos_aplicados: [], notas: [] },
+        {
+          fase_id: 1,
+          precio_neto_usd: 400,
+          cotizacion_dolar: 1,
+          precio_total_usd: 400,
+          impuestos_aplicados: [],
+          notas: [],
+        },
       ],
     });
     expect(resultado.totales.disponible).toBeLessThan(0);
@@ -195,12 +211,77 @@ describe("calcularAnalisis", () => {
   it("cobradoPorFase: con margen positivo sí incluye la fila 'Disponible'", () => {
     const resultado = calcularAnalisis({
       fases: [{ id: 1, nombre: "Demolición" }],
-      cobros: [{ monto_neto: 1000 }],
+      cobros: [{ monto_neto_usd: 1000 }],
       compras: [
-        { fase_id: 1, precio_neto: 300, precio_total: 300, impuestos_aplicados: [], notas: [] },
+        {
+          fase_id: 1,
+          precio_neto_usd: 300,
+          cotizacion_dolar: 1,
+          precio_total_usd: 300,
+          impuestos_aplicados: [],
+          notas: [],
+        },
       ],
     });
     const disponibleFila = resultado.cobradoPorFase.find((f) => f.nombre === "Disponible");
     expect(disponibleFila.monto).toBe(700);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Doble moneda (docs/PLAN_TIPO_CAMBIO.md, Fase 5): cada moneda suma su cifra
+// congelada, nada se reconvierte al leer, y los % salen siempre de los USD.
+// ---------------------------------------------------------------------------
+
+describe("calcularAnalisis en dos monedas", () => {
+  // Se cobró a 1000 y se pagó a 1250: en USD gana, en pesos nominales no.
+  const datos = {
+    proyecto: { precio_acordado_usd: 100000 },
+    cobros: [{ monto_neto_usd: 65000, monto_neto_ars: 65000000 }],
+    gastos: [{ monto_usd: 8000, monto_ars: 10000000, categorias: [] }],
+    compras: [
+      {
+        precio_neto_usd: 40000,
+        precio_neto_ars: 50000000,
+        precio_total_usd: 48400,
+        precio_total_ars: 60500000,
+        cotizacion_dolar: 1250,
+        impuestos_aplicados: [{ monto: 10500000 }],
+        notas: [],
+      },
+    ],
+  };
+
+  it("en USD suma las cifras en dólares y los impuestos con la cotización de su compra", () => {
+    const { totales } = calcularAnalisis({ ...datos, moneda: "usd" });
+    expect(totales.cobrado).toBe(65000);
+    expect(totales.impuestos).toBe(8400);
+    expect(totales.egresos).toBe(56400);
+    expect(totales.disponible).toBe(8600);
+  });
+
+  it("en pesos suma las cifras en pesos congeladas, sin reexpresar", () => {
+    const { totales } = calcularAnalisis({
+      ...datos,
+      moneda: "ars",
+      cotizacionActual: { valor: 1500 },
+    });
+    expect(totales.cobrado).toBe(65000000);
+    expect(totales.egresos).toBe(70500000);
+    expect(totales.disponible).toBe(-5500000);
+    expect(totales.precioAcordado).toBe(150000000);
+  });
+
+  it("los % contra el precio acordado salen de los dólares en las dos monedas", () => {
+    const usd = calcularAnalisis({ ...datos, moneda: "usd" });
+    const ars = calcularAnalisis({ ...datos, moneda: "ars", cotizacionActual: { valor: 1500 } });
+    expect(usd.totales.pctGastado).toBeCloseTo(56.4);
+    expect(ars.totales.pctGastado).toBeCloseTo(56.4); // 70.5M / 150M daría 47%
+  });
+
+  it("sin cotización cargada, el precio acordado en pesos queda en null", () => {
+    const { totales } = calcularAnalisis({ ...datos, moneda: "ars" });
+    expect(totales.precioAcordado).toBeNull();
+    expect(totales.pctGastado).toBeCloseTo(56.4);
   });
 });

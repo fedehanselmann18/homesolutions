@@ -10,7 +10,16 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { useProyectos, useFases, useGastos, useCobros, useCompras } from "../hooks/queries";
+import {
+  useProyectos,
+  useFases,
+  useGastos,
+  useCobros,
+  useCompras,
+  useUltimaCotizacion,
+} from "../hooks/queries";
+import { useMonedaAnalisis } from "../hooks/useMonedaAnalisis";
+import { SelectorMoneda } from "../components/shared/SelectorMoneda";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 import { TarjetaKpi } from "../components/shared/TarjetaKpi";
@@ -115,14 +124,14 @@ function Seccion({ titulo, descripcion, accion, children }) {
   );
 }
 
-function TooltipEvolucion({ active, payload }) {
+function TooltipEvolucion({ active, payload, moneda }) {
   if (!active || !payload?.length) return null;
   const mes = payload[0].payload;
   return (
     <div className="panel-tooltip">
       <strong>{mes.etiquetaCompleta}</strong>
-      <span style={{ color: VERDE }}>Cobrado: {formatMoneda(mes.cobrado)}</span>
-      <span style={{ color: NARANJA }}>Gastado: {formatMoneda(mes.gastado)}</span>
+      <span style={{ color: VERDE }}>Cobrado: {formatMoneda(mes.cobrado, moneda)}</span>
+      <span style={{ color: NARANJA }}>Gastado: {formatMoneda(mes.gastado, moneda)}</span>
     </div>
   );
 }
@@ -139,6 +148,10 @@ export function Dashboard() {
   const gastosQuery = useGastos();
   const cobrosQuery = useCobros();
   const comprasQuery = useCompras();
+  // Moneda del panel (la misma elección que los análisis) y la última
+  // cotización, para el precio acordado en pesos (decisión #8 del plan).
+  const [moneda] = useMonedaAnalisis();
+  const cotizacionActual = useUltimaCotizacion().data ?? null;
 
   const cargando =
     proyectosQuery.isLoading ||
@@ -175,7 +188,11 @@ export function Dashboard() {
     ]
   );
 
-  const panel = useMemo(() => (datos ? calcularPanel(datos) : null), [datos]);
+  const panel = useMemo(
+    () => (datos ? calcularPanel({ ...datos, moneda, cotizacionActual }) : null),
+    [datos, moneda, cotizacionActual]
+  );
+  const fm = (monto) => (monto == null ? "sin cotización" : formatMoneda(monto, moneda));
 
   if (cargando) return <DashboardSkeleton />;
   if (error || !panel)
@@ -226,7 +243,8 @@ export function Dashboard() {
         titulo="Panel"
         subtitulo={`${totalProyectos} ${
           totalProyectos === 1 ? "proyecto" : "proyectos"
-        } en total · ${formatMoneda(kpis.contratadoEnCurso)} contratados en curso`}
+        } en total · ${fm(kpis.contratadoEnCurso)} contratados en curso`}
+        acciones={<SelectorMoneda />}
       />
 
       <div className="panel-kpis">
@@ -241,7 +259,7 @@ export function Dashboard() {
         <div className="panel-kpi-realce">
           <TarjetaKpi
             titulo="Dinero disponible"
-            valor={formatMoneda(kpis.disponibleTotal)}
+            valor={fm(kpis.disponibleTotal)}
             detalle="Cobros − gastos − compras (proyectos en curso)"
             color={kpis.disponibleTotal >= 0 ? VERDE : ROJO}
             destacado
@@ -249,12 +267,12 @@ export function Dashboard() {
         </div>
         <TarjetaKpi
           titulo="Cobrado este mes"
-          valor={formatMoneda(kpis.cobradoMes)}
-          detalle={`${formatMoneda(kpis.pendienteDeCobrar)} pendiente de cobrar`}
+          valor={fm(kpis.cobradoMes)}
+          detalle={`${fm(kpis.pendienteDeCobrar)} pendiente de cobrar`}
         />
         <TarjetaKpi
           titulo="Ganancia neta del mes"
-          valor={formatMoneda(kpis.gananciaNetaMes)}
+          valor={fm(kpis.gananciaNetaMes)}
           detalle="Cobrado − gastos − compras − impuestos"
           color={kpis.gananciaNetaMes >= 0 ? VERDE : ROJO}
           destacado
@@ -297,8 +315,15 @@ export function Dashboard() {
             <BarChart data={evolucion} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-linea)" />
               <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-              <YAxis tickFormatter={formatMonedaCorta} tick={{ fontSize: 12 }} width={80} />
-              <Tooltip content={<TooltipEvolucion />} cursor={{ fill: "var(--color-base-2)" }} />
+              <YAxis
+                tickFormatter={(v) => formatMonedaCorta(v, moneda)}
+                tick={{ fontSize: 12 }}
+                width={80}
+              />
+              <Tooltip
+                content={<TooltipEvolucion moneda={moneda} />}
+                cursor={{ fill: "var(--color-base-2)" }}
+              />
               <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar
                 dataKey="cobrado"
@@ -343,7 +368,7 @@ export function Dashboard() {
                       </span>
                     </span>
                     <span className="panel-actividad-monto" style={{ color: tipo.color }}>
-                      {signoTexto(tipo.signo)} {formatMoneda(mov.monto)}
+                      {signoTexto(tipo.signo)} {fm(mov.monto)}
                     </span>
                   </li>
                 );

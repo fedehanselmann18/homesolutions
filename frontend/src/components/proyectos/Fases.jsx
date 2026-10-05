@@ -118,6 +118,8 @@ export function Fases({ proyectoId }) {
       fases: fasesQuery.data,
       gastos: gastosQuery.data,
       compras: comprasQuery.data,
+      // En dólares, como el precio acordado contra el que se compara cada fase.
+      moneda: "usd",
     });
     const porFase = new Map(analisis.egresosPorFase.map((f) => [f.faseId, f.total]));
     return { porFase, totales: analisis.totales };
@@ -210,7 +212,7 @@ export function Fases({ proyectoId }) {
                 </span>
 
                 <span className="fases-tabla-col--num">
-                  {sinDatos || gastado === 0 ? "—" : formatMoneda(gastado)}
+                  {sinDatos || gastado === 0 ? "—" : formatMoneda(gastado, "usd")}
                 </span>
 
                 <span className="fases-tabla-col--pct">
@@ -279,7 +281,7 @@ export function Fases({ proyectoId }) {
             </span>
             <span />
             <span className="fases-tabla-col--num">
-              {gastadoPorFase ? formatMoneda(gastadoPorFase.totales.egresos) : "—"}
+              {gastadoPorFase ? formatMoneda(gastadoPorFase.totales.egresos, "usd") : "—"}
             </span>
             <span className="fases-tabla-total-pct">
               {gastadoPorFase

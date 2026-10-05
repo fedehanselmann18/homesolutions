@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
 
 import { calcularSeguimiento } from "../../utils/seguimiento";
-import { formatMoneda, formatFecha } from "../../utils/formato";
+import { formatFecha } from "../../utils/formato";
+import { formatMontoDeItem } from "../../utils/moneda";
 import { getCondicionPagoLabel } from "../../constants/estadoCompra";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
 import { ROJO, NARANJA, GRIS } from "../../constants/colores";
@@ -127,7 +128,7 @@ export function SeguimientoFase({
                     fecha={formatFecha(compra.fecha)}
                     badges={badgesCompra(compra)}
                     etiqueta={diasTexto(compra.dias)}
-                    monto={formatMoneda(compra.monto)}
+                    monto={formatMontoDeItem(compra)}
                     color={ROJO}
                     onClick={() => abrirDetalleCompra(compra.id)}
                   />
@@ -135,7 +136,14 @@ export function SeguimientoFase({
               </div>
             )}
             {comprasImpagas.length > 0 && (
-              <AlertaColumna>{formatMoneda(totales.deudaTotal)} sin pagar</AlertaColumna>
+              <AlertaColumna>
+                {formatMontoDeItem({
+                  monto: totales.deudaTotal,
+                  montoOtra: totales.deudaTotalOtra,
+                  moneda: "ars",
+                })}{" "}
+                sin pagar
+              </AlertaColumna>
             )}
           </div>
 
@@ -191,7 +199,7 @@ export function SeguimientoFase({
                     productos={compra.productos}
                     fecha={formatFecha(compra.fecha)}
                     badges={badgesCompra(compra)}
-                    monto={formatMoneda(compra.monto)}
+                    monto={formatMontoDeItem(compra)}
                     color={GRIS}
                     onClick={() => abrirDetalleCompra(compra.id)}
                   />
@@ -211,7 +219,11 @@ export function SeguimientoFase({
         titulo="Gastos sin comprobante"
         descripcion={
           gastosSinComprobante.length > 0
-            ? `${formatMoneda(totales.montoSinComprobante)} sin respaldo cargado`
+            ? `${formatMontoDeItem({
+                monto: totales.montoSinComprobante,
+                montoOtra: totales.montoSinComprobanteOtra,
+                moneda: "ars",
+              })} sin respaldo cargado`
             : undefined
         }
         cantidad={gastosSinComprobante.length}
@@ -225,7 +237,7 @@ export function SeguimientoFase({
                 key={gasto.id}
                 titulo={gasto.descripcion}
                 subtitulo={`Cargado el ${formatFecha(gasto.fecha)}`}
-                monto={formatMoneda(gasto.monto)}
+                monto={formatMontoDeItem(gasto)}
                 color={GRIS}
                 onClick={() => abrirDetalleGasto(gasto.id)}
               />
@@ -252,7 +264,7 @@ export function SeguimientoFase({
                 <tr key={fila.proveedor}>
                   <td>{fila.proveedor}</td>
                   <td>{fila.compras}</td>
-                  <td className="seguimiento-tabla-monto">{formatMoneda(fila.monto)}</td>
+                  <td className="seguimiento-tabla-monto">{formatMontoDeItem(fila)}</td>
                 </tr>
               ))}
             </tbody>
@@ -260,7 +272,13 @@ export function SeguimientoFase({
               <tr>
                 <td>Total</td>
                 <td>{comprasImpagas.length}</td>
-                <td className="seguimiento-tabla-monto">{formatMoneda(totales.deudaTotal)}</td>
+                <td className="seguimiento-tabla-monto">
+                  {formatMontoDeItem({
+                    monto: totales.deudaTotal,
+                    montoOtra: totales.deudaTotalOtra,
+                    moneda: "ars",
+                  })}
+                </td>
               </tr>
             </tfoot>
           </table>

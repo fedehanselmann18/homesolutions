@@ -335,6 +335,20 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* Equivalente en la otra moneda (doble moneda, ver PLAN_TIPO_CAMBIO.md):
+   debajo del total y como dato secundario, no compite con la cifra tipeada. */
+.mov-edit__total-secundario,
+.mov-edit__footer-total-secundario {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-tinta-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.mov-edit__total-secundario {
+  margin-top: var(--space-1);
+}
+
 .mov-edit__estados {
   display: flex;
   flex-direction: column;

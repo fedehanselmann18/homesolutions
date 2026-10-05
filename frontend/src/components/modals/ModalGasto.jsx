@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ComprobantesUploader } from "../shared/ComprobantesUploader";
-import { formatFecha } from "../../utils/formato";
+import { formatFecha, formatMoneda } from "../../utils/formato";
 import { TIPOS_FACTURA, getTipoFacturaLabel } from "../../constants/tipoFactura";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { useExtraccionIA } from "../../hooks/useExtraccionIA";
@@ -9,6 +9,8 @@ import { validarRequerido, validarMonto, validarFecha } from "../../utils/formVa
 import { EditarShell, SeccionForm } from "./PiezasEditar";
 import { PasoComprobante, BannerIA, ResumenValidacion, MarcaIA } from "./PiezasIA";
 import { LogoCargando } from "../shared/LogoCargando";
+import { CamposCotizacion } from "./CamposCotizacion";
+import { useCotizacionDia } from "../../hooks/useCotizacionDia";
 
 const validarCampo = (name, value) => {
   if (name === "descripcion") return validarRequerido(value, "La descripción es obligatoria.");
@@ -41,6 +43,10 @@ export function ModalGasto({
   const [errores, setErrores] = useState({});
   const { extraer, extrayendo } = useExtraccionIA();
   const toast = useToast();
+  // El gasto se paga en pesos: el monto se tipea en ARS y el USD lo congela
+  // el backend con esta cotización (ver docs/PLAN_TIPO_CAMBIO.md).
+  const cotizacion = useCotizacionDia({ fecha: form.fecha, inicial: gasto });
+  const [intentoGuardar, setIntentoGuardar] = useState(false);
 
   // Flujo "IA primero" (dirección 5c): ver el comentario equivalente en
   // ModalCompra.jsx.
@@ -53,7 +59,7 @@ export function ModalGasto({
     if (gasto) {
       setForm({
         descripcion: gasto.descripcion ?? "",
-        monto: gasto.monto ?? "",
+        monto: gasto.monto_ars ?? "",
         fecha: gasto.fecha ?? "",
         tipo_factura: gasto.tipo_factura ?? "",
         // Si viene de la pantalla de una fase, la fase queda fija aunque
@@ -127,11 +133,13 @@ export function ModalGasto({
       fecha: validarCampo("fecha", form.fecha),
     };
     setErrores(nuevosErrores);
-    if (Object.values(nuevosErrores).some(Boolean)) return;
+    setIntentoGuardar(true);
+    if (Object.values(nuevosErrores).some(Boolean) || cotizacion.error) return;
 
     const payload = {
       descripcion: form.descripcion,
-      monto: Number(form.monto),
+      monto_ars: Number(form.monto),
+      ...cotizacion.payload,
       fecha: form.fecha,
       tipo_factura: form.tipo_factura,
       // Con faseFija la fase no se puede tocar desde el form -- se manda
@@ -157,7 +165,10 @@ export function ModalGasto({
     !form.monto ? "Monto" : null,
     !form.fecha ? "Fecha" : null,
     !form.tipo_factura ? "Tipo de factura" : null,
+    cotizacion.error ? "Cotización" : null,
   ].filter(Boolean);
+
+  const montoUsd = Number(form.monto) / Number(cotizacion.valor);
 
   const uploader = (
     <ComprobantesUploader
@@ -197,6 +208,9 @@ export function ModalGasto({
       // agrega nada, a diferencia de Compra/Cobro donde el total es derivado).
       totalLabel="Monto"
       total={Number(form.monto) || 0}
+      totalSecundario={
+        Number.isFinite(montoUsd) && montoUsd > 0 ? `≈ ${formatMoneda(montoUsd, "usd")}` : null
+      }
       totalColor={TIPOS_MOVIMIENTO.gasto.color}
       textoGuardar={esEdicion ? "Guardar cambios" : "Crear gasto"}
       guardarDeshabilitado={!mostrarFormulario}
@@ -272,7 +286,7 @@ export function ModalGasto({
 
             <div className="mov-edit__campos">
               <label className={`mov-edit__campo ${claseIA("monto")}`}>
-                Monto
+                Monto ($)
                 <input
                   type="number"
                   name="monto"
@@ -299,6 +313,16 @@ export function ModalGasto({
                 {camposIA.has("fecha") && !errores.fecha && <MarcaIA />}
               </label>
             </div>
+
+            <CamposCotizacion
+              cotizacion={cotizacion}
+              monto={form.monto}
+              monedaMonto="ars"
+              claseFila="mov-edit__campos"
+              claseCampo="mov-edit__campo"
+              mostrarError={intentoGuardar}
+              disabled={guardando}
+            />
           </SeccionForm>
 
           <SeccionForm titulo="Clasificación">

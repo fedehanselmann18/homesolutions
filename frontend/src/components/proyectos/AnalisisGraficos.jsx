@@ -18,7 +18,16 @@ export function Seccion({ titulo, descripcion, children, vacio, mensajeVacio }) 
   );
 }
 
-export function TooltipMoneda({ active, payload, label, obtenerValor, mostrarPorcentaje }) {
+// `moneda` ("usd" | "ars") es la del análisis que se está mirando: los
+// montos que llegan acá ya vienen en esa moneda (ver utils/analisis.js).
+export function TooltipMoneda({
+  active,
+  payload,
+  label,
+  obtenerValor,
+  mostrarPorcentaje,
+  moneda = "ars",
+}) {
   if (!active || !payload?.length) return null;
   const dato = payload[0].payload;
   const valor = obtenerValor(dato);
@@ -27,7 +36,7 @@ export function TooltipMoneda({ active, payload, label, obtenerValor, mostrarPor
   return (
     <div className="analisis-tooltip">
       <strong>{label ?? dato.name ?? dato.nombre}</strong>
-      <span>{formatMoneda(valor)}</span>
+      <span>{formatMoneda(valor, moneda)}</span>
       {mostrarPorcentaje && Number.isFinite(dato.pct) && (
         <span className="analisis-tooltip-pct">{dato.pct.toFixed(1)}%</span>
       )}
@@ -37,7 +46,18 @@ export function TooltipMoneda({ active, payload, label, obtenerValor, mostrarPor
 
 // depth 0 = raíz (no se dibuja), 1 = tipo de producto (solo el marco),
 // 2 = producto (el bloque con nombre y monto)
-export function ContenidoTreemap({ x, y, width, height, depth, name, monto, color, indice }) {
+export function ContenidoTreemap({
+  x,
+  y,
+  width,
+  height,
+  depth,
+  name,
+  monto,
+  color,
+  indice,
+  moneda = "ars",
+}) {
   if (depth === 0) return null;
 
   if (depth === 1) {
@@ -75,7 +95,7 @@ export function ContenidoTreemap({ x, y, width, height, depth, name, monto, colo
             {name}
           </text>
           <text x={x + 8} y={y + 36} className="analisis-treemap-monto">
-            {formatMonedaCorta(monto)}
+            {formatMonedaCorta(monto, moneda)}
           </text>
         </>
       )}
@@ -83,7 +103,7 @@ export function ContenidoTreemap({ x, y, width, height, depth, name, monto, colo
   );
 }
 
-export function Torta({ datos, colores }) {
+export function Torta({ datos, colores, moneda = "ars" }) {
   return (
     <div className="analisis-torta">
       <ResponsiveContainer width="100%" height={220}>
@@ -101,7 +121,11 @@ export function Torta({ datos, colores }) {
               <Cell key={dato.nombre} fill={colores[i % colores.length]} />
             ))}
           </Pie>
-          <Tooltip content={<TooltipMoneda obtenerValor={(d) => d.monto} mostrarPorcentaje />} />
+          <Tooltip
+            content={
+              <TooltipMoneda obtenerValor={(d) => d.monto} mostrarPorcentaje moneda={moneda} />
+            }
+          />
         </PieChart>
       </ResponsiveContainer>
 
@@ -114,7 +138,7 @@ export function Torta({ datos, colores }) {
             />
             <span className="analisis-leyenda-nombre">{dato.nombre}</span>
             <span className="analisis-leyenda-pct">{dato.pct.toFixed(1)}%</span>
-            <span className="analisis-leyenda-monto">{formatMoneda(dato.monto)}</span>
+            <span className="analisis-leyenda-monto">{formatMoneda(dato.monto, moneda)}</span>
           </li>
         ))}
       </ul>

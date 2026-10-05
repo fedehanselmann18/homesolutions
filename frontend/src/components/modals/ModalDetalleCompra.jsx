@@ -1,4 +1,5 @@
-import { formatMoneda, formatFecha } from "../../utils/formato";
+import { formatMoneda, formatFecha, formatMonedaDual } from "../../utils/formato";
+import { leyendaOtraMoneda } from "../../utils/moneda";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
 import { getEstadoPago, getEstadoEnvio, getCondicionPagoLabel } from "../../constants/estadoCompra";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
@@ -59,6 +60,12 @@ export function ModalDetalleCompra({
   const notas = compra.notas ?? [];
   const notasCredito = totalNotasCredito(notas);
   const notasDebito = totalNotasDebito(notas);
+  // La compra se paga en pesos: pesos principal y USD congelado entre
+  // paréntesis. Los impuestos heredan la cotización de la compra; cada nota
+  // trae la suya (por eso el USD del total no es total en pesos / cotización).
+  const usd = (ars) => Number(ars) / Number(compra.cotizacion_dolar);
+  const dual = (ars, usdCongelado) =>
+    formatMonedaDual(ars, usdCongelado ?? usd(ars), { principal: "ars" });
 
   const contexto = [proveedorNombre, faseNombre, getTipoFacturaLabel(compra.tipo_factura)]
     .filter(Boolean)
@@ -82,13 +89,14 @@ export function ModalDetalleCompra({
       fecha={formatFecha(compra.fecha)}
       titulo={compra.descripcion}
       subtitulo={subtitulo}
-      total={compra.precio_total}
+      total={compra.precio_total_ars}
+      totalSecundario={leyendaOtraMoneda(compra.precio_total_usd, "usd", compra)}
       onCerrar={onCerrar}
       onEditar={canManage ? onEditar : undefined}
     >
       <BarraComposicion
         segmentos={[
-          { label: "Neto", monto: compra.precio_neto, color: TIPOS_MOVIMIENTO.compra.color },
+          { label: "Neto", monto: compra.precio_neto_ars, color: TIPOS_MOVIMIENTO.compra.color },
           { label: "Impuestos", monto: totalImpuestos, color: OLIVA_CLARO },
           {
             label: "Nota de crédito",
@@ -109,13 +117,13 @@ export function ModalDetalleCompra({
         <div className="detalle__desglose">
           <div className="detalle__desglose-fila">
             <span>Neto</span>
-            <span>{formatMoneda(compra.precio_neto)}</span>
+            <span>{dual(compra.precio_neto_ars, compra.precio_neto_usd)}</span>
           </div>
           {impuestos.length > 0 ? (
             impuestos.map((i) => (
               <div className="detalle__desglose-fila" key={i.id}>
                 <span>{i.impuesto?.nombre ?? "Impuesto"}</span>
-                <span>{formatMoneda(i.monto)}</span>
+                <span>{dual(i.monto)}</span>
               </div>
             ))
           ) : (
@@ -127,18 +135,18 @@ export function ModalDetalleCompra({
           {notasCredito > 0 && (
             <div className="detalle__desglose-fila detalle__desglose-fila--credito">
               <span>Notas de crédito</span>
-              <span>-{formatMoneda(notasCredito)}</span>
+              <span>-{dual(notasCredito, totalNotasCredito(notas, "usd"))}</span>
             </div>
           )}
           {notasDebito > 0 && (
             <div className="detalle__desglose-fila detalle__desglose-fila--debito">
               <span>Notas de débito</span>
-              <span>+{formatMoneda(notasDebito)}</span>
+              <span>+{dual(notasDebito, totalNotasDebito(notas, "usd"))}</span>
             </div>
           )}
           <div className="detalle__desglose-fila detalle__desglose-fila--total">
             <span>Total</span>
-            <span>{formatMoneda(compra.precio_total)}</span>
+            <span>{dual(compra.precio_total_ars, compra.precio_total_usd)}</span>
           </div>
         </div>
       </SeccionDetalle>

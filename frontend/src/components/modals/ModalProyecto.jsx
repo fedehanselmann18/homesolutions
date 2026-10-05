@@ -1,6 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import ModalShell from "./ModalShell";
 import { LogoCargando } from "../shared/LogoCargando";
+import { CamposCotizacion } from "./CamposCotizacion";
+import { useCotizacionDia } from "../../hooks/useCotizacionDia";
 
 const ESTADOS_OPCIONES = [
   { value: "a_iniciar", label: "A iniciar" },
@@ -19,6 +21,21 @@ export function ModalProyecto({ proyecto, onGuardar, onCerrar }) {
     precio_acordado_usd: "",
   });
   const [guardando, setGuardando] = useState(false);
+
+  // El precio se acuerda en dólares. El dólar del día de la firma es solo
+  // trazabilidad (no entra en ninguna cuenta, ver models.Proyecto): se
+  // sugiere el de la fecha de inicio y se puede dejar vacío.
+  const cotizacionInicial = useMemo(
+    () =>
+      proyecto
+        ? {
+            tipo_cambio: proyecto.tipo_cambio_acordado ?? undefined,
+            cotizacion_dolar: proyecto.cotizacion_acordada ?? "",
+          }
+        : undefined,
+    [proyecto]
+  );
+  const cotizacion = useCotizacionDia({ fecha: form.fecha_inicio, inicial: cotizacionInicial });
 
   useEffect(() => {
     if (proyecto) {
@@ -41,9 +58,12 @@ export function ModalProyecto({ proyecto, onGuardar, onCerrar }) {
     e.preventDefault();
     setGuardando(true);
     try {
+      const hayCotizacion = Number(cotizacion.valor) > 0;
       await onGuardar({
         ...form,
         precio_acordado_usd: Number(form.precio_acordado_usd),
+        cotizacion_acordada: hayCotizacion ? Number(cotizacion.valor) : null,
+        tipo_cambio_acordado: hayCotizacion ? cotizacion.tipo : null,
       });
     } finally {
       setGuardando(false);
@@ -120,7 +140,7 @@ export function ModalProyecto({ proyecto, onGuardar, onCerrar }) {
       </label>
 
       <label>
-        Precio acordado
+        Precio acordado (US$)
         <input
           type="number"
           name="precio_acordado_usd"
@@ -131,6 +151,16 @@ export function ModalProyecto({ proyecto, onGuardar, onCerrar }) {
           required
         />
       </label>
+
+      <CamposCotizacion
+        cotizacion={cotizacion}
+        monto={form.precio_acordado_usd}
+        monedaMonto="usd"
+        claseFila="modal-form-fila"
+        etiqueta="Dólar de la firma (opcional)"
+        requerido={false}
+        disabled={guardando}
+      />
     </ModalShell>
   );
 }

@@ -1,4 +1,5 @@
-import { formatMoneda, formatFecha } from "../../utils/formato";
+import { formatFecha, formatMonedaDual } from "../../utils/formato";
+import { leyendaOtraMoneda } from "../../utils/moneda";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
@@ -24,11 +25,14 @@ export function ModalDetalleCobro({
   canManage = false,
 }) {
   const notas = cobro.notas ?? [];
-  const notasCredito = totalNotasCredito(notas);
-  const notasDebito = totalNotasDebito(notas);
-  // monto_neto lo calcula el backend (Cobro.monto_neto); si no vino en la
-  // respuesta, se calcula acá con el mismo criterio.
-  const montoNeto = cobro.monto_neto ?? Number(cobro.monto) - notasCredito + notasDebito;
+  // El cobro se carga en dólares: USD principal, y los pesos congelados (cada
+  // nota con su propia cotización) entre paréntesis. Los netos los calcula
+  // el backend (Cobro.monto_neto_usd/_ars).
+  const notasCredito = totalNotasCredito(notas, "usd");
+  const notasDebito = totalNotasDebito(notas, "usd");
+  const notasCreditoArs = totalNotasCredito(notas, "ars");
+  const notasDebitoArs = totalNotasDebito(notas, "ars");
+  const montoNeto = cobro.monto_neto_usd;
   const hayNotas = notasCredito > 0 || notasDebito > 0;
 
   return (
@@ -41,13 +45,16 @@ export function ModalDetalleCobro({
       subtitulo={usuarioNombre ? `Cargado por ${usuarioNombre}` : null}
       totalLabel="Neto"
       total={montoNeto}
+      totalMoneda="usd"
+      totalSecundario={leyendaOtraMoneda(cobro.monto_neto_ars, "ars", cobro)}
       totalColor={TIPOS_MOVIMIENTO.cobro.color}
       onCerrar={onCerrar}
       onEditar={canManage ? onEditar : undefined}
     >
       <BarraComposicion
+        moneda="usd"
         segmentos={[
-          { label: "Bruto", monto: cobro.monto, color: TIPOS_MOVIMIENTO.cobro.color },
+          { label: "Bruto", monto: cobro.monto_usd, color: TIPOS_MOVIMIENTO.cobro.color },
           {
             label: "Nota de crédito",
             monto: notasCredito,
@@ -68,23 +75,23 @@ export function ModalDetalleCobro({
           <div className="detalle__desglose">
             <div className="detalle__desglose-fila">
               <span>Bruto</span>
-              <span>{formatMoneda(cobro.monto)}</span>
+              <span>{formatMonedaDual(cobro.monto_ars, cobro.monto_usd)}</span>
             </div>
             {notasCredito > 0 && (
               <div className="detalle__desglose-fila detalle__desglose-fila--credito">
                 <span>Notas de crédito</span>
-                <span>-{formatMoneda(notasCredito)}</span>
+                <span>-{formatMonedaDual(notasCreditoArs, notasCredito)}</span>
               </div>
             )}
             {notasDebito > 0 && (
               <div className="detalle__desglose-fila detalle__desglose-fila--debito">
                 <span>Notas de débito</span>
-                <span>+{formatMoneda(notasDebito)}</span>
+                <span>+{formatMonedaDual(notasDebitoArs, notasDebito)}</span>
               </div>
             )}
             <div className="detalle__desglose-fila detalle__desglose-fila--total">
               <span>Neto</span>
-              <span>{formatMoneda(montoNeto)}</span>
+              <span>{formatMonedaDual(cobro.monto_neto_ars, montoNeto)}</span>
             </div>
           </div>
         </SeccionDetalle>

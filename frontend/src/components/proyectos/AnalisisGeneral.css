@@ -12,7 +12,18 @@
 
 .analisis-header {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* Cómo leer los pesos cuando el análisis está en ARS: va pegado al header,
+   como texto secundario (DESIGN.md §3). */
+.analisis-nota-moneda {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
 }
 
 .analisis-btn-reporte {

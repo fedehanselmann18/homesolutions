@@ -2,7 +2,11 @@ import { useMemo } from "react";
 import { ResponsiveContainer, Tooltip, Treemap } from "recharts";
 
 import { calcularAnalisis } from "../../utils/analisis";
-import { formatMoneda } from "../../utils/formato";
+import { formatMoneda, formatMonedaDual } from "../../utils/formato";
+import { montoCobroNeto, precioAcordado as precioAcordadoEn } from "../../utils/moneda";
+import { useCotizacionActual } from "../../hooks/queries";
+import { useMonedaAnalisis } from "../../hooks/useMonedaAnalisis";
+import { SelectorMoneda } from "../shared/SelectorMoneda";
 import { ROJO, NARANJA } from "../../constants/colores";
 import { TarjetaKpi } from "../shared/TarjetaKpi";
 import {
@@ -19,6 +23,10 @@ import {
  * completo (hace falta precio_acordado_usd) y `cobros: []` (una fase no tiene
  * cobros propios). No renderiza la cascada de rentabilidad ni el resto de
  * secciones a nivel proyecto -- ver docs/redesign/11_fase_detalle_tabs.md.
+ *
+ * Moneda: la misma elección global que el análisis del proyecto
+ * (useMonedaAnalisis). Los % salen siempre de los dólares (caveat 6.3) y lo
+ * que se debe va con los pesos primero (caveat 6.2).
  */
 export function AnalisisFase({
   proyecto,
@@ -31,6 +39,10 @@ export function AnalisisFase({
   comprasImpagasFase,
   montoSinPagarFase,
 }) {
+  const [moneda] = useMonedaAnalisis();
+  const cotizacionActual = useCotizacionActual(proyecto);
+  const fm = (monto) => formatMoneda(monto, moneda);
+
   const analisis = useMemo(
     () =>
       calcularAnalisis({
@@ -41,8 +53,10 @@ export function AnalisisFase({
         cobros: [],
         productos,
         proveedores,
+        moneda,
+        cotizacionActual,
       }),
-    [proyecto, gastosFase, comprasFase, productos, proveedores]
+    [proyecto, gastosFase, comprasFase, productos, proveedores, moneda, cotizacionActual]
   );
 
   const { gastosPorCategoria, comprasPorTipoYProducto, topProveedores, totales } = analisis;
@@ -50,22 +64,37 @@ export function AnalisisFase({
   // % cobrado del proyecto -- mismo cálculo que totales.pctCobrado de
   // AnalisisGeneral.jsx, pero sobre los cobros del proyecto entero (una fase
   // no tiene cobros propios), no sobre `cobros: []` de este análisis.
-  const precioAcordado = Number(proyecto?.precio_acordado_usd ?? 0);
+  // El % en USD siempre (caveat 6.3); el monto, en la moneda elegida.
+  const precioAcordadoUsd = precioAcordadoEn(proyecto, "usd");
+  const cobradoUsd = cobrosProyecto.reduce((acc, c) => acc + montoCobroNeto(c, "usd"), 0);
   const totalCobradoProyecto = cobrosProyecto.reduce(
-    (acc, c) => acc + (c.monto_neto ?? c.monto ?? 0),
+    (acc, c) => acc + montoCobroNeto(c, moneda),
     0
   );
-  const pctCobradoProyecto = precioAcordado > 0 ? (totalCobradoProyecto / precioAcordado) * 100 : 0;
+  const pctCobradoProyecto = precioAcordadoUsd > 0 ? (cobradoUsd / precioAcordadoUsd) * 100 : 0;
+  const precioAcordado = precioAcordadoEn(proyecto, moneda, cotizacionActual);
 
   return (
     <div className="analisis">
+      <div className="analisis-header">
+        <SelectorMoneda />
+      </div>
+
       <div className="analisis-kpis">
-        <TarjetaKpi titulo="Gastado en esta fase" valor={formatMoneda(kpisFase.gastadoFase)} destacado />
+        <TarjetaKpi
+          titulo="Gastado en esta fase"
+          valor={fm(kpisFase.gastadoFase[moneda])}
+          destacado
+        />
         <TarjetaKpi
           titulo="% del presupuesto del proyecto"
           valor={`${kpisFase.pctPresupuesto.toFixed(1)}%`}
           porcentaje={kpisFase.pctPresupuesto}
-          detalle={`${formatMoneda(proyecto.precio_acordado_usd)} acordados`}
+          detalle={
+            precioAcordado == null
+              ? "Precio acordado sin cotización cargada para pasarlo a pesos"
+              : `${fm(precioAcordado)} acordados`
+          }
           color={kpisFase.pctPresupuesto > 100 ? ROJO : undefined}
         />
         <TarjetaKpi
@@ -76,13 +105,15 @@ export function AnalisisFase({
         />
         <TarjetaKpi
           titulo="Sin pagar"
-          valor={formatMoneda(montoSinPagarFase)}
+          valor={formatMonedaDual(montoSinPagarFase.ars, montoSinPagarFase.usd, {
+            principal: "ars",
+          })}
           detalle={
             comprasImpagasFase.length === 0
               ? "Todo al día"
               : `${comprasImpagasFase.length} ${comprasImpagasFase.length === 1 ? "compra" : "compras"}`
           }
-          color={montoSinPagarFase > 0 ? ROJO : undefined}
+          color={montoSinPagarFase.ars > 0 ? ROJO : undefined}
           destacado
         />
       </div>
@@ -98,7 +129,7 @@ export function AnalisisFase({
             <span key={tipo.name} className="analisis-leyenda-tipo">
               <span className="analisis-leyenda-punto" style={{ backgroundColor: tipo.color }} />
               {tipo.name}
-              <strong>{formatMoneda(tipo.monto)}</strong>
+              <strong>{fm(tipo.monto)}</strong>
             </span>
           ))}
         </div>
@@ -108,20 +139,22 @@ export function AnalisisFase({
             dataKey="monto"
             nameKey="name"
             isAnimationActive={false}
-            content={<ContenidoTreemap />}
+            content={<ContenidoTreemap moneda={moneda} />}
           >
-            <Tooltip content={<TooltipMoneda obtenerValor={(d) => d.monto ?? d.value} />} />
+            <Tooltip
+              content={<TooltipMoneda obtenerValor={(d) => d.monto ?? d.value} moneda={moneda} />}
+            />
           </Treemap>
         </ResponsiveContainer>
       </Seccion>
 
       <Seccion
         titulo="Gastos por categoría"
-        descripcion={`Total de gastos: ${formatMoneda(totales.gastos)}`}
+        descripcion={`Total de gastos: ${fm(totales.gastos)}`}
         vacio={gastosPorCategoria.length === 0}
         mensajeVacio="No hay gastos cargados."
       >
-        <Torta datos={gastosPorCategoria} colores={COLORES_TORTA} />
+        <Torta datos={gastosPorCategoria} colores={COLORES_TORTA} moneda={moneda} />
       </Seccion>
 
       <Seccion
@@ -134,7 +167,7 @@ export function AnalisisFase({
             <li key={proveedor.nombre} className="analisis-ranking-item">
               <span className="analisis-ranking-puesto">{i + 1}</span>
               <span className="analisis-ranking-nombre">{proveedor.nombre}</span>
-              <span className="analisis-ranking-monto">{formatMoneda(proveedor.monto)}</span>
+              <span className="analisis-ranking-monto">{fm(proveedor.monto)}</span>
             </li>
           ))}
         </ul>
@@ -144,7 +177,7 @@ export function AnalisisFase({
         <div className="analisis-kpis--notas">
           <TarjetaKpi
             titulo="Notas de crédito (fase)"
-            valor={formatMoneda(kpisFase.notasCreditoFase)}
+            valor={fm(kpisFase.notasCreditoFase[moneda])}
             detalle="A favor nuestro, ya restado del gastado en esta fase"
             color={ROJO}
             destacado
@@ -152,7 +185,7 @@ export function AnalisisFase({
           />
           <TarjetaKpi
             titulo="Notas de débito (fase)"
-            valor={formatMoneda(kpisFase.notasDebitoFase)}
+            valor={fm(kpisFase.notasDebitoFase[moneda])}
             detalle="En contra nuestro, ya sumado al gastado en esta fase"
             color={NARANJA}
             destacado
@@ -168,7 +201,7 @@ export function AnalisisFase({
         <TarjetaKpi
           valor={`${pctCobradoProyecto.toFixed(1)}%`}
           porcentaje={pctCobradoProyecto}
-          detalle={`${formatMoneda(totalCobradoProyecto)} cobrados en todo el proyecto`}
+          detalle={`${fm(totalCobradoProyecto)} cobrados en todo el proyecto`}
         />
       </Seccion>
     </div>

@@ -1,4 +1,5 @@
 import { formatFecha } from "../../utils/formato";
+import { leyendaOtraMoneda } from "../../utils/moneda";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { DetalleShell, BarraComposicion, SeccionDetalle, ChipsComprobantes } from "./PiezasDetalle";
@@ -31,13 +32,16 @@ export function ModalDetalleGasto({
       fecha={formatFecha(gasto.fecha)}
       titulo={gasto.descripcion}
       subtitulo={usuarioNombre ? `Cargado por ${usuarioNombre}` : null}
-      total={gasto.monto}
+      total={gasto.monto_ars}
+      totalSecundario={leyendaOtraMoneda(gasto.monto_usd, "usd", gasto)}
       totalColor={TIPOS_MOVIMIENTO.gasto.color}
       onCerrar={onCerrar}
       onEditar={onEditar}
     >
       <BarraComposicion
-        segmentos={[{ label: "Monto", monto: gasto.monto, color: TIPOS_MOVIMIENTO.gasto.color }]}
+        segmentos={[
+          { label: "Monto", monto: gasto.monto_ars, color: TIPOS_MOVIMIENTO.gasto.color },
+        ]}
       />
 
       {gasto.categorias?.length > 0 && (

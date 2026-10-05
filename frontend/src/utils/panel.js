@@ -1,6 +1,14 @@
 import { calcularAnalisis } from "./analisis";
 import { esCompraImpaga, esCompraSinEntregar, diasDesde, DIAS_FASE_ESTANCADA } from "./seguimiento";
 import { notasDeCompras, notasDeCobros } from "./notas";
+import {
+  MONEDA_ANALISIS_DEFAULT,
+  montoCobroNeto,
+  montoGasto,
+  montoNota,
+  precioAcordado as precioAcordadoEn,
+  precioTotalCompra,
+} from "./moneda";
 
 // Cuántos movimientos y cuántos meses se muestran en los bloques de abajo.
 const MOVIMIENTOS_RECIENTES = 8;
@@ -33,7 +41,7 @@ function claveMesDeDate(fecha) {
   return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function armarActividad(resumenes) {
+function armarActividad(resumenes, moneda) {
   const movimientos = [];
 
   resumenes.forEach(({ proyecto, gastosDelProyecto, cobrosDelProyecto, comprasDelProyecto }) => {
@@ -45,7 +53,7 @@ function armarActividad(resumenes) {
         id: c.id,
         tipo: "cobro",
         descripcion: c.descripcion,
-        monto: c.monto_neto ?? c.monto,
+        monto: montoCobroNeto(c, moneda),
         fecha: c.fecha,
       })
     );
@@ -55,7 +63,7 @@ function armarActividad(resumenes) {
         id: g.id,
         tipo: "gasto",
         descripcion: g.descripcion,
-        monto: g.monto,
+        monto: montoGasto(g, moneda),
         fecha: g.fecha,
       })
     );
@@ -65,7 +73,7 @@ function armarActividad(resumenes) {
         id: c.id,
         tipo: "compra",
         descripcion: c.descripcion,
-        monto: c.precio_total,
+        monto: precioTotalCompra(c, moneda),
         fecha: c.fecha,
       })
     );
@@ -78,7 +86,7 @@ function armarActividad(resumenes) {
         id: n.id,
         tipo: n.tipo,
         descripcion: n.descripcion,
-        monto: n.monto,
+        monto: montoNota(n, moneda),
         fecha: n.fecha,
       })
     );
@@ -88,7 +96,7 @@ function armarActividad(resumenes) {
         id: n.id,
         tipo: n.tipo,
         descripcion: n.descripcion,
-        monto: n.monto,
+        monto: montoNota(n, moneda),
         fecha: n.fecha,
       })
     );
@@ -97,7 +105,7 @@ function armarActividad(resumenes) {
   return movimientos.sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, MOVIMIENTOS_RECIENTES);
 }
 
-function armarEvolucion(gastos, cobros, compras, hoy) {
+function armarEvolucion(gastos, cobros, compras, hoy, moneda) {
   const meses = [];
   for (let i = MESES_EVOLUCION - 1; i >= 0; i--) {
     const fecha = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
@@ -113,18 +121,17 @@ function armarEvolucion(gastos, cobros, compras, hoy) {
   const porMes = new Map(meses.map((m) => [m.mes, m]));
   cobros.forEach((c) => {
     const mes = porMes.get(claveMes(c.fecha));
-    // monto_neto: si no viene (no debería pasar, el backend siempre lo manda),
-    // cae al bruto en vez de romper el gráfico.
-    if (mes) mes.cobrado += c.monto_neto ?? c.monto;
+    // Neto de notas (lo calcula el backend), en la moneda del panel.
+    if (mes) mes.cobrado += montoCobroNeto(c, moneda);
   });
   gastos.forEach((g) => {
     const mes = porMes.get(claveMes(g.fecha));
-    if (mes) mes.gastado += g.monto;
+    if (mes) mes.gastado += montoGasto(g, moneda);
   });
   compras.forEach((c) => {
     const mes = porMes.get(claveMes(c.fecha));
-    // precio_total ya incluye impuestos + notas de crédito/débito.
-    if (mes) mes.gastado += c.precio_total;
+    // precio_total_* ya incluye impuestos + notas de crédito/débito.
+    if (mes) mes.gastado += precioTotalCompra(c, moneda);
   });
 
   return meses;
@@ -136,6 +143,10 @@ function armarEvolucion(gastos, cobros, compras, hoy) {
  * Cada proyecto se pasa por `calcularAnalisis` (el mismo cálculo que usa la
  * pestaña Análisis General) para que los números del Panel y los del detalle
  * de un proyecto no puedan divergir nunca.
+ *
+ * `moneda` y `cotizacionActual`: mismos que en calcularAnalisis (ver
+ * docs/PLAN_TIPO_CAMBIO.md). Cada fila de proyecto lleva su moneda para que
+ * la tabla la formatee sin otra prop.
  */
 export function calcularPanel({
   proyectos = [],
@@ -144,6 +155,8 @@ export function calcularPanel({
   cobros = [],
   compras = [],
   hoy = new Date(),
+  moneda = MONEDA_ANALISIS_DEFAULT,
+  cotizacionActual = null,
 }) {
   const proyectoDeFase = new Map(fases.map((f) => [f.id, f.proyecto_id]));
 
@@ -170,6 +183,8 @@ export function calcularPanel({
         gastos: gastosDelProyecto,
         cobros: cobrosDelProyecto,
         compras: comprasDelProyecto,
+        moneda,
+        cotizacionActual,
       }),
     };
   });
@@ -178,18 +193,37 @@ export function calcularPanel({
   const mesActual = claveMesDeDate(hoy);
   const delMes = (items) => items.filter((i) => claveMes(i.fecha) === mesActual);
 
-  // monto_neto / precio_total: ambos ya incluyen el efecto de las notas de
-  // crédito/débito (ver Cobro.monto_neto y Compra.precio_total en el backend).
-  const cobradoMes = sumar(delMes(cobros), (c) => c.monto_neto ?? c.monto);
-  const gastosMes = sumar(delMes(gastos), (g) => g.monto);
-  const comprasTotalMes = sumar(delMes(compras), (c) => c.precio_total);
+  // monto_neto_* / precio_total_*: ambos ya incluyen el efecto de las notas
+  // de crédito/débito (ver Cobro y Compra en el backend).
+  const cobradoMes = sumar(delMes(cobros), (c) => montoCobroNeto(c, moneda));
+  const gastosMes = sumar(delMes(gastos), (g) => montoGasto(g, moneda));
+  const comprasTotalMes = sumar(delMes(compras), (c) => precioTotalCompra(c, moneda));
 
   // Lo que falta cobrar de los proyectos vivos: nunca negativo, si un proyecto
-  // cobró de más no compensa lo que falta cobrar en otro.
-  const pendienteDeCobrar = enCurso.reduce(
-    (acc, r) => acc + Math.max(0, r.analisis.totales.precioAcordado - r.analisis.totales.cobrado),
+  // cobró de más no compensa lo que falta cobrar en otro. Se cuenta en
+  // DÓLARES (el contrato es en USD y lo cobrado también): restarle pesos
+  // nominales de hace meses a un precio en pesos de hoy daría cualquier cosa.
+  // En pesos se muestra ese mismo saldo con la cotización actual, o null si
+  // no hay ninguna cargada.
+  const pendienteUsd = enCurso.reduce(
+    (acc, r) =>
+      acc +
+      Math.max(
+        0,
+        precioAcordadoEn(r.proyecto, "usd") -
+          sumar(r.cobrosDelProyecto, (c) => montoCobroNeto(c, "usd"))
+      ),
     0
   );
+  const pendienteDeCobrar =
+    moneda === "usd"
+      ? pendienteUsd
+      : cotizacionActual
+        ? pendienteUsd * Number(cotizacionActual.valor)
+        : null;
+  const contratadoEnCurso = enCurso.some((r) => r.analisis.totales.precioAcordado == null)
+    ? null
+    : sumar(enCurso, (r) => r.analisis.totales.precioAcordado);
 
   // Fila de tabla para UN proyecto, sea cual sea su estado -- se usa tanto
   // para "proyectosActivos" (compat, sólo en_curso) como para
@@ -210,6 +244,7 @@ export function calcularPanel({
     ).length;
     return {
       id: proyecto.id,
+      moneda,
       estado: proyecto.estado,
       nombre: proyecto.nombre,
       direccion: proyecto.direccion,
@@ -224,7 +259,7 @@ export function calcularPanel({
       // Pendientes de compra del proyecto: mismo criterio que la pestaña
       // Seguimiento, que es donde se ve el detalle de cada una.
       comprasImpagas: impagas.length,
-      montoImpago: sumar(impagas, (c) => c.precio_total),
+      montoImpago: sumar(impagas, (c) => precioTotalCompra(c, moneda)),
       comprasSinEntregar: comprasDelProyecto.filter(esCompraSinEntregar).length,
       fasesEstancadas: estancadas,
       // Estado por fase, en el mismo orden que devuelve la API (igual que
@@ -263,7 +298,7 @@ export function calcularPanel({
       cobradoMes,
       pendienteDeCobrar,
       gananciaNetaMes: cobradoMes - gastosMes - comprasTotalMes,
-      contratadoEnCurso: sumar(enCurso, (r) => r.analisis.totales.precioAcordado),
+      contratadoEnCurso,
       requiereAccion,
       comprasImpagasEnCurso,
       comprasSinEntregarEnCurso,
@@ -271,7 +306,8 @@ export function calcularPanel({
     },
     proyectosActivos,
     proyectosResumen,
-    actividad: armarActividad(resumenes),
-    evolucion: armarEvolucion(gastos, cobros, compras, hoy),
+    moneda,
+    actividad: armarActividad(resumenes, moneda),
+    evolucion: armarEvolucion(gastos, cobros, compras, hoy, moneda),
   };
 }

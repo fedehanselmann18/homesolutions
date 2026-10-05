@@ -5,7 +5,7 @@ import { formatMoneda, formatFecha } from "../../utils/formato";
 import { iconoParaArchivo, nombreDeArchivo } from "../../utils/archivos";
 import { getEstadoPago, getEstadoEnvio } from "../../constants/estadoCompra";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
-import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
+import { montoCobroNeto, montoGasto, precioTotalCompra } from "../../utils/moneda";
 import { esCompraImpaga, esCompraSinEntregar, diasDesde } from "../../utils/seguimiento";
 import { TIPOS_MOVIMIENTO as TIPOS, signoTexto } from "../../constants/tipoMovimiento";
 
@@ -22,12 +22,11 @@ const diaConNombre = (fecha) =>
 
 const conSigno = (monto, signo) => `${signoTexto(signo)}${formatMoneda(Math.abs(monto))}`;
 
-function montoNetoCobro(cobro) {
-  const notas = cobro.notas ?? [];
-  return (
-    cobro.monto_neto ?? Number(cobro.monto) - totalNotasCredito(notas) + totalNotasDebito(notas)
-  );
-}
+// Doble moneda (ver docs/PLAN_TIPO_CAMBIO.md): el libro es la caja, así que
+// importes y saldo van en PESOS nominales, lo que efectivamente entró y salió
+// (decisión #5). Cada movimiento usa su cifra en pesos congelada; el USD de
+// cada uno va en el contexto de la fila como referencia.
+const usd = (monto) => `≈ ${formatMoneda(monto, "usd")}`;
 
 /**
  * Libro de obra (dirección 3b del rediseño, ver claudedesign/): compras,
@@ -76,7 +75,7 @@ export function LibroDeObra({
         tipo: "compra",
         entidad: compra,
         fecha: compra.fecha,
-        importe: Number(compra.precio_total) || 0,
+        importe: precioTotalCompra(compra, "ars"),
         titulo: compra.descripcion,
         // Lo que le falta a la compra, en rojo al lado del título: hace
         // cuántos días está impaga (la señal que dispara el "sin pagar" de
@@ -98,6 +97,7 @@ export function LibroDeObra({
           compra.detalle?.length
             ? `${compra.detalle.length} ${compra.detalle.length === 1 ? "producto" : "productos"}`
             : null,
+          usd(precioTotalCompra(compra, "usd")),
         ],
       })),
       ...gastos.map((gasto) => ({
@@ -105,12 +105,13 @@ export function LibroDeObra({
         tipo: "gasto",
         entidad: gasto,
         fecha: gasto.fecha,
-        importe: Number(gasto.monto) || 0,
+        importe: montoGasto(gasto, "ars"),
         titulo: gasto.descripcion,
         contexto: [
           getTipoFacturaLabel(gasto.tipo_factura),
           gasto.fase_id ? nombreFase?.(gasto.fase_id) : "Gasto general",
           gasto.categorias?.map((c) => c.nombre).join(", ") || null,
+          usd(montoGasto(gasto, "usd")),
         ],
       })),
       ...cobros.map((cobro) => ({
@@ -118,12 +119,14 @@ export function LibroDeObra({
         tipo: "cobro",
         entidad: cobro,
         fecha: cobro.fecha,
-        importe: montoNetoCobro(cobro),
+        importe: montoCobroNeto(cobro, "ars"),
         titulo: cobro.descripcion,
         contexto: [
           getTipoFacturaLabel(cobro.tipo_factura),
-          Number(cobro.monto) !== montoNetoCobro(cobro)
-            ? `Bruto ${formatMoneda(cobro.monto)}`
+          // El cobro se cargó en dólares: esa es su cifra de verdad.
+          formatMoneda(montoCobroNeto(cobro, "usd"), "usd"),
+          Number(cobro.monto_usd) !== montoCobroNeto(cobro, "usd")
+            ? `Bruto ${formatMoneda(cobro.monto_usd, "usd")}`
             : null,
         ],
       })),

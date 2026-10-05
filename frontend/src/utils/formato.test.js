@@ -1,6 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   formatMoneda,
+  formatMonedaDual,
+  formatCotizacion,
   formatMonedaCorta,
   formatFecha,
   formatBytes,
@@ -14,6 +16,34 @@ const sinEspacios = (s) => s.replace(/\s/g, "");
 describe("formatMoneda", () => {
   it("formatea con símbolo de pesos y sin decimales", () => {
     expect(sinEspacios(formatMoneda(250000))).toBe("$250.000");
+  });
+});
+
+describe("formatMoneda en dólares", () => {
+  it("usa US$ para no confundirse con el $ de pesos", () => {
+    expect(sinEspacios(formatMoneda(41379, "usd"))).toBe("US$41.379");
+  });
+});
+
+describe("formatMonedaDual", () => {
+  it("pone el USD primero y los pesos entre paréntesis por default", () => {
+    expect(sinEspacios(formatMonedaDual(60000000, 41379))).toBe("US$41.379($60.000.000)");
+  });
+
+  it("con principal ars invierte el orden (deuda, gastos)", () => {
+    expect(sinEspacios(formatMonedaDual(60000000, 41379, { principal: "ars" }))).toBe(
+      "$60.000.000(US$41.379)"
+    );
+  });
+
+  it("sin la cifra secundaria muestra solo la principal", () => {
+    expect(sinEspacios(formatMonedaDual(null, 100))).toBe("US$100");
+  });
+});
+
+describe("formatCotizacion", () => {
+  it("muestra los centavos del tipo de cambio", () => {
+    expect(sinEspacios(formatCotizacion(1487.3456))).toBe("$1.487,35");
   });
 });
 

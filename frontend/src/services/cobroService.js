@@ -11,7 +11,8 @@ export const getCobrosPorProyecto = async (proyectoId) => {
 };
 
 export const crearCobro = async (cobro) => {
-  // cobro: { proyecto_id, monto, descripcion, fecha, tipo_factura }
+  // cobro: { proyecto_id, monto_usd, cotizacion_dolar, tipo_cambio, descripcion,
+  //          fecha, tipo_factura } -- monto_ars NO: lo congela el backend
   const { data } = await axiosClient.post("/cobros/crear", cobro);
   return data;
 };
@@ -52,13 +53,27 @@ export const eliminarComprobanteCobro = async (cobroId, comprobanteId) => {
 
 export const crearNotaCobro = async (
   cobroId,
-  { archivo, tipo, tipo_factura, monto, descripcion, fecha, origen }
+  {
+    archivo,
+    tipo,
+    tipo_factura,
+    monto_usd,
+    cotizacion_dolar,
+    tipo_cambio,
+    descripcion,
+    fecha,
+    origen,
+  }
 ) => {
   const formData = new FormData();
   formData.append("archivo", archivo);
   formData.append("tipo", tipo);
   formData.append("tipo_factura", tipo_factura);
-  formData.append("monto", monto);
+  // En dólares, como el cobro; los pesos los congela el backend con la
+  // cotización de la nota (no la del cobro: es otro día, otro dólar).
+  formData.append("monto_usd", monto_usd);
+  formData.append("cotizacion_dolar", cotizacion_dolar);
+  formData.append("tipo_cambio", tipo_cambio);
   formData.append("descripcion", descripcion);
   formData.append("fecha", fecha);
   if (origen) formData.append("origen", origen);

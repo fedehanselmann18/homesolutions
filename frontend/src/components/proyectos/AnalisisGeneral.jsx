@@ -20,14 +20,22 @@ import {
   useComprasPorProyecto,
   useProductos,
   useProveedores,
+  useCotizacionActual,
 } from "../../hooks/queries";
+import { useMonedaAnalisis } from "../../hooks/useMonedaAnalisis";
+import { SelectorMoneda } from "../shared/SelectorMoneda";
 
 import { TarjetaKpi } from "../shared/TarjetaKpi";
 import { Cargando } from "../shared/Cargando";
 import { EstadoVacio } from "../shared/EstadoVacio";
 import { EstadoError } from "../shared/EstadoError";
 import { calcularAnalisis } from "../../utils/analisis";
-import { formatMoneda, formatMonedaCorta } from "../../utils/formato";
+import {
+  formatCotizacion,
+  formatFecha,
+  formatMoneda,
+  formatMonedaCorta,
+} from "../../utils/formato";
 import { useToast } from "../../context/useToast";
 import useAuth from "../../context/useAuth";
 import { Seccion, TooltipMoneda, ContenidoTreemap, Torta, COLORES_TORTA } from "./AnalisisGraficos";
@@ -91,6 +99,8 @@ export function AnalisisGeneral({ proyectoId }) {
   const comprasQuery = useComprasPorProyecto(proyectoId);
   const productosQuery = useProductos();
   const proveedoresQuery = useProveedores();
+  const [moneda] = useMonedaAnalisis();
+  const cotizacionActual = useCotizacionActual(proyectoQuery.data);
 
   const cargando =
     proyectoQuery.isLoading ||
@@ -126,7 +136,13 @@ export function AnalisisGeneral({ proyectoId }) {
     ]
   );
 
-  const analisis = useMemo(() => (datos ? calcularAnalisis(datos) : null), [datos]);
+  const analisis = useMemo(
+    () => (datos ? calcularAnalisis({ ...datos, moneda, cotizacionActual }) : null),
+    [datos, moneda, cotizacionActual]
+  );
+  // Atajos para no repetir la moneda en cada cifra de la pantalla.
+  const fm = (monto) => formatMoneda(monto, moneda);
+  const fmCorta = (monto) => formatMonedaCorta(monto, moneda);
 
   const handleDescargarReporte = async () => {
     try {
@@ -162,6 +178,20 @@ export function AnalisisGeneral({ proyectoId }) {
   } = analisis;
 
   const totalFases = avanceFases.reduce((acc, f) => acc + f.cantidad, 0);
+  // En pesos el precio acordado no tiene cifra congelada: sale de la última
+  // cotización (decisión #8). Sin ninguna cargada no hay número que mostrar.
+  const precioTexto =
+    totales.precioAcordado == null
+      ? "un precio sin cotización cargada"
+      : fm(totales.precioAcordado);
+  const notaPrecioEnPesos =
+    moneda === "ars"
+      ? cotizacionActual
+        ? `Precio acordado en pesos con el dólar ${cotizacionActual.tipo} de ${formatCotizacion(
+            cotizacionActual.valor
+          )} (${formatFecha(cotizacionActual.fecha)}). Cobros, gastos y compras en pesos de cuando se cargaron.`
+        : "No hay cotizaciones cargadas: el precio acordado no se puede pasar a pesos."
+      : null;
   const colorDisponible = totales.disponible >= 0 ? VERDE : ROJO;
   const escala = escalaCascada(cascada);
 
@@ -177,8 +207,9 @@ export function AnalisisGeneral({ proyectoId }) {
 
   return (
     <div className="analisis">
-      {esAdmin && (
-        <div className="analisis-header">
+      <div className="analisis-header">
+        <SelectorMoneda />
+        {esAdmin && (
           <button
             type="button"
             className="analisis-btn-reporte"
@@ -187,26 +218,27 @@ export function AnalisisGeneral({ proyectoId }) {
           >
             {descargandoReporte ? "Generando..." : "Generar reporte PDF"}
           </button>
-        </div>
-      )}
+        )}
+      </div>
+      {notaPrecioEnPesos && <p className="analisis-nota-moneda">{notaPrecioEnPesos}</p>}
 
       <div className="analisis-kpis">
         <TarjetaKpi
           titulo="Cobrado"
           valor={`${totales.pctCobrado.toFixed(1)}%`}
           porcentaje={totales.pctCobrado}
-          detalle={`${formatMoneda(totales.cobrado)} de ${formatMoneda(totales.precioAcordado)} acordados`}
+          detalle={`${fm(totales.cobrado)} de ${precioTexto} acordados`}
         />
         <TarjetaKpi
           titulo="Gastado"
           valor={`${totales.pctGastado.toFixed(1)}%`}
           porcentaje={totales.pctGastado}
-          detalle={`${formatMoneda(totales.egresos)} en gastos y compras sobre ${formatMoneda(totales.precioAcordado)}`}
+          detalle={`${fm(totales.egresos)} en gastos y compras sobre ${precioTexto}`}
           color={totales.pctGastado > 100 ? ROJO : NARANJA}
         />
         <TarjetaKpi
           titulo="Dinero disponible"
-          valor={formatMoneda(totales.disponible)}
+          valor={fm(totales.disponible)}
           detalle="Cobros − gastos − compras"
           color={colorDisponible}
           destacado
@@ -226,11 +258,11 @@ export function AnalisisGeneral({ proyectoId }) {
             <YAxis
               domain={escala.dominio}
               ticks={escala.ticks}
-              tickFormatter={formatMonedaCorta}
+              tickFormatter={fmCorta}
               tick={{ fontSize: 12 }}
               width={80}
             />
-            <Tooltip content={<TooltipMoneda obtenerValor={(d) => d.valor} />} />
+            <Tooltip content={<TooltipMoneda obtenerValor={(d) => d.valor} moneda={moneda} />} />
             <Bar dataKey="rango" isAnimationActive={false} radius={3}>
               {cascada.map((paso) => (
                 <Cell key={paso.nombre} fill={colorPasoCascada(paso)} />
@@ -243,11 +275,11 @@ export function AnalisisGeneral({ proyectoId }) {
       <div className="analisis-fila">
         <Seccion
           titulo="Gastos por categoría"
-          descripcion={`Total de gastos: ${formatMoneda(totales.gastos)}`}
+          descripcion={`Total de gastos: ${fm(totales.gastos)}`}
           vacio={gastosPorCategoria.length === 0}
           mensajeVacio="No hay gastos cargados."
         >
-          <Torta datos={gastosPorCategoria} colores={COLORES_TORTA} />
+          <Torta datos={gastosPorCategoria} colores={COLORES_TORTA} moneda={moneda} />
         </Seccion>
 
         <Seccion
@@ -255,8 +287,8 @@ export function AnalisisGeneral({ proyectoId }) {
           vacio={impuestosPorTipo.length === 0}
           mensajeVacio="No hay impuestos cargados en las compras."
         >
-          <TarjetaKpi titulo="Total de impuestos" valor={formatMoneda(totales.impuestos)} plano />
-          <Torta datos={impuestosPorTipo} colores={COLORES_TORTA} />
+          <TarjetaKpi titulo="Total de impuestos" valor={fm(totales.impuestos)} plano />
+          <Torta datos={impuestosPorTipo} colores={COLORES_TORTA} moneda={moneda} />
         </Seccion>
       </div>
 
@@ -271,7 +303,7 @@ export function AnalisisGeneral({ proyectoId }) {
             <span key={tipo.name} className="analisis-leyenda-tipo">
               <span className="analisis-leyenda-punto" style={{ backgroundColor: tipo.color }} />
               {tipo.name}
-              <strong>{formatMoneda(tipo.monto)}</strong>
+              <strong>{fm(tipo.monto)}</strong>
             </span>
           ))}
         </div>
@@ -281,21 +313,23 @@ export function AnalisisGeneral({ proyectoId }) {
             dataKey="monto"
             nameKey="name"
             isAnimationActive={false}
-            content={<ContenidoTreemap />}
+            content={<ContenidoTreemap moneda={moneda} />}
           >
             {/* el treemap arma su propio payload, ahí el monto viaja como `value` */}
-            <Tooltip content={<TooltipMoneda obtenerValor={(d) => d.monto ?? d.value} />} />
+            <Tooltip
+              content={<TooltipMoneda obtenerValor={(d) => d.monto ?? d.value} moneda={moneda} />}
+            />
           </Treemap>
         </ResponsiveContainer>
       </Seccion>
 
       <Seccion
         titulo="Cobrado vs. gastado por fase"
-        descripcion={`De ${formatMoneda(totales.cobrado)} cobrados: cuánto sigue disponible, lo comprado en cada fase y los gastos.`}
+        descripcion={`De ${fm(totales.cobrado)} cobrados: cuánto sigue disponible, lo comprado en cada fase y los gastos.`}
         vacio={totales.cobrado === 0}
         mensajeVacio="Todavía no hay cobros cargados para este proyecto."
       >
-        <Torta datos={cobradoPorFase} colores={coloresCobradoPorFase} />
+        <Torta datos={cobradoPorFase} colores={coloresCobradoPorFase} moneda={moneda} />
       </Seccion>
 
       <Seccion
@@ -308,8 +342,8 @@ export function AnalisisGeneral({ proyectoId }) {
           <BarChart data={pagosPorTipoFactura} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={LINEA} />
             <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-            <YAxis tickFormatter={formatMonedaCorta} tick={{ fontSize: 12 }} width={80} />
-            <Tooltip content={<TooltipMoneda obtenerValor={(d) => d.monto} />} />
+            <YAxis tickFormatter={fmCorta} tick={{ fontSize: 12 }} width={80} />
+            <Tooltip content={<TooltipMoneda obtenerValor={(d) => d.monto} moneda={moneda} />} />
             <Bar dataKey="monto" fill={AZUL} isAnimationActive={false} radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
@@ -327,7 +361,7 @@ export function AnalisisGeneral({ proyectoId }) {
               <tr key={fila.tipo}>
                 <td>{fila.label}</td>
                 <td>{fila.cantidad}</td>
-                <td>{formatMoneda(fila.monto)}</td>
+                <td>{fm(fila.monto)}</td>
               </tr>
             ))}
           </tbody>
@@ -373,7 +407,7 @@ export function AnalisisGeneral({ proyectoId }) {
               margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
             >
               <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke={LINEA} />
-              <XAxis type="number" tickFormatter={formatMonedaCorta} tick={{ fontSize: 12 }} />
+              <XAxis type="number" tickFormatter={fmCorta} tick={{ fontSize: 12 }} />
               <YAxis
                 type="category"
                 dataKey="nombre"
@@ -381,7 +415,7 @@ export function AnalisisGeneral({ proyectoId }) {
                 tick={{ fontSize: 12 }}
                 interval={0}
               />
-              <Tooltip content={<TooltipMoneda obtenerValor={(d) => d.total} />} />
+              <Tooltip content={<TooltipMoneda obtenerValor={(d) => d.total} moneda={moneda} />} />
               <Bar dataKey="total" fill={VERDE} isAnimationActive={false} radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -392,7 +426,7 @@ export function AnalisisGeneral({ proyectoId }) {
         <Seccion titulo="Gastos sin comprobante">
           <TarjetaKpi
             valor={gastosSinComprobante.cantidad}
-            detalle={`${formatMoneda(gastosSinComprobante.monto)} sin respaldo cargado`}
+            detalle={`${fm(gastosSinComprobante.monto)} sin respaldo cargado`}
             plano
           />
         </Seccion>
@@ -407,7 +441,7 @@ export function AnalisisGeneral({ proyectoId }) {
               <li key={proveedor.nombre} className="analisis-ranking-item">
                 <span className="analisis-ranking-puesto">{i + 1}</span>
                 <span className="analisis-ranking-nombre">{proveedor.nombre}</span>
-                <span className="analisis-ranking-monto">{formatMoneda(proveedor.monto)}</span>
+                <span className="analisis-ranking-monto">{fm(proveedor.monto)}</span>
               </li>
             ))}
           </ul>
@@ -428,7 +462,7 @@ export function AnalisisGeneral({ proyectoId }) {
         <div className="analisis-kpis--notas">
           <TarjetaKpi
             titulo="Notas de crédito (compras)"
-            valor={formatMoneda(notas.compras.credito)}
+            valor={fm(notas.compras.credito)}
             detalle="A favor nuestro, resta a lo que le debemos al proveedor"
             color={ROJO}
             destacado
@@ -436,7 +470,7 @@ export function AnalisisGeneral({ proyectoId }) {
           />
           <TarjetaKpi
             titulo="Notas de débito (compras)"
-            valor={formatMoneda(notas.compras.debito)}
+            valor={fm(notas.compras.debito)}
             detalle="En contra nuestro, suma a lo que le debemos al proveedor"
             color={NARANJA}
             destacado
@@ -444,7 +478,7 @@ export function AnalisisGeneral({ proyectoId }) {
           />
           <TarjetaKpi
             titulo="Notas de crédito (cobros)"
-            valor={formatMoneda(notas.cobros.credito)}
+            valor={fm(notas.cobros.credito)}
             detalle="Ajuste a favor del cliente, resta a lo cobrado"
             color={ROJO}
             destacado
@@ -452,7 +486,7 @@ export function AnalisisGeneral({ proyectoId }) {
           />
           <TarjetaKpi
             titulo="Notas de débito (cobros)"
-            valor={formatMoneda(notas.cobros.debito)}
+            valor={fm(notas.cobros.debito)}
             detalle="Ajuste en contra del cliente, suma a lo cobrado"
             color={NARANJA}
             destacado

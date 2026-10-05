@@ -1,0 +1,17 @@
+/* Línea de ayuda debajo del dólar: de dónde salió la sugerencia y el
+   equivalente en la otra moneda. Mismo tratamiento que un texto secundario
+   de formulario (DESIGN.md §3: --text-sm muted), en caja normal aunque el
+   label de arriba vaya en mayúsculas. */
+.campos-cotizacion__ayuda {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.campos-cotizacion__equivalente {
+  font-weight: 700;
+  color: var(--color-tinta);
+  font-variant-numeric: tabular-nums;
+}

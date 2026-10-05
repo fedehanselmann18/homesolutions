@@ -2,7 +2,8 @@ import { useState } from "react";
 import { X, FileMinus, FilePlus, ChevronDown } from "lucide-react";
 import { getOrigenNotaLabel } from "../../constants/notas";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
-import { formatMoneda, formatFecha } from "../../utils/formato";
+import { formatCotizacion, formatFecha, formatMonedaDual } from "../../utils/formato";
+import { getTipoCambioLabel } from "../../utils/moneda";
 import { obtenerMensajeError } from "../../utils/errorHandling";
 import "./SeccionNotas.css";
 
@@ -16,7 +17,7 @@ import "./SeccionNotas.css";
  * quien tiene ModalNota montado, mismo criterio que onEditar en las demás cards).
  *
  * Props:
- * - notas: [{ id, tipo, origen, tipo_factura, monto, descripcion, fecha, archivo_path, detalles?: [{detalle_compra_id, cantidad}] }]
+ * - notas: [{ id, tipo, origen, tipo_factura, monto_ars, monto_usd, cotizacion_dolar, descripcion, fecha, archivo_path, detalles?: [{detalle_compra_id, cantidad}] }]
  * - contexto: "compra" | "cobro" (para las etiquetas de origen)
  * - variant: "detallada" (default, todo el detalle siempre visible) | "compacta"
  *   (cada nota colapsada muestra solo motivo + monto; el detalle -- fecha,
@@ -28,6 +29,13 @@ import "./SeccionNotas.css";
  * - onEliminar(notaId) => Promise
  * - canManage: bool
  */
+// Cada nota con sus dos cifras congeladas (con SU cotización). La moneda en
+// que se cargó va primero: pesos en las de compra, dólares en las de cobro.
+const montoDeNota = (nota, contexto) =>
+  formatMonedaDual(nota.monto_ars, nota.monto_usd, {
+    principal: contexto === "cobro" ? "usd" : "ars",
+  });
+
 export function SeccionNotas({
   notas = [],
   contexto = "compra",
@@ -128,7 +136,7 @@ export function SeccionNotas({
                     </span>
                     <span className="seccion-notas-item-monto">
                       {esCredito ? "-" : "+"}
-                      {formatMoneda(n.monto)}
+                      {montoDeNota(n, contexto)}
                     </span>
                   </div>
                   <p className="seccion-notas-item-motivo">{n.descripcion}</p>
@@ -136,6 +144,12 @@ export function SeccionNotas({
                     {n.origen && <span>{getOrigenNotaLabel(n.origen, contexto)}</span>}
                     {n.tipo_factura && <span>{getTipoFacturaLabel(n.tipo_factura)}</span>}
                     {n.fecha && <span>{formatFecha(n.fecha)}</span>}
+                    {n.cotizacion_dolar && (
+                      <span>
+                        Dólar {getTipoCambioLabel(n.tipo_cambio).toLowerCase()}{" "}
+                        {formatCotizacion(n.cotizacion_dolar)}
+                      </span>
+                    )}
                   </div>
                   {productos.length > 0 && (
                     <p className="seccion-notas-item-productos">
@@ -191,7 +205,7 @@ export function SeccionNotas({
                   <span className="seccion-notas-item-toggle-derecha">
                     <span className="seccion-notas-item-monto">
                       {esCredito ? "-" : "+"}
-                      {formatMoneda(n.monto)}
+                      {montoDeNota(n, contexto)}
                     </span>
                     <ChevronDown
                       size={13}
@@ -207,6 +221,12 @@ export function SeccionNotas({
                       {n.origen && <span>{getOrigenNotaLabel(n.origen, contexto)}</span>}
                       {n.tipo_factura && <span>{getTipoFacturaLabel(n.tipo_factura)}</span>}
                       {n.fecha && <span>{formatFecha(n.fecha)}</span>}
+                      {n.cotizacion_dolar && (
+                        <span>
+                          Dólar {getTipoCambioLabel(n.tipo_cambio).toLowerCase()}{" "}
+                          {formatCotizacion(n.cotizacion_dolar)}
+                        </span>
+                      )}
                     </div>
                     {productos.length > 0 && (
                       <p className="seccion-notas-item-productos">

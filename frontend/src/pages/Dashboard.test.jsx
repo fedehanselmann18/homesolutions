@@ -2,7 +2,14 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
-import { useProyectos, useFases, useGastos, useCobros, useCompras } from "../hooks/queries";
+import {
+  useProyectos,
+  useFases,
+  useGastos,
+  useCobros,
+  useCompras,
+  useUltimaCotizacion,
+} from "../hooks/queries";
 
 // Dashboard usa 5 hooks de TanStack Query independientes (useProyectos,
 // useFases, etc.) combinados en un único "cargando" -- calcularPanel
@@ -22,6 +29,9 @@ const renderDashboard = () =>
 
 const mockQueries = ({ isLoading, data }) => {
   const estado = { isLoading, error: null, data };
+  // El precio acordado en pesos sale de la última cotización: sin ninguna
+  // cargada, el panel tiene que andar igual.
+  useUltimaCotizacion.mockReturnValue({ isLoading: false, error: null, data: null });
   useProyectos.mockReturnValue(
     estado.data?.proyectos !== undefined ? { ...estado, data: estado.data.proyectos } : estado
   );
@@ -53,7 +63,9 @@ describe("Dashboard", () => {
     mockQueries({
       isLoading: false,
       data: {
-        proyectos: [{ id: 1, estado: "en_curso", precio_acordado_usd: 10000, nombre: "Depto Centro" }],
+        proyectos: [
+          { id: 1, estado: "en_curso", precio_acordado_usd: 10000, nombre: "Depto Centro" },
+        ],
         fases: [],
         gastos: [],
         cobros: [],

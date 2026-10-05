@@ -4,7 +4,8 @@ import { calcularPanel } from "./panel";
 // calcularPanel resume TODOS los proyectos para el Panel, reusando
 // calcularAnalisis por proyecto -- estos tests cubren el agrupado por
 // proyecto/fase, los KPIs del mes y los casos de borde (arrays vacíos,
-// montos negativos, proyectos sin fase/proyecto asociado).
+// montos negativos, proyectos sin fase/proyecto asociado). Los fixtures van
+// en dólares, la moneda default del panel.
 
 const HOY = new Date("2026-08-13");
 
@@ -43,7 +44,13 @@ describe("calcularPanel", () => {
       proyectos: [{ id: 1, estado: "en_curso", precio_acordado_usd: 10000 }],
       fases: [{ id: 10, proyecto_id: 1 }],
       compras: [
-        { fase_id: 10, precio_neto: 500, impuestos_aplicados: [], notas: [], fecha: "2026-08-01" },
+        {
+          fase_id: 10,
+          precio_neto_usd: 500,
+          impuestos_aplicados: [],
+          notas: [],
+          fecha: "2026-08-01",
+        },
       ],
       hoy: HOY,
     });
@@ -55,7 +62,13 @@ describe("calcularPanel", () => {
       proyectos: [{ id: 1, estado: "en_curso", precio_acordado_usd: 10000 }],
       fases: [{ id: 10, proyecto_id: 1 }],
       compras: [
-        { fase_id: 999, precio_neto: 500, impuestos_aplicados: [], notas: [], fecha: "2026-08-01" },
+        {
+          fase_id: 999,
+          precio_neto_usd: 500,
+          impuestos_aplicados: [],
+          notas: [],
+          fecha: "2026-08-01",
+        },
       ],
       hoy: HOY,
     });
@@ -69,8 +82,8 @@ describe("calcularPanel", () => {
         { id: 2, estado: "en_curso", precio_acordado_usd: 1000 },
       ],
       cobros: [
-        { proyecto_id: 1, monto_neto: 1500, fecha: "2026-06-01" }, // cobró de más
-        { proyecto_id: 2, monto_neto: 200, fecha: "2026-06-01" }, // le falta 800
+        { proyecto_id: 1, monto_neto_usd: 1500, fecha: "2026-06-01" }, // cobró de más
+        { proyecto_id: 2, monto_neto_usd: 200, fecha: "2026-06-01" }, // le falta 800
       ],
       hoy: HOY,
     });
@@ -80,8 +93,8 @@ describe("calcularPanel", () => {
   it("gananciaNetaMes puede dar negativa si se gastó más de lo cobrado en el mes", () => {
     const resultado = calcularPanel({
       proyectos: [{ id: 1, estado: "en_curso" }],
-      gastos: [{ proyecto_id: 1, monto: 5000, fecha: "2026-08-05" }],
-      cobros: [{ proyecto_id: 1, monto_neto: 1000, fecha: "2026-08-05" }],
+      gastos: [{ proyecto_id: 1, monto_usd: 5000, fecha: "2026-08-05" }],
+      cobros: [{ proyecto_id: 1, monto_neto_usd: 1000, fecha: "2026-08-05" }],
       hoy: HOY,
     });
     expect(resultado.kpis.gananciaNetaMes).toBe(-4000);
@@ -91,8 +104,8 @@ describe("calcularPanel", () => {
     const resultado = calcularPanel({
       proyectos: [{ id: 1, estado: "en_curso" }],
       gastos: [
-        { proyecto_id: 1, monto: 1000, fecha: "2026-08-05" },
-        { proyecto_id: 1, monto: -300, fecha: "2026-08-06" },
+        { proyecto_id: 1, monto_usd: 1000, fecha: "2026-08-05" },
+        { proyecto_id: 1, monto_usd: -300, fecha: "2026-08-06" },
       ],
       hoy: HOY,
     });
@@ -103,8 +116,8 @@ describe("calcularPanel", () => {
     const resultado = calcularPanel({
       proyectos: [{ id: 1, estado: "en_curso" }],
       cobros: [
-        { proyecto_id: 1, monto_neto: 1000, fecha: "2026-08-01" }, // este mes
-        { proyecto_id: 1, monto_neto: 5000, fecha: "2026-07-01" }, // mes anterior, no cuenta
+        { proyecto_id: 1, monto_neto_usd: 1000, fecha: "2026-08-01" }, // este mes
+        { proyecto_id: 1, monto_neto_usd: 5000, fecha: "2026-07-01" }, // mes anterior, no cuenta
       ],
       hoy: HOY,
     });
@@ -119,8 +132,8 @@ describe("calcularPanel", () => {
         { id: 3, estado: "terminado", precio_acordado_usd: 1000 },
       ],
       gastos: [
-        { proyecto_id: 1, monto: 100, fecha: "2026-08-01" },
-        { proyecto_id: 2, monto: 900, fecha: "2026-08-01" },
+        { proyecto_id: 1, monto_usd: 100, fecha: "2026-08-01" },
+        { proyecto_id: 2, monto_usd: 900, fecha: "2026-08-01" },
       ],
       hoy: HOY,
     });
@@ -136,8 +149,8 @@ describe("calcularPanel", () => {
       compras: [
         {
           fase_id: 10,
-          precio_total: 300,
-          precio_neto: 300,
+          precio_total_usd: 300,
+          precio_neto_usd: 300,
           impuestos_aplicados: [],
           notas: [],
           estado_pago: "pendiente",
@@ -146,8 +159,8 @@ describe("calcularPanel", () => {
         },
         {
           fase_id: 10,
-          precio_total: 200,
-          precio_neto: 200,
+          precio_total_usd: 200,
+          precio_neto_usd: 200,
           impuestos_aplicados: [],
           notas: [],
           estado_pago: "pagado",
@@ -165,7 +178,7 @@ describe("calcularPanel", () => {
     const gastos = Array.from({ length: 10 }, (_, i) => ({
       proyecto_id: 1,
       id: i,
-      monto: 10,
+      monto_usd: 10,
       fecha: `2026-08-${String(i + 1).padStart(2, "0")}`,
     }));
     const resultado = calcularPanel({
@@ -203,8 +216,8 @@ describe("calcularPanel", () => {
           // proyecto 1: una compra impaga y sin entregar a la vez -> cuenta como 2 acciones.
           {
             fase_id: 10,
-            precio_total: 100,
-            precio_neto: 100,
+            precio_total_usd: 100,
+            precio_neto_usd: 100,
             impuestos_aplicados: [],
             notas: [],
             estado_pago: "pendiente",
@@ -214,8 +227,8 @@ describe("calcularPanel", () => {
           // proyecto 2: una compra pagada y entregada -> no suma nada.
           {
             fase_id: 20,
-            precio_total: 50,
-            precio_neto: 50,
+            precio_total_usd: 50,
+            precio_neto_usd: 50,
             impuestos_aplicados: [],
             notas: [],
             estado_pago: "pagado",
@@ -296,6 +309,40 @@ describe("calcularPanel", () => {
         hoy: HOY,
       });
       expect(resultado.proyectosResumen[0]).toMatchObject({ id: 1, estado: "terminado" });
+    });
+  });
+
+  describe("doble moneda", () => {
+    const base = {
+      proyectos: [{ id: 1, estado: "en_curso", precio_acordado_usd: 1000 }],
+      cobros: [
+        { proyecto_id: 1, monto_neto_usd: 400, monto_neto_ars: 400000, fecha: "2026-08-01" },
+      ],
+      gastos: [{ proyecto_id: 1, monto_usd: 50, monto_ars: 60000, fecha: "2026-08-02" }],
+      hoy: HOY,
+    };
+
+    it("en pesos suma las cifras congeladas en pesos de cada movimiento", () => {
+      const { kpis, proyectosActivos } = calcularPanel({
+        ...base,
+        moneda: "ars",
+        cotizacionActual: { valor: 1500 },
+      });
+      expect(kpis.cobradoMes).toBe(400000);
+      expect(kpis.gananciaNetaMes).toBe(340000);
+      expect(proyectosActivos[0].moneda).toBe("ars");
+    });
+
+    it("el pendiente de cobrar se cuenta en USD y en pesos se pasa con la cotización actual", () => {
+      expect(calcularPanel(base).kpis.pendienteDeCobrar).toBe(600);
+      const enPesos = calcularPanel({ ...base, moneda: "ars", cotizacionActual: { valor: 1500 } });
+      expect(enPesos.kpis.pendienteDeCobrar).toBe(900000);
+    });
+
+    it("sin cotización cargada, lo que depende del precio en pesos queda en null", () => {
+      const { kpis } = calcularPanel({ ...base, moneda: "ars" });
+      expect(kpis.pendienteDeCobrar).toBeNull();
+      expect(kpis.contratadoEnCurso).toBeNull();
     });
   });
 });

@@ -2,6 +2,20 @@ import { ESTADO_LABELS } from "../constants/estados";
 import { getTipoFacturaLabel } from "../constants/tipoFactura";
 import { getTipoProducto } from "../constants/tipoProducto";
 import { notasDeCompras, notasDeCobros, totalNotasCredito, totalNotasDebito } from "./notas";
+import {
+  MONEDA_ANALISIS_DEFAULT,
+  enMonedaDeCompra,
+  montoCobroNeto,
+  montoGasto,
+  precioAcordado as precioAcordadoEn,
+  precioNetoCompra,
+  precioTotalCompra,
+} from "./moneda";
+
+// Doble moneda (ver docs/PLAN_TIPO_CAMBIO.md, Fase 5): todo el análisis es UN
+// cuerpo de fórmulas que recibe la moneda y solo elige qué columna congelada
+// sumar de cada movimiento (accessors de utils/moneda.js). Mismo criterio que
+// backend/app/reportes/calculos.py, que es el que arma el PDF.
 
 const SIN_CATEGORIA = "Sin categoría";
 const SIN_FASE = "Sin fase";
@@ -19,8 +33,9 @@ function aLista(mapa) {
   return Object.entries(mapa).map(([nombre, monto]) => ({ nombre, monto }));
 }
 
-function impuestosDeCompra(compra) {
-  return sumar(compra.impuestos_aplicados ?? [], (i) => i.monto);
+// Los impuestos guardan solo pesos: en USD heredan la cotización de su compra.
+function impuestosDeCompra(compra, moneda) {
+  return sumar(compra.impuestos_aplicados ?? [], (i) => enMonedaDeCompra(i.monto, compra, moneda));
 }
 
 /**
@@ -28,11 +43,11 @@ function impuestosDeCompra(compra) {
  * en partes iguales entre ellas para que la suma del gráfico dé exactamente el
  * total de gastos del proyecto y no se cuente el mismo gasto dos veces.
  */
-function gastosPorCategoria(gastos) {
+function gastosPorCategoria(gastos, moneda) {
   const acumulado = {};
   gastos.forEach((gasto) => {
     const categorias = gasto.categorias?.length ? gasto.categorias : [{ nombre: SIN_CATEGORIA }];
-    const porCategoria = gasto.monto / categorias.length;
+    const porCategoria = montoGasto(gasto, moneda) / categorias.length;
     categorias.forEach((cat) => {
       acumulado[cat.nombre] = (acumulado[cat.nombre] ?? 0) + porCategoria;
     });
@@ -40,12 +55,13 @@ function gastosPorCategoria(gastos) {
   return aLista(acumulado).sort((a, b) => b.monto - a.monto);
 }
 
-function impuestosPorTipo(compras) {
+function impuestosPorTipo(compras, moneda) {
   const acumulado = {};
   compras.forEach((compra) => {
     (compra.impuestos_aplicados ?? []).forEach((aplicado) => {
       const nombre = aplicado.impuesto?.nombre ?? "Impuesto";
-      acumulado[nombre] = (acumulado[nombre] ?? 0) + aplicado.monto;
+      acumulado[nombre] =
+        (acumulado[nombre] ?? 0) + enMonedaDeCompra(aplicado.monto, compra, moneda);
     });
   });
   return aLista(acumulado).sort((a, b) => b.monto - a.monto);
@@ -57,7 +73,7 @@ function impuestosPorTipo(compras) {
  * detalle de las compras (cantidad x precio unitario), que es el único lugar
  * donde el gasto está abierto por producto.
  */
-function comprasPorTipoYProducto(compras, productos) {
+function comprasPorTipoYProducto(compras, productos, moneda) {
   const porTipo = {};
   compras.forEach((compra) => {
     (compra.detalle ?? []).forEach((linea) => {
@@ -66,7 +82,9 @@ function comprasPorTipoYProducto(compras, productos) {
       const nombreProducto = producto
         ? `${producto.marca} ${producto.modelo}`
         : "Producto eliminado";
-      const monto = linea.cantidad * linea.precio_unitario;
+      // El detalle está en pesos (precio de catálogo): en USD, con la
+      // cotización congelada de su compra.
+      const monto = enMonedaDeCompra(linea.cantidad * linea.precio_unitario, compra, moneda);
 
       porTipo[tipo] = porTipo[tipo] ?? {};
       porTipo[tipo][nombreProducto] = (porTipo[tipo][nombreProducto] ?? 0) + monto;
@@ -92,7 +110,7 @@ function comprasPorTipoYProducto(compras, productos) {
 }
 
 /** Pagos = salidas de dinero (gastos + compras), agrupadas por tipo de factura. */
-function pagosPorTipoFactura(gastos, compras) {
+function pagosPorTipoFactura(gastos, compras, moneda) {
   const acumulado = {};
   const registrar = (tipo, monto) => {
     acumulado[tipo] = acumulado[tipo] ?? { cantidad: 0, monto: 0 };
@@ -100,8 +118,8 @@ function pagosPorTipoFactura(gastos, compras) {
     acumulado[tipo].monto += monto;
   };
 
-  gastos.forEach((gasto) => registrar(gasto.tipo_factura, gasto.monto));
-  compras.forEach((compra) => registrar(compra.tipo_factura, compra.precio_total));
+  gastos.forEach((gasto) => registrar(gasto.tipo_factura, montoGasto(gasto, moneda)));
+  compras.forEach((compra) => registrar(compra.tipo_factura, precioTotalCompra(compra, moneda)));
 
   return Object.entries(acumulado)
     .map(([tipo, datos]) => ({ tipo, label: getTipoFacturaLabel(tipo), ...datos }))
@@ -119,17 +137,17 @@ function avancePorEstadoDeFase(fases) {
     .filter((seccion) => seccion.cantidad > 0);
 }
 
-function egresosPorFase(fases, gastos, compras) {
+function egresosPorFase(fases, gastos, compras, moneda) {
   const filas = fases.map((fase) => ({
     faseId: fase.id,
     nombre: fase.nombre,
     gastos: sumar(
       gastos.filter((g) => g.fase_id === fase.id),
-      (g) => g.monto
+      (g) => montoGasto(g, moneda)
     ),
     compras: sumar(
       compras.filter((c) => c.fase_id === fase.id),
-      (c) => c.precio_total
+      (c) => precioTotalCompra(c, moneda)
     ),
   }));
 
@@ -138,7 +156,7 @@ function egresosPorFase(fases, gastos, compras) {
     filas.push({
       faseId: null,
       nombre: SIN_FASE,
-      gastos: sumar(gastosSinFase, (g) => g.monto),
+      gastos: sumar(gastosSinFase, (g) => montoGasto(g, moneda)),
       compras: 0,
     });
   }
@@ -158,7 +176,7 @@ function egresosPorFase(fases, gastos, compras) {
  * -- ahí la base pasa a ser el total gastado, para no dibujar una porción
  * negativa.
  */
-function cobradoPorFase(fases, compras, totalGastos, totalCobrado, totalEgresos) {
+function cobradoPorFase(fases, compras, totalGastos, totalCobrado, totalEgresos, moneda) {
   const disponible = totalCobrado - totalEgresos;
   const hayDisponible = disponible > 0;
   const base = hayDisponible ? totalCobrado : totalEgresos;
@@ -170,7 +188,7 @@ function cobradoPorFase(fases, compras, totalGastos, totalCobrado, totalEgresos)
       nombre: `Comprado en ${fase.nombre}`,
       monto: sumar(
         compras.filter((c) => c.fase_id === fase.id),
-        (c) => c.precio_total
+        (c) => precioTotalCompra(c, moneda)
       ),
     }))
     .filter((fila) => fila.monto > 0)
@@ -184,12 +202,12 @@ function cobradoPorFase(fases, compras, totalGastos, totalCobrado, totalEgresos)
   return filas.map((f) => ({ ...f, pct: porcentaje(f.monto, base) }));
 }
 
-function topProveedores(compras, proveedores, limite = 5) {
+function topProveedores(compras, proveedores, moneda, limite = 5) {
   const acumulado = {};
   compras.forEach((compra) => {
     const nombre =
       proveedores.find((p) => p.id === compra.proveedor_id)?.nombre ?? "Proveedor eliminado";
-    acumulado[nombre] = (acumulado[nombre] ?? 0) + compra.precio_total;
+    acumulado[nombre] = (acumulado[nombre] ?? 0) + precioTotalCompra(compra, moneda);
   });
   return aLista(acumulado)
     .sort((a, b) => b.monto - a.monto)
@@ -220,29 +238,35 @@ export function calcularAnalisis({
   compras = [],
   productos = [],
   proveedores = [],
+  // "usd" (default, la vara de rentabilidad) o "ars" (pesos nominales
+  // históricos: lo que salió de la caja, nada reexpresado a dólar de hoy).
+  moneda = MONEDA_ANALISIS_DEFAULT,
+  // Última cotización cargada: SOLO para mostrar el precio acordado en
+  // pesos, que es lo único sin cifra congelada (decisión #8).
+  cotizacionActual = null,
 }) {
-  // Cobrado NETO: monto_neto ya viene calculado por el backend (Cobro.monto_neto
-  // = monto - notas de crédito + notas de débito, ver app/db/models.py). Usar
+  // Cobrado NETO: monto_neto_* ya viene calculado por el backend (bruto -
+  // notas de crédito + notas de débito, cada nota con su cotización). Usar
   // el bruto acá sería ignorar los ajustes de precio hechos al cliente.
-  const totalCobrado = sumar(cobros, (c) => c.monto_neto ?? c.monto);
-  const totalGastos = sumar(gastos, (g) => g.monto);
-  const totalComprasNeto = sumar(compras, (c) => c.precio_neto);
-  const totalImpuestos = sumar(compras, impuestosDeCompra);
+  const totalCobrado = sumar(cobros, (c) => montoCobroNeto(c, moneda));
+  const totalGastos = sumar(gastos, (g) => montoGasto(g, moneda));
+  const totalComprasNeto = sumar(compras, (c) => precioNetoCompra(c, moneda));
+  const totalImpuestos = sumar(compras, (c) => impuestosDeCompra(c, moneda));
 
   // Notas de crédito/débito de las compras de este proyecto (cuenta corriente
   // con los proveedores) -- devolución de producto, reposición, acuerdo
   // comercial, etc. Ver utils/notas.js.
   const notasCompra = notasDeCompras(compras);
-  const notasCreditoCompras = totalNotasCredito(notasCompra);
-  const notasDebitoCompras = totalNotasDebito(notasCompra);
+  const notasCreditoCompras = totalNotasCredito(notasCompra, moneda);
+  const notasDebitoCompras = totalNotasDebito(notasCompra, moneda);
   const ajusteNotasCompras = notasDebitoCompras - notasCreditoCompras; // + si suma a lo que se debe, - si resta
 
   // Mismo criterio del lado de los cobros (ajustes de precio al cliente).
   const notasCobro = notasDeCobros(cobros);
-  const notasCreditoCobros = totalNotasCredito(notasCobro);
-  const notasDebitoCobros = totalNotasDebito(notasCobro);
+  const notasCreditoCobros = totalNotasCredito(notasCobro, moneda);
+  const notasDebitoCobros = totalNotasDebito(notasCobro, moneda);
 
-  // totalCompras tiene que coincidir con sum(compra.precio_total) -- antes
+  // totalCompras tiene que coincidir con sum(compra.precio_total_*) -- antes
   // de este fix sumaba precio_neto + impuestos y SE OLVIDABA de las notas,
   // así que una devolución de producto no bajaba nada acá.
   const totalCompras = totalComprasNeto + totalImpuestos + ajusteNotasCompras;
@@ -250,13 +274,25 @@ export function calcularAnalisis({
   const disponible = totalCobrado - totalEgresos;
   const margenBruto = totalCobrado - totalGastos - totalComprasNeto - ajusteNotasCompras;
 
-  const precioAcordado = proyecto?.precio_acordado_usd ?? 0;
+  // null en pesos si todavía no hay ninguna cotización cargada: quien lo
+  // muestre dice "sin cotización" en vez de inventar un número.
+  const precioAcordado = precioAcordadoEn(proyecto, moneda, cotizacionActual);
 
-  const categorias = gastosPorCategoria(gastos);
-  const impuestos = impuestosPorTipo(compras);
-  const filasEgresosPorFase = egresosPorFase(fases, gastos, compras);
+  // Los % contra el precio acordado salen SIEMPRE de la cuenta en USD
+  // (caveat 6.3): comparar pesos nominales de marzo contra un precio pasado
+  // a pesos de hoy mezcla dos cosas distintas. En la vista en pesos se
+  // muestran igual, pero el número viene de los dólares congelados.
+  const precioAcordadoUsd = precioAcordadoEn(proyecto, "usd");
+  const cobradoUsd = sumar(cobros, (c) => montoCobroNeto(c, "usd"));
+  const egresosUsd =
+    sumar(gastos, (g) => montoGasto(g, "usd")) + sumar(compras, (c) => precioTotalCompra(c, "usd"));
+
+  const categorias = gastosPorCategoria(gastos, moneda);
+  const impuestos = impuestosPorTipo(compras, moneda);
+  const filasEgresosPorFase = egresosPorFase(fases, gastos, compras, moneda);
 
   return {
+    moneda,
     totales: {
       cobrado: totalCobrado,
       gastos: totalGastos,
@@ -267,8 +303,8 @@ export function calcularAnalisis({
       disponible,
       margenBruto,
       precioAcordado,
-      pctCobrado: porcentaje(totalCobrado, precioAcordado),
-      pctGastado: porcentaje(totalEgresos, precioAcordado),
+      pctCobrado: porcentaje(cobradoUsd, precioAcordadoUsd),
+      pctGastado: porcentaje(egresosUsd, precioAcordadoUsd),
       notasCreditoCompras,
       notasDebitoCompras,
       notasCreditoCobros,
@@ -285,19 +321,19 @@ export function calcularAnalisis({
     ]),
     gastosPorCategoria: categorias.map((c) => ({ ...c, pct: porcentaje(c.monto, totalGastos) })),
     impuestosPorTipo: impuestos.map((i) => ({ ...i, pct: porcentaje(i.monto, totalImpuestos) })),
-    comprasPorTipoYProducto: comprasPorTipoYProducto(compras, productos),
-    pagosPorTipoFactura: pagosPorTipoFactura(gastos, compras),
+    comprasPorTipoYProducto: comprasPorTipoYProducto(compras, productos, moneda),
+    pagosPorTipoFactura: pagosPorTipoFactura(gastos, compras, moneda),
     avanceFases: avancePorEstadoDeFase(fases),
     egresosPorFase: filasEgresosPorFase,
-    cobradoPorFase: cobradoPorFase(fases, compras, totalGastos, totalCobrado, totalEgresos),
+    cobradoPorFase: cobradoPorFase(fases, compras, totalGastos, totalCobrado, totalEgresos, moneda),
     gastosSinComprobante: {
       cantidad: gastos.filter((g) => !g.comprobantes?.length).length,
       monto: sumar(
         gastos.filter((g) => !g.comprobantes?.length),
-        (g) => g.monto
+        (g) => montoGasto(g, moneda)
       ),
     },
-    topProveedores: topProveedores(compras, proveedores),
+    topProveedores: topProveedores(compras, proveedores, moneda),
     notas: {
       compras: {
         credito: notasCreditoCompras,

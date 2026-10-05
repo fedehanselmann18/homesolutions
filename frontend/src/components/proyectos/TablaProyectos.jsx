@@ -73,7 +73,9 @@ export function FilaProyecto({ proyecto, onClick, renderAcciones }) {
 
       <div className="panel-tabla-col panel-tabla-col--disponible">
         <span className="panel-tabla-label-movil label-ficha">Disponible</span>
-        <span style={{ color: positivo ? VERDE : ROJO }}>{formatMoneda(proyecto.disponible)}</span>
+        <span style={{ color: positivo ? VERDE : ROJO }}>
+          {formatMoneda(proyecto.disponible, proyecto.moneda)}
+        </span>
       </div>
 
       <div className="panel-tabla-col panel-tabla-col--presupuesto">
@@ -85,7 +87,10 @@ export function FilaProyecto({ proyecto, onClick, renderAcciones }) {
         </div>
         <BarraProgreso porcentaje={proyecto.pctPresupuesto} color={excedido ? ROJO : NARANJA} />
         <span className="panel-tabla-presupuesto-detalle">
-          {formatMonedaCorta(proyecto.egresos)} / {formatMonedaCorta(proyecto.precioAcordado)}
+          {formatMonedaCorta(proyecto.egresos, proyecto.moneda)} /{" "}
+          {proyecto.precioAcordado == null
+            ? "sin cotización"
+            : formatMonedaCorta(proyecto.precioAcordado, proyecto.moneda)}
         </span>
       </div>
 

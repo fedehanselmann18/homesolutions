@@ -370,7 +370,7 @@ export function ProveedorDetalle() {
                   color={tipoNota.color}
                   titulo={nota.origenDescripcion}
                   detalle={`Compra del ${formatFecha(nota.origenFecha)}`}
-                  monto={`${signoTexto(tipoNota.signo)}${formatMoneda(nota.monto)}`}
+                  monto={`${signoTexto(tipoNota.signo)}${formatMoneda(nota.monto_ars)}`}
                   onClick={() => setDetalleCompraId(nota.origenId)}
                 />
               );

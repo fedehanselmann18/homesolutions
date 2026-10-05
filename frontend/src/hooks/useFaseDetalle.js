@@ -22,6 +22,7 @@ import {
   crearNotaCompra,
 } from "../services/compraService";
 import { notasDeCompras, totalNotasCredito, totalNotasDebito } from "../utils/notas";
+import { montoGasto, precioTotalCompra } from "../utils/moneda";
 import { useToast } from "../context/useToast";
 import {
   useFase,
@@ -68,23 +69,31 @@ export function useFaseDetalle(faseId) {
 
   const kpis = useMemo(() => {
     if (!proyecto) return null;
-    // precio_total ya incluye impuestos + notas de crédito/débito (ver
-    // Compra.precio_total en el backend) -- "gastado en esta fase" ya
+    // precio_total_* ya incluye impuestos + notas de crédito/débito (ver
+    // Compra.precio_total_* en el backend) -- "gastado en esta fase" ya
     // sale bien sin tocar nada acá.
-    const gastadoFase =
-      sumar(gastosFase, (g) => g.monto) + sumar(comprasFase, (c) => c.precio_total);
-    const totalGastoProyecto =
-      sumar(gastosProyecto, (g) => g.monto) + sumar(comprasProyecto, (c) => c.precio_total);
-    const precioAcordado = Number(proyecto.precio_acordado_usd ?? 0);
+    //
+    // Doble moneda: las cifras van en las dos monedas ({ usd, ars }) y el
+    // análisis muestra la que esté elegida. Los % salen siempre de los
+    // dólares (caveat 6.3 de PLAN_TIPO_CAMBIO.md).
+    const gastado = (gastos, compras, moneda) =>
+      sumar(gastos, (g) => montoGasto(g, moneda)) +
+      sumar(compras, (c) => precioTotalCompra(c, moneda));
+    const enLasDos = (calcular) => ({ usd: calcular("usd"), ars: calcular("ars") });
+
+    const gastadoFase = enLasDos((m) => gastado(gastosFase, comprasFase, m));
+    const totalGastoProyectoUsd = gastado(gastosProyecto, comprasProyecto, "usd");
+    const precioAcordadoUsd = Number(proyecto.precio_acordado_usd ?? 0);
 
     const notasFase = notasDeCompras(comprasFase);
 
     return {
       gastadoFase,
-      pctPresupuesto: precioAcordado > 0 ? (gastadoFase / precioAcordado) * 100 : 0,
-      pctGastoTotal: totalGastoProyecto > 0 ? (gastadoFase / totalGastoProyecto) * 100 : 0,
-      notasCreditoFase: totalNotasCredito(notasFase),
-      notasDebitoFase: totalNotasDebito(notasFase),
+      pctPresupuesto: precioAcordadoUsd > 0 ? (gastadoFase.usd / precioAcordadoUsd) * 100 : 0,
+      pctGastoTotal:
+        totalGastoProyectoUsd > 0 ? (gastadoFase.usd / totalGastoProyectoUsd) * 100 : 0,
+      notasCreditoFase: enLasDos((m) => totalNotasCredito(notasFase, m)),
+      notasDebitoFase: enLasDos((m) => totalNotasDebito(notasFase, m)),
       cantidadNotasFase: notasFase.length,
     };
     // Las dependencias usan los datos crudos de cada query (en vez de
@@ -221,7 +230,9 @@ export function useFaseDetalle(faseId) {
   // comprobante", y obligar a pasar por el formulario entero para adjuntar
   // un PDF era el rodeo que hacía que no se cargaran.
   const agregarComprobantesCompra = async (compraId, files) => {
-    await Promise.all(Array.from(files).map((archivo) => subirComprobanteCompra(compraId, archivo)));
+    await Promise.all(
+      Array.from(files).map((archivo) => subirComprobanteCompra(compraId, archivo))
+    );
     invalidar("compras");
   };
 

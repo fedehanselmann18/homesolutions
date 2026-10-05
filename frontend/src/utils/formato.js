@@ -1,19 +1,59 @@
-export function formatMoneda(monto) {
+// Doble moneda (ver docs/PLAN_TIPO_CAMBIO.md): "ars" -> "$ 1.234", "usd" ->
+// "US$ 1.234". Es el formato es-AR de Intl, así que en pantalla "$" pelado
+// siempre significa pesos. El default es pesos porque es la moneda de todo lo
+// que no se convirtió (catálogo de proveedores, detalle de compra, impuestos).
+const CODIGO_ISO = { ars: "ARS", usd: "USD" };
+
+export function formatMoneda(monto, moneda = "ars") {
   return new Intl.NumberFormat("es-AR", {
     style: "currency",
-    currency: "ARS",
+    currency: CODIGO_ISO[moneda],
     maximumFractionDigits: 0,
   }).format(monto);
 }
 
-// Versión compacta para ejes y etiquetas de gráficos: $3,9 M
-export function formatMonedaCorta(monto) {
+// Versión compacta para ejes y etiquetas de gráficos: $3,9 M / US$ 3,9 M
+export function formatMonedaCorta(monto, moneda = "ars") {
   return new Intl.NumberFormat("es-AR", {
     style: "currency",
-    currency: "ARS",
+    currency: CODIGO_ISO[moneda],
     notation: "compact",
     maximumFractionDigits: 1,
   }).format(monto);
+}
+
+/**
+ * Una cifra en las dos monedas: la principal y la otra entre paréntesis
+ * ("US$ 41.379 ($ 60.000.000)"). USD principal por default, que es la vara
+ * de rentabilidad; `principal: "ars"` para lo que se debe o se pagó en pesos
+ * (deuda a proveedores, un gasto). `ars` en null (ej. precio acordado sin
+ * ninguna cotización cargada) muestra solo la principal.
+ */
+export function formatMonedaDual(ars, usd, { principal = "usd" } = {}) {
+  const [primera, segunda] =
+    principal === "usd"
+      ? [
+          [usd, "usd"],
+          [ars, "ars"],
+        ]
+      : [
+          [ars, "ars"],
+          [usd, "usd"],
+        ];
+  if (segunda[0] == null) return formatMoneda(primera[0], primera[1]);
+  return `${formatMoneda(primera[0], primera[1])} (${formatMoneda(segunda[0], segunda[1])})`;
+}
+
+// Cotización del dólar: pesos con centavos ("$ 1.487,35"), a diferencia de
+// formatMoneda que redondea al peso -- en un tipo de cambio los centavos sí
+// importan.
+export function formatCotizacion(valor) {
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(valor);
 }
 
 export function formatFecha(fecha) {
