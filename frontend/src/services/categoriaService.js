@@ -10,3 +10,14 @@ export const crearCategoria = async (categoria) => {
   const { data } = await axiosClient.post("/categorias/crear", categoria);
   return data;
 };
+
+export const actualizarCategoria = async (id, categoria) => {
+  // categoria: { nombre, tipo } -- tipo: "equipo" | "materiales" | "mano_obra"
+  const { data } = await axiosClient.put(`/categorias/${id}`, categoria);
+  return data;
+};
+
+export const eliminarCategoria = async (id) => {
+  const { data } = await axiosClient.delete(`/categorias/${id}`);
+  return data;
+};
