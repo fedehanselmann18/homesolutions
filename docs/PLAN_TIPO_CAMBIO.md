@@ -4,6 +4,32 @@ Fecha: 2026-10-05. Último cambio grande antes del deploy del relanzamiento.
 Reemplaza la decisión previa de "se carga todo en pesos" (ver memoria
 `proyecto_moneda_precio_acordado`): ahora el sistema sí maneja las dos monedas.
 
+## Estado (05/10/2026)
+
+Fases 1 a 5 implementadas y commiteadas, con `pytest` y `npm run test` en
+verde. Diferencias con lo planeado:
+
+- La migración (`c9e4a7b3d1f0`) no hace backfill y además **frena con un
+  mensaje claro** si encuentra movimientos cargados, en vez de fallar con un
+  NOT NULL críptico. La base local se vació solo en las tablas de
+  movimientos (backup previo en `backend/backups/antes_tipo_cambio_2026-10-05.dump`)
+  y se volvió a sembrar la demo con `scripts.seed_demo`, que ahora carga
+  cotizaciones blue **inventadas** y convierte sus importes.
+- La moneda del análisis es una elección global (`useMonedaAnalisis`): el
+  switch US$/Pesos aparece en el análisis del proyecto, el de la fase, el
+  Panel y Proyectos, y cambia todos a la vez. Vuelve a USD al recargar.
+- El libro de obra quedó como caja en pesos nominales; los proveedores
+  (catálogo, total comprado, deuda) siguen en pesos.
+- El precio acordado en pesos usa la última cotización del tipo con que se
+  acordó el proyecto, o la última de cualquier tipo si no hay de ese.
+
+Pendiente:
+- **6.1** — la columna de dólar del Excel de la carga inicial.
+- **Deploy** (paso 20): no se hizo.
+- Verificación visual con sesión iniciada: el PDF y la API se probaron
+  contra la base local, las pantallas solo con tests (el login pide la
+  contraseña real).
+
 ## 1. El problema de negocio
 
 Agus acuerda el precio de la obra con el cliente **en dólares** (ej. 100.000 USD)
