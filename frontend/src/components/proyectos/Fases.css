@@ -109,12 +109,6 @@
 .fases-tabla-acciones {
   display: flex;
   gap: 4px;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.fases-tabla-fila:hover .fases-tabla-acciones {
-  opacity: 1;
 }
 
 .fases-tabla-orden-btns {
@@ -265,12 +259,6 @@
   .fases-tabla-col--accion {
     grid-area: acciones;
     justify-content: flex-end;
-  }
-
-  /* Siempre visibles en touch -- ver docs/DESIGN.md §8 ("acciones de fila
-     siempre visibles, no sólo hover"). */
-  .fases-tabla-acciones {
-    opacity: 1;
   }
 
   .fases-tabla-chevron {

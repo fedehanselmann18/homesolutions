@@ -272,19 +272,13 @@
   white-space: nowrap;
 }
 
-/* --- acciones de admin, visibles al pasar el mouse por la fila --- */
+/* --- acciones de admin: siempre visibles, en muted; el hover sólo sube el
+   contraste. En touch no hay hover (ver docs/DESIGN.md §8). --- */
 
 .libro__acciones {
   display: flex;
   gap: var(--space-1);
   justify-content: flex-end;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.libro__fila:hover .libro__acciones,
-.libro__acciones:focus-within {
-  opacity: 1;
 }
 
 .libro__accion {
@@ -414,10 +408,8 @@
     justify-content: flex-end;
   }
 
-  /* Siempre visibles en touch -- ver docs/DESIGN.md §8. */
   .libro__acciones {
     grid-area: acciones;
-    opacity: 1;
   }
 
   .libro__saldo {
