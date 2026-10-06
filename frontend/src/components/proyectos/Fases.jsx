@@ -274,7 +274,7 @@ export function Fases({ proyectoId }) {
             );
           })}
 
-          <div className="fases-tabla-total">
+          <div className="planilla__fila fases-tabla-total">
             <span />
             <span>
               TOTAL {fases.length} {fases.length === 1 ? "FASE" : "FASES"}
