@@ -7,3 +7,8 @@ claudedesign/
 
 # 128MB, supera el límite de 100MB de GitHub -- queda solo en disco local.
 docs/Manual_uso_HS.pdf
+# Material interno que no es código (brief comercial, prototipos, contexto
+# para Claude): queda solo en disco local.
+docs/BRIEF_COMERCIALIZACION.md
+docs/HomeSolutionsMobile.zip
+docs/CLAUDE.md
