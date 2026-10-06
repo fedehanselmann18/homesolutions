@@ -81,6 +81,13 @@ export function formatFechaHora(instante) {
   });
 }
 
+// Cantidad con su sustantivo concordado: "1 compra" / "3 compras". El plural
+// por default agrega una "s"; cuando eso no alcanza (frases con verbo o
+// adjetivo, "compra que no tiene" / "compras que no tienen") se pasa entero.
+export function pluralizar(cantidad, singular, plural = `${singular}s`) {
+  return `${cantidad} ${cantidad === 1 ? singular : plural}`;
+}
+
 // Tamaño de archivo legible (1536 -> "1.5 KB"), para la reconciliación de
 // R2 (ver GestionArchivos.jsx). Los comprobantes están topeados a 10MB (ver
 // MAX_SIZE_BYTES en el backend), así que nunca hace falta ir más allá de MB.

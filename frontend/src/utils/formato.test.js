@@ -7,6 +7,7 @@ import {
   formatFecha,
   formatBytes,
   formatUltimaActividad,
+  pluralizar,
 } from "./formato";
 
 // Ver comentario en formatUtils.test.js: normalizamos espacios que Intl
@@ -64,6 +65,23 @@ describe("formatFecha", () => {
     expect(formatFecha(null)).toBe("");
     expect(formatFecha(undefined)).toBe("");
     expect(formatFecha("")).toBe("");
+  });
+});
+
+describe("pluralizar", () => {
+  it("concuerda con 1 y con 2", () => {
+    expect(pluralizar(1, "compra")).toBe("1 compra");
+    expect(pluralizar(2, "compra")).toBe("2 compras");
+  });
+
+  it("usa el plural en 0", () => {
+    expect(pluralizar(0, "fase")).toBe("0 fases");
+  });
+
+  it("acepta el plural explícito cuando no alcanza con la s", () => {
+    const frase = ["compra que no tiene comprobante", "compras que no tienen comprobante"];
+    expect(pluralizar(1, ...frase)).toBe("1 compra que no tiene comprobante");
+    expect(pluralizar(2, ...frase)).toBe("2 compras que no tienen comprobante");
   });
 });
 

@@ -20,7 +20,7 @@ import { VERDE, NARANJA, ROJO, LINEA, TINTA_MUTED } from "../../constants/colore
 import { EstadoVacio } from "../shared/EstadoVacio";
 import { calcularAnalisis } from "../../utils/analisis";
 import { diasDesde } from "../../utils/seguimiento";
-import { formatMoneda } from "../../utils/formato";
+import { formatMoneda, pluralizar } from "../../utils/formato";
 import { obtenerDetalleBackend } from "../../utils/errorHandling";
 import { TINTE_PASTILLA } from "../../constants/tipoMovimiento";
 
@@ -280,9 +280,7 @@ export function Fases({ proyectoId }) {
 
           <div className="planilla__fila fases-tabla-total">
             <span />
-            <span>
-              TOTAL {fases.length} {fases.length === 1 ? "FASE" : "FASES"}
-            </span>
+            <span>TOTAL {pluralizar(fases.length, "FASE")}</span>
             <span />
             <span className="fases-tabla-col--num">
               {gastadoPorFase ? formatMoneda(gastadoPorFase.totales.egresos, "usd") : "—"}

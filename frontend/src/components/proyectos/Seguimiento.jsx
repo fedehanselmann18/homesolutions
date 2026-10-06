@@ -30,14 +30,14 @@ import ModalCompra from "../modals/ModalCompra";
 import ModalGasto from "../modals/ModalGasto";
 import ModalCobro from "../modals/ModalCobro";
 import { calcularSeguimiento, DIAS_FASE_ESTANCADA } from "../../utils/seguimiento";
-import { formatMoneda, formatFecha } from "../../utils/formato";
+import { formatMoneda, formatFecha, pluralizar } from "../../utils/formato";
 import { formatMontoDeItem } from "../../utils/moneda";
 import { getCondicionPagoLabel } from "../../constants/estadoCompra";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
 import { VERDE, ROJO, NARANJA, GRIS } from "../../constants/colores";
 import "./Seguimiento.css";
 
-const diasTexto = (dias) => `hace ${dias} ${dias === 1 ? "día" : "días"}`;
+const diasTexto = (dias) => `hace ${pluralizar(dias, "día")}`;
 
 function Seccion({ titulo, descripcion, cantidad, children }) {
   return (
@@ -200,7 +200,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
         titulo="Cobro del proyecto"
         descripcion={
           cobranza.ultimoCobro
-            ? `${cobranza.cantidadCobros} ${cobranza.cantidadCobros === 1 ? "cobro registrado" : "cobros registrados"} · último ${diasTexto(cobranza.ultimoCobro.dias)}`
+            ? `${pluralizar(cobranza.cantidadCobros, "cobro registrado", "cobros registrados")} · último ${diasTexto(cobranza.ultimoCobro.dias)}`
             : "Todavía no se cargó ningún cobro"
         }
       >
@@ -301,7 +301,11 @@ export function Seguimiento({ proyectoId, onIrATab }) {
             )}
             {comprasSinEntregar.length > 0 && (
               <AlertaColumna>
-                {comprasSinEntregar.length} pedidos que no te entregaron
+                {pluralizar(
+                  comprasSinEntregar.length,
+                  "pedido que no te entregaron",
+                  "pedidos que no te entregaron"
+                )}
               </AlertaColumna>
             )}
           </div>
@@ -335,7 +339,11 @@ export function Seguimiento({ proyectoId, onIrATab }) {
             )}
             {comprasSinComprobante.length > 0 && (
               <AlertaColumna>
-                {comprasSinComprobante.length} compras que no tienen comprobante adjunto
+                {pluralizar(
+                  comprasSinComprobante.length,
+                  "compra que no tiene comprobante adjunto",
+                  "compras que no tienen comprobante adjunto"
+                )}
               </AlertaColumna>
             )}
           </div>
