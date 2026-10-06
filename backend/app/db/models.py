@@ -79,7 +79,7 @@ class Usuario(TimestampMixin, Base):
     # login() en routes/login.py y resolver_usuario_vigente en auth/oAuth2.py.
     # Solo la cuenta "Manager" la puede prender/apagar.
     activo: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="true")
-    # "Visto por última vez" (ver PLAN_MANAGER.md #4): se actualiza en
+    # "Visto por última vez": se actualiza en
     # resolver_usuario_vigente (auth/oAuth2.py) con throttle -- no en cada
     # request, alcanza con saber "activo hace poco". NULL para cuentas que
     # nunca hicieron un request autenticado desde que existe esta columna

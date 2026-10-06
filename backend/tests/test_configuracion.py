@@ -1,5 +1,5 @@
 """
-Tests del panel de configuración de Manager (ver PLAN_MANAGER.md #2):
+Tests del panel de configuración de Manager:
 GET/PATCH/DELETE /configuracion (valores editables, con fallback a
 Settings/.env) y GET /configuracion/estado-integraciones (solo lectura de
 R2/Gemini).

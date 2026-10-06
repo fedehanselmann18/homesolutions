@@ -1,5 +1,5 @@
 """
-Tests de la reconciliación de archivos en R2 (ver PLAN_MANAGER.md #3):
+Tests de la reconciliación de archivos en R2:
 GET /storage/reconciliacion (huérfanos y rotos) y POST
 /storage/reconciliacion/purgar.
 

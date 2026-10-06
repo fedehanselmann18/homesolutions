@@ -1,5 +1,5 @@
 """
-Panel de configuración de Manager (ver PLAN_MANAGER.md #2): valores
+Panel de configuración de Manager: valores
 editables desde la app sin redeployar (tabla `configuracion`, ver
 models.Configuracion) más el estado -- solo lectura -- de las integraciones
 externas (R2, Gemini), que dependen de variables que NUNCA se migran acá

@@ -192,7 +192,7 @@ class UsuarioOut(UsuarioBase, TimestampOut):
     # Cuenta dada de baja temporalmente por "Manager" (ver models.Usuario).
     # El front lo usa para mostrar el estado en la lista de usuarios.
     activo: bool = True
-    # "Visto por última vez" (ver PLAN_MANAGER.md #4). None si la cuenta
+    # "Visto por última vez". None si la cuenta
     # nunca hizo un request autenticado desde que existe esta columna -- el
     # front lo muestra como "Nunca" en ese caso, no como una fecha vacía.
     ultima_actividad: Optional[datetime] = None
