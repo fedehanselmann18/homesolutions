@@ -13,10 +13,10 @@ import SeccionArchivos from "../../components/manager/SeccionArchivos";
 import "./GestionManager.css";
 
 /**
- * Página de Manager: reconciliación de archivos en R2 (ver
- * PLAN_MANAGER.md #3). Solo aplica con R2 configurado -- sin eso el
- * backend responde 400, que acá se trata como estado informativo (no hay
- * nada roto, la comparación directamente no aplica en disco local).
+ * Página de Manager: reconciliación de archivos en R2. Solo aplica con R2
+ * configurado -- sin eso el backend responde 400, que acá se trata como
+ * estado informativo (no hay nada roto, la comparación directamente no
+ * aplica en disco local).
  */
 export function GestionArchivos() {
   usePageTitle("Archivos");

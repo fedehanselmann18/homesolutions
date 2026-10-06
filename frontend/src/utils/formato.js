@@ -50,7 +50,7 @@ export function formatBytes(bytes) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-// "Visto por última vez" (ver PLAN_MANAGER.md #4, planilla de Equipo en
+// "Visto por última vez" (planilla de Equipo en
 // Manager): relativo y no una fecha/hora pelada -- para esto importa "hace
 // cuánto", no el instante exacto. Pasado el día cae a formatFechaHora
 // (fecha+hora concreta), donde lo relativo deja de aportar más que confundir.

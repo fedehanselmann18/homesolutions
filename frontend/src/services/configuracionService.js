@@ -1,6 +1,6 @@
 import axiosClient from "../api/axiosClient";
 
-// Panel de configuración de Manager (ver PLAN_MANAGER.md #2): exclusivo de
+// Panel de configuración de Manager: exclusivo de
 // esa cuenta (403 para cualquier otra, incluidos los admin del equipo -- ver
 // requiere_manager en el backend).
 

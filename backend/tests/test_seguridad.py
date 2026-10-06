@@ -132,6 +132,26 @@ def test_rate_limit_de_login_bloquea_despues_de_5_intentos_por_minuto(client, us
     assert respuesta.status_code == 429
 
 
+def test_rate_limit_de_login_no_se_saltea_cambiando_x_forwarded_for(client, usuario_admin):
+    # Simula el proxy de Railway: el cliente manda un X-Forwarded-For
+    # inventado distinto en cada intento y el proxy agrega la IP real al
+    # final. El límite tiene que seguir contando contra esa IP real.
+    for intento in range(5):
+        respuesta = client.post(
+            "/auth/login",
+            data={"username": usuario_admin.nombre_usuario, "password": "no-es-esta"},
+            headers={"X-Forwarded-For": f"10.0.0.{intento}, 203.0.113.7"},
+        )
+        assert respuesta.status_code == 401
+
+    respuesta = client.post(
+        "/auth/login",
+        data={"username": usuario_admin.nombre_usuario, "password": "no-es-esta"},
+        headers={"X-Forwarded-For": "10.0.0.99, 203.0.113.7"},
+    )
+    assert respuesta.status_code == 429
+
+
 # ---------------------------------------------------------------------------
 # Reporte PDF: solo admin, "lectura" no puede generarlo
 # ---------------------------------------------------------------------------

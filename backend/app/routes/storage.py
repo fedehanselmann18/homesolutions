@@ -1,5 +1,5 @@
 """
-Reconciliación de archivos en R2 (ver PLAN_MANAGER.md #3): `eliminar_comprobante`
+Reconciliación de archivos en R2: `eliminar_comprobante`
 (app/files/storage.py) se llama explícitamente antes de cada borrado en
 proyectos.py/compras.py/gastos.py/cobros.py/fases.py, así que esto NO es una
 red de seguridad para un borrado que "se olvidó" -- es la red para lo que

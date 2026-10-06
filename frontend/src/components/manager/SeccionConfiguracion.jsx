@@ -4,7 +4,7 @@ import { RotateCcw, Save } from "lucide-react";
 import "./Manager.css";
 
 /**
- * Panel de configuración de Manager (ver PLAN_MANAGER.md #2): valores
+ * Panel de configuración de Manager: valores
  * editables sin redeployar (hoy solo GEMINI_MODEL, piloto) más el estado
  * -- solo lectura -- de las integraciones que SÍ dependen de variables de
  * entorno reales (R2, Gemini): esas nunca se migran a la tabla porque son

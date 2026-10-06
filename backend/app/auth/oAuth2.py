@@ -28,7 +28,7 @@ REFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS
 # relojes, y quedar revocado apenas se crea.
 TOLERANCIA_REVOCACION = timedelta(seconds=5)
 
-# "Visto por última vez" (PLAN_MANAGER.md #4): no se actualiza en cada
+# "Visto por última vez": no se actualiza en cada
 # request, alcanza con saber "activo hace poco" -- Manager no necesita
 # precisión al segundo para esto, y 5 minutos evita un UPDATE de más en el
 # camino más caliente de toda la app (se ejecuta en TODO request autenticado).

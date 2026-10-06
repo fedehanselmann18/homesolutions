@@ -95,7 +95,7 @@ async def extraer_comprobante_endpoint(
             mime_type=MIME_POR_EXTENSION[ext],
             tipo_entidad=tipo_entidad,
             contexto=contexto_dict,
-            # Editable desde Manager (ver PLAN_MANAGER.md #2) sin redeployar
+            # Editable desde Manager sin redeployar
             # -- ver app/configuracion.py para el fallback a Settings/.env.
             modelo=obtener_valor(db, "GEMINI_MODEL"),
         )

@@ -14,7 +14,7 @@ de cada uno. Backend en FastAPI + SQLAlchemy + PostgreSQL, frontend en React
 
 ## Backend
 
-```bashsigo aca
+```bash
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate          # Windows: .venv\Scripts\activate
@@ -22,7 +22,6 @@ pip install -r requirements-dev.txt   # instala requirements.txt + herramientas 
 
 cp .env.example .env
 # completar .env: credenciales de Postgres, SECRET_KEY (generarla con el
-d
 # comando que indica el propio .env.example), y el resto según haga falta
 # (GEMINI_API_KEY para el autocompletado con IA, credenciales de R2 para
 # almacenamiento de comprobantes en producción -- ninguna de las dos es

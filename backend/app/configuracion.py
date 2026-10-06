@@ -6,11 +6,10 @@ config.py (que es el .env, sin acceso a DB) ni en routes/configuracion.py
 (que es la API) -- porque lo consumen también otros módulos que no son rutas
 (app/ia/extractor.py, app/ia/catalogo.py).
 
-Por ahora la única clave migrada es GEMINI_MODEL (piloto, ver
-PLAN_MANAGER.md #2). SECRET_KEY, credenciales de DB y de R2 NO se agregan
-acá a propósito: pasarlas por una tabla las expone a cualquiera con acceso
-de lectura a la base y a cualquier fuga de GET /configuracion, algo que un
-.env fuera del repo no tiene.
+Por ahora la única clave migrada es GEMINI_MODEL (piloto). SECRET_KEY,
+credenciales de DB y de R2 NO se agregan acá a propósito: pasarlas por una
+tabla las expone a cualquiera con acceso de lectura a la base y a cualquier
+fuga de GET /configuracion, algo que un .env fuera del repo no tiene.
 
 Sumar una clave nueva es agregar una entrada acá -- el endpoint y el
 resolver ya son genéricos.

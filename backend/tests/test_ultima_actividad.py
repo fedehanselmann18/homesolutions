@@ -1,5 +1,5 @@
 """
-Tests de "visto por última vez" (ver PLAN_MANAGER.md #4):
+Tests de "visto por última vez":
 resolver_usuario_vigente actualiza Usuario.ultima_actividad en cada request
 autenticado, con throttle (THROTTLE_ULTIMA_ACTIVIDAD) para no pegarle un
 UPDATE a la base en cada uno.

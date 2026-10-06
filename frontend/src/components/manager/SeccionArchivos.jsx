@@ -6,7 +6,7 @@ import { formatBytes, formatFechaHora } from "../../utils/formato";
 import { EstadoVacio } from "../shared/EstadoVacio";
 
 /**
- * Reconciliación de archivos en R2 (ver PLAN_MANAGER.md #3): objetos del
+ * Reconciliación de archivos en R2: objetos del
  * bucket sin ninguna fila de comprobante/nota que los referencie
  * (huérfanos, se pueden purgar acá) y el caso inverso -- filas con
  * archivo_path que ya no existe en R2 (rotos, solo para detectarlos: no hay
