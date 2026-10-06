@@ -60,6 +60,31 @@
   background: var(--color-oxido-tint);
 }
 
+/* --- referencia de los íconos de estado --- */
+
+.libro__referencias {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1-5) var(--space-6);
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-linea);
+}
+
+.libro__referencias-grupo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2-5);
+}
+
+.libro__referencia {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-tinta-muted);
+}
+
 /* --- encabezado de columnas --- */
 
 .libro__columnas {
@@ -349,7 +374,8 @@
   .libro__fila,
   .libro__saldo,
   .libro__dia,
-  .libro__cabecera {
+  .libro__cabecera,
+  .libro__referencias {
     min-width: 900px;
   }
 }

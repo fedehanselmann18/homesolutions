@@ -216,6 +216,23 @@ export function LibroDeObra({
 
       {errorComprobante && <p className="libro__error">{errorComprobante}</p>}
 
+      {/* En la fila el estado de una compra es sólo un ícono: acá se dice una
+          vez qué significa cada uno. Sin compras no hay estados que explicar. */}
+      {compras.length > 0 && (
+        <div className="libro__referencias">
+          <span className="libro__referencias-grupo">
+            <span className="label-ficha">Pago</span>
+            <Referencia estado={getEstadoPago("pendiente")} />
+            <Referencia estado={getEstadoPago("pagado")} />
+          </span>
+          <span className="libro__referencias-grupo">
+            <span className="label-ficha">Envío</span>
+            <Referencia estado={getEstadoEnvio("pedido")} />
+            <Referencia estado={getEstadoEnvio("entregado")} />
+          </span>
+        </div>
+      )}
+
       <div className="libro__columnas">
         <span className="label-ficha">Tipo</span>
         <span className="label-ficha">Movimiento</span>
@@ -352,20 +369,22 @@ function FilaMovimiento({
           <>
             <EstadoBoton
               estado={estadoPago}
-              titulo={
+              descripcion={entidad.estado_pago === "pagado" ? "Pagado" : "Pago pendiente"}
+              accion={
                 entidad.estado_pago === "pagado"
-                  ? "Pagado — click para marcar sin pagar"
-                  : "Pago pendiente — click para marcar pagado"
+                  ? "click para marcar sin pagar"
+                  : "click para marcar pagado"
               }
               canManage={canManage}
               onClick={detener(() => onTogglePagoCompra?.(entidad))}
             />
             <EstadoBoton
               estado={estadoEnvio}
-              titulo={
+              descripcion={entidad.estado_envio === "entregado" ? "Entregado" : "Pedido"}
+              accion={
                 entidad.estado_envio === "entregado"
-                  ? "Entregado — click para marcar sin entregar"
-                  : "Pedido — click para marcar entregado"
+                  ? "click para marcar sin entregar"
+                  : "click para marcar entregado"
               }
               canManage={canManage}
               onClick={detener(() => onToggleEnvioCompra?.(entidad))}
@@ -416,19 +435,33 @@ function FilaMovimiento({
   );
 }
 
-function EstadoBoton({ estado, titulo, canManage, onClick }) {
+// Botón de sólo ícono: aria-label además del title, que no se muestra en
+// touch ni lo lee siempre un lector de pantalla (DESIGN.md §8).
+function EstadoBoton({ estado, descripcion, accion, canManage, onClick }) {
   const Icono = estado.icono;
+  const etiqueta = canManage ? `${descripcion} — ${accion}` : descripcion;
   return (
     <button
       type="button"
       className="libro__estado"
-      title={canManage ? titulo : estado.label}
+      title={etiqueta}
+      aria-label={etiqueta}
       disabled={!canManage}
       style={{ color: estado.color, backgroundColor: `${estado.color}${TINTE_PASTILLA}` }}
       onClick={onClick}
     >
-      {Icono && <Icono size={14} strokeWidth={2.25} />}
+      {Icono && <Icono size={14} strokeWidth={2.25} aria-hidden="true" />}
     </button>
+  );
+}
+
+function Referencia({ estado }) {
+  const Icono = estado.icono;
+  return (
+    <span className="libro__referencia">
+      <Icono size={14} strokeWidth={2.25} style={{ color: estado.color }} aria-hidden="true" />
+      {estado.label}
+    </span>
   );
 }
 

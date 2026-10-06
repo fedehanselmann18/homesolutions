@@ -149,6 +149,27 @@ describe("LibroDeObra", () => {
     expect(onAbrirDetalle).not.toHaveBeenCalled();
   });
 
+  it("nombra los íconos de estado aunque el usuario no pueda cambiarlos", () => {
+    render_({ canManage: false });
+
+    expect(screen.getByRole("button", { name: "Pago pendiente" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Entregado" })).toBeDisabled();
+  });
+
+  it("explica una vez qué significa cada ícono de estado", () => {
+    render_();
+
+    const referencias = [...document.querySelectorAll(".libro__referencia")].map(
+      (e) => e.textContent
+    );
+    expect(referencias).toEqual(["Pendiente", "Pagado", "Pedido", "Entregado"]);
+  });
+
+  it("no muestra la referencia de estados si no hay compras", () => {
+    render_({ compras: [] });
+    expect(document.querySelector(".libro__referencias")).not.toBeInTheDocument();
+  });
+
   it("marca las notas de crédito en la fila", () => {
     render_();
     expect(screen.getByTitle("Notas de crédito")).toBeInTheDocument();
