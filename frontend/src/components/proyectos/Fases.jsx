@@ -131,7 +131,11 @@ export function Fases({ proyectoId }) {
     <div>
       <div className="fases-header">
         <h2>Fases del Proyecto</h2>
-        {canManage && <button onClick={handleNuevaFase}>Nueva fase</button>}
+        {canManage && (
+          <button type="button" className="btn btn-primary" onClick={handleNuevaFase}>
+            Nueva fase
+          </button>
+        )}
       </div>
 
       {fases.length === 0 ? (

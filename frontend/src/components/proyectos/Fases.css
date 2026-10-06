@@ -10,26 +10,6 @@
   font-size: var(--text-xl);
 }
 
-.fases-header button {
-  font-family: var(--font-ui);
-  font-size: var(--text-base);
-  font-weight: 600;
-  padding: 9px 18px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-musgo);
-  background-color: var(--color-musgo);
-  color: var(--color-superficie);
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.fases-header button:hover {
-  background-color: var(--color-musgo-dark);
-  border-color: var(--color-musgo-dark);
-}
-
 /* Planilla de fases (dirección 1a "Planilla", mock 2b): reemplaza las
    tarjetas de antes por una fila real con columnas alineadas -- mismo
    criterio visual que components/proyectos/TablaProyectos.css (borde
