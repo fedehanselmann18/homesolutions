@@ -125,3 +125,12 @@ export function formatUltimaActividad(instante) {
   if (minutos < 60 * 24) return `Hace ${Math.floor(minutos / 60)} h`;
   return formatFechaHora(instante);
 }
+
+// "mlopez" -> "ML", "Agustin" -> "AG", "ClimaTotal Instalaciones" -> "CI": las
+// dos letras de un avatar. Con dos palabras o más, la inicial de las dos
+// primeras; con una sola, sus dos primeras letras.
+export function iniciales(nombre = "") {
+  const partes = nombre.split(/[.\s_-]+/).filter(Boolean);
+  if (partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase();
+  return nombre.slice(0, 2).toUpperCase();
+}

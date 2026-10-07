@@ -1,17 +1,10 @@
-/* ModalConfirmar.css
-   El overlay y la caja del modal se definen una sola vez en ModalCompra.css:
-   acá antes se redeclaraban `.modal-overlay` y `.modal-contenido` enteros
-   (con el borde rojo incluido), y como el CSS termina todo en el mismo
-   bundle, ese borde se le aplicaba a cualquier modal según el orden de
-   importación. Ahora el rojo va en un modificador propio. */
-
-.modal-contenido--peligro {
-  border-top-color: var(--color-oxido);
-}
+/* ModalConfirmar.css. La caja es la de ModalShell. v5: ya no lleva el borde
+   superior rojo (el borde de color arriba se retiró de todos los modales);
+   que es un borrado lo dicen el ícono y el botón rojo. */
 
 .modal-confirmar {
   display: flex;
-  gap: 14px;
+  gap: var(--space-3);
 }
 
 .modal-confirmar-icono {
@@ -29,7 +22,7 @@
 .modal-confirmar-texto {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-1-5);
   min-width: 0;
 }
 

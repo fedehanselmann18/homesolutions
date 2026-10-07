@@ -1,6 +1,6 @@
 // Cálculos derivados de Proveedor para el listado y el detalle. Se separa acá
 // para que el listado (tarjetas) y el detalle usen siempre el mismo criterio.
-import { esCompraImpaga } from "./seguimiento";
+import { esCompraImpaga, diasDesde } from "./seguimiento";
 import { precioTotalCompra } from "./moneda";
 import {
   notasDeCompras,
@@ -44,9 +44,13 @@ export function rubroPrincipal(productosDelProveedor, getTipoProducto) {
  * Todo en PESOS: con un proveedor se compra y se debe en pesos (catálogo en
  * pesos, decisión #4 de docs/PLAN_TIPO_CAMBIO.md, y caveat 6.2 para la deuda).
  */
-export function calcularResumenProveedor(proveedor, { productos = [], compras = [] } = {}) {
+export function calcularResumenProveedor(
+  proveedor,
+  { productos = [], compras = [], hoy = new Date() } = {}
+) {
   const productosDelProveedor = productos.filter((p) => p.proveedor_id === proveedor.id);
   const comprasDelProveedor = compras.filter((c) => c.proveedor_id === proveedor.id);
+  const comprasImpagas = comprasDelProveedor.filter(esCompraImpaga);
   // Notas de crédito/débito de todas las compras de este proveedor, cada una
   // con la referencia a la compra de la que vino (ver utils/notas.js).
   const notas = notasDeCompras(comprasDelProveedor);
@@ -56,7 +60,17 @@ export function calcularResumenProveedor(proveedor, { productos = [], compras = 
     comprasDelProveedor,
     cantidadProductos: productosDelProveedor.length,
     totalComprado: sumar(comprasDelProveedor, (c) => precioTotalCompra(c, "ars")),
-    deuda: sumar(comprasDelProveedor.filter(esCompraImpaga), (c) => precioTotalCompra(c, "ars")),
+    deuda: sumar(comprasImpagas, (c) => precioTotalCompra(c, "ars")),
+    // Para la lista "primero a quién se le debe" (variante 4N): qué se debe,
+    // hace cuánto la más vieja y cuándo fue la última compra.
+    comprasImpagas,
+    diasDeudaMasVieja: comprasImpagas.length
+      ? Math.max(...comprasImpagas.map((c) => diasDesde(c.fecha, hoy)))
+      : 0,
+    ultimaCompra: comprasDelProveedor.reduce(
+      (ultima, c) => (!ultima || c.fecha > ultima ? c.fecha : ultima),
+      null
+    ),
     notas,
     totalNotasCredito: sumarNotasCredito(notas),
     totalNotasDebito: sumarNotasDebito(notas),

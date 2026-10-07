@@ -22,6 +22,7 @@ import {
   useCompras,
 } from "../hooks/queries";
 import { calcularPanel } from "../utils/panel";
+import { iniciales } from "../utils/formato";
 import {
   RUTA_MANAGER_EQUIPO,
   RUTA_MANAGER_AUTORIZADOS,
@@ -53,15 +54,6 @@ const ITEMS_NAV_MANAGER = [
   { to: RUTA_MANAGER_CONFIGURACION, label: "Configuración", icono: Settings },
   { to: RUTA_MANAGER_ARCHIVOS, label: "Archivos", icono: FolderSearch },
 ];
-
-// "mlopez" -> "ML", "Agustin" -> "AG" (sin separador, se usan las primeras 2
-// letras). nombre_usuario es lo único que tiene el usuario -- no hay nombre
-// real por separado (ver backend/app/schemas.py Usuario).
-function iniciales(nombreUsuario = "") {
-  const partes = nombreUsuario.split(/[.\s_-]+/).filter(Boolean);
-  if (partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase();
-  return nombreUsuario.slice(0, 2).toUpperCase();
-}
 
 // El nav "normal" vive en su propio componente porque monta 6 queries: así
 // no se disparan para la cuenta "Manager", que no ve ninguna de estas
