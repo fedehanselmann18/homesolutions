@@ -1,0 +1,173 @@
+/* Bandeja por urgencia — variante 4f. La usan el Seguimiento del proyecto y
+   el de una fase (components/shared/Bandeja.jsx). */
+
+.bandeja {
+  display: flex;
+  flex-direction: column;
+}
+
+.bandeja__titulo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 36px;
+  margin: 0;
+  padding: 0 var(--space-2);
+  border-top: 1px solid var(--color-linea);
+  border-bottom: 1px solid var(--color-linea);
+  background: var(--color-superficie-suave);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.bandeja__punto {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-tinta-tenue);
+}
+
+.bandeja__titulo--vencido .bandeja__punto {
+  background: var(--color-error);
+}
+
+.bandeja__titulo--pendiente .bandeja__punto {
+  background: var(--color-atencion);
+}
+
+.bandeja__cantidad {
+  font-weight: 500;
+  color: var(--color-tinta-tenue);
+}
+
+.bandeja__lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bandeja__item {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 150px 170px 150px;
+  gap: var(--space-4);
+  align-items: center;
+  min-height: 56px;
+  padding: var(--space-1-5) var(--space-2);
+  border-bottom: 1px solid var(--color-linea-suave);
+}
+
+.bandeja__item--abre {
+  cursor: pointer;
+  transition: background-color var(--transicion);
+}
+
+.bandeja__item--abre:hover {
+  background: var(--color-superficie-suave);
+}
+
+.bandeja__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: var(--color-relleno);
+  color: var(--color-tinta-muted);
+}
+
+.bandeja__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* El título es el botón que abre el detalle: así se llega por teclado, sin
+   hacer de toda la fila (que ya tiene un botón de acción) otro botón. */
+.bandeja__titulo-item {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-tinta);
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: inherit;
+}
+
+button.bandeja__titulo-item:focus-visible {
+  outline: 2px solid var(--color-oliva);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+.bandeja__subtitulo {
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+.bandeja__estado {
+  justify-self: start;
+}
+
+.bandeja__monto {
+  font-size: var(--text-base);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.bandeja__accion {
+  justify-self: end;
+}
+
+@media (max-width: 1100px) {
+  .bandeja__item {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "icono texto  monto"
+      "icono estado accion";
+    row-gap: var(--space-1-5);
+    padding-top: var(--space-2-5);
+    padding-bottom: var(--space-2-5);
+  }
+
+  .bandeja__icono {
+    grid-area: icono;
+    align-self: start;
+  }
+
+  .bandeja__texto {
+    grid-area: texto;
+  }
+
+  .bandeja__estado {
+    grid-area: estado;
+  }
+
+  .bandeja__monto {
+    grid-area: monto;
+    align-self: start;
+  }
+
+  .bandeja__accion {
+    grid-area: accion;
+  }
+}
+
+@media (max-width: 640px) {
+  .bandeja__item {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "icono texto  texto"
+      "icono monto  monto"
+      "icono estado accion";
+  }
+
+  .bandeja__monto {
+    text-align: left;
+  }
+}

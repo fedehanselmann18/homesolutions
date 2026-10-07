@@ -1,49 +1,21 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
-import { calcularSeguimiento } from "../../utils/seguimiento";
-import { formatFecha } from "../../utils/formato";
-import { formatMontoDeItem } from "../../utils/moneda";
-import { getCondicionPagoLabel } from "../../constants/estadoCompra";
-import { getTipoFacturaLabel } from "../../constants/tipoFactura";
-import { ERROR, ATENCION, GRIS } from "../../constants/colores";
-import { TarjetaMiniSeguimiento } from "../shared/TarjetaMiniSeguimiento";
-import { EstadoVacio } from "../shared/EstadoVacio";
+import { calcularSeguimiento, armarBandeja } from "../../utils/seguimiento";
+import { formatMoneda } from "../../utils/formato";
+import { obtenerDetalleBackend } from "../../utils/errorHandling";
+import { DIAS_DEUDA_VENCIDA } from "../../constants/estadoCompra";
+import { useToast } from "../../context/useToast";
+import { Bandeja } from "../shared/Bandeja";
 import { ModalDetalleCompra } from "../modals/ModalDetalleCompra";
 import { ModalDetalleGasto } from "../modals/ModalDetalleGasto";
-
-const diasTexto = (dias) => `hace ${dias} ${dias === 1 ? "día" : "días"}`;
-
-function Seccion({ titulo, descripcion, cantidad, children }) {
-  return (
-    <section className="seguimiento-seccion">
-      <div className="seguimiento-seccion-header">
-        <h3 className="seguimiento-seccion-titulo">
-          {titulo}
-          {cantidad > 0 && <span className="badge badge--sm badge--neutro">{cantidad}</span>}
-        </h3>
-        {descripcion && <p className="seguimiento-seccion-descripcion">{descripcion}</p>}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function AlertaColumna({ children }) {
-  return <p className="seguimiento-alerta-columna">{children}</p>;
-}
-
-function badgesCompra(compra) {
-  return [
-    getCondicionPagoLabel(compra.condicionPago),
-    getTipoFacturaLabel(compra.tipoFactura),
-  ].filter(Boolean);
-}
+import "../proyectos/Seguimiento.css";
 
 /**
- * Tab "Seguimiento de la fase" de FaseDetalle.jsx -- reusa calcularSeguimiento
- * (utils/seguimiento.js) tal cual, scopeado a las compras/gastos de esta fase
- * nomás (cobros/fases vacíos, proyecto null: esas secciones no aplican a una
- * fase individual). Ver docs/redesign/11_fase_detalle_tabs.md.
+ * Tab "Seguimiento de la fase" de FaseDetalle.jsx: la misma pantalla que el
+ * Seguimiento del proyecto (variante 4f, tres cifras y la bandeja por
+ * urgencia), acotada a las compras y gastos de la fase. Reusa
+ * calcularSeguimiento y armarBandeja tal cual, sin cobros, fases ni proyecto:
+ * una fase no cobra, así que no hay "Saldo del contrato" ni "Ver fase".
  */
 export function SeguimientoFase({
   faseNombre,
@@ -91,199 +63,94 @@ export function SeguimientoFase({
     [comprasFase, gastosFase, productos, proveedores]
   );
 
-  const {
-    comprasImpagas,
-    comprasSinEntregar,
-    comprasSinComprobante,
-    gastosSinComprobante,
-    deudaPorProveedor,
-    totales,
-  } = seguimiento;
+  const toast = useToast();
+  // Un solo <input type="file"> para todos los "Adjuntar": se anota a qué
+  // movimiento va y se abre el selector del sistema (igual que en el proyecto).
+  const inputAdjuntarRef = useRef(null);
+  const [adjuntarA, setAdjuntarA] = useState(null); // { tipo, id, key }
+  const [ocupado, setOcupado] = useState(null); // key del item en curso
+
+  const { comprasSinEntregar, comprasSinComprobante, gastosSinComprobante, totales } = seguimiento;
+  const grupos = armarBandeja(seguimiento, { diasVencida: DIAS_DEUDA_VENCIDA });
 
   const nombreProveedor = (proveedorId) => proveedores.find((p) => p.id === proveedorId)?.nombre;
+  const compraPorId = (id) => comprasFase.find((c) => c.id === id);
 
-  const abrirDetalleCompra = (compraId) => setDetalle({ tipo: "compra", id: compraId });
-  const abrirDetalleGasto = (gastoId) => setDetalle({ tipo: "gasto", id: gastoId });
+  const abrirItem = (item) => setDetalle({ tipo: item.tipo, id: item.id });
+
+  const agregarComprobantes = {
+    compra: onAgregarComprobanteCompra,
+    gasto: onAgregarComprobanteGasto,
+  };
+
+  const ejecutar = async (item) => {
+    if (item.accion === "adjuntar") {
+      setAdjuntarA({ tipo: item.tipo, id: item.id, key: item.key });
+      inputAdjuntarRef.current?.click();
+      return;
+    }
+    const toggle = item.accion === "pagar" ? onTogglePagoCompra : onToggleEnvioCompra;
+    if (!toggle) return;
+    setOcupado(item.key);
+    try {
+      await toggle(compraPorId(item.id));
+    } finally {
+      setOcupado(null);
+    }
+  };
+
+  const subirAdjuntos = async (files) => {
+    const agregar = adjuntarA && agregarComprobantes[adjuntarA.tipo];
+    if (!agregar || !files?.length) return;
+    setOcupado(adjuntarA.key);
+    try {
+      await agregar(adjuntarA.id, files);
+    } catch (err) {
+      toast.error(obtenerDetalleBackend(err) ?? "No se pudo adjuntar el comprobante.");
+    } finally {
+      setOcupado(null);
+      setAdjuntarA(null);
+    }
+  };
 
   return (
     <div className="seguimiento">
-      <Seccion titulo="Compras">
-        <div className="seguimiento-tablero">
-          <div className="seguimiento-columna">
-            <h4 className="seguimiento-columna-titulo">
-              Pendientes de pago
-              {comprasImpagas.length > 0 && (
-                <span className="badge badge--sm badge--neutro">{comprasImpagas.length}</span>
-              )}
-            </h4>
-            {comprasImpagas.length === 0 ? (
-              <EstadoVacio mensaje="No hay compras impagas." />
-            ) : (
-              <div className="seguimiento-columna-lista">
-                {comprasImpagas.map((compra) => (
-                  <TarjetaMiniSeguimiento
-                    key={compra.id}
-                    titulo={compra.descripcion}
-                    productos={compra.productos}
-                    fecha={formatFecha(compra.fecha)}
-                    badges={badgesCompra(compra)}
-                    etiqueta={diasTexto(compra.dias)}
-                    monto={formatMontoDeItem(compra)}
-                    color={ERROR}
-                    onClick={() => abrirDetalleCompra(compra.id)}
-                  />
-                ))}
-              </div>
-            )}
-            {comprasImpagas.length > 0 && (
-              <AlertaColumna>
-                {formatMontoDeItem({
-                  monto: totales.deudaTotal,
-                  montoOtra: totales.deudaTotalOtra,
-                  moneda: "ars",
-                })}{" "}
-                sin pagar
-              </AlertaColumna>
-            )}
-          </div>
-
-          <div className="seguimiento-columna">
-            <h4 className="seguimiento-columna-titulo">
-              Pendientes de entrega
-              {comprasSinEntregar.length > 0 && (
-                <span className="badge badge--sm badge--neutro">{comprasSinEntregar.length}</span>
-              )}
-            </h4>
-            {comprasSinEntregar.length === 0 ? (
-              <EstadoVacio mensaje="No hay compras esperando entrega." />
-            ) : (
-              <div className="seguimiento-columna-lista">
-                {comprasSinEntregar.map((compra) => (
-                  <TarjetaMiniSeguimiento
-                    key={compra.id}
-                    titulo={compra.descripcion}
-                    productos={compra.productos}
-                    fecha={formatFecha(compra.fecha)}
-                    badges={badgesCompra(compra)}
-                    etiqueta={diasTexto(compra.dias)}
-                    color={ATENCION}
-                    onClick={() => abrirDetalleCompra(compra.id)}
-                  />
-                ))}
-              </div>
-            )}
-            {comprasSinEntregar.length > 0 && (
-              <AlertaColumna>
-                {comprasSinEntregar.length} pedidos que no te entregaron
-              </AlertaColumna>
-            )}
-          </div>
-
-          <div className="seguimiento-columna">
-            <h4 className="seguimiento-columna-titulo">
-              Sin comprobante
-              {comprasSinComprobante.length > 0 && (
-                <span className="badge badge--sm badge--neutro">
-                  {comprasSinComprobante.length}
-                </span>
-              )}
-            </h4>
-            {comprasSinComprobante.length === 0 ? (
-              <EstadoVacio mensaje="Todas las compras tienen comprobante." />
-            ) : (
-              <div className="seguimiento-columna-lista">
-                {comprasSinComprobante.map((compra) => (
-                  <TarjetaMiniSeguimiento
-                    key={compra.id}
-                    titulo={compra.descripcion}
-                    productos={compra.productos}
-                    fecha={formatFecha(compra.fecha)}
-                    badges={badgesCompra(compra)}
-                    monto={formatMontoDeItem(compra)}
-                    color={GRIS}
-                    onClick={() => abrirDetalleCompra(compra.id)}
-                  />
-                ))}
-              </div>
-            )}
-            {comprasSinComprobante.length > 0 && (
-              <AlertaColumna>
-                {comprasSinComprobante.length} compras que no tienen comprobante adjunto
-              </AlertaColumna>
-            )}
-          </div>
+      <dl className="seguimiento-kpis">
+        <div>
+          <dt>Por pagar en la fase</dt>
+          <dd>{formatMoneda(totales.deudaTotal, "ars")}</dd>
         </div>
-      </Seccion>
+        <div>
+          <dt>Sin entregar</dt>
+          <dd>{comprasSinEntregar.length}</dd>
+        </div>
+        <div>
+          <dt>Sin comprobante</dt>
+          <dd>{comprasSinComprobante.length + gastosSinComprobante.length}</dd>
+        </div>
+      </dl>
 
-      <Seccion
-        titulo="Gastos sin comprobante"
-        descripcion={
-          gastosSinComprobante.length > 0
-            ? `${formatMontoDeItem({
-                monto: totales.montoSinComprobante,
-                montoOtra: totales.montoSinComprobanteOtra,
-                moneda: "ars",
-              })} sin respaldo cargado`
-            : undefined
-        }
-        cantidad={gastosSinComprobante.length}
-      >
-        {gastosSinComprobante.length === 0 ? (
-          <EstadoVacio mensaje="Todos los gastos tienen comprobante." />
-        ) : (
-          <div className="seguimiento-columna-lista">
-            {gastosSinComprobante.map((gasto) => (
-              <TarjetaMiniSeguimiento
-                key={gasto.id}
-                titulo={gasto.descripcion}
-                subtitulo={`Cargado el ${formatFecha(gasto.fecha)}`}
-                monto={formatMontoDeItem(gasto)}
-                color={GRIS}
-                onClick={() => abrirDetalleGasto(gasto.id)}
-              />
-            ))}
-          </div>
-        )}
-      </Seccion>
-
-      {deudaPorProveedor.length > 0 && (
-        <Seccion
-          titulo="Deuda por proveedor"
-          descripcion="Sumando las compras impagas de esta fase"
-        >
-          <table className="seguimiento-tabla">
-            <thead>
-              <tr>
-                <th>Proveedor</th>
-                <th>Compras</th>
-                <th>Deuda</th>
-              </tr>
-            </thead>
-            <tbody>
-              {deudaPorProveedor.map((fila) => (
-                <tr key={fila.proveedor}>
-                  <td>{fila.proveedor}</td>
-                  <td>{fila.compras}</td>
-                  <td className="seguimiento-tabla-monto">{formatMontoDeItem(fila)}</td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td>Total</td>
-                <td>{comprasImpagas.length}</td>
-                <td className="seguimiento-tabla-monto">
-                  {formatMontoDeItem({
-                    monto: totales.deudaTotal,
-                    montoOtra: totales.deudaTotalOtra,
-                    moneda: "ars",
-                  })}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </Seccion>
+      {canManage && (
+        <input
+          ref={inputAdjuntarRef}
+          type="file"
+          multiple
+          hidden
+          onChange={(e) => {
+            subirAdjuntos(e.target.files);
+            e.target.value = "";
+          }}
+        />
       )}
+
+      <Bandeja
+        grupos={grupos}
+        canManage={canManage}
+        ocupado={ocupado}
+        onAbrir={abrirItem}
+        onEjecutar={ejecutar}
+        mensajeVacio="No hay nada pendiente en esta fase."
+      />
 
       {entidadDetalle && detalle.tipo === "compra" && (
         <ModalDetalleCompra

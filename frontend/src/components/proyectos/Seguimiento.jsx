@@ -1,6 +1,5 @@
 import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Clock, HandCoins, Layers, Paperclip } from "lucide-react";
 
 import { getComprobanteCompra, getNotaCompra } from "../../services/compraService";
 import { getComprobanteGasto } from "../../services/gastoService";
@@ -19,8 +18,7 @@ import { useAccionesProyecto } from "../../hooks/useAccionesProyecto";
 import useAuth from "../../context/useAuth";
 import { useToast } from "../../context/useToast";
 
-import { BadgeEstado } from "../shared/BadgeEstado";
-import { EstadoVacio } from "../shared/EstadoVacio";
+import { Bandeja } from "../shared/Bandeja";
 import { EstadoError } from "../shared/EstadoError";
 import { Cargando } from "../shared/Cargando";
 import { ModalDetalleCompra } from "../modals/ModalDetalleCompra";
@@ -31,65 +29,9 @@ import ModalGasto from "../modals/ModalGasto";
 import ModalCobro from "../modals/ModalCobro";
 import { calcularSeguimiento, armarBandeja } from "../../utils/seguimiento";
 import { formatMoneda } from "../../utils/formato";
-import { formatMontoDeItem } from "../../utils/moneda";
 import { obtenerDetalleBackend } from "../../utils/errorHandling";
-import {
-  DIAS_DEUDA_VENCIDA,
-  getEstadoEnvio,
-  getEstadoPago,
-  getEstadoPagoConAntiguedad,
-} from "../../constants/estadoCompra";
-import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
-import { ATENCION, ATENCION_TINT, ATENCION_TEXTO, TINTA_MUTED, RELLENO } from "../../constants/colores";
+import { DIAS_DEUDA_VENCIDA } from "../../constants/estadoCompra";
 import "./Seguimiento.css";
-
-// El badge de cada item de la bandeja, con la forma de estadoCompra.js para
-// que lo pinte BadgeEstado: el de pago y el de envío son los mismos del libro
-// de obra; los otros tres son propios de esta lista.
-const PAR_ATENCION = { color: ATENCION, bg: ATENCION_TINT, fg: ATENCION_TEXTO };
-function estadoDeItem(item) {
-  switch (item.estado) {
-    case "impaga":
-      // Desde DIAS_DEUDA_VENCIDA el par rojo de estadoCompra; antes, el
-      // ámbar de "a pagar" pero con los días, que es lo que ordena la lista.
-      return item.dias >= DIAS_DEUDA_VENCIDA
-        ? getEstadoPagoConAntiguedad("pendiente", item.dias)
-        : {
-            ...getEstadoPago("pendiente"),
-            label: item.dias > 1 ? `${item.dias} días sin pagar` : "A pagar",
-          };
-    case "sinEntregar":
-      return getEstadoEnvio("pedido");
-    case "sinComprobante":
-      return { ...PAR_ATENCION, label: "Sin comprobante", icono: Paperclip };
-    case "estancada":
-      return { ...PAR_ATENCION, label: `${item.dias} días sin cambios`, icono: Clock };
-    default:
-      return {
-        color: TINTA_MUTED,
-        bg: RELLENO,
-        fg: TINTA_MUTED,
-        label: "Por cobrar",
-        icono: HandCoins,
-      };
-  }
-}
-
-const ICONO_TIPO = {
-  compra: TIPOS_MOVIMIENTO.compra.icono,
-  gasto: TIPOS_MOVIMIENTO.gasto.icono,
-  cobro: TIPOS_MOVIMIENTO.cobro.icono,
-  cobranza: TIPOS_MOVIMIENTO.cobro.icono,
-  fase: Layers,
-};
-
-const TEXTO_ACCION = {
-  pagar: "Registrar pago",
-  entregar: "Marcar entregado",
-  adjuntar: "Adjuntar",
-  cobrar: "Registrar cobro",
-  verFase: "Ver fase",
-};
 
 export function Seguimiento({ proyectoId }) {
   // Se guarda el id y no la entidad: desde acá se puede togglear pago/envío y
@@ -297,76 +239,14 @@ export function Seguimiento({ proyectoId }) {
         />
       )}
 
-      {grupos.length === 0 ? (
-        <EstadoVacio mensaje="No hay nada pendiente en este proyecto." />
-      ) : (
-        <div className="bandeja">
-          {grupos.map((grupo) => (
-            <section key={grupo.clave} className="bandeja__grupo" aria-label={grupo.label}>
-              <h3 className={`bandeja__titulo bandeja__titulo--${grupo.clave}`}>
-                <span className="bandeja__punto" aria-hidden="true" />
-                {grupo.label}
-                <span className="bandeja__cantidad">{grupo.items.length}</span>
-              </h3>
-              <ul className="bandeja__lista">
-                {grupo.items.map((item) => {
-                  const Icono = ICONO_TIPO[item.tipo];
-                  const abre = item.tipo !== "cobranza";
-                  return (
-                    <li
-                      key={item.key}
-                      className={`bandeja__item${abre ? " bandeja__item--abre" : ""}`}
-                      onClick={abre ? () => abrirItem(item) : undefined}
-                    >
-                      <span className="bandeja__icono" aria-hidden="true">
-                        <Icono size={15} strokeWidth={1.75} />
-                      </span>
-                      <span className="bandeja__texto">
-                        {abre ? (
-                          <button
-                            type="button"
-                            className="bandeja__titulo-item"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              abrirItem(item);
-                            }}
-                          >
-                            {item.titulo}
-                          </button>
-                        ) : (
-                          <span className="bandeja__titulo-item">{item.titulo}</span>
-                        )}
-                        <span className="bandeja__subtitulo">{item.subtitulo}</span>
-                      </span>
-                      <span className="bandeja__estado">
-                        <BadgeEstado estado={estadoDeItem(item)} chico />
-                      </span>
-                      <span className="bandeja__monto">
-                        {item.monto ? formatMontoDeItem(item.monto) : ""}
-                      </span>
-                      <span className="bandeja__accion">
-                        {canManage && (
-                          <button
-                            type="button"
-                            className="btn btn--sm btn-secondary"
-                            disabled={ocupado === item.key}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              ejecutar(item);
-                            }}
-                          >
-                            {TEXTO_ACCION[item.accion]}
-                          </button>
-                        )}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          ))}
-        </div>
-      )}
+      <Bandeja
+        grupos={grupos}
+        canManage={canManage}
+        ocupado={ocupado}
+        onAbrir={abrirItem}
+        onEjecutar={ejecutar}
+        mensajeVacio="No hay nada pendiente en este proyecto."
+      />
 
       {entidadDetalle && detalle.tipo === "compra" && (
         <ModalDetalleCompra

@@ -16,7 +16,7 @@ import { getComprobanteGasto } from "../services/gastoService";
 
 import useAuth from "../context/useAuth";
 import { getEstadoLabel } from "../constants/estados";
-import { diasDesde, esCompraImpaga } from "../utils/seguimiento";
+import { calcularSeguimiento, diasDesde, esCompraImpaga } from "../utils/seguimiento";
 import { formatFecha } from "../utils/formato";
 import { etapaDeFase } from "../utils/fases";
 import { useFaseDetalle } from "../hooks/useFaseDetalle";
@@ -36,7 +36,6 @@ import AccionesFase from "../components/fases/AccionesFase";
 import SeguimientoFase from "../components/fases/SeguimientoFase";
 import AnalisisFase from "../components/fases/AnalisisFase";
 
-import "../components/proyectos/Seguimiento.css";
 import "../components/proyectos/AnalisisGeneral.css";
 import "./FaseDetalle.css";
 
@@ -240,6 +239,16 @@ export function FaseDetalle() {
     canManage && fase.estado !== "terminada" && fase.estado !== "auditada";
 
   const comprasImpagasFase = comprasFase.filter(esCompraImpaga);
+  // El contador de la tab sale del mismo cálculo que pinta la bandeja de
+  // Seguimiento (igual que en el proyecto), así no pueden no coincidir.
+  const pendientesFase = calcularSeguimiento({
+    compras: comprasFase,
+    gastos: gastosFase,
+    cobros: [],
+    fases: [],
+    proyecto: null,
+  }).pendientes;
+  const tabs = TABS.map((t) => (t.key === "seguimiento" ? { ...t, badge: pendientesFase } : t));
   // Lo que se debe, en las dos monedas: la deuda es en pesos (caveat 6.2 de
   // PLAN_TIPO_CAMBIO.md) y el USD congelado va de referencia.
   const montoSinPagarFase = {
@@ -314,7 +323,7 @@ export function FaseDetalle() {
       </header>
 
       <Tabs
-        tabs={TABS}
+        tabs={tabs}
         activa={tabActiva}
         onCambiar={setTabActiva}
         etiqueta="Secciones de la fase"
