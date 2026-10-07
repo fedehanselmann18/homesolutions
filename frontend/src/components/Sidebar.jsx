@@ -31,7 +31,7 @@ import {
   RUTA_MANAGER_ARCHIVOS,
   esManager,
 } from "../constants/manager";
-import isotipo from "../assets/HS_iso_blanco.png";
+import isotipo from "../assets/HS_iso_negro.png";
 import "./Sidebar.css";
 
 const ITEMS_NAV = [
@@ -156,7 +156,7 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="sidebar sidebar--oscuro">
+    <aside className="sidebar">
       <div className="sidebar-header">
         <img src={isotipo} alt="" className="sidebar-brand" />
         <span className="sidebar-brand-nombre">

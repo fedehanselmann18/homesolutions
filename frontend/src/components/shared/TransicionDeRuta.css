@@ -1,0 +1,20 @@
+/* La entrada de cada página (ver TransicionDeRuta.jsx). Corta y chica: tiene
+   que leerse como que la página se acomoda, no como una animación.
+
+   El transform dura sólo lo que dura la animación y termina en `none`, así
+   que no deja un containing block que les cambie el posicionamiento a los
+   modales (position: fixed) ni a los paneles sticky. */
+.transicion-ruta {
+  animation: transicion-ruta-entrar 180ms ease-out;
+}
+
+@keyframes transicion-ruta-entrar {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

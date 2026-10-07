@@ -32,6 +32,9 @@ const GestionArchivos = lazy(() => import("../pages/manager/GestionArchivos"));
 // Las páginas protegidas se cargan con React.lazy para no meter todo el
 // bundle en el chunk inicial (login solo necesita Login + Registro).
 export function AppRouter() {
+  // Red de seguridad: las páginas internas suspenden contra el Suspense de
+  // MainLayout, que no se lleva puesto el sidebar al cargarlas. Éste sólo
+  // actuaría si alguna ruta pública llegara a ser lazy.
   return (
     <Suspense fallback={<Cargando texto="Cargando..." />}>
       <Routes>
