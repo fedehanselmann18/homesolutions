@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
-import { FolderSearch } from "lucide-react";
 
 import { getReconciliacion, purgarHuerfanos } from "../../services/storageService";
 import { obtenerMensajeError } from "../../utils/errorHandling";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { useToast } from "../../context/useToast";
 import { Cargando } from "../../components/shared/Cargando";
+import { EstadoError } from "../../components/shared/EstadoError";
 import { PageHeader } from "../../components/shared/PageHeader";
 import { EstadoVacio } from "../../components/shared/EstadoVacio";
 import ModalConfirmar from "../../components/modals/ModalConfirmar";
@@ -75,7 +75,6 @@ export function GestionArchivos() {
   return (
     <div className="manager-pagina">
       <PageHeader
-        icono={<FolderSearch size={20} strokeWidth={2} />}
         titulo="Archivos"
         subtitulo="Reconciliación entre R2 y la base: huérfanos y comprobantes rotos. Solo lo ve esta cuenta."
       />
@@ -83,7 +82,7 @@ export function GestionArchivos() {
       {cargando ? (
         <Cargando texto="Comparando con R2..." />
       ) : errorCarga ? (
-        <p className="manager-pagina__error">{errorCarga}</p>
+        <EstadoError mensaje={errorCarga} />
       ) : r2NoConfigurado ? (
         <div className="manager-pagina__tarjeta">
           <EstadoVacio

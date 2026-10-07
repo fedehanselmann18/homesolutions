@@ -6,7 +6,7 @@
   align-items: center;
   gap: var(--space-2-5);
   padding: var(--space-1-5) 0;
-  color: var(--color-oxido);
+  color: var(--color-error);
 }
 
 .estado-error-icono {
@@ -14,7 +14,7 @@
 }
 
 .estado-error-mensaje {
-  font-size: var(--text-btn);
+  font-size: var(--text-sm);
   color: inherit;
   margin: 0;
 }

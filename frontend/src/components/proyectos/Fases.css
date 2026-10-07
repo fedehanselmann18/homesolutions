@@ -1,282 +1,351 @@
-.fases-header {
+/* Fases del proyecto — variante 4b "Línea de tiempo"
+   (docs/MODALSUIUXChange/HS Proyecto.dc.html).
+
+   Reemplaza la planilla de la v4 (2b): ahí la fila llevaba una regla de color
+   del estado a la izquierda y el nombre de una fase cerrada iba TACHADO. Acá
+   la posición en la obra la dice el punto de la línea (oliva: es progreso, no
+   estado), el estado lo dice su badge, y una fase cerrada se atenúa — tachar
+   un trabajo terminado lo hacía parecer anulado. */
+
+/* Las tabs no traen margen abajo: cada panel pone el suyo. */
+.fases {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  padding-top: var(--space-6);
+}
+
+/* --- arriba: presupuesto usado + Nueva fase --- */
+
+.fases__barra {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-6);
+  gap: var(--space-4);
 }
 
-.fases-header h2 {
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-}
-
-/* Planilla de fases (dirección 1a "Planilla", mock 2b): reemplaza las
-   tarjetas de antes por una fila real con columnas alineadas -- mismo
-   criterio visual que components/proyectos/TablaProyectos.css (borde
-   izquierdo de color, chevron que aparece en hover), pero con sus propias
-   columnas (#, fase, estado, gastado, % del presupuesto). */
-.fases-tabla-header, .fases-tabla-fila, .fases-tabla-total {
-  grid-template-columns: 34px 2fr 1fr 1.1fr 1.6fr 116px;
-}
-
-.fases-tabla-col--num {
-  text-align: right;
-}
-
-.fases-tabla-num {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  color: var(--color-tinta-muted);
-}
-
-.fases-tabla-col--fase {
+.fases__presupuesto {
   display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
+  align-items: center;
+  gap: var(--space-4);
+  flex: 1;
+  max-width: 560px;
 }
 
-.fases-tabla-nombre {
+.fases__presupuesto-label {
   font-size: var(--text-base);
-  font-weight: 600;
-  color: var(--color-tinta);
-}
-
-.fases-tabla-nombre--pendiente {
-  color: var(--color-tinta-muted);
-}
-
-.fases-tabla-nombre--terminada {
-  color: var(--color-tinta-muted);
-  font-weight: 500;
-  text-decoration: line-through;
-}
-
-.fases-tabla-subtexto {
-  font-size: var(--text-xs);
-  color: var(--color-tinta-muted);
-}
-
-/* Una sola línea, cortada con "..." si no entra -- la fila de la planilla
-   es compacta (a diferencia de la fase-card vieja, que tenía lugar para
-   varios renglones). El texto completo queda en el title="" para el hover. */
-.fases-tabla-descripcion {
-  font-size: var(--text-xs);
   color: var(--color-tinta-muted);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 100%;
-}
-.fases-tabla-estado {
-  justify-self: start;
 }
 
-.fases-tabla-col--num {
-  font-size: var(--text-sm);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.fases-tabla-col--pct {
+.fases__presupuesto-barra {
   display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.fases-tabla-col--pct .kpi-progreso {
   flex: 1;
+  height: 8px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-linea-suave);
 }
 
-.fases-tabla-pct-valor {
-  font-size: var(--text-xs);
+/* El borde blanco separa un tramo del siguiente: sin él dos fases cerradas
+   seguidas se leen como una sola. */
+.fases__tramo + .fases__tramo {
+  border-left: 2px solid var(--color-superficie);
+}
+
+.fases__tramo--cerrada,
+.fases__tramo--pendiente {
+  background: var(--color-oliva-claro);
+}
+
+.fases__tramo--actual {
+  background: var(--color-oliva);
+}
+
+.fases__tramo--sin-fase {
+  background: var(--color-linea-fuerte);
+}
+
+.fases__tramo--excedido {
+  background: var(--color-error);
+}
+
+.fases__presupuesto-valor {
+  font-size: var(--text-base);
   font-weight: 600;
-  color: var(--color-tinta-muted);
   font-variant-numeric: tabular-nums;
-  width: 42px;
-  text-align: right;
-  flex-shrink: 0;
+  white-space: nowrap;
 }
 
-.fases-tabla-col--accion {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
-}
+/* --- la línea --- */
 
-.fases-tabla-acciones {
-  display: flex;
-  gap: 4px;
-}
-
-.fases-tabla-orden-btns {
+.fases__linea {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.fases-tabla-orden-btn {
+.fases__item {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: var(--space-4);
+}
+
+.fases__riel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fases__punto {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 12px;
-  border: 1px solid var(--color-linea);
-  border-radius: 2px;
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  border: 2px solid var(--color-linea-fuerte);
+  border-radius: var(--radius-pill);
   background: var(--color-superficie);
-  color: var(--color-tinta-muted);
-  cursor: pointer;
-  padding: 0;
-  transition:
-    border-color 0.15s ease,
-    color 0.15s ease;
-}
-
-.fases-tabla-orden-btn:hover:not(:disabled) {
-  border-color: var(--color-tinta);
-  color: var(--color-tinta);
-}
-
-.fases-tabla-orden-btn:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
-
-.fases-tabla-chevron {
-  color: var(--color-tinta-muted);
-  opacity: 0.5;
-  transition: opacity 0.15s ease;
-}
-
-.fases-tabla-fila:hover .fases-tabla-chevron {
-  opacity: 1;
-}
-
-/* El pie toma la grilla de `.planilla__fila` para alinearse con las columnas
-   de arriba. Doble clase para ganarle a su padding sin depender del orden del
-   bundle (ver docs/DESIGN.md §13), y sin el cursor de link: no navega. */
-.planilla__fila.fases-tabla-total {
-  cursor: default;
-  padding: 11px var(--space-4);
-  background-color: var(--color-base-1);
-  border-top: 1px solid var(--color-linea);
   font-size: var(--text-xs);
   font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-tinta-tenue);
+}
+
+.fases__item--actual .fases__punto {
+  border-color: var(--color-oliva);
+  color: var(--color-oliva);
+}
+
+.fases__item--cerrada .fases__punto {
+  border-color: var(--color-oliva);
+  background: var(--color-oliva);
+  color: var(--color-superficie);
+}
+
+.fases__tramo-linea {
+  flex: 1;
+  width: 2px;
+  min-height: 12px;
+  background: var(--color-linea);
+}
+
+.fases__item--cerrada .fases__tramo-linea {
+  background: var(--color-oliva);
+}
+
+.fases__item:last-child .fases__tramo-linea {
+  background: transparent;
+}
+
+/* --- la tarjeta de cada fase --- */
+
+.fases__card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 120px 200px auto;
+  gap: var(--space-5);
+  align-items: center;
+  margin-bottom: var(--space-3);
+  padding: 14px 18px;
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-lg);
+  background: var(--color-superficie);
+  cursor: pointer;
+  transition: border-color var(--transicion);
+}
+
+.fases__card:hover {
+  border-color: var(--color-linea-fuerte);
+}
+
+.fases__card:focus-visible {
+  outline: none;
+  border-color: var(--color-oliva);
+  box-shadow: var(--shadow-foco);
+}
+
+.fases__item--actual .fases__card {
+  border-color: var(--color-oliva);
+  background: var(--color-oliva-tint-fila);
+}
+
+/* Cerrada: se atenúa, no se tacha (nota del diseño 4b). */
+.fases__item--cerrada .fases__card {
+  opacity: 0.75;
+}
+
+.fases__texto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.fases__nombre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--color-tinta);
+}
+
+.fases__item--pendiente .fases__nombre {
   color: var(--color-tinta-muted);
 }
 
-.fases-tabla-total .fases-tabla-col--num {
-  font-size: var(--text-base);
-  color: var(--color-tinta);
-}
-
-.fases-tabla-total-pct {
+/* Una sola línea, cortada con "…": el texto completo queda en el title. */
+.fases__descripcion {
+  overflow: hidden;
   font-size: var(--text-sm);
-  color: var(--color-tinta);
-  text-transform: none;
-  letter-spacing: normal;
+  color: var(--color-tinta-tenue);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-@media (max-width: 900px) and (min-width: 641px) {
-  /* Ver la nota equivalente en TablaProyectos.css. */
-  .planilla.fases-tabla {
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .fases-tabla-header,
-  .fases-tabla-fila,
-  .fases-tabla-total {
-    grid-template-columns: 34px 220px 100px 120px 180px 116px;
-    width: max-content;
-    min-width: 100%;
-  }
+.fases__gastado {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Mobile: la planilla pasa a una card por fase (mismo patrón que el mock de
-   "Fases del proyecto" en mobile) en vez de scrollear en horizontal -- la
-   fila deja de ser una grilla de 6 columnas y pasa a dos renglones: arriba
-   #/nombre/estado, abajo el importe con su barra de progreso. Las acciones
-   de admin (reordenar/editar/eliminar) quedan siempre visibles (no sólo en
-   hover, que en touch no existe) en su propio renglón. */
-@media (max-width: 640px) {
-  .planilla.fases-tabla {
-    border: none;
-    border-radius: 0;
-    background: transparent;
-    overflow: visible;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
+.fases__gastado-monto {
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
+.fases__gastado-label {
+  font-size: var(--text-xs);
+  color: var(--color-tinta-tenue);
+}
+
+.fases__avance {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2-5);
+}
+
+.fases__avance-barra {
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-linea-suave);
+}
+
+.fases__avance-barra > span {
+  display: block;
+  height: 100%;
+  background: var(--color-oliva-claro);
+}
+
+.fases__item--actual .fases__avance-barra > span {
+  background: var(--color-oliva);
+}
+
+.fases__avance-barra > .fases__avance-relleno--excedido {
+  background: var(--color-error);
+}
+
+.fases__avance-pct {
+  width: 40px;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-tinta-muted);
+  text-align: right;
+}
+
+.fases__fin {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-1);
+}
+
+.fases__fin .acciones {
+  display: flex;
+  gap: 2px;
+}
+
+.fases__chevron {
+  flex-shrink: 0;
+  color: var(--color-tinta-tenue);
+}
+
+/* Con el sidebar al lado, bajo 1100px la columna del nombre se queda sin
+   lugar: el % sigue en la barra de arriba, así que el avance se va primero. */
+@media (max-width: 1100px) {
+  .fases__card {
+    grid-template-columns: minmax(0, 1fr) 120px auto;
   }
 
-  .fases-tabla-header {
+  .fases__avance {
     display: none;
   }
+}
 
-  .fases-tabla-fila {
-    display: grid;
-    grid-template-columns: 22px 1fr auto;
+/* Mobile: la tarjeta pasa a dos renglones (nombre arriba, importe y avance
+   abajo) y las acciones quedan siempre visibles — la regla de hover de
+   index.css sólo las esconde con puntero fino. */
+@media (max-width: 640px) {
+  .fases__barra {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .fases__presupuesto {
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-3);
+    max-width: none;
+  }
+
+  .fases__presupuesto-barra {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .fases__item {
+    gap: var(--space-3);
+  }
+
+  .fases__card {
+    grid-template-columns: minmax(0, 1fr) auto;
     grid-template-areas:
-      "num fase estado"
-      ". monto pct"
-      ". acciones acciones";
-    row-gap: var(--space-2);
-    column-gap: var(--space-2-5);
-    background: var(--color-superficie);
-    border: 1px solid var(--color-linea);
-    border-radius: var(--radius-sm);
+      "texto   texto"
+      "avance  gastado"
+      "fin     fin";
+    gap: var(--space-2-5) var(--space-3);
     padding: var(--space-3) var(--space-4);
   }
 
-  .fases-tabla-num {
-    grid-area: num;
+  .fases__texto {
+    grid-area: texto;
   }
 
-  .fases-tabla-col--fase {
-    grid-area: fase;
+  .fases__gastado {
+    grid-area: gastado;
   }
 
-  .fases-tabla-estado {
-    grid-area: estado;
-    justify-self: start;
-  }
-
-  .fases-tabla-col--num {
-    grid-area: monto;
-    text-align: left;
-  }
-
-  .fases-tabla-col--pct {
-    grid-area: pct;
-  }
-
-  .fases-tabla-col--accion {
-    grid-area: acciones;
-    justify-content: flex-end;
-  }
-
-  .fases-tabla-chevron {
-    display: none;
-  }
-
-  .planilla__fila.fases-tabla-total {
+  .fases__avance {
     display: flex;
-    align-items: baseline;
-    flex-wrap: wrap;
-    gap: var(--space-1-5);
+    grid-area: avance;
   }
 
-  .fases-tabla-total > span:empty {
+  .fases__fin {
+    grid-area: fin;
+  }
+
+  .fases__fin:not(:has(.acciones)) {
     display: none;
   }
 
-  .fases-tabla-total > span:nth-child(2) {
-    margin-right: auto;
+  .fases__chevron {
+    display: none;
   }
 }

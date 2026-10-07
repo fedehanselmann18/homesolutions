@@ -213,3 +213,119 @@ export function calcularSeguimiento({
       fasesEstancadas.length,
   };
 }
+
+// --- Bandeja (variante 4f) ---------------------------------------------------
+//
+// Una sola lista de lo que hay que resolver en el proyecto, por urgencia, con
+// la acción que lo resuelve. Los grupos no son tipos de movimiento sino qué
+// tan urgente es: una compra impaga hace 120 días va arriba de todo aunque
+// sea "una compra", igual que un pedido sin entregar.
+//
+// No hay "vence esta semana": el modelo no tiene fechas de vencimiento (ni
+// de compras ni de cobros), así que la urgencia sale de la antigüedad.
+export const GRUPOS_BANDEJA = [
+  { clave: "vencido", label: "Vencido" },
+  { clave: "pendiente", label: "Pendiente" },
+  { clave: "revisar", label: "Para revisar" },
+];
+
+/**
+ * Arma los grupos de la bandeja a partir de `calcularSeguimiento`. Cada item:
+ * `{ key, tipo, id, accion, titulo, subtitulo, estado, monto, dias }`, con
+ * `tipo` en compra | gasto | cobro | fase | cobranza, `accion` en pagar |
+ * entregar | adjuntar | cobrar | verFase, `estado` la clave del badge
+ * (impaga | sinEntregar | sinComprobante | estancada | porCobrar) y `monto`
+ * un item de `formatMontoDeItem` o null. Los grupos vacíos no se devuelven.
+ */
+export function armarBandeja(seguimiento, { diasVencida }) {
+  const {
+    cobranza,
+    comprasImpagas,
+    comprasSinEntregar,
+    comprasSinComprobante,
+    gastosSinComprobante,
+    cobrosSinComprobante,
+    fasesEstancadas,
+  } = seguimiento;
+  const porDias = (a, b) => b.dias - a.dias;
+
+  const impagas = comprasImpagas.map((c) => ({
+    key: `pagar-${c.id}`,
+    tipo: "compra",
+    id: c.id,
+    accion: "pagar",
+    titulo: c.descripcion,
+    subtitulo: `${c.proveedor} · compra`,
+    estado: "impaga",
+    monto: c,
+    dias: c.dias,
+  }));
+
+  const vencido = impagas.filter((i) => i.dias >= diasVencida).sort(porDias);
+
+  const pendiente = [
+    ...impagas.filter((i) => i.dias < diasVencida),
+    ...comprasSinEntregar.map((c) => ({
+      key: `entregar-${c.id}`,
+      tipo: "compra",
+      id: c.id,
+      accion: "entregar",
+      titulo: c.descripcion,
+      subtitulo: `${c.proveedor} · pedido hace ${c.dias === 1 ? "1 día" : `${c.dias} días`}`,
+      estado: "sinEntregar",
+      monto: c,
+      dias: c.dias,
+    })),
+  ].sort(porDias);
+
+  // Lo que falta cobrar del contrato no tiene antigüedad: va al final de lo
+  // pendiente, con su acción para cargar el cobro.
+  if (cobranza.pendiente > 0) {
+    pendiente.push({
+      key: "cobranza",
+      tipo: "cobranza",
+      id: null,
+      accion: "cobrar",
+      titulo: "Saldo del contrato",
+      subtitulo: `Cobrado ${Math.round(cobranza.pctCobrado)}% de lo acordado`,
+      estado: "porCobrar",
+      monto: { monto: cobranza.pendiente, montoOtra: null, moneda: "usd" },
+      dias: 0,
+    });
+  }
+
+  const sinComprobante = (tipo, items, subtitulo) =>
+    items.map((m) => ({
+      key: `adjuntar-${tipo}-${m.id}`,
+      tipo,
+      id: m.id,
+      accion: "adjuntar",
+      titulo: m.descripcion,
+      subtitulo: subtitulo(m),
+      estado: "sinComprobante",
+      monto: m,
+      dias: m.dias,
+    }));
+
+  const revisar = [
+    ...sinComprobante("compra", comprasSinComprobante, (c) => `${c.proveedor} · compra`),
+    ...sinComprobante("gasto", gastosSinComprobante, () => "Gasto"),
+    ...sinComprobante("cobro", cobrosSinComprobante, () => "Cobro"),
+    ...fasesEstancadas.map((f) => ({
+      key: `fase-${f.id}`,
+      tipo: "fase",
+      id: f.id,
+      accion: "verFase",
+      titulo: f.nombre,
+      subtitulo: "Fase en curso sin cambios",
+      estado: "estancada",
+      monto: null,
+      dias: f.dias,
+    })),
+  ].sort(porDias);
+
+  const items = { vencido, pendiente, revisar };
+  return GRUPOS_BANDEJA.map((g) => ({ ...g, items: items[g.clave] })).filter(
+    (g) => g.items.length > 0
+  );
+}

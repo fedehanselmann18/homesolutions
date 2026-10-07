@@ -18,6 +18,7 @@ export function SelectorMoneda() {
       activa={moneda}
       onCambiar={setMoneda}
       etiqueta="Moneda del análisis"
+      variante="segmentado"
     />
   );
 }

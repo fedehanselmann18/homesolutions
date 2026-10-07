@@ -1,8 +1,29 @@
 import { useState, useEffect } from "react";
+import { Package, Truck } from "lucide-react";
+
 import { TIPOS_PRODUCTO } from "../../constants/tipoProducto";
-import ModalShell from "./ModalShell";
+import ModalShell, { AccionesFormulario } from "./ModalShell";
 import ChipsCategorias from "./ChipsCategorias";
-import { LogoCargando } from "../shared/LogoCargando";
+import { CampoMonto } from "./CamposCotizacion";
+import { ControlOpcion } from "../shared/ControlOpcion";
+import { ErrorCampo } from "../shared/ErrorCampo";
+import { avisoFaltantes, validarMonto, validarRequerido } from "../../utils/formValidation";
+
+const OPCIONES_TIPO = Object.entries(TIPOS_PRODUCTO).map(([valor, info]) => ({
+  valor,
+  label: info.label,
+  icono: info.icono,
+}));
+
+const validarCampo = (name, value) => {
+  if (name === "marca") return validarRequerido(value, "Escribí la marca.");
+  if (name === "modelo") return validarRequerido(value, "Escribí el modelo.");
+  if (name === "tipo") return value ? null : "Elegí el tipo de producto.";
+  if (name === "precio") return validarMonto(value);
+  return null;
+};
+
+const ETIQUETAS = { marca: "Marca", modelo: "Modelo", tipo: "Tipo", precio: "Precio" };
 
 export function ModalProducto({
   producto,
@@ -22,6 +43,7 @@ export function ModalProducto({
     categoria_ids: [],
   });
   const [guardando, setGuardando] = useState(false);
+  const [errores, setErrores] = useState({});
 
   useEffect(() => {
     if (producto) {
@@ -35,15 +57,13 @@ export function ModalProducto({
     }
   }, [producto]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-      // Si cambia el tipo, las categorías ya elegidas (de otro tipo) dejan de tener sentido.
-      ...(name === "tipo" ? { categoria_ids: [] } : {}),
-    }));
+  const cambiar = (name, value) => {
+    setForm((prev) => ({ ...prev, [name]: value }));
+    // Un campo que ya marcó error se revalida al escribir, para que el error
+    // se vaya apenas se corrige (como en gasto y compra).
+    if (errores[name]) setErrores((prev) => ({ ...prev, [name]: validarCampo(name, value) }));
   };
+  const handleChange = (e) => cambiar(e.target.name, e.target.value);
 
   const toggleCategoria = (categoriaId) => {
     setForm((prev) => ({
@@ -56,6 +76,12 @@ export function ModalProducto({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const nuevosErrores = Object.fromEntries(
+      Object.keys(ETIQUETAS).map((campo) => [campo, validarCampo(campo, form[campo])])
+    );
+    setErrores(nuevosErrores);
+    if (Object.values(nuevosErrores).some(Boolean)) return;
+
     setGuardando(true);
     try {
       await onGuardar({
@@ -70,79 +96,92 @@ export function ModalProducto({
     }
   };
 
+  const faltantes = Object.keys(ETIQUETAS)
+    .filter((campo) => errores[campo])
+    .map((campo) => ETIQUETAS[campo]);
+
   return (
     <ModalShell
       titulo={esEdicion ? "Editar producto" : "Nuevo producto"}
+      icono={Package}
       contexto={proveedor?.nombre}
-      contextoDestacado
+      iconoContexto={Truck}
       onCerrar={onCerrar}
       onSubmit={handleSubmit}
+      validacionPropia
+      aviso={avisoFaltantes(faltantes)}
       cerrarDeshabilitado={guardando}
       acciones={
-        <>
-          <button
-            type="button"
-            onClick={onCerrar}
-            className="btn btn-secondary"
-            disabled={guardando}
-          >
-            Cancelar
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={guardando}>
-            {guardando ? (
-              <>
-                <LogoCargando size={14} variante="blanco" />
-                Guardando...
-              </>
-            ) : esEdicion ? (
-              "Guardar cambios"
-            ) : (
-              "Crear producto"
-            )}
-          </button>
-        </>
+        <AccionesFormulario
+          guardando={guardando}
+          onCancelar={onCerrar}
+          textoGuardar={esEdicion ? "Guardar cambios" : "Crear producto"}
+        />
       }
     >
       <div className="modal-form-fila">
         <label>
           Marca
-          <input type="text" name="marca" value={form.marca} onChange={handleChange} required />
+          <input
+            type="text"
+            name="marca"
+            value={form.marca}
+            onChange={handleChange}
+            placeholder="Ej: Prysmian"
+            aria-invalid={errores.marca ? true : undefined}
+            className={errores.marca ? "campo--error" : undefined}
+            required
+          />
+          <ErrorCampo texto={errores.marca} />
         </label>
 
         <label>
           Modelo
-          <input type="text" name="modelo" value={form.modelo} onChange={handleChange} required />
-        </label>
-      </div>
-
-      <div className="modal-form-fila">
-        <label>
-          Tipo
-          <select name="tipo" value={form.tipo} onChange={handleChange} required>
-            <option value="" disabled>
-              Seleccioná un tipo
-            </option>
-            {Object.entries(TIPOS_PRODUCTO).map(([valor, info]) => (
-              <option key={valor} value={valor}>
-                {info.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          Precio de catálogo
           <input
-            type="number"
-            name="precio"
-            value={form.precio}
+            type="text"
+            name="modelo"
+            value={form.modelo}
             onChange={handleChange}
-            min="0"
-            step="0.01"
+            placeholder="Ej: Cable 2x1.5mm x 50m"
+            aria-invalid={errores.modelo ? true : undefined}
+            className={errores.modelo ? "campo--error" : undefined}
             required
           />
+          <ErrorCampo texto={errores.modelo} />
         </label>
       </div>
+
+      <ControlOpcion
+        etiqueta="Tipo"
+        opciones={OPCIONES_TIPO}
+        valor={form.tipo}
+        onCambiar={(tipo) => {
+          // Si cambia el tipo, las categorías ya elegidas (de otro tipo) dejan de tener sentido.
+          setForm((prev) => ({ ...prev, tipo, categoria_ids: [] }));
+          setErrores((prev) => ({ ...prev, tipo: null }));
+        }}
+        error={errores.tipo}
+        variante="segmentado"
+        disabled={guardando}
+      />
+
+      <CampoMonto
+        etiqueta="Precio de catálogo"
+        name="precio"
+        value={form.precio}
+        onChange={handleChange}
+        error={errores.precio}
+        disabled={guardando}
+      />
+
+      {!form.tipo && (
+        <div className="chips-cat">
+          <div className="chips-cat-header">
+            <span className="chips-cat-label">Categorías</span>
+          </div>
+          <p className="campo-hint">Elegí el tipo para ver sus categorías.</p>
+        </div>
+      )}
 
       {form.tipo && (
         <ChipsCategorias

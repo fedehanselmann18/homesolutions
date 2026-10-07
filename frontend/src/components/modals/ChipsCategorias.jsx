@@ -75,7 +75,9 @@ export function ChipsCategorias({
   const formCrear = (
     <div className="chips-cat-crear">
       <input
+        className="campo campo--sm"
         type="text"
+        aria-label="Nombre de la nueva categoría"
         value={nombreNueva}
         onChange={(e) => setNombreNueva(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -84,11 +86,11 @@ export function ChipsCategorias({
       />
       <button
         type="button"
-        className="chips-cat-crear-boton"
+        className="btn btn-secondary"
         onClick={handleCrear}
         disabled={creando || !nombreNueva.trim()}
       >
-        {creando ? <LogoCargando size={13} /> : <Plus size={13} strokeWidth={2.5} />}
+        {creando ? <LogoCargando size={14} /> : <Plus size={14} strokeWidth={2} />}
         {creando ? "Creando..." : "Crear categoría"}
       </button>
     </div>
@@ -105,7 +107,7 @@ export function ChipsCategorias({
             Podés crear el producto igual y asignarle categorías más adelante.
           </span>
           {formCrear}
-          {error && <span className="chips-cat-error">{error}</span>}
+          {error && <span className="campo-error">{error}</span>}
         </div>
       </div>
     );
@@ -136,11 +138,14 @@ export function ChipsCategorias({
             <button
               key={cat.id}
               type="button"
-              className={`chips-cat-chip${elegida ? " chips-cat-chip--elegida" : ""}`}
+              // Elección múltiple: la forma es la del chip-opción (DESIGN.md
+              // §9) y el elegido lleva además el check, porque puede haber
+              // varios activos a la vez.
+              className={`chip${compacto ? "" : " chip--opcion"}${elegida ? " chip--activo" : ""}`}
               onClick={() => onToggle(cat.id)}
               aria-pressed={elegida}
             >
-              {elegida && <Check size={11} strokeWidth={3} />}
+              {elegida && <Check aria-hidden="true" />}
               {cat.nombre}
             </button>
           );
@@ -148,7 +153,7 @@ export function ChipsCategorias({
       </div>
 
       {formCrear}
-      {error && <span className="chips-cat-error">{error}</span>}
+      {error && <span className="campo-error">{error}</span>}
     </div>
   );
 }

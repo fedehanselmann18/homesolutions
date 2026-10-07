@@ -1,14 +1,18 @@
 /* Pantallas de entrada (login, registro, no autorizado) — dirección 4c del
    rediseño: panel partido, mitad negra de marca con el logo y una línea de
    contexto, mitad clara con el formulario. En pantallas angostas colapsa a
-   una banda negra arriba de la tarjeta (dirección 4a). */
+   una banda negra arriba de la tarjeta (dirección 4a).
+
+   v5: página blanca y tarjeta con borde y el radio de un modal (DESIGN.md
+   §0 y §14), campos y botones de la app (`select.campo`, `.btn--lg`), el
+   error como el de cualquier campo y los links en oliva. */
 
 .auth-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-base-2);
+  background: var(--color-superficie);
   font-family: var(--font-ui);
   padding: var(--space-4);
 }
@@ -21,7 +25,7 @@
   grid-template-columns: 0.9fr 1.1fr;
   background: var(--color-superficie);
   border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-xl);
   overflow: hidden;
 }
 
@@ -51,7 +55,7 @@
 .auth-panel__barra {
   width: 40px;
   height: 3px;
-  background: var(--color-terracota);
+  background: var(--color-oliva);
   border-radius: var(--radius-pill);
 }
 
@@ -89,9 +93,10 @@
 
 .auth-panel__titulo h1 {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: var(--text-2xl);
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--color-tinta);
 }
 
@@ -101,72 +106,24 @@
   color: var(--color-tinta-muted);
 }
 
+/* Tipografía del label: la de `.label-campo` en index.css (alias). */
 .auth-campo {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-family: var(--font-ui);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--color-tinta-muted);
-}
-
-/* El chevron propio reemplaza la flecha nativa del <select>, que cambia de
-   forma según el sistema operativo y desentona con el resto de los campos. */
-.auth-campo__select {
-  position: relative;
-  display: block;
-}
-
-.auth-campo__select select {
-  appearance: none;
-  padding-right: 36px;
-}
-
-.auth-campo__select svg {
-  position: absolute;
-  right: 11px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  color: var(--color-tinta-muted);
-}
-
-.auth-campo--error input,
-.auth-campo--error select {
-  border-color: var(--color-oxido);
-  background: var(--color-superficie);
-}
-
-.auth-campo .campo-error {
-  text-transform: none;
-  letter-spacing: normal;
-}
-
-.auth-panel__error {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--color-oxido);
-  background: var(--color-oxido-tint);
-  border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-3);
+  gap: var(--space-1-5);
 }
 
 .auth-panel__submit {
-  /* La forma la da `.btn .btn-primary`; acá sólo el ancho completo, que es
-     propio del formulario de login. */
+  /* La forma la da `.btn .btn-primary .btn--lg`; acá sólo el ancho completo,
+     que es propio del formulario de entrada. */
   width: 100%;
-  justify-content: center;
-  padding: 12px;
   margin-top: var(--space-1);
 }
 
 .auth-panel__link {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--color-musgo-dark);
+  color: var(--color-oliva-dark);
   text-decoration: none;
 }
 
@@ -183,7 +140,7 @@
 
 .auth-panel__aviso h1 {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: var(--text-2xl);
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -250,6 +207,6 @@
 }
 
 .auth-panel__toggle:hover {
-  color: var(--color-musgo-dark);
+  color: var(--color-oliva-dark);
   text-decoration: underline;
 }

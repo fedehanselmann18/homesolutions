@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { ChevronDown, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { CalendarDays, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 
 import "./Manager.css";
 import { FILAS_POR_PAGINA, getAccionAuditoria } from "../../constants/auditoria";
@@ -88,60 +88,62 @@ export function SeccionAuditoria({ usuarios }) {
       <div className="manager-auditoria__filtros">
         <label className="manager-campo">
           <span>Tipo</span>
-          <span className="manager-campo__select">
-            <select
-              value={filtros.tipo_recurso}
-              onChange={(e) => cambiarFiltro("tipo_recurso", e.target.value)}
-            >
-              <option value="">Todos</option>
-              {tipos.map((tipo) => (
-                <option key={tipo} value={tipo}>
-                  {tipo}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={16} />
-          </span>
+          <select
+            className="campo"
+            value={filtros.tipo_recurso}
+            onChange={(e) => cambiarFiltro("tipo_recurso", e.target.value)}
+          >
+            <option value="">Todos</option>
+            {tipos.map((tipo) => (
+              <option key={tipo} value={tipo}>
+                {tipo}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="manager-campo">
           <span>Quién</span>
-          <span className="manager-campo__select">
-            <select
-              value={filtros.usuario_id}
-              onChange={(e) => cambiarFiltro("usuario_id", e.target.value)}
-            >
-              <option value="">Todos</option>
-              {usuarios.map((usuario) => (
-                <option key={usuario.id} value={usuario.id}>
-                  {usuario.nombre_usuario}
-                </option>
-              ))}
-            </select>
-            <ChevronDown size={16} />
-          </span>
+          <select
+            className="campo"
+            value={filtros.usuario_id}
+            onChange={(e) => cambiarFiltro("usuario_id", e.target.value)}
+          >
+            <option value="">Todos</option>
+            {usuarios.map((usuario) => (
+              <option key={usuario.id} value={usuario.id}>
+                {usuario.nombre_usuario}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="manager-campo">
           <span>Desde</span>
-          <input
-            type="date"
-            value={filtros.desde}
-            onChange={(e) => cambiarFiltro("desde", e.target.value)}
-          />
+          <div className="campo">
+            <CalendarDays aria-hidden="true" />
+            <input
+              type="date"
+              value={filtros.desde}
+              onChange={(e) => cambiarFiltro("desde", e.target.value)}
+            />
+          </div>
         </label>
 
         <label className="manager-campo">
           <span>Hasta</span>
-          <input
-            type="date"
-            value={filtros.hasta}
-            onChange={(e) => cambiarFiltro("hasta", e.target.value)}
-          />
+          <div className="campo">
+            <CalendarDays aria-hidden="true" />
+            <input
+              type="date"
+              value={filtros.hasta}
+              onChange={(e) => cambiarFiltro("hasta", e.target.value)}
+            />
+          </div>
         </label>
 
         {hayFiltros && (
-          <button type="button" className="manager-accion" onClick={limpiarFiltros}>
+          <button type="button" className="btn btn--sm btn-secondary" onClick={limpiarFiltros}>
             <RotateCcw size={14} strokeWidth={2} />
             Limpiar
           </button>
@@ -212,7 +214,7 @@ export function SeccionAuditoria({ usuarios }) {
             <div className="manager-auditoria__botones">
               <button
                 type="button"
-                className="manager-accion"
+                className="btn btn--sm btn-secondary"
                 onClick={() => setPagina((p) => p - 1)}
                 disabled={pagina === 0}
               >
@@ -221,7 +223,7 @@ export function SeccionAuditoria({ usuarios }) {
               </button>
               <button
                 type="button"
-                className="manager-accion"
+                className="btn btn--sm btn-secondary"
                 onClick={() => setPagina((p) => p + 1)}
                 disabled={!hayMas}
               >

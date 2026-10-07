@@ -8,7 +8,7 @@
 }
 
 .acciones-header h2 {
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: var(--text-xl);
   margin: 0;
 }

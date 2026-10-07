@@ -11,20 +11,23 @@ export const FILTRO_NOTAS = [
   { value: "sin_notas", label: "Sin notas" },
 ];
 
+// Los labels de estado son los mismos que el badge de la fila (ver
+// constants/estadoCompra.js): filtrar por "A pagar" tiene que traer las filas
+// que dicen "A pagar".
 export const FILTRO_ESTADO_PAGO = [
-  { value: "todos", label: "Cualquier estado de pago" },
+  { value: "todos", label: "Todos" },
   { value: "pagado", label: "Pagado" },
-  { value: "pendiente", label: "Pendiente" },
+  { value: "pendiente", label: "A pagar" },
 ];
 
 export const FILTRO_ESTADO_ENVIO = [
-  { value: "todos", label: "Cualquier estado de envío" },
+  { value: "todos", label: "Todos" },
   { value: "entregado", label: "Entregado" },
-  { value: "pedido", label: "Pedido" },
+  { value: "pedido", label: "Sin entregar" },
 ];
 
 export const FILTRO_COMPROBANTE = [
-  { value: "todos", label: "Con o sin comprobante" },
+  { value: "todos", label: "Todos" },
   { value: "con", label: "Con comprobante" },
   { value: "sin", label: "Sin comprobante" },
 ];
@@ -91,6 +94,7 @@ export function filtrarCompras(compras, filtros = FILTROS_VACIOS, { proyectoDeCo
       c.estado_envio !== filtros.estadoEnvio
     )
       return false;
+    if (!coincideComprobante(c.comprobantes, filtros.comprobante)) return false;
     return true;
   });
 }
@@ -126,4 +130,41 @@ export function hayFiltrosActivos(filtros) {
     (filtros.estadoEnvio && filtros.estadoEnvio !== "todos") ||
     (filtros.comprobante && filtros.comprobante !== "todos")
   );
+}
+
+/**
+ * El filtro "Con alertas" de la lista de movimientos (Movimientos v2): un
+ * movimiento pide atención si le falta el comprobante, o si es una compra
+ * impaga o sin entregar. Es el mismo criterio que la columna de comprobante y
+ * los badges de estado de la fila, así que el contador del chip coincide con
+ * lo que se ve en ámbar o rojo.
+ */
+export function tieneAlerta(tipo, movimiento) {
+  if ((movimiento.comprobantes ?? []).length === 0) return true;
+  if (tipo !== "compra") return false;
+  return movimiento.estado_pago === "pendiente" || movimiento.estado_envio === "pedido";
+}
+
+/**
+ * Qué filtros tienen sentido según el chip de tipo elegido en una lista de
+ * movimientos. Un filtro que no aplica a un tipo no se ofrece: "Notas: con
+ * nota de crédito" parado en Todo dejaría los gastos (que no tienen notas)
+ * pasando igual, y la lista diría algo que no es.
+ */
+export const CAMPOS_FILTRO_POR_TIPO = {
+  todo: ["tipoFactura", "comprobante"],
+  compras: ["estadoPago", "estadoEnvio", "notas", "tipoFactura", "comprobante"],
+  gastos: ["tipoFactura", "comprobante"],
+  cobros: ["notas", "tipoFactura", "comprobante"],
+  alertas: ["tipoFactura"],
+};
+
+/** Los filtros, con los que no aplican al tipo nuevo devueltos a su valor vacío. */
+export function filtrosParaTipo(filtros, tipo) {
+  const aplican = CAMPOS_FILTRO_POR_TIPO[tipo] ?? [];
+  const resultado = { ...filtros };
+  for (const campo of Object.keys(FILTROS_VACIOS)) {
+    if (!aplican.includes(campo)) resultado[campo] = FILTROS_VACIOS[campo];
+  }
+  return resultado;
 }

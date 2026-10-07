@@ -7,8 +7,8 @@
 // dejaba atrás justo en lo que pinta el estado de toda la app.
 import { Clock, CirclePlay, CircleCheckBig, Search } from "lucide-react";
 
-// v5: `en_curso` pasa de NARANJA a AZUL y `auditada` de AZUL (que era un gris
-// frío) a VIOLETA. El ámbar queda reservado a "requiere atención" (vence pronto,
+// v5: `en_curso` pasa del ámbar al azul y `auditada` del gris frío al
+// violeta. El ámbar queda reservado a "requiere atención" (vence pronto,
 // sin entregar, sin comprobante) en vez de cargar también "está pasando", que
 // eran dos significados en un solo color.
 //
@@ -19,10 +19,10 @@ import { Clock, CirclePlay, CircleCheckBig, Search } from "lucide-react";
 // pierde la mitad de la información.
 import {
   TINTA_MUTED,
-  BASE_2,
-  VERDE,
-  VERDE_TINT,
-  VERDE_OSCURO,
+  RELLENO,
+  EXITO,
+  EXITO_TINT,
+  EXITO_OSCURO,
   ESTADO_CURSO,
   ESTADO_CURSO_TINT,
   ESTADO_CURSO_TEXTO,
@@ -38,9 +38,9 @@ import {
 //     consumidor se armaba el fondo a partir de `color` como podía (color-mix,
 //     alfa concatenado) y el mismo estado salía con un tint distinto según la
 //     pantalla.
-const NEUTRO = { color: TINTA_MUTED, bg: BASE_2, fg: TINTA_MUTED };
+const NEUTRO = { color: TINTA_MUTED, bg: RELLENO, fg: TINTA_MUTED };
 const CURSO = { color: ESTADO_CURSO, bg: ESTADO_CURSO_TINT, fg: ESTADO_CURSO_TEXTO };
-const TERMINADO = { color: VERDE, bg: VERDE_TINT, fg: VERDE_OSCURO };
+const TERMINADO = { color: EXITO, bg: EXITO_TINT, fg: EXITO_OSCURO };
 const VERIFICADO = {
   color: ESTADO_VERIFICADO,
   bg: ESTADO_VERIFICADO_TINT,

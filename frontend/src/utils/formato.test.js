@@ -7,6 +7,7 @@ import {
   formatFecha,
   formatBytes,
   formatUltimaActividad,
+  formatNumero,
   pluralizar,
 } from "./formato";
 
@@ -23,6 +24,14 @@ describe("formatMoneda", () => {
 describe("formatMoneda en dólares", () => {
   it("usa US$ para no confundirse con el $ de pesos", () => {
     expect(sinEspacios(formatMoneda(41379, "usd"))).toBe("US$41.379");
+  });
+});
+
+describe("formatNumero", () => {
+  it("usa coma decimal y punto de miles, con los decimales pedidos", () => {
+    expect(formatNumero(59.31, 1)).toBe("59,3");
+    expect(formatNumero(14634)).toBe("14.634");
+    expect(formatNumero(4, 1)).toBe("4,0");
   });
 });
 

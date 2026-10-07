@@ -1,121 +1,206 @@
+/* Comparador de precios — no tiene diseño propio: sigue a Proveedores (4N)
+   y al catálogo de un proveedor (4P). Secciones con título y contador, la
+   barra de filtros a la derecha del título, el tipo como chips (decisión 5)
+   y la lista en `.planilla`. */
 .comparador-container {
-  font-family: var(--font-ui);
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
 }
 
+/* Como en Proveedores: el separador del header ya da el aire de arriba. */
+.comparador-container > .page-header {
+  margin-bottom: 0;
+}
+
+.comparador-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.comparador-seccion__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
 .comparador-seccion-titulo {
-  margin: 0 0 var(--space-4);
-  font-family: var(--font-display);
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin: 0;
   font-size: var(--text-lg);
   font-weight: 600;
   color: var(--color-tinta);
 }
 
-/* --- Grupos "mismo producto" --- */
+.comparador-seccion-cantidad {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-tinta-tenue);
+  font-variant-numeric: tabular-nums;
+}
+
+.comparador-tipo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+/* --- Mismo producto: una card por producto, las ofertas de menor a mayor --- */
 
 .comparador-grupos {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--space-4);
 }
 
 .comparador-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
   border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-superficie);
 }
 
-.comparador-grupo-header {
+.comparador-grupo__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: var(--space-3);
+  gap: var(--space-3);
 }
 
-.comparador-grupo-nombre {
-  margin: 0 0 6px;
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
+.comparador-grupo__titulo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  min-width: 0;
+}
+
+.comparador-grupo__nombre {
+  margin: 0;
+  font-size: var(--text-md);
   font-weight: 600;
-  color: var(--color-tinta);
+  overflow-wrap: anywhere;
 }
 
-.comparador-grupo-chips {
+.comparador-grupo__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  align-items: center;
+  gap: var(--space-1-5) var(--space-2);
 }
-.comparador-ahorro {
+
+/* La diferencia entre la oferta más barata y la más cara: un dato, en oliva
+   oscuro, no un badge de estado. */
+.comparador-grupo__ahorro {
+  display: inline-flex;
   flex-shrink: 0;
-}
-
-.comparador-tabla {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--text-btn);
-  font-variant-numeric: tabular-nums;
-}
-
-.comparador-tabla th {
-  text-align: left;
-  font-size: var(--text-xs);
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--color-tinta-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--color-linea);
-}
-
-.comparador-tabla td {
-  padding: 8px 8px 8px 0;
-  border-bottom: 1px solid var(--color-linea);
-  color: var(--color-tinta);
-}
-
-.comparador-tabla tr:last-child td {
-  border-bottom: none;
-}
-
-.comparador-fila-mejor td {
-  color: var(--color-tinta);
-  font-weight: 700;
-}
-.comparador-tag-mejor {
-  margin-left: 8px;
-  vertical-align: middle;
-}
-
-/* --- Explorar por categoría --- */
-
-.comparador-filtros__select {
-  width: auto;
-  min-width: 180px;
-}
-
-.comparador-filtros {
-  display: flex;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-}
-
-.comparador-tabla-wrap {
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  -webkit-overflow-scrolling: touch;
-}
-
-.comparador-tabla--ancha th,
-.comparador-tabla--ancha td {
+  color: var(--color-oliva-dark);
   white-space: nowrap;
 }
 
+.comparador-ofertas {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--color-linea);
+}
+
+.comparador-oferta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 40px;
+  border-bottom: 1px solid var(--color-linea-suave);
+  font-size: var(--text-base);
+}
+
+.comparador-oferta:last-child {
+  border-bottom: none;
+}
+
+.comparador-oferta__proveedor {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  color: var(--color-tinta-muted);
+}
+
+.comparador-oferta--mejor .comparador-oferta__proveedor,
+.comparador-oferta--mejor .comparador-oferta__precio {
+  color: var(--color-tinta);
+  font-weight: 600;
+}
+
+.comparador-oferta__precio {
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- Todo el catálogo --- */
+
+.comparador-filtros {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.comparador-filtros__select {
+  width: auto;
+  min-width: 200px;
+}
+
+/* Doble clase para ganarle a `.planilla` (DESIGN.md §13). Las filas no
+   navegan a ningún lado: sin el cursor de link de la utilidad. */
+.planilla.comparador-catalogo .planilla__header,
+.planilla.comparador-catalogo .planilla__fila {
+  grid-template-columns: minmax(0, 1fr) 150px minmax(0, 220px) 120px;
+}
+
+.planilla.comparador-catalogo .planilla__fila {
+  cursor: default;
+}
+
+.comparador-catalogo__nombre {
+  font-size: var(--text-base);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.comparador-catalogo__proveedor {
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+.comparador-catalogo__precio {
+  justify-self: end;
+  font-size: var(--text-base);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.planilla.comparador-catalogo .planilla__header .comparador-catalogo__precio {
+  font-size: inherit;
+}
+
 @media (max-width: 640px) {
+  .comparador-seccion__header,
   .comparador-filtros {
     flex-direction: column;
+    align-items: stretch;
+    width: 100%;
   }
 
   .comparador-filtros__select {
@@ -125,5 +210,38 @@
 
   .comparador-grupos {
     grid-template-columns: 1fr;
+  }
+
+  /* Dos renglones: producto + precio arriba, tipo · proveedor abajo. */
+  .planilla.comparador-catalogo .planilla__header {
+    display: none;
+  }
+
+  .planilla.comparador-catalogo .planilla__fila {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "nombre precio"
+      "tipo   proveedor";
+    gap: var(--space-1) var(--space-3);
+    padding-left: var(--space-1);
+    padding-right: var(--space-1);
+  }
+
+  .comparador-catalogo__nombre {
+    grid-area: nombre;
+  }
+
+  .comparador-catalogo__precio {
+    grid-area: precio;
+  }
+
+  .comparador-catalogo__tipo {
+    grid-area: tipo;
+  }
+
+  .comparador-catalogo__proveedor {
+    grid-area: proveedor;
+    justify-self: end;
+    text-align: right;
   }
 }

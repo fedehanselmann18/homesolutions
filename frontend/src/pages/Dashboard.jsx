@@ -1,80 +1,70 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Legend,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { ChevronRight, Clock, Paperclip, Truck, Wallet } from "lucide-react";
 import {
   useProyectos,
   useFases,
   useGastos,
   useCobros,
   useCompras,
+  useProveedores,
   useUltimaCotizacion,
 } from "../hooks/queries";
 import { useMonedaAnalisis } from "../hooks/useMonedaAnalisis";
+import useAuth from "../context/useAuth";
 import { SelectorMoneda } from "../components/shared/SelectorMoneda";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 import { TarjetaKpi } from "../components/shared/TarjetaKpi";
-import { TablaProyectos } from "../components/proyectos/TablaProyectos";
 import { calcularPanel } from "../utils/panel";
-import { formatMoneda, formatMonedaCorta, formatFecha } from "../utils/formato";
-import { VERDE, ROJO, NARANJA } from "../constants/colores";
-import { getTipoMovimiento, signoTexto, TINTE_PASTILLA } from "../constants/tipoMovimiento";
-import { FiltrosSegmentados } from "../components/shared/FiltrosSegmentados";
+import { formatMoneda, formatMonedaCorta, pluralizar } from "../utils/formato";
+import {
+  OLIVA,
+  ERROR,
+  ERROR_TEXTO,
+  ERROR_TINT,
+  ATENCION_TINT,
+  ATENCION_TEXTO,
+  TINTA_TENUE,
+  LINEA_SUAVE,
+  GRIS_CLARO,
+} from "../constants/colores";
 import { EstadoVacio } from "../components/shared/EstadoVacio";
 import { PageHeader } from "../components/shared/PageHeader";
 import { EstadoError } from "../components/shared/EstadoError";
 import "./Dashboard.css";
 
-// Filtro de estado de la tabla "Proyectos en curso" (dirección 1a) -- client
-// side, sobre los datos que ya trajo el Panel (sin pedir nada nuevo al
-// backend). "titulo"/"descripcion" cambian el encabezado de la sección para
-// que no diga "Proyectos en curso" mientras se está mirando Terminados.
-const FILTROS_PROYECTO = [
-  {
-    key: "en_curso",
-    label: "En curso",
-    titulo: "Proyectos en curso",
-    vacio: "No hay proyectos en curso.",
-  },
-  {
-    key: "a_iniciar",
-    label: "A iniciar",
-    titulo: "Proyectos a iniciar",
-    vacio: "No hay proyectos a iniciar.",
-  },
-  {
-    key: "terminado",
-    label: "Terminados",
-    titulo: "Proyectos terminados",
-    vacio: "No hay proyectos terminados.",
-  },
-];
+// Panel — variante 4i de docs/GENERALUIUXChange/HS General.dc.html ("Números
+// + gráfico + dos listas"): lo primero que se ve al entrar es cuánta plata
+// hay, qué falta cobrar, qué se debe y qué hay que resolver.
 
-// Reproduce la estructura real del panel (header, KPIs, proyectos, gráfico)
+// Cada pendiente de "Para resolver": ícono del cuadradito y qué dice el badge.
+const PENDIENTE = {
+  pago: { icono: Wallet, etiqueta: (item) => `${item.dias} días` },
+  envio: { icono: Truck, etiqueta: () => "Sin entregar" },
+  comprobante: { icono: Paperclip, etiqueta: () => "Sin comprobante" },
+  fase: { icono: Clock, etiqueta: (item) => `${item.dias} días en curso` },
+};
+
+const PAR_NIVEL = {
+  problema: { backgroundColor: ERROR_TINT, color: ERROR_TEXTO },
+  atencion: { backgroundColor: ATENCION_TINT, color: ATENCION_TEXTO },
+};
+
+// Reproduce la estructura real del panel (saludo, KPIs, gráfico, dos listas)
 // con bloques placeholder, en vez de tapar todo con un spinner monolítico.
 // calcularPanel necesita los 5 recursos juntos (los KPIs salen de cruzarlos
-// entre sí), así que aunque cada useQuery resuelve por separado, no hay una
-// sección que pueda pintarse con datos reales antes que las demás -- el
-// skeleton cubre esa espera combinada en vez de fingir progreso por KPI.
+// entre sí), así que no hay una sección que pueda pintarse con datos reales
+// antes que las demás. Es la excepción a propósito de DESIGN.md §16: el único
+// lugar donde el layout es estable y conocido de antemano.
 function DashboardSkeleton() {
   return (
     <div className="panel">
-      <div className="panel-header">
-        <div className="skeleton skeleton--titulo" />
-        <div className="skeleton skeleton--subtitulo" />
-      </div>
+      <div className="skeleton skeleton--titulo" />
 
       <div className="panel-kpis">
-        {[0, 1, 2, 3, 4].map((i) => (
+        {[0, 1, 2].map((i) => (
           <div key={i} className="panel-kpi-skeleton">
             <div className="skeleton skeleton--kpi-label" />
             <div className="skeleton skeleton--kpi-valor" />
@@ -83,41 +73,28 @@ function DashboardSkeleton() {
         ))}
       </div>
 
-      <section className="panel-seccion">
-        <div className="skeleton skeleton--seccion-titulo" />
-        <div className="planilla panel-tabla">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="skeleton skeleton--proyecto-fila" />
-          ))}
-        </div>
-      </section>
+      <div className="skeleton skeleton--grafico" />
 
-      <div className="panel-fila">
-        <section className="panel-seccion">
-          <div className="skeleton skeleton--seccion-titulo" />
-          <div className="skeleton skeleton--grafico" />
-        </section>
-        <section className="panel-seccion">
-          <div className="skeleton skeleton--seccion-titulo" />
-          <div className="skeleton skeleton--actividad" />
-        </section>
+      <div className="panel-listas">
+        {[0, 1].map((i) => (
+          <section key={i} className="panel-lista">
+            <div className="skeleton skeleton--seccion-titulo" />
+            {[0, 1, 2].map((j) => (
+              <div key={j} className="skeleton skeleton--fila" />
+            ))}
+          </section>
+        ))}
       </div>
     </div>
   );
 }
 
-// `accion` es opcional: contenido a la derecha del título (ver los filtros
-// En curso/A iniciar/Terminados de "Proyectos en curso" más abajo). Sin
-// `accion` se ve exactamente igual que antes.
-function Seccion({ titulo, descripcion, accion, children }) {
+function ListaPanel({ titulo, link, children }) {
   return (
-    <section className="panel-seccion">
-      <div className="panel-seccion-header">
-        <div>
-          <h2 className="panel-seccion-titulo">{titulo}</h2>
-          {descripcion && <p className="panel-seccion-descripcion">{descripcion}</p>}
-        </div>
-        {accion}
+    <section className="panel-lista">
+      <div className="panel-lista__header">
+        <h2 className="panel-lista__titulo">{titulo}</h2>
+        {link}
       </div>
       {children}
     </section>
@@ -130,16 +107,18 @@ function TooltipEvolucion({ active, payload, moneda }) {
   return (
     <div className="panel-tooltip">
       <strong>{mes.etiquetaCompleta}</strong>
-      <span style={{ color: VERDE }}>Cobrado: {formatMoneda(mes.cobrado, moneda)}</span>
-      <span style={{ color: NARANJA }}>Gastado: {formatMoneda(mes.gastado, moneda)}</span>
+      <span>Cobrado {formatMoneda(mes.cobrado, moneda)}</span>
+      <span>Compras y gastos {formatMoneda(mes.gastado, moneda)}</span>
     </div>
   );
 }
 
+const capitalizar = (texto = "") => texto.charAt(0).toUpperCase() + texto.slice(1);
+
 export function Dashboard() {
   usePageTitle("Panel");
   const navigate = useNavigate();
-  const [filtroEstado, setFiltroEstado] = useState("en_curso");
+  const { usuario } = useAuth() ?? {};
 
   // Los endpoints globales traen todo de una: el Panel agrupa por proyecto
   // en el front, así no hacen falta N requests por proyecto.
@@ -148,6 +127,9 @@ export function Dashboard() {
   const gastosQuery = useGastos();
   const cobrosQuery = useCobros();
   const comprasQuery = useCompras();
+  // Sólo para nombrar al proveedor en "Para resolver": si no llegó, la lista
+  // sale igual sin ese dato.
+  const proveedores = useProveedores()?.data;
   // Moneda del panel (la misma elección que los análisis) y la última
   // cotización, para el precio acordado en pesos (decisión #8 del plan).
   const [moneda] = useMonedaAnalisis();
@@ -189,8 +171,11 @@ export function Dashboard() {
   );
 
   const panel = useMemo(
-    () => (datos ? calcularPanel({ ...datos, moneda, cotizacionActual }) : null),
-    [datos, moneda, cotizacionActual]
+    () =>
+      datos
+        ? calcularPanel({ ...datos, moneda, cotizacionActual, proveedores: proveedores ?? [] })
+        : null,
+    [datos, moneda, cotizacionActual, proveedores]
   );
   const fm = (monto) => (monto == null ? "sin cotización" : formatMoneda(monto, moneda));
 
@@ -198,36 +183,15 @@ export function Dashboard() {
   if (error || !panel)
     return <EstadoError mensaje="No se pudieron cargar los datos del panel." grande />;
 
-  const { kpis, proyectosResumen, actividad, evolucion } = panel;
+  const { kpis, proyectosActivos, paraResolver, totalParaResolver, evolucion } = panel;
   const totalProyectos = kpis.enCurso + kpis.terminados + kpis.aIniciar;
-
-  const filtro = FILTROS_PROYECTO.find((f) => f.key === filtroEstado);
-  const contadorPorFiltro = {
-    en_curso: kpis.enCurso,
-    a_iniciar: kpis.aIniciar,
-    terminado: kpis.terminados,
-  };
-  const proyectosFiltrados = proyectosResumen.filter((p) => p.estado === filtroEstado);
-
-  // Detalle del KPI "Requiere acción": junta los 3 subtotales que vengan en
-  // > 0, en vez de mostrar siempre los 3 (la mayoría de los meses alguno da
-  // cero). Ver kpis.comprasImpagasEnCurso/comprasSinEntregarEnCurso/
-  // fasesEstancadasEnCurso en utils/panel.js.
-  const detalleAccion = [
-    kpis.comprasImpagasEnCurso > 0 &&
-      `${kpis.comprasImpagasEnCurso} ${kpis.comprasImpagasEnCurso === 1 ? "compra" : "compras"} sin pagar`,
-    kpis.comprasSinEntregarEnCurso > 0 &&
-      `${kpis.comprasSinEntregarEnCurso} ${kpis.comprasSinEntregarEnCurso === 1 ? "envío" : "envíos"} sin entregar`,
-    kpis.fasesEstancadasEnCurso > 0 &&
-      `${kpis.fasesEstancadasEnCurso} ${kpis.fasesEstancadasEnCurso === 1 ? "fase parada" : "fases paradas"}`,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const saludo = usuario?.nombre_usuario ? `Hola, ${capitalizar(usuario.nombre_usuario)}` : "Panel";
+  const { deudaProveedores: deuda } = kpis;
 
   if (totalProyectos === 0) {
     return (
       <div className="panel">
-        <PageHeader sinLinea titulo="Panel" />
+        <PageHeader sinLinea titulo={saludo} />
         <EstadoVacio
           mensaje="Todavía no hay proyectos cargados. Creá el primero desde la sección Proyectos."
           grande
@@ -238,144 +202,177 @@ export function Dashboard() {
 
   return (
     <div className="panel">
-      <PageHeader
-        sinLinea
-        titulo="Panel"
-        subtitulo={`${totalProyectos} ${
-          totalProyectos === 1 ? "proyecto" : "proyectos"
-        } en total · ${fm(kpis.contratadoEnCurso)} contratados en curso`}
-        acciones={<SelectorMoneda />}
-      />
+      <PageHeader sinLinea titulo={saludo} acciones={<SelectorMoneda />} />
 
       <div className="panel-kpis">
         <TarjetaKpi
-          titulo="Proyectos en curso"
-          valor={kpis.enCurso}
-          detalle={`${kpis.terminados} terminados · ${kpis.aIniciar} a iniciar`}
-        />
-        {/* Envuelto en .panel-kpi-realce (dirección 1a): mismo TarjetaKpi de
-            siempre, sólo se le agrega un fondo que ocupa toda la celda para
-            destacarlo sin agrandar la tipografía (ver docs/DESIGN.md). */}
-        <div className="panel-kpi-realce">
-          <TarjetaKpi
-            titulo="Dinero disponible"
-            valor={fm(kpis.disponibleTotal)}
-            detalle="Cobros − gastos − compras (proyectos en curso)"
-            color={kpis.disponibleTotal >= 0 ? VERDE : ROJO}
-            destacado
-          />
-        </div>
-        <TarjetaKpi
-          titulo="Cobrado este mes"
-          valor={fm(kpis.cobradoMes)}
-          detalle={`${fm(kpis.pendienteDeCobrar)} pendiente de cobrar`}
+          titulo="Disponible en obras"
+          valor={fm(kpis.disponibleTotal)}
+          detalle={pluralizar(kpis.enCurso, "proyecto en curso", "proyectos en curso")}
+          color={ERROR_TEXTO}
+          destacado={kpis.disponibleTotal < 0}
         />
         <TarjetaKpi
-          titulo="Ganancia neta del mes"
-          valor={fm(kpis.gananciaNetaMes)}
-          detalle="Cobrado − gastos − compras − impuestos"
-          color={kpis.gananciaNetaMes >= 0 ? VERDE : ROJO}
-          destacado
+          titulo="Falta cobrar"
+          valor={fm(kpis.pendienteDeCobrar)}
+          detalle={`${fm(kpis.cobradoMes)} cobrado este mes`}
         />
         <TarjetaKpi
-          titulo="Requiere acción"
-          valor={kpis.requiereAccion}
-          detalle={kpis.requiereAccion === 0 ? "Todo al día" : detalleAccion}
-          color={kpis.requiereAccion > 0 ? ROJO : VERDE}
-          destacado
+          titulo="Deuda con proveedores"
+          valor={formatMoneda(deuda.monto)}
+          detalle={
+            deuda.compras === 0
+              ? "Todo al día"
+              : deuda.vencidas > 0
+                ? `${pluralizar(deuda.vencidas, "compra", "compras")} con más de 90 días`
+                : pluralizar(deuda.compras, "compra sin pagar", "compras sin pagar")
+          }
+          detalleColor={deuda.vencidas > 0 ? ERROR_TEXTO : undefined}
         />
       </div>
 
-      <Seccion
-        titulo={filtro.titulo}
-        descripcion="Tocá una fila para ir al detalle del proyecto"
-        accion={
-          <FiltrosSegmentados
-            opciones={FILTROS_PROYECTO}
-            activa={filtroEstado}
-            contadores={contadorPorFiltro}
-            etiqueta="Filtrar proyectos por estado"
-            onCambiar={setFiltroEstado}
-          />
-        }
-      >
-        {proyectosFiltrados.length === 0 ? (
-          <EstadoVacio mensaje={filtro.vacio} />
-        ) : (
-          <TablaProyectos
-            proyectos={proyectosFiltrados}
-            onFilaClick={(proyecto) => navigate(`/proyectos/${proyecto.id}`)}
-          />
-        )}
-      </Seccion>
+      <section className="panel-grafico" aria-label="Cobrado y gastado, últimos 6 meses">
+        <div className="panel-grafico__header">
+          <h2 className="panel-lista__titulo">Últimos 6 meses</h2>
+          <div className="panel-leyenda">
+            <span className="panel-leyenda__item">
+              <span className="panel-leyenda__cuadro" style={{ background: OLIVA }} />
+              Cobros
+            </span>
+            <span className="panel-leyenda__item">
+              <span className="panel-leyenda__cuadro" style={{ background: GRIS_CLARO }} />
+              Compras y gastos
+            </span>
+          </div>
+        </div>
+        <ResponsiveContainer width="100%" height={180}>
+          <BarChart data={evolucion} margin={{ top: 8, right: 0, left: 0, bottom: 0 }} barGap={5}>
+            <CartesianGrid vertical={false} stroke={LINEA_SUAVE} />
+            <XAxis
+              dataKey="label"
+              tickLine={false}
+              axisLine={{ stroke: GRIS_CLARO }}
+              tick={{ fontSize: 12, fill: TINTA_TENUE }}
+            />
+            <YAxis
+              tickFormatter={(v) => formatMonedaCorta(v, moneda)}
+              tickLine={false}
+              axisLine={false}
+              tick={{ fontSize: 12, fill: TINTA_TENUE }}
+              width={72}
+            />
+            <Tooltip
+              content={<TooltipEvolucion moneda={moneda} />}
+              cursor={{ fill: LINEA_SUAVE }}
+            />
+            <Bar
+              dataKey="cobrado"
+              name="Cobros"
+              fill={OLIVA}
+              barSize={22}
+              isAnimationActive={false}
+              radius={[3, 3, 0, 0]}
+            />
+            <Bar
+              dataKey="gastado"
+              name="Compras y gastos"
+              fill={GRIS_CLARO}
+              barSize={22}
+              isAnimationActive={false}
+              radius={[3, 3, 0, 0]}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </section>
 
-      <div className="panel-fila">
-        <Seccion titulo="Cobrado vs. gastado" descripcion="Últimos 6 meses, todos los proyectos">
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={evolucion} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-linea)" />
-              <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-              <YAxis
-                tickFormatter={(v) => formatMonedaCorta(v, moneda)}
-                tick={{ fontSize: 12 }}
-                width={80}
-              />
-              <Tooltip
-                content={<TooltipEvolucion moneda={moneda} />}
-                cursor={{ fill: "var(--color-base-2)" }}
-              />
-              <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar
-                dataKey="cobrado"
-                name="Cobrado"
-                fill={VERDE}
-                isAnimationActive={false}
-                radius={[4, 4, 0, 0]}
-              />
-              <Bar
-                dataKey="gastado"
-                name="Gastado"
-                fill={NARANJA}
-                isAnimationActive={false}
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </Seccion>
-
-        <Seccion titulo="Actividad reciente" descripcion="Últimos movimientos cargados">
-          {actividad.length === 0 ? (
-            <EstadoVacio mensaje="Todavía no hay movimientos cargados." />
+      <div className="panel-listas">
+        <ListaPanel
+          titulo="Proyectos en curso"
+          link={
+            <Link to="/proyectos" className="panel-lista__link">
+              Ver todos
+              <ChevronRight size={14} strokeWidth={1.75} aria-hidden="true" />
+            </Link>
+          }
+        >
+          {proyectosActivos.length === 0 ? (
+            <EstadoVacio mensaje="No hay proyectos en curso." />
           ) : (
-            <ul className="panel-actividad">
-              {actividad.map((mov) => {
-                const tipo = getTipoMovimiento(mov.tipo);
-                return (
-                  <li key={`${mov.tipo}-${mov.id}`} className="panel-actividad-item">
+            <ul className="panel-lista__items">
+              {proyectosActivos.map((p) => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    className="panel-proyecto"
+                    onClick={() => navigate(`/proyectos/${p.id}`)}
+                  >
+                    <span className="panel-proyecto__nombre">
+                      <span
+                        className="panel-proyecto__punto"
+                        style={{ background: p.disponible >= 0 ? OLIVA : ERROR }}
+                      />
+                      {p.nombre}
+                    </span>
                     <span
-                      className="badge badge--sm panel-actividad-tipo"
-                      style={{
-                        color: tipo.color,
-                        backgroundColor: `${tipo.color}${TINTE_PASTILLA}`,
-                      }}
+                      className="panel-proyecto__monto cifra"
+                      style={p.disponible < 0 ? { color: ERROR_TEXTO } : undefined}
                     >
-                      {tipo.singular}
+                      {fm(p.disponible)}
                     </span>
-                    <span className="panel-actividad-texto">
-                      <span className="panel-actividad-descripcion">{mov.descripcion}</span>
-                      <span className="panel-actividad-detalle">
-                        {mov.proyectoNombre} · {formatFecha(mov.fecha)}
+                    <span className="panel-proyecto__fase">
+                      {p.faseActual?.texto ?? "Sin fases cargadas"}
+                    </span>
+                    <span className="panel-proyecto__rotulo">disponible</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </ListaPanel>
+
+        <ListaPanel
+          titulo="Para resolver"
+          link={
+            totalParaResolver > paraResolver.length && (
+              <span className="panel-lista__resto">
+                y {totalParaResolver - paraResolver.length} más en Seguimiento
+              </span>
+            )
+          }
+        >
+          {paraResolver.length === 0 ? (
+            <EstadoVacio mensaje="Nada pendiente en los proyectos en curso." />
+          ) : (
+            <ul className="panel-lista__items">
+              {paraResolver.map((item) => {
+                const { icono: Icono, etiqueta } = PENDIENTE[item.tipo];
+                return (
+                  <li key={item.key}>
+                    <button
+                      type="button"
+                      className="panel-pendiente"
+                      onClick={() => navigate(`/proyectos/${item.proyectoId}?tab=seguimiento`)}
+                    >
+                      <span className="panel-pendiente__icono">
+                        <Icono size={15} strokeWidth={1.75} aria-hidden="true" />
                       </span>
-                    </span>
-                    <span className="panel-actividad-monto" style={{ color: tipo.color }}>
-                      {signoTexto(tipo.signo)} {fm(mov.monto)}
-                    </span>
+                      <span className="panel-pendiente__titulo">{item.titulo}</span>
+                      <span className="badge badge--sm" style={PAR_NIVEL[item.nivel]}>
+                        {etiqueta(item)}
+                      </span>
+                      <span className="panel-pendiente__contexto">
+                        {[item.proveedor, item.proyectoNombre].filter(Boolean).join(" · ")}
+                      </span>
+                      <span className="panel-pendiente__monto cifra">
+                        {item.monto != null ? formatMoneda(item.monto, item.moneda) : ""}
+                      </span>
+                    </button>
                   </li>
                 );
               })}
             </ul>
           )}
-        </Seccion>
+        </ListaPanel>
       </div>
     </div>
   );

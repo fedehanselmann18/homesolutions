@@ -24,7 +24,6 @@ export function validarFecha(valor) {
   return null;
 }
 
-
 // Mismo mínimo que valida el backend (UsuarioCreate y UsuarioResetPassword,
 // ver backend/app/schemas.py). Sin este chequeo en el front, una contraseña
 // corta viaja igual y vuelve como 422 -- que el usuario leía como un error
@@ -37,4 +36,16 @@ export function validarPassword(valor) {
     return `La contraseña tiene que tener al menos ${MINIMO_PASSWORD} caracteres.`;
   }
   return null;
+}
+
+/**
+ * El aviso del pie de un modal cuando no se pudo guardar: "Falta 1 campo:
+ * Descripción" / "Faltan 2 campos: Monto, Fecha". null si no falta nada.
+ * Reemplaza al banner rojo de arriba del formulario (variante 5a): el error
+ * ya está en cada campo, el pie sólo cuenta cuántos y cuáles.
+ */
+export function avisoFaltantes(faltantes) {
+  if (!faltantes.length) return null;
+  const cuantos = faltantes.length === 1 ? "Falta 1 campo" : `Faltan ${faltantes.length} campos`;
+  return `${cuantos}: ${faltantes.join(", ")}`;
 }

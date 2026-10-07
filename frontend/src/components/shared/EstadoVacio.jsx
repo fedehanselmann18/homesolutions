@@ -18,9 +18,8 @@ import "./EstadoVacio.css";
  * sección.
  *
  * EXCEPCIÓN a propósito: adentro de un modal o de un formulario el hueco
- * vacío se dice con la clase del propio componente (`.mov-edit__vacio`,
- * `.modal-form-seccion-vacio`, `.seccion-notas-vacio`,
- * `.comprobantes-vacio`). Ahí el isotipo de marca al lado de un campo sería
+ * vacío se dice con la clase del propio componente (`.seccion-notas-vacio`,
+ * `.modal-form-seccion-vacio`). Ahí el isotipo de marca al lado de un campo sería
  * ruido, no orientación.
  */
 export function EstadoVacio({ mensaje, grande }) {

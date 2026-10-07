@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
+import { Download } from "lucide-react";
 import {
   Bar,
   BarChart,
   CartesianGrid,
-  Cell,
   ResponsiveContainer,
   Tooltip,
   Treemap,
@@ -35,29 +35,26 @@ import {
   formatFecha,
   formatMoneda,
   formatMonedaCorta,
+  formatNumero,
 } from "../../utils/formato";
 import { useToast } from "../../context/useToast";
 import useAuth from "../../context/useAuth";
 import { Seccion, TooltipMoneda, ContenidoTreemap, Torta, COLORES_TORTA } from "./AnalisisGraficos";
-import { VERDE, ROJO, AZUL, NARANJA, LINEA } from "../../constants/colores";
+import { OLIVA, ERROR, GRIS_CLARO, ATENCION, LINEA } from "../../constants/colores";
 import "./AnalisisGeneral.css";
 
-const COLOR_CASCADA = {
-  entrada: VERDE,
-  salida: NARANJA,
-  subtotal: AZUL,
-  total: VERDE,
-  ajuste: NARANJA,
-};
-
-// El paso "Notas (compras)" y el paso "total" pueden ir para cualquier lado
-// según el signo (una devolución de producto sube el margen, una reposición
-// lo baja) -- a diferencia de "salida"/"entrada" que siempre son fijos.
-function colorPasoCascada(paso) {
-  if (paso.tipo === "total" || paso.tipo === "ajuste") {
-    return paso.valor < 0 ? ROJO : VERDE;
-  }
-  return COLOR_CASCADA[paso.tipo];
+// Variante 4d: lo que suma en oliva, lo que resta en gris claro, los
+// subtotales en negro (DESIGN.md §2). Antes eran verde / naranja / gris y el
+// naranja de "salida" se confundía con el ámbar de "requiere atención".
+// "Notas (compras)" y el total pueden ir para cualquier lado según el signo
+// (una devolución de producto sube el margen, una reposición lo baja); una
+// ganancia neta negativa es una pérdida y va en óxido.
+function claseDePaso(paso) {
+  if (paso.tipo === "subtotal") return "subtotal";
+  if (paso.tipo === "total") return paso.valor < 0 ? "perdida" : "neto";
+  if (paso.tipo === "entrada") return "suma";
+  if (paso.tipo === "ajuste") return paso.valor > 0 ? "suma" : "resta";
+  return "resta";
 }
 
 /**
@@ -84,6 +81,60 @@ function escalaCascada(pasos) {
     ticks.push(Math.round(valor));
   }
   return { dominio: [desde, hasta], ticks };
+}
+
+/**
+ * La cascada de rentabilidad en barras horizontales (4d): una fila por paso,
+ * con el valor escrito al lado de la barra — no se depende del tooltip para
+ * leer el número. Es HTML y no recharts: son siete barras de rango sobre una
+ * escala fija, y así el texto usa la tipografía de la app.
+ */
+function Cascada({ pasos, moneda }) {
+  const { dominio, ticks } = escalaCascada(pasos);
+  const [desde, hasta] = dominio;
+  const pos = (valor) => ((valor - desde) / (hasta - desde || 1)) * 100;
+  // Redondeado antes de mirar el signo: un -0,3 se escribe "US$ 0", no "−US$ 0".
+  const conSigno = (valor) => {
+    const redondeado = Math.round(valor);
+    return redondeado < 0
+      ? `−${formatMoneda(-redondeado, moneda)}`
+      : formatMoneda(Math.abs(redondeado), moneda);
+  };
+
+  return (
+    <div className="cascada" style={{ "--cascada-divisiones": ticks.length - 1 }}>
+      {pasos.map((paso) => {
+        const [a, b] = paso.rango;
+        const clase = claseDePaso(paso);
+        return (
+          <div key={paso.nombre} className={`cascada__fila cascada__fila--${clase}`}>
+            <span className="cascada__label">{paso.nombre}</span>
+            <div className="cascada__pista">
+              <span
+                className="cascada__barra"
+                style={{
+                  left: `${pos(Math.min(a, b))}%`,
+                  width: `${pos(Math.max(a, b)) - pos(Math.min(a, b))}%`,
+                }}
+              />
+            </div>
+            <span className="cascada__valor">{conSigno(paso.valor)}</span>
+          </div>
+        );
+      })}
+      <div className="cascada__fila cascada__fila--eje" aria-hidden="true">
+        <span />
+        <div className="cascada__eje">
+          {ticks.map((tick) => (
+            <span key={tick} style={{ left: `${pos(tick)}%` }}>
+              {formatMonedaCorta(tick, moneda)}
+            </span>
+          ))}
+        </div>
+        <span />
+      </div>
+    </div>
+  );
 }
 
 export function AnalisisGeneral({ proyectoId }) {
@@ -192,85 +243,96 @@ export function AnalisisGeneral({ proyectoId }) {
           )} (${formatFecha(cotizacionActual.fecha)}). Cobros, gastos y compras en pesos de cuando se cargaron.`
         : "No hay cotizaciones cargadas: el precio acordado no se puede pasar a pesos."
       : null;
-  const colorDisponible = totales.disponible >= 0 ? VERDE : ROJO;
-  const escala = escalaCascada(cascada);
+  const pctGanancia = totales.cobrado > 0 ? (totales.disponible / totales.cobrado) * 100 : null;
+  const faltaCobrar =
+    totales.precioAcordado == null ? null : Math.max(totales.precioAcordado - totales.cobrado, 0);
+  const sinMovimientos = totales.cobrado === 0 && totales.egresos === 0;
 
-  // "Disponible" siempre va primero y en verde (mismo color que la
-  // tarjeta de KPI) -- el resto de las porciones son las fases, con la
-  // paleta de marca de siempre pero sin repetir el verde para no
-  // confundirlas con la porción de disponible.
-  const coloresFasesSinVerde = COLORES_TORTA.filter((c) => c !== VERDE);
+  // "Disponible" siempre va primero y en oliva (lo que queda a favor) -- el
+  // resto de las porciones son las fases, con la rampa sin repetir el oliva
+  // para no confundirlas con la porción de disponible.
+  const coloresFasesSinOliva = COLORES_TORTA.filter((c) => c !== OLIVA);
   const coloresCobradoPorFase =
     cobradoPorFase[0]?.nombre === "Disponible"
-      ? [VERDE, ...coloresFasesSinVerde]
-      : coloresFasesSinVerde;
+      ? [OLIVA, ...coloresFasesSinOliva]
+      : coloresFasesSinOliva;
 
   return (
     <div className="analisis">
-      <div className="analisis-header">
-        <SelectorMoneda />
-        {esAdmin && (
-          <button
-            type="button"
-            className="analisis-btn-reporte"
-            onClick={handleDescargarReporte}
-            disabled={descargandoReporte}
-          >
-            {descargandoReporte ? "Generando..." : "Generar reporte PDF"}
-          </button>
-        )}
-      </div>
-      {notaPrecioEnPesos && <p className="analisis-nota-moneda">{notaPrecioEnPesos}</p>}
+      {/* Variante 4d: el resultado primero, y al lado de dónde sale. */}
+      <div className="analisis-resultado">
+        <div className="analisis-resumen">
+          <div className="analisis-ganancia">
+            <span className="analisis-ganancia__label">Ganancia neta</span>
+            <span
+              className={`analisis-ganancia__monto${totales.disponible < 0 ? " analisis-ganancia__monto--perdida" : ""}`}
+            >
+              {fm(totales.disponible)}
+            </span>
+            <span className="analisis-ganancia__detalle">
+              {pctGanancia == null
+                ? "Todavía no hay cobros"
+                : `${formatNumero(pctGanancia, 1)}% de lo cobrado`}
+            </span>
+          </div>
 
-      <div className="analisis-kpis">
-        <TarjetaKpi
-          titulo="Cobrado"
-          valor={`${totales.pctCobrado.toFixed(1)}%`}
-          porcentaje={totales.pctCobrado}
-          detalle={`${fm(totales.cobrado)} de ${precioTexto} acordados`}
-        />
-        <TarjetaKpi
-          titulo="Gastado"
-          valor={`${totales.pctGastado.toFixed(1)}%`}
-          porcentaje={totales.pctGastado}
-          detalle={`${fm(totales.egresos)} en gastos y compras sobre ${precioTexto}`}
-          color={totales.pctGastado > 100 ? ROJO : NARANJA}
-        />
-        <TarjetaKpi
-          titulo="Dinero disponible"
-          valor={fm(totales.disponible)}
-          detalle="Cobros − gastos − compras"
-          color={colorDisponible}
-          destacado
-        />
-      </div>
+          <dl className="analisis-datos">
+            <div>
+              <dt>Acordado</dt>
+              <dd>
+                {totales.precioAcordado == null ? "Sin cotización" : fm(totales.precioAcordado)}
+              </dd>
+            </div>
+            <div>
+              <dt>Cobrado</dt>
+              <dd title={`${fm(totales.cobrado)} de ${precioTexto}`}>
+                {formatNumero(totales.pctCobrado, 1)}%
+              </dd>
+            </div>
+            <div>
+              <dt>Gastado</dt>
+              <dd
+                className={totales.pctGastado > 100 ? "analisis-datos--excedido" : undefined}
+                title={`${fm(totales.egresos)} en gastos y compras`}
+              >
+                {formatNumero(totales.pctGastado, 1)}%
+              </dd>
+            </div>
+            <div>
+              <dt>Falta cobrar</dt>
+              <dd>{faltaCobrar == null ? "—" : fm(faltaCobrar)}</dd>
+            </div>
+          </dl>
 
-      <Seccion
-        titulo="Rentabilidad"
-        descripcion="De lo cobrado a la ganancia neta, restando gastos, compras, notas de crédito/débito e impuestos."
-        vacio={totales.cobrado === 0 && totales.egresos === 0}
-        mensajeVacio="Todavía no hay cobros ni egresos cargados."
-      >
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={cascada} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={LINEA} />
-            <XAxis dataKey="nombre" tick={{ fontSize: 12 }} />
-            <YAxis
-              domain={escala.dominio}
-              ticks={escala.ticks}
-              tickFormatter={fmCorta}
-              tick={{ fontSize: 12 }}
-              width={80}
-            />
-            <Tooltip content={<TooltipMoneda obtenerValor={(d) => d.valor} moneda={moneda} />} />
-            <Bar dataKey="rango" isAnimationActive={false} radius={3}>
-              {cascada.map((paso) => (
-                <Cell key={paso.nombre} fill={colorPasoCascada(paso)} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </Seccion>
+          {notaPrecioEnPesos && <p className="analisis-nota-moneda">{notaPrecioEnPesos}</p>}
+
+          <div className="analisis-controles">
+            <SelectorMoneda />
+            {esAdmin && (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={handleDescargarReporte}
+                disabled={descargandoReporte}
+              >
+                <Download size={15} strokeWidth={2} aria-hidden="true" />
+                {descargandoReporte ? "Generando..." : "Reporte PDF"}
+              </button>
+            )}
+          </div>
+        </div>
+
+        <section className="analisis-rentabilidad" aria-labelledby="analisis-rentabilidad-titulo">
+          <h3 id="analisis-rentabilidad-titulo" className="analisis-rentabilidad__titulo">
+            Rentabilidad
+          </h3>
+          {sinMovimientos ? (
+            <EstadoVacio mensaje="Todavía no hay cobros ni egresos cargados." />
+          ) : (
+            <Cascada pasos={cascada} moneda={moneda} />
+          )}
+        </section>
+      </div>
 
       <div className="analisis-fila">
         <Seccion
@@ -344,7 +406,12 @@ export function AnalisisGeneral({ proyectoId }) {
             <XAxis dataKey="label" tick={{ fontSize: 12 }} />
             <YAxis tickFormatter={fmCorta} tick={{ fontSize: 12 }} width={80} />
             <Tooltip content={<TooltipMoneda obtenerValor={(d) => d.monto} moneda={moneda} />} />
-            <Bar dataKey="monto" fill={AZUL} isAnimationActive={false} radius={[4, 4, 0, 0]} />
+            <Bar
+              dataKey="monto"
+              fill={GRIS_CLARO}
+              isAnimationActive={false}
+              radius={[4, 4, 0, 0]}
+            />
           </BarChart>
         </ResponsiveContainer>
 
@@ -416,7 +483,12 @@ export function AnalisisGeneral({ proyectoId }) {
                 interval={0}
               />
               <Tooltip content={<TooltipMoneda obtenerValor={(d) => d.total} moneda={moneda} />} />
-              <Bar dataKey="total" fill={VERDE} isAnimationActive={false} radius={[0, 4, 4, 0]} />
+              <Bar
+                dataKey="total"
+                fill={GRIS_CLARO}
+                isAnimationActive={false}
+                radius={[0, 4, 4, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -464,7 +536,7 @@ export function AnalisisGeneral({ proyectoId }) {
             titulo="Notas de crédito (compras)"
             valor={fm(notas.compras.credito)}
             detalle="A favor nuestro, resta a lo que le debemos al proveedor"
-            color={ROJO}
+            color={ERROR}
             destacado
             plano
           />
@@ -472,7 +544,7 @@ export function AnalisisGeneral({ proyectoId }) {
             titulo="Notas de débito (compras)"
             valor={fm(notas.compras.debito)}
             detalle="En contra nuestro, suma a lo que le debemos al proveedor"
-            color={NARANJA}
+            color={ATENCION}
             destacado
             plano
           />
@@ -480,7 +552,7 @@ export function AnalisisGeneral({ proyectoId }) {
             titulo="Notas de crédito (cobros)"
             valor={fm(notas.cobros.credito)}
             detalle="Ajuste a favor del cliente, resta a lo cobrado"
-            color={ROJO}
+            color={ERROR}
             destacado
             plano
           />
@@ -488,7 +560,7 @@ export function AnalisisGeneral({ proyectoId }) {
             titulo="Notas de débito (cobros)"
             valor={fm(notas.cobros.debito)}
             detalle="Ajuste en contra del cliente, suma a lo cobrado"
-            color={NARANJA}
+            color={ATENCION}
             destacado
             plano
           />

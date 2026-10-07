@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Pencil, Trash2 } from "lucide-react";
 import { useProyectos } from "../hooks/useProyectos";
@@ -6,7 +6,7 @@ import { useFases, useGastos, useCobros, useCompras, useUltimaCotizacion } from 
 import { useMonedaAnalisis } from "../hooks/useMonedaAnalisis";
 import { SelectorMoneda } from "../components/shared/SelectorMoneda";
 import { calcularPanel } from "../utils/panel";
-import { TablaProyectos, FilaProyecto } from "../components/proyectos/TablaProyectos";
+import { ProyectoCard } from "../components/proyectos/ProyectoCard";
 import ModalProyecto from "../components/modals/ModalProyecto";
 import ModalConfirmar from "../components/modals/ModalConfirmar";
 import useAuth from "../context/useAuth";
@@ -20,13 +20,9 @@ import { EstadoVacio } from "../components/shared/EstadoVacio";
 import { EstadoError } from "../components/shared/EstadoError";
 
 // Orden fijo pedido: en curso primero, después a iniciar, después terminados.
-const ORDEN_SECCIONES = ["en_curso", "a_iniciar", "terminado"];
-
-const ETIQUETAS_GRUPO = {
-  en_curso: "En curso",
-  a_iniciar: "A iniciar",
-  terminado: "Terminados",
-};
+// En "Todos" las cards se agrupan así y, dentro de cada estado, por el orden
+// elegido.
+const ORDEN_ESTADOS = ["en_curso", "a_iniciar", "terminado"];
 
 const FILTROS = [
   { key: "todos", label: "Todos" },
@@ -128,7 +124,11 @@ export function Proyectos() {
       )
     : proyectosResumen;
 
-  const proyectosOrdenados = [...proyectosBuscados].sort(COMPARADORES[ordenarPor]);
+  const proyectosOrdenados = [...proyectosBuscados].sort(
+    (a, b) =>
+      ORDEN_ESTADOS.indexOf(a.estado) - ORDEN_ESTADOS.indexOf(b.estado) ||
+      COMPARADORES[ordenarPor](a, b)
+  );
 
   const proyectosVisibles =
     filtroEstado === "todos"
@@ -181,7 +181,7 @@ export function Proyectos() {
 
   const canManage = usuario.rol === "admin";
 
-  const renderAccionesFila = (proyecto) =>
+  const renderAcciones = (proyecto) =>
     canManage && (
       <>
         <button
@@ -194,7 +194,7 @@ export function Proyectos() {
             abrirModalEditar(proyecto.id);
           }}
         >
-          <Pencil size={14} strokeWidth={2} />
+          <Pencil aria-hidden="true" />
         </button>
         <button
           type="button"
@@ -206,7 +206,7 @@ export function Proyectos() {
             handleSolicitarEliminar(proyecto);
           }}
         >
-          <Trash2 size={14} strokeWidth={2} />
+          <Trash2 aria-hidden="true" />
         </button>
       </>
     );
@@ -234,62 +234,37 @@ export function Proyectos() {
               onCambiar={setFiltroEstado}
             />
 
-            <SelectorMoneda />
+            <div className="proyectos-toolbar__derecha">
+              <SelectorMoneda />
 
-            <label className="proyectos-orden">
-              <span className="label-ficha">Ordenar por</span>
-              <select
-                className="campo campo--sm proyectos-orden__select"
-                value={ordenarPor}
-                onChange={(e) => setOrdenarPor(e.target.value)}
-              >
-                <option value="disponible">Disponible</option>
-                <option value="nombre">Nombre</option>
-                <option value="presupuesto">Presupuesto ejecutado</option>
-              </select>
-            </label>
+              <label className="proyectos-orden">
+                <span className="label-campo">Ordenar por</span>
+                <select
+                  className="campo campo--sm proyectos-orden__select"
+                  value={ordenarPor}
+                  onChange={(e) => setOrdenarPor(e.target.value)}
+                >
+                  <option value="disponible">Disponible</option>
+                  <option value="nombre">Nombre</option>
+                  <option value="presupuesto">Presupuesto ejecutado</option>
+                </select>
+              </label>
+            </div>
           </div>
 
           {proyectosVisibles.length === 0 ? (
             <EstadoVacio mensaje="No se encontraron proyectos con ese criterio." />
-          ) : filtroEstado === "todos" ? (
-            <div className="planilla panel-tabla panel-tabla--acciones">
-              <div className="planilla__header panel-tabla-header">
-                <span className="label-ficha">Proyecto</span>
-                <span className="label-ficha">Disponible</span>
-                <span className="label-ficha">Presupuesto ejecutado</span>
-                <span className="label-ficha">Fases</span>
-                <span className="label-ficha">Pendientes</span>
-                <span />
-              </div>
-              {ORDEN_SECCIONES.map((estadoKey) => {
-                const grupo = proyectosVisibles.filter((p) => p.estado === estadoKey);
-                if (grupo.length === 0) return null;
-                return (
-                  <Fragment key={estadoKey}>
-                    <div className={`panel-tabla-grupo panel-tabla-grupo--${estadoKey}`}>
-                      <span className="panel-tabla-grupo-punto" />
-                      <span className="panel-tabla-grupo-label">{ETIQUETAS_GRUPO[estadoKey]}</span>
-                      <span className="panel-tabla-grupo-contador">{grupo.length}</span>
-                    </div>
-                    {grupo.map((proyecto) => (
-                      <FilaProyecto
-                        key={proyecto.id}
-                        proyecto={proyecto}
-                        onClick={() => navigate(`/proyectos/${proyecto.id}`)}
-                        renderAcciones={renderAccionesFila}
-                      />
-                    ))}
-                  </Fragment>
-                );
-              })}
-            </div>
           ) : (
-            <TablaProyectos
-              proyectos={proyectosVisibles}
-              onFilaClick={(proyecto) => navigate(`/proyectos/${proyecto.id}`)}
-              renderAcciones={renderAccionesFila}
-            />
+            <div className="proyectos-grilla">
+              {proyectosVisibles.map((proyecto) => (
+                <ProyectoCard
+                  key={proyecto.id}
+                  proyecto={proyecto}
+                  onAbrir={() => navigate(`/proyectos/${proyecto.id}`)}
+                  acciones={renderAcciones(proyecto)}
+                />
+              ))}
+            </div>
           )}
         </>
       )}

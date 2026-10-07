@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ChevronDown } from "lucide-react";
 import { crearUsuario, getOpcionesRegistro } from "../services/usuarioService";
 import { validarPassword } from "../utils/formValidation";
 import { obtenerMensajeError } from "../utils/errorHandling";
@@ -8,6 +7,7 @@ import { usePageTitle } from "../hooks/usePageTitle";
 import logoHS from "../assets/HS_logo_blanco.png";
 import "./Auth.css"; // reusa el mismo panel partido que el login
 import { LogoCargando } from "../components/shared/LogoCargando";
+import { ErrorCampo } from "../components/shared/ErrorCampo";
 
 export function Registro() {
   usePageTitle("Registro");
@@ -102,58 +102,62 @@ export function Registro() {
 
           <label className="auth-campo">
             <span>Nombre</span>
-            <span className="auth-campo__select">
-              <select
-                value={nombreUsuario}
-                onChange={(e) => setNombreUsuario(e.target.value)}
-                disabled={cargandoNombres}
-              >
-                <option value="" disabled>
-                  {cargandoNombres ? "Cargando..." : "Seleccioná tu nombre"}
+            <select
+              className="campo"
+              value={nombreUsuario}
+              onChange={(e) => setNombreUsuario(e.target.value)}
+              disabled={cargandoNombres}
+            >
+              <option value="" disabled>
+                {cargandoNombres ? "Cargando..." : "Seleccioná tu nombre"}
+              </option>
+              {nombresUsuario.map((nombre) => (
+                <option key={nombre} value={nombre}>
+                  {nombre}
                 </option>
-                {nombresUsuario.map((nombre) => (
-                  <option key={nombre} value={nombre}>
-                    {nombre}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={16} />
-            </span>
+              ))}
+            </select>
           </label>
 
           {!cargandoNombres && nombresUsuario.length === 0 && (
-            <p className="auth-panel__error">
+            <p className="campo-hint">
               No hay nombres pendientes de registro. Pedile al administrador que te autorice.
             </p>
           )}
 
-          <label className={`auth-campo${errorPassword ? " auth-campo--error" : ""}`}>
+          <label className="auth-campo">
             <span>Contraseña</span>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
+              className={errorPassword ? "campo--error" : undefined}
+              aria-invalid={errorPassword ? true : undefined}
             />
-            {errorPassword && <span className="campo-error">{errorPassword}</span>}
+            <ErrorCampo texto={errorPassword} />
           </label>
 
-          <label className={`auth-campo${passwordsNoCoinciden ? " auth-campo--error" : ""}`}>
+          <label className="auth-campo">
             <span>Confirmar contraseña</span>
             <input
               type="password"
               value={confirmarPassword}
               onChange={(e) => setConfirmarPassword(e.target.value)}
               placeholder="••••••••"
+              className={passwordsNoCoinciden ? "campo--error" : undefined}
+              aria-invalid={passwordsNoCoinciden ? true : undefined}
             />
-            {passwordsNoCoinciden && (
-              <span className="campo-error">Las contraseñas no coinciden.</span>
-            )}
+            <ErrorCampo texto={passwordsNoCoinciden ? "Las contraseñas no coinciden." : null} />
           </label>
 
-          {error && <p className="auth-panel__error">{error}</p>}
+          <ErrorCampo texto={error} />
 
-          <button type="submit" className="btn btn-primary auth-panel__submit" disabled={enviando}>
+          <button
+            type="submit"
+            className="btn btn-primary btn--lg auth-panel__submit"
+            disabled={enviando}
+          >
             {enviando ? (
               <>
                 <LogoCargando size={14} variante="blanco" />

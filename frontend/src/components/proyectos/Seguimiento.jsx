@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Clock, AlertTriangle } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { getComprobanteCompra, getNotaCompra } from "../../services/compraService";
 import { getComprobanteGasto } from "../../services/gastoService";
@@ -16,11 +16,9 @@ import {
 
 import { useAccionesProyecto } from "../../hooks/useAccionesProyecto";
 import useAuth from "../../context/useAuth";
+import { useToast } from "../../context/useToast";
 
-import { TarjetaAlerta } from "../shared/TarjetaAlerta";
-import { TarjetaKpi } from "../shared/TarjetaKpi";
-import { TarjetaMiniSeguimiento } from "../shared/TarjetaMiniSeguimiento";
-import { EstadoVacio } from "../shared/EstadoVacio";
+import { Bandeja } from "../shared/Bandeja";
 import { EstadoError } from "../shared/EstadoError";
 import { Cargando } from "../shared/Cargando";
 import { ModalDetalleCompra } from "../modals/ModalDetalleCompra";
@@ -29,44 +27,13 @@ import { ModalDetalleCobro } from "../modals/ModalDetalleCobro";
 import ModalCompra from "../modals/ModalCompra";
 import ModalGasto from "../modals/ModalGasto";
 import ModalCobro from "../modals/ModalCobro";
-import { calcularSeguimiento, DIAS_FASE_ESTANCADA } from "../../utils/seguimiento";
-import { formatMoneda, formatFecha, pluralizar } from "../../utils/formato";
-import { formatMontoDeItem } from "../../utils/moneda";
-import { getCondicionPagoLabel } from "../../constants/estadoCompra";
-import { getTipoFacturaLabel } from "../../constants/tipoFactura";
-import { VERDE, ROJO, NARANJA, GRIS } from "../../constants/colores";
+import { calcularSeguimiento, armarBandeja } from "../../utils/seguimiento";
+import { formatMoneda } from "../../utils/formato";
+import { obtenerDetalleBackend } from "../../utils/errorHandling";
+import { DIAS_DEUDA_VENCIDA } from "../../constants/estadoCompra";
 import "./Seguimiento.css";
 
-const diasTexto = (dias) => `hace ${pluralizar(dias, "día")}`;
-
-function Seccion({ titulo, descripcion, cantidad, children }) {
-  return (
-    <section className="seguimiento-seccion">
-      <div className="seguimiento-seccion-header">
-        <h3 className="seguimiento-seccion-titulo">
-          <AlertTriangle className="seguimiento-seccion-icono" size={20} strokeWidth={2.25} />
-          {titulo}
-          {cantidad > 0 && <span className="badge badge--sm badge--neutro">{cantidad}</span>}
-        </h3>
-        {descripcion && <p className="seguimiento-seccion-descripcion">{descripcion}</p>}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function AlertaColumna({ children }) {
-  return <p className="seguimiento-alerta-columna">{children}</p>;
-}
-
-function badgesCompra(compra) {
-  return [
-    getCondicionPagoLabel(compra.condicionPago),
-    getTipoFacturaLabel(compra.tipoFactura),
-  ].filter(Boolean);
-}
-
-export function Seguimiento({ proyectoId, onIrATab }) {
+export function Seguimiento({ proyectoId }) {
   // Se guarda el id y no la entidad: desde acá se puede togglear pago/envío y
   // subir comprobantes, y eso recarga las queries -- una copia congelada del
   // objeto seguiría mostrando el estado viejo dentro del modal abierto.
@@ -75,6 +42,14 @@ export function Seguimiento({ proyectoId, onIrATab }) {
 
   const { usuario } = useAuth();
   const canManage = usuario?.rol === "admin";
+  const toast = useToast();
+  const navigate = useNavigate();
+
+  // Un solo <input type="file"> para todos los "Adjuntar" de la lista: se
+  // anota a qué movimiento va y se abre el selector del sistema.
+  const inputAdjuntarRef = useRef(null);
+  const [adjuntarA, setAdjuntarA] = useState(null); // { tipo, id }
+  const [ocupado, setOcupado] = useState(null); // key del item en curso
 
   // Seguimiento es la pantalla de "lo que falta": compras sin pagar, sin
   // entregar y movimientos sin comprobante. Poder resolverlo desde la misma
@@ -138,20 +113,11 @@ export function Seguimiento({ proyectoId, onIrATab }) {
     return <EstadoError mensaje="No se pudieron cargar los datos del seguimiento." grande />;
   }
 
-  const {
-    cobranza,
-    comprasImpagas,
-    comprasSinEntregar,
-    comprasSinComprobante,
-    gastosSinComprobante,
-    cobrosSinComprobante,
-    fasesEstancadas,
-    deudaPorProveedor,
-    totales,
-    pendientes,
-  } = seguimiento;
-
-  const irAFases = onIrATab ? () => onIrATab("fases") : undefined;
+  const { cobranza, comprasSinComprobante, gastosSinComprobante, cobrosSinComprobante, totales } =
+    seguimiento;
+  const grupos = armarBandeja(seguimiento, { diasVencida: DIAS_DEUDA_VENCIDA });
+  const cantidadSinComprobante =
+    comprasSinComprobante.length + gastosSinComprobante.length + cobrosSinComprobante.length;
 
   const nombreFase = (faseId) => datos.fases.find((f) => f.id === faseId)?.nombre;
   const nombreProveedor = (proveedorId) =>
@@ -194,285 +160,93 @@ export function Seguimiento({ proyectoId, onIrATab }) {
     }
   };
 
+  const compraPorId = (id) => datos.compras.find((c) => c.id === id);
+  const agregarComprobantes = {
+    compra: acciones.agregarComprobantesCompra,
+    gasto: acciones.agregarComprobantesGasto,
+    cobro: acciones.agregarComprobantesCobro,
+  };
+
+  const ejecutar = async (item) => {
+    if (item.accion === "adjuntar") {
+      setAdjuntarA({ tipo: item.tipo, id: item.id, key: item.key });
+      inputAdjuntarRef.current?.click();
+      return;
+    }
+    if (item.accion === "cobrar") return setEditando({ tipo: "cobro", entidad: null });
+    if (item.accion === "verFase") return navigate(`/proyectos/${proyectoId}/fases/${item.id}`);
+
+    setOcupado(item.key);
+    try {
+      if (item.accion === "pagar") await acciones.toggleEstadoPagoCompra(compraPorId(item.id));
+      else await acciones.toggleEstadoEnvioCompra(compraPorId(item.id));
+    } catch {
+      // el hook ya mostró el toast de error
+    } finally {
+      setOcupado(null);
+    }
+  };
+
+  const subirAdjuntos = async (files) => {
+    if (!adjuntarA || !files?.length) return;
+    setOcupado(adjuntarA.key);
+    try {
+      await agregarComprobantes[adjuntarA.tipo](adjuntarA.id, files);
+    } catch (err) {
+      toast.error(obtenerDetalleBackend(err) ?? "No se pudo adjuntar el comprobante.");
+    } finally {
+      setOcupado(null);
+      setAdjuntarA(null);
+    }
+  };
+
+  const abrirItem = (item) => {
+    if (item.tipo === "compra") abrirDetalleCompra(item.id);
+    else if (item.tipo === "gasto") abrirDetalleGasto(item.id);
+    else if (item.tipo === "cobro") abrirDetalleCobro(item.id);
+    else if (item.tipo === "fase") navigate(`/proyectos/${proyectoId}/fases/${item.id}`);
+  };
+
   return (
     <div className="seguimiento">
-      <Seccion
-        titulo="Cobro del proyecto"
-        descripcion={
-          cobranza.ultimoCobro
-            ? `${pluralizar(cobranza.cantidadCobros, "cobro registrado", "cobros registrados")} · último ${diasTexto(cobranza.ultimoCobro.dias)}`
-            : "Todavía no se cargó ningún cobro"
-        }
-      >
-        <div className="seguimiento-cobranza">
-          <TarjetaKpi
-            titulo="Precio acordado"
-            valor={formatMoneda(cobranza.precioAcordado, "usd")}
-          />
-          <TarjetaKpi
-            titulo="Cobrado"
-            valor={formatMoneda(cobranza.cobrado, "usd")}
-            porcentaje={cobranza.pctCobrado}
-            detalle={`${cobranza.pctCobrado.toFixed(1)}% de lo acordado`}
-          />
-          <TarjetaKpi
-            titulo="Queda por cobrar"
-            valor={formatMoneda(cobranza.pendiente, "usd")}
-            detalle="Precio acordado − cobros cargados"
-            color={cobranza.pendiente > 0 ? NARANJA : VERDE}
-            destacado
-          />
+      {/* Variante 4f: tres cifras arriba y una sola lista por urgencia, cada
+          item con la acción que lo resuelve ahí mismo. */}
+      <dl className="seguimiento-kpis">
+        <div>
+          <dt>Por pagar a proveedores</dt>
+          <dd>{formatMoneda(totales.deudaTotal, "ars")}</dd>
         </div>
-      </Seccion>
-
-      <div className="seguimiento-resumen">
-        <span className="seguimiento-resumen-valor">{pendientes}</span>
-        <span className="seguimiento-resumen-texto">
-          {pendientes === 0
-            ? "No hay nada pendiente en este proyecto."
-            : `${pendientes === 1 ? "cosa pendiente" : "cosas pendientes"} en este proyecto`}
-        </span>
-      </div>
-
-      <Seccion titulo="Compras">
-        <div className="seguimiento-tablero">
-          <div className="seguimiento-columna">
-            <h4 className="seguimiento-columna-titulo">
-              Pendientes de pago
-              {comprasImpagas.length > 0 && (
-                <span className="badge badge--sm badge--neutro">{comprasImpagas.length}</span>
-              )}
-            </h4>
-            {comprasImpagas.length === 0 ? (
-              <EstadoVacio mensaje="No hay compras impagas." />
-            ) : (
-              <div className="seguimiento-columna-lista">
-                {comprasImpagas.map((compra) => (
-                  <TarjetaMiniSeguimiento
-                    key={compra.id}
-                    titulo={compra.descripcion}
-                    productos={compra.productos}
-                    fecha={formatFecha(compra.fecha)}
-                    badges={badgesCompra(compra)}
-                    etiqueta={diasTexto(compra.dias)}
-                    monto={formatMontoDeItem(compra)}
-                    color={ROJO}
-                    onClick={() => abrirDetalleCompra(compra.id)}
-                  />
-                ))}
-              </div>
-            )}
-            {comprasImpagas.length > 0 && (
-              <AlertaColumna>
-                {formatMontoDeItem({
-                  monto: totales.deudaTotal,
-                  montoOtra: totales.deudaTotalOtra,
-                  moneda: "ars",
-                })}{" "}
-                sin pagar
-              </AlertaColumna>
-            )}
-          </div>
-
-          <div className="seguimiento-columna">
-            <h4 className="seguimiento-columna-titulo">
-              Pendientes de entrega
-              {comprasSinEntregar.length > 0 && (
-                <span className="badge badge--sm badge--neutro">{comprasSinEntregar.length}</span>
-              )}
-            </h4>
-            {comprasSinEntregar.length === 0 ? (
-              <EstadoVacio mensaje="No hay compras esperando entrega." />
-            ) : (
-              <div className="seguimiento-columna-lista">
-                {comprasSinEntregar.map((compra) => (
-                  <TarjetaMiniSeguimiento
-                    key={compra.id}
-                    titulo={compra.descripcion}
-                    productos={compra.productos}
-                    fecha={formatFecha(compra.fecha)}
-                    badges={badgesCompra(compra)}
-                    etiqueta={diasTexto(compra.dias)}
-                    color={NARANJA}
-                    onClick={() => abrirDetalleCompra(compra.id)}
-                  />
-                ))}
-              </div>
-            )}
-            {comprasSinEntregar.length > 0 && (
-              <AlertaColumna>
-                {pluralizar(
-                  comprasSinEntregar.length,
-                  "pedido que no te entregaron",
-                  "pedidos que no te entregaron"
-                )}
-              </AlertaColumna>
-            )}
-          </div>
-
-          <div className="seguimiento-columna">
-            <h4 className="seguimiento-columna-titulo">
-              Sin comprobante
-              {comprasSinComprobante.length > 0 && (
-                <span className="badge badge--sm badge--neutro">
-                  {comprasSinComprobante.length}
-                </span>
-              )}
-            </h4>
-            {comprasSinComprobante.length === 0 ? (
-              <EstadoVacio mensaje="Todas las compras tienen comprobante." />
-            ) : (
-              <div className="seguimiento-columna-lista">
-                {comprasSinComprobante.map((compra) => (
-                  <TarjetaMiniSeguimiento
-                    key={compra.id}
-                    titulo={compra.descripcion}
-                    productos={compra.productos}
-                    fecha={formatFecha(compra.fecha)}
-                    badges={badgesCompra(compra)}
-                    monto={formatMontoDeItem(compra)}
-                    color={GRIS}
-                    onClick={() => abrirDetalleCompra(compra.id)}
-                  />
-                ))}
-              </div>
-            )}
-            {comprasSinComprobante.length > 0 && (
-              <AlertaColumna>
-                {pluralizar(
-                  comprasSinComprobante.length,
-                  "compra que no tiene comprobante adjunto",
-                  "compras que no tienen comprobante adjunto"
-                )}
-              </AlertaColumna>
-            )}
-          </div>
+        <div>
+          <dt>Por cobrar</dt>
+          <dd>{formatMoneda(cobranza.pendiente, "usd")}</dd>
         </div>
-      </Seccion>
+        <div>
+          <dt>Sin comprobante</dt>
+          <dd>{cantidadSinComprobante}</dd>
+        </div>
+      </dl>
 
-      <Seccion
-        titulo="Gastos sin comprobante"
-        descripcion={
-          gastosSinComprobante.length > 0
-            ? `${formatMontoDeItem({
-                monto: totales.montoSinComprobante,
-                montoOtra: totales.montoSinComprobanteOtra,
-                moneda: "ars",
-              })} sin respaldo cargado`
-            : undefined
-        }
-        cantidad={gastosSinComprobante.length}
-      >
-        {gastosSinComprobante.length === 0 ? (
-          <EstadoVacio mensaje="Todos los gastos tienen comprobante." />
-        ) : (
-          <div className="seguimiento-columna-lista">
-            {gastosSinComprobante.map((gasto) => (
-              <TarjetaMiniSeguimiento
-                key={gasto.id}
-                titulo={gasto.descripcion}
-                subtitulo={`Cargado el ${formatFecha(gasto.fecha)}`}
-                monto={formatMontoDeItem(gasto)}
-                color={GRIS}
-                onClick={() => abrirDetalleGasto(gasto.id)}
-              />
-            ))}
-          </div>
-        )}
-      </Seccion>
-
-      <Seccion
-        titulo="Cobros sin comprobante"
-        descripcion={
-          cobrosSinComprobante.length > 0
-            ? `${formatMontoDeItem({
-                monto: totales.montoCobrosSinComprobante,
-                montoOtra: totales.montoCobrosSinComprobanteOtra,
-                moneda: "usd",
-              })} sin respaldo cargado`
-            : undefined
-        }
-        cantidad={cobrosSinComprobante.length}
-      >
-        {cobrosSinComprobante.length === 0 ? (
-          <EstadoVacio mensaje="Todos los cobros tienen comprobante." />
-        ) : (
-          <div className="seguimiento-columna-lista">
-            {cobrosSinComprobante.map((cobro) => (
-              <TarjetaMiniSeguimiento
-                key={cobro.id}
-                titulo={cobro.descripcion}
-                subtitulo={`Cargado el ${formatFecha(cobro.fecha)}`}
-                monto={formatMontoDeItem(cobro)}
-                color={GRIS}
-                onClick={() => abrirDetalleCobro(cobro.id)}
-              />
-            ))}
-          </div>
-        )}
-      </Seccion>
-
-      <Seccion
-        titulo="Fases estancadas"
-        descripcion={`En curso, sin cambios hace ${DIAS_FASE_ESTANCADA} días o más`}
-        cantidad={fasesEstancadas.length}
-      >
-        {fasesEstancadas.length === 0 ? (
-          <EstadoVacio mensaje="Ninguna fase quedó frenada." />
-        ) : (
-          <div className="seguimiento-lista">
-            {fasesEstancadas.map((fase) => (
-              <TarjetaAlerta
-                key={fase.id}
-                icono={Clock}
-                color={NARANJA}
-                titulo={fase.nombre}
-                detalle={`En curso, sin cambios ${diasTexto(fase.dias)}`}
-                onClick={irAFases}
-              />
-            ))}
-          </div>
-        )}
-      </Seccion>
-
-      {deudaPorProveedor.length > 0 && (
-        <Seccion
-          titulo="Deuda por proveedor"
-          descripcion="Sumando las compras impagas del proyecto"
-        >
-          <table className="seguimiento-tabla">
-            <thead>
-              <tr>
-                <th>Proveedor</th>
-                <th>Compras</th>
-                <th>Deuda</th>
-              </tr>
-            </thead>
-            <tbody>
-              {deudaPorProveedor.map((fila) => (
-                <tr key={fila.proveedor}>
-                  <td>{fila.proveedor}</td>
-                  <td>{fila.compras}</td>
-                  <td className="seguimiento-tabla-monto">{formatMontoDeItem(fila)}</td>
-                </tr>
-              ))}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td>Total</td>
-                <td>{comprasImpagas.length}</td>
-                <td className="seguimiento-tabla-monto">
-                  {formatMontoDeItem({
-                    monto: totales.deudaTotal,
-                    montoOtra: totales.deudaTotalOtra,
-                    moneda: "ars",
-                  })}
-                </td>
-              </tr>
-            </tfoot>
-          </table>
-        </Seccion>
+      {canManage && (
+        <input
+          ref={inputAdjuntarRef}
+          type="file"
+          multiple
+          hidden
+          onChange={(e) => {
+            subirAdjuntos(e.target.files);
+            e.target.value = "";
+          }}
+        />
       )}
+
+      <Bandeja
+        grupos={grupos}
+        canManage={canManage}
+        ocupado={ocupado}
+        onAbrir={abrirItem}
+        onEjecutar={ejecutar}
+        mensajeVacio="No hay nada pendiente en este proyecto."
+      />
 
       {entidadDetalle && detalle.tipo === "compra" && (
         <ModalDetalleCompra
@@ -539,6 +313,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
 
       {editando?.tipo === "compra" && (
         <ModalCompra
+          contexto={datos.proyecto.nombre}
           compra={editando.entidad}
           fasesDisponibles={datos.fases}
           proveedores={datos.proveedores}
@@ -554,6 +329,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
       {editando?.tipo === "gasto" && (
         <ModalGasto
           gasto={editando.entidad}
+          contexto={datos.proyecto.nombre}
           categoriasDisponibles={acciones.categoriasGasto}
           fasesDisponibles={datos.fases}
           onGuardar={guardarEdicion}
@@ -565,6 +341,7 @@ export function Seguimiento({ proyectoId, onIrATab }) {
       {editando?.tipo === "cobro" && (
         <ModalCobro
           cobro={editando.entidad}
+          proyectoActual={{ ...datos.proyecto, cobrado_usd: cobranza.cobrado }}
           onGuardar={guardarEdicion}
           onCerrar={cerrarEdicion}
           onVerComprobante={(c) => getComprobanteCobro(editando.entidad.id, c.id)}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import ModalShell from "./ModalShell";
-import { LogoCargando } from "../shared/LogoCargando";
+import { CircleAlert, Tag } from "lucide-react";
+
+import ModalShell, { AccionesFormulario } from "./ModalShell";
 import { validarRequerido } from "../../utils/formValidation";
 
 /**
@@ -9,7 +10,7 @@ import { validarRequerido } from "../../utils/formValidation";
  * propósito -- los dos formularios son idénticos y lo único que cambia es el
  * texto, que entra por props.
  */
-export function ModalCatalogoSimple({ titulo, registro, onGuardar, onCerrar }) {
+export function ModalCatalogoSimple({ titulo, icono = Tag, registro, onGuardar, onCerrar }) {
   const esEdicion = Boolean(registro);
 
   const [nombre, setNombre] = useState("");
@@ -45,32 +46,16 @@ export function ModalCatalogoSimple({ titulo, registro, onGuardar, onCerrar }) {
   return (
     <ModalShell
       titulo={titulo}
+      icono={icono}
       onCerrar={onCerrar}
       onSubmit={handleSubmit}
       cerrarDeshabilitado={guardando}
       acciones={
-        <>
-          <button
-            type="button"
-            onClick={onCerrar}
-            className="btn btn-secondary"
-            disabled={guardando}
-          >
-            Cancelar
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={guardando}>
-            {guardando ? (
-              <>
-                <LogoCargando size={14} variante="blanco" />
-                Guardando...
-              </>
-            ) : esEdicion ? (
-              "Guardar cambios"
-            ) : (
-              "Crear"
-            )}
-          </button>
-        </>
+        <AccionesFormulario
+          guardando={guardando}
+          onCancelar={onCerrar}
+          textoGuardar={esEdicion ? "Guardar cambios" : "Crear"}
+        />
       }
     >
       <label>
@@ -83,7 +68,12 @@ export function ModalCatalogoSimple({ titulo, registro, onGuardar, onCerrar }) {
           maxLength={100}
           required
         />
-        {error && <p className="campo-error">{error}</p>}
+        {error && (
+          <p className="campo-error">
+            <CircleAlert aria-hidden="true" />
+            {error}
+          </p>
+        )}
       </label>
     </ModalShell>
   );

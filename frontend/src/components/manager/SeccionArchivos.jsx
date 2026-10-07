@@ -46,7 +46,7 @@ export function SeccionArchivos({ huerfanos, rotos, onPedirPurgar }) {
           {seleccionados.size > 0 && (
             <button
               type="button"
-              className="manager-accion manager-accion--peligro"
+              className="btn btn--sm btn-peligro"
               onClick={() => onPedirPurgar(Array.from(seleccionados))}
             >
               <Trash2 size={14} strokeWidth={2} />

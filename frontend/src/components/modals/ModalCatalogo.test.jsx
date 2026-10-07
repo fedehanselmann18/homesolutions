@@ -73,7 +73,7 @@ describe("ModalCategoria", () => {
     render(<ModalCategoria onGuardar={onGuardar} onCerrar={vi.fn()} />);
 
     await userEvent.type(screen.getByLabelText("Nombre"), "Cables");
-    await userEvent.selectOptions(screen.getByLabelText("Tipo"), "Mano de obra");
+    await userEvent.click(screen.getByRole("radio", { name: "Mano de obra" }));
     await userEvent.click(screen.getByRole("button", { name: "Crear categoría" }));
 
     expect(onGuardar).toHaveBeenCalledWith({ nombre: "Cables", tipo: "mano_obra" });
@@ -89,6 +89,7 @@ describe("ModalCategoria", () => {
     );
 
     expect(screen.getByLabelText("Nombre")).toHaveValue("Aires");
-    expect(screen.getByLabelText("Tipo")).toHaveValue("equipo");
+    expect(screen.getByRole("radio", { name: "Equipo" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByRole("radiogroup", { name: "Tipo de producto" })).toBeInTheDocument();
   });
 });

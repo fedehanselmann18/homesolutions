@@ -12,6 +12,15 @@ export function formatMoneda(monto, moneda = "ars") {
   }).format(monto);
 }
 
+// Un número sin moneda, en es-AR y con decimales fijos: "59,3" y no "59.3"
+// (toFixed), que en una pantalla en castellano se lee como miles.
+export function formatNumero(numero, decimales = 0) {
+  return new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: decimales,
+    maximumFractionDigits: decimales,
+  }).format(numero);
+}
+
 // Versión compacta para ejes y etiquetas de gráficos: $3,9 M / US$ 3,9 M
 export function formatMonedaCorta(monto, moneda = "ars") {
   return new Intl.NumberFormat("es-AR", {
@@ -66,6 +75,21 @@ export function formatFecha(fecha) {
   });
 }
 
+// "Jueves 5 de marzo" (y el año sólo si no es el actual): el día de un grupo
+// en el libro de obra y la fecha del header del detalle de un movimiento. Se
+// arma por partes porque es-AR pone una coma después del día de la semana
+// ("jueves, 5 de marzo") que el diseño no tiene.
+export function formatFechaLarga(fecha) {
+  if (!fecha) return "";
+  const dia = new Date(`${fecha}T00:00:00`);
+  const parte = (opciones) => dia.toLocaleDateString("es-AR", opciones);
+  const semana = parte({ weekday: "long" });
+  const anio = dia.getFullYear() !== new Date().getFullYear() ? ` de ${dia.getFullYear()}` : "";
+  return `${semana.charAt(0).toUpperCase()}${semana.slice(1)} ${dia.getDate()} de ${parte({
+    month: "long",
+  })}${anio}`;
+}
+
 // Timestamp completo (fecha + hora), para el rastro de auditoría. A
 // diferencia de formatFecha, acá el valor que manda el backend YA es un
 // instante con zona horaria (creado_en es un timestamptz), así que se parsea
@@ -109,4 +133,13 @@ export function formatUltimaActividad(instante) {
   if (minutos < 60) return `Hace ${Math.floor(minutos)} min`;
   if (minutos < 60 * 24) return `Hace ${Math.floor(minutos / 60)} h`;
   return formatFechaHora(instante);
+}
+
+// "mlopez" -> "ML", "Agustin" -> "AG", "ClimaTotal Instalaciones" -> "CI": las
+// dos letras de un avatar. Con dos palabras o más, la inicial de las dos
+// primeras; con una sola, sus dos primeras letras.
+export function iniciales(nombre = "") {
+  const partes = nombre.split(/[.\s_-]+/).filter(Boolean);
+  if (partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase();
+  return nombre.slice(0, 2).toUpperCase();
 }

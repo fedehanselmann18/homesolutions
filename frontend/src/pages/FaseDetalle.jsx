@@ -1,14 +1,24 @@
 import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, CalendarDays, Clock } from "lucide-react";
+import { Link, useParams } from "react-router-dom";
+import {
+  ArrowLeft,
+  ArrowRightLeft,
+  Bell,
+  CalendarDays,
+  ChartNoAxesColumn,
+  Check,
+  Clock,
+  Plus,
+} from "lucide-react";
 
 import { getComprobanteCompra, getNotaCompra } from "../services/compraService";
 import { getComprobanteGasto } from "../services/gastoService";
 
 import useAuth from "../context/useAuth";
 import { getEstadoLabel } from "../constants/estados";
-import { diasDesde, esCompraImpaga } from "../utils/seguimiento";
+import { calcularSeguimiento, diasDesde, esCompraImpaga } from "../utils/seguimiento";
 import { formatFecha } from "../utils/formato";
+import { etapaDeFase } from "../utils/fases";
 import { useFaseDetalle } from "../hooks/useFaseDetalle";
 import { precioTotalCompra } from "../utils/moneda";
 import { usePageTitle } from "../hooks/usePageTitle";
@@ -22,27 +32,23 @@ import ModalDetalleCompra from "../components/modals/ModalDetalleCompra";
 import { Cargando } from "../components/shared/Cargando";
 import { Tabs } from "../components/shared/Tabs";
 import { EstadoError } from "../components/shared/EstadoError";
-import { Breadcrumbs } from "../components/shared/Breadcrumbs";
 import AccionesFase from "../components/fases/AccionesFase";
 import SeguimientoFase from "../components/fases/SeguimientoFase";
 import AnalisisFase from "../components/fases/AnalisisFase";
 
-import "../components/proyectos/Seguimiento.css";
 import "../components/proyectos/AnalisisGeneral.css";
 import "./FaseDetalle.css";
-import { TINTE_PASTILLA } from "../constants/tipoMovimiento";
 
 const diasTexto = (dias) => `hace ${dias} ${dias === 1 ? "día" : "días"}`;
 
 const TABS = [
-  { key: "acciones", label: "Acciones de la fase" },
-  { key: "seguimiento", label: "Seguimiento de la fase" },
-  { key: "analisis", label: "Análisis de la fase" },
+  { key: "acciones", label: "Acciones de la fase", icono: ArrowRightLeft },
+  { key: "seguimiento", label: "Seguimiento de la fase", icono: Bell },
+  { key: "analisis", label: "Análisis de la fase", icono: ChartNoAxesColumn },
 ];
 
 export function FaseDetalle() {
   const { proyectoId, faseId } = useParams();
-  const navigate = useNavigate();
   const { usuario } = useAuth();
   const canManage = usuario?.rol === "admin";
 
@@ -233,6 +239,16 @@ export function FaseDetalle() {
     canManage && fase.estado !== "terminada" && fase.estado !== "auditada";
 
   const comprasImpagasFase = comprasFase.filter(esCompraImpaga);
+  // El contador de la tab sale del mismo cálculo que pinta la bandeja de
+  // Seguimiento (igual que en el proyecto), así no pueden no coincidir.
+  const pendientesFase = calcularSeguimiento({
+    compras: comprasFase,
+    gastos: gastosFase,
+    cobros: [],
+    fases: [],
+    proyecto: null,
+  }).pendientes;
+  const tabs = TABS.map((t) => (t.key === "seguimiento" ? { ...t, badge: pendientesFase } : t));
   // Lo que se debe, en las dos monedas: la deuda es en pesos (caveat 6.2 de
   // PLAN_TIPO_CAMBIO.md) y el USD congelado va de referencia.
   const montoSinPagarFase = {
@@ -242,84 +258,72 @@ export function FaseDetalle() {
 
   return (
     <div className="fase-detalle">
-      <Breadcrumbs
-        items={[
-          { label: "Proyectos", to: "/proyectos" },
-          { label: proyecto.nombre, to: `/proyectos/${proyectoId}` },
-          { label: `${fase.orden}. ${fase.nombre}` },
-        ]}
-      />
+      {/* Variante 4h: volver al proyecto, el número de la fase en su punto de
+          la línea de tiempo (el mismo de la tab Fases), nombre y estado, y una
+          sola acción principal. "Terminar fase" se fue al panel de Acciones. */}
+      <header className="fase-detalle__header">
+        <Link to={`/proyectos/${proyectoId}`} className="fase-detalle__volver">
+          <ArrowLeft size={14} strokeWidth={2} aria-hidden="true" />
+          {proyecto.nombre}
+        </Link>
 
-      <button
-        type="button"
-        className="fase-detalle-volver"
-        onClick={() => navigate(`/proyectos/${proyectoId}`)}
-      >
-        <ArrowLeft size={16} strokeWidth={2} />
-        Volver al proyecto
-      </button>
-
-      <div className="fase-detalle-header" style={{ borderLeftColor: estadoInfo.color }}>
-        <div className="fase-detalle-header-top">
-          <div className="fase-detalle-header-titulo">
-            <span className="badge badge--neutro fase-detalle-numero">Fase {fase.orden}</span>
-            <h1 className="fase-detalle-nombre">{fase.nombre}</h1>
+        <div className="fase-detalle__fila">
+          <div className="fase-detalle__titulo">
             <span
-              className="badge fase-detalle-estado"
-              style={{
-                color: estadoInfo.color,
-                backgroundColor: `${estadoInfo.color}${TINTE_PASTILLA}`,
-                borderColor: `${estadoInfo.color}55`,
-              }}
+              className={`fase-detalle__numero fase-detalle__numero--${etapaDeFase(fase.estado)}`}
+              aria-label={`Fase ${fase.orden}`}
             >
-              {IconoEstado && (
-                <IconoEstado size={13} strokeWidth={2.25} className="fase-detalle-estado-icono" />
+              {etapaDeFase(fase.estado) === "cerrada" ? (
+                <Check size={14} strokeWidth={2.6} aria-hidden="true" />
+              ) : (
+                fase.orden
               )}
+            </span>
+            <h1 className="fase-detalle__nombre">{fase.nombre}</h1>
+            <span
+              className="badge"
+              style={{ color: estadoInfo.fg, backgroundColor: estadoInfo.bg }}
+            >
+              {IconoEstado && <IconoEstado size={12} strokeWidth={2} aria-hidden="true" />}
               {estadoInfo.label}
             </span>
           </div>
 
           {canManage && (
-            <div className="fase-detalle-header-acciones">
-              {puedeMarcarTerminada && (
-                <button
-                  type="button"
-                  className="fase-detalle-btn-terminar"
-                  onClick={marcarTerminada}
-                >
-                  Marcar como terminada
-                </button>
-              )}
+            <div className="fase-detalle__acciones">
               <button type="button" className="btn btn-secondary" onClick={handleNuevoGasto}>
-                + Gasto
+                <Plus size={15} strokeWidth={2} aria-hidden="true" />
+                Gasto
               </button>
               <button type="button" className="btn btn-primary" onClick={handleNuevaCompra}>
+                <Plus size={15} strokeWidth={2} aria-hidden="true" />
                 Nueva compra
               </button>
             </div>
           )}
         </div>
 
-        {fase.descripcion && <p className="fase-detalle-descripcion">{fase.descripcion}</p>}
-
-        <div className="fase-detalle-datos">
-          {fase.fecha_inicio && (
-            <span className="fase-detalle-dato">
-              <CalendarDays size={16} strokeWidth={2} />
-              Inicio: {formatFecha(fase.fecha_inicio)}
-            </span>
-          )}
-          {diasEnCurso !== null && (
-            <span className="fase-detalle-dato">
-              <Clock size={16} strokeWidth={2} />
-              En curso {diasTexto(diasEnCurso)}
-            </span>
-          )}
-        </div>
-      </div>
+        {(fase.descripcion || fase.fecha_inicio || diasEnCurso !== null) && (
+          <ul className="fase-detalle__meta">
+            {fase.descripcion && <li>{fase.descripcion}</li>}
+            {fase.fecha_inicio && (
+              <li>
+                <CalendarDays size={14} strokeWidth={1.75} aria-hidden="true" />
+                Inicio el {formatFecha(fase.fecha_inicio)}
+              </li>
+            )}
+            {diasEnCurso !== null && (
+              <li>
+                <Clock size={14} strokeWidth={1.75} aria-hidden="true" />
+                En curso {diasTexto(diasEnCurso)}
+              </li>
+            )}
+          </ul>
+        )}
+      </header>
 
       <Tabs
-        tabs={TABS}
+        tabs={tabs}
         activa={tabActiva}
         onCambiar={setTabActiva}
         etiqueta="Secciones de la fase"
@@ -327,7 +331,6 @@ export function FaseDetalle() {
 
       {tabActiva === "acciones" && (
         <AccionesFase
-          faseNombre={fase.nombre}
           canManage={canManage}
           nombreProveedor={nombreProveedor}
           compras={comprasFase}
@@ -343,6 +346,11 @@ export function FaseDetalle() {
           onEliminarGasto={handleSolicitarEliminarGasto}
           onVerComprobanteGasto={getComprobanteGasto}
           onAbrirDetalleGasto={(g) => setDetalle({ tipo: "gasto", id: g.id })}
+          kpis={kpis}
+          productos={productos}
+          proveedores={proveedores}
+          onVerSeguimiento={() => setTabActiva("seguimiento")}
+          onTerminarFase={puedeMarcarTerminada ? marcarTerminada : undefined}
         />
       )}
 
@@ -385,6 +393,7 @@ export function FaseDetalle() {
       {modalGastoAbierto && (
         <ModalGasto
           gasto={gastoEditando}
+          contexto={`${proyecto.nombre} · ${fase.nombre}`}
           categoriasDisponibles={categoriasGasto}
           faseFija={fase}
           onGuardar={handleGuardarGasto}
@@ -397,6 +406,7 @@ export function FaseDetalle() {
 
       {modalCompraAbierto && (
         <ModalCompra
+          contexto={`${proyecto.nombre} · ${fase.nombre}`}
           compra={compraEditando}
           faseFija={fase}
           proveedores={proveedores}
@@ -425,6 +435,14 @@ export function FaseDetalle() {
         <ModalDetalleGasto
           gasto={entidadDetalle}
           faseNombre={fase.nombre}
+          onEliminar={
+            canManage
+              ? () => {
+                  cerrarDetalle();
+                  handleSolicitarEliminarGasto(entidadDetalle.id);
+                }
+              : undefined
+          }
           onCerrar={cerrarDetalle}
           onVerComprobante={(c) => getComprobanteGasto(entidadDetalle.id, c.id)}
         />
@@ -436,6 +454,14 @@ export function FaseDetalle() {
           faseNombre={fase.nombre}
           proveedorNombre={nombreProveedor(entidadDetalle.proveedor_id)}
           productos={productos}
+          onEliminar={
+            canManage
+              ? () => {
+                  cerrarDetalle();
+                  handleSolicitarEliminarCompra(entidadDetalle.id);
+                }
+              : undefined
+          }
           onCerrar={cerrarDetalle}
           onVerComprobante={(c) => getComprobanteCompra(entidadDetalle.id, c.id)}
           onVerNota={(n) => getNotaCompra(entidadDetalle.id, n.id)}

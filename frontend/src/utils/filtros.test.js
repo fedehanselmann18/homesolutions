@@ -3,6 +3,8 @@ import {
   filtrarCompras,
   filtrarCobros,
   filtrarGastos,
+  tieneAlerta,
+  filtrosParaTipo,
   hayFiltrosActivos,
   FILTROS_VACIOS,
 } from "./filtros";
@@ -129,5 +131,38 @@ describe("hayFiltrosActivos", () => {
   it("es false si falta el objeto de filtros", () => {
     expect(hayFiltrosActivos(null)).toBe(false);
     expect(hayFiltrosActivos(undefined)).toBe(false);
+  });
+});
+
+describe("tieneAlerta", () => {
+  const conComprobante = { comprobantes: [{ id: 1 }] };
+
+  it("un movimiento sin comprobante pide atención, sea del tipo que sea", () => {
+    for (const tipo of ["compra", "gasto", "cobro"]) {
+      expect(tieneAlerta(tipo, { comprobantes: [] })).toBe(true);
+    }
+  });
+
+  it("una compra con comprobante pide atención si está impaga o sin entregar", () => {
+    const base = { ...conComprobante, estado_pago: "pagado", estado_envio: "entregado" };
+    expect(tieneAlerta("compra", base)).toBe(false);
+    expect(tieneAlerta("compra", { ...base, estado_pago: "pendiente" })).toBe(true);
+    expect(tieneAlerta("compra", { ...base, estado_envio: "pedido" })).toBe(true);
+  });
+
+  it("un gasto o un cobro con comprobante no tienen nada pendiente", () => {
+    expect(tieneAlerta("gasto", conComprobante)).toBe(false);
+    expect(tieneAlerta("cobro", conComprobante)).toBe(false);
+  });
+});
+
+describe("filtrosParaTipo", () => {
+  it("suelta los filtros que no aplican al tipo nuevo y deja los que sí", () => {
+    const filtros = { ...FILTROS_VACIOS, estadoPago: "pendiente", tipoFactura: "factura_a" };
+    expect(filtrosParaTipo(filtros, "gastos")).toEqual({
+      ...FILTROS_VACIOS,
+      tipoFactura: "factura_a",
+    });
+    expect(filtrosParaTipo(filtros, "compras")).toEqual(filtros);
   });
 });

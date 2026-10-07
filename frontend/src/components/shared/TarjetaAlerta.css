@@ -18,7 +18,7 @@
 }
 
 .alerta:hover {
-  background-color: var(--color-base-1);
+  background-color: var(--color-superficie-suave);
 }
 
 .alerta--estatica {

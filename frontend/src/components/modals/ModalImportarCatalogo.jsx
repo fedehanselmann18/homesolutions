@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Paperclip, X, Check } from "lucide-react";
+import { Check, FileSpreadsheet, Truck } from "lucide-react";
 
 import { useLecturaCatalogoIA } from "../../hooks/useLecturaCatalogoIA";
 import { useToast } from "../../context/useToast";
@@ -10,9 +10,10 @@ import { obtenerMensajeError } from "../../utils/errorHandling";
 import { formatMoneda } from "../../utils/formato";
 import { TIPOS_PRODUCTO } from "../../constants/tipoProducto";
 import ModalShell from "./ModalShell";
-import { PasoComprobante } from "./PiezasIA";
+import { BotonIA } from "./PiezasIA";
 import ChipsCategorias from "./ChipsCategorias";
-import "../shared/ComprobantesUploader.css";
+import { ZonaArchivo, FilaArchivo } from "../shared/ComprobantesUploader";
+import { describirArchivo } from "../../utils/archivos";
 import "./PiezasIA.css";
 import "./ModalImportarCatalogo.css";
 import { LogoCargando } from "../shared/LogoCargando";
@@ -207,6 +208,7 @@ export function ModalImportarCatalogo({
   const [archivo, setArchivo] = useState(null);
   const [erroresArchivo, setErroresArchivo] = useState([]);
   const [arrastrando, setArrastrando] = useState(false);
+  const inputArchivoRef = useRef(null);
 
   const [lectura, setLectura] = useState(null);
   const [filas, setFilas] = useState([]);
@@ -247,12 +249,6 @@ export function ModalImportarCatalogo({
   const handleSeleccionarArchivo = (e) => {
     if (e.target.files?.length) validarYSetArchivo(e.target.files[0]);
     e.target.value = "";
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setArrastrando(false);
-    if (e.dataTransfer.files?.length) validarYSetArchivo(e.dataTransfer.files[0]);
   };
 
   const handleLeer = async () => {
@@ -421,57 +417,51 @@ export function ModalImportarCatalogo({
     onCerrar();
   };
 
-  const uploader = (
+  // Paso de carga (DESIGN.md §14, "Comprobante primero"): la zona vacía y,
+  // con el archivo elegido, su fila con "Leer catálogo con IA" al lado.
+  const cargaArchivo = (
     <div className="comprobantes-uploader">
-      <div
-        className={`comprobantes-dropzone comprobantes-dropzone--prominente ${arrastrando ? "comprobantes-dropzone--activo" : ""}`}
-        onDragOver={(e) => {
-          e.preventDefault();
-          setArrastrando(true);
-        }}
-        onDragLeave={() => setArrastrando(false)}
-        onDrop={handleDrop}
-        onClick={() => document.getElementById("catalogo-input-archivo")?.click()}
-        role="button"
-        tabIndex={0}
-      >
-        <Paperclip size={26} strokeWidth={1.75} className="comprobantes-dropzone-icono" />
-        <span className="comprobantes-dropzone-texto">Arrastrá el catálogo acá</span>
-        <span className="comprobantes-dropzone-subtexto">
-          Excel, CSV, PDF, JPG o PNG · máx. 10MB
-        </span>
-        <input
-          id="catalogo-input-archivo"
-          type="file"
-          accept={EXTENSIONES_PERMITIDAS.join(",")}
-          hidden
-          onChange={handleSeleccionarArchivo}
+      <input
+        ref={inputArchivoRef}
+        type="file"
+        accept={EXTENSIONES_PERMITIDAS.join(",")}
+        hidden
+        onChange={handleSeleccionarArchivo}
+      />
+      {archivo ? (
+        <ul className="filas-archivo">
+          <FilaArchivo
+            nombre={archivo.name}
+            meta={describirArchivo(archivo)}
+            accion={
+              <BotonIA
+                onClick={handleLeer}
+                disabled={leyendo}
+                leyendo={leyendo}
+                textoLeyendo="Leyendo catálogo..."
+              >
+                Leer catálogo con IA
+              </BotonIA>
+            }
+            onQuitar={() => setArchivo(null)}
+            disabled={leyendo}
+          />
+        </ul>
+      ) : (
+        <ZonaArchivo
+          texto="Arrastrá el catálogo o"
+          extra="Excel, CSV, PDF o imagen · máx. 10MB"
+          arrastrando={arrastrando}
+          onElegir={() => inputArchivoRef.current?.click()}
+          onSoltar={(files) => validarYSetArchivo(files[0])}
+          onArrastrando={setArrastrando}
         />
-      </div>
-
+      )}
       {erroresArchivo.length > 0 && (
-        <ul className="comprobantes-errores">
+        <ul className="comprobantes-errores" role="alert">
           {erroresArchivo.map((err, i) => (
             <li key={i}>{err}</li>
           ))}
-        </ul>
-      )}
-
-      {archivo && (
-        <ul className="comprobantes-lista">
-          <li className="comprobantes-chip comprobantes-chip--pendiente">
-            <span className="comprobantes-chip-nombre" title={archivo.name}>
-              {archivo.name}
-            </span>
-            <button
-              type="button"
-              className="comprobantes-chip-quitar"
-              onClick={() => setArchivo(null)}
-              title="Quitar"
-            >
-              <X size={13} strokeWidth={2.25} />
-            </button>
-          </li>
         </ul>
       )}
     </div>
@@ -480,10 +470,10 @@ export function ModalImportarCatalogo({
   return (
     <ModalShell
       titulo="Importar catálogo"
+      icono={FileSpreadsheet}
       contexto={proveedor?.nombre}
-      contextoDestacado
+      iconoContexto={Truck}
       ancho={paso === "productos"}
-      clase={paso === "productos" ? "modal-contenido--importar-catalogo" : ""}
       onCerrar={onCerrar}
       cerrarDeshabilitado={guardando || creandoProveedor}
       aviso={
@@ -512,24 +502,27 @@ export function ModalImportarCatalogo({
             </button>
           </>
         ) : (
-          <button type="button" onClick={onCerrar} className="btn btn-secondary">
+          <button type="button" onClick={onCerrar} className="btn btn--lg btn-secondary">
             Cancelar
+          </button>
+        )
+      }
+      accionesIzquierda={
+        paso === "carga" && (
+          <button type="button" className="btn btn--lg btn-secondary" onClick={handleCargarAMano}>
+            {proveedor ? "Agregar producto a mano" : "Cargar el proveedor a mano"}
           </button>
         )
       }
     >
       {paso === "carga" && (
-        <PasoComprobante
-          hayArchivo={Boolean(archivo)}
-          leyendo={leyendo}
-          onLeer={handleLeer}
-          onCargarAMano={handleCargarAMano}
-          textoBoton="Leer catálogo con IA"
-          textoLeyendo="Leyendo catálogo..."
-          textoManual={proveedor ? "Agregar producto a mano" : "Cargar el proveedor a mano"}
-        >
-          {uploader}
-        </PasoComprobante>
+        <>
+          <p className="catalogo-carga-texto">
+            Subí la lista de precios del proveedor y la IA arma los productos para que los revises
+            antes de importarlos.
+          </p>
+          {cargaArchivo}
+        </>
       )}
 
       {paso === "proveedor" && (

@@ -2,37 +2,111 @@ import { X, CircleAlert } from "lucide-react";
 
 import { formatMoneda } from "../../utils/formato";
 import { useModal } from "../../hooks/useModal";
+import { LogoCargando } from "../shared/LogoCargando";
 
 import "./modal-base.css";
 import "./ModalShell.css";
 
 /**
- * Shell común de los modales de alta/edición — dirección 5c del rediseño (ver
- * claudedesign/). El título y el contexto viven en un header fijo, el
- * formulario scrollea en el medio y el footer (total + acciones) queda
- * siempre a la vista.
+ * Header de un modal — DESIGN.md §14: cuadradito de 32px con el ícono del tipo
+ * de operación, título y, a la derecha del título, el contexto (el proyecto,
+ * la fecha) separado por una línea.
+ */
+export function ModalHeader({
+  icono: Icono,
+  titulo,
+  contexto,
+  iconoContexto: IconoContexto,
+  onCerrar,
+  cerrarDeshabilitado = false,
+}) {
+  return (
+    <div className="shell__header">
+      {Icono && (
+        <span className="shell__icono">
+          <Icono size={16} strokeWidth={1.75} aria-hidden="true" />
+        </span>
+      )}
+      <h2 className="shell__titulo">{titulo}</h2>
+      {contexto && (
+        <span
+          className="shell__contexto"
+          title={typeof contexto === "string" ? contexto : undefined}
+        >
+          {IconoContexto && <IconoContexto size={14} strokeWidth={1.75} aria-hidden="true" />}
+          <span className="shell__contexto-texto">{contexto}</span>
+        </span>
+      )}
+      <span className="shell__espaciador" />
+      <button
+        type="button"
+        className="btn-icono"
+        onClick={onCerrar}
+        disabled={cerrarDeshabilitado}
+        title="Cerrar"
+        aria-label="Cerrar"
+      >
+        <X aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Shell común de los modales — DESIGN.md §14. El título y el contexto viven
+ * en un header fijo de 64px, el contenido scrollea en el medio y el footer
+ * (total + acciones) queda siempre a la vista.
+ *
+ * v5: un solo shell para ver y para cargar. En la v4 el detalle de un
+ * movimiento tenía su propio shell con header NEGRO "porque distingue mirar de
+ * cargar"; en una app sin superficies oscuras eso lo dicen el ícono y el
+ * título, y el header negro era un resto de la v4.
+ *
+ * El alto es variable (`max-height: 88vh` con el cuerpo en `flex: 0 1 auto`):
+ * el modal se encoge hasta su contenido en vez de dejar un hueco muerto entre
+ * el último campo y el pie.
  *
  * `onSubmit` convierte el shell en un <form>, así el footer puede tener el
- * botón submit aunque esté fuera del área scrolleable.
+ * botón submit aunque esté fuera del área scrolleable. `accionesIzquierda`
+ * va al otro extremo del pie (el "Borrar" del detalle de un movimiento).
  */
 export function ModalShell({
   titulo,
+  icono,
   contexto,
-  contextoDestacado = false,
+  iconoContexto,
+  // aria-label del diálogo, si el título solo no alcanza ("Compra" no dice
+  // cuál): por defecto es el título.
+  etiqueta,
   ancho = false,
   clase = "",
   capaSuperior = false,
   onCerrar,
   onSubmit,
+  // true en los formularios que validan cada campo por su cuenta (gasto,
+  // cobro, compra): sin esto el `required` nativo frena el submit con su
+  // globito y nunca se ven los errores propios debajo de cada campo.
+  validacionPropia = false,
   cerrarDeshabilitado = false,
   totalLabel = "Total",
   total,
+  // El total de una carga en pasos (Nueva compra): --text-2xl y la otra
+  // moneda debajo, en vez del total chico de un pie normal.
+  totalGrande = false,
+  totalSecundario,
+  // Debajo del header, fijo: los pasos de Nueva compra.
+  encabezadoExtra,
+  // Una fila propia sobre el pie, en el suave: el desglose del total
+  // ("Neto $ … · impuestos $ … · ≈ US$ …"), variante 5ab.
+  desglose,
   aviso,
   acciones,
+  accionesIzquierda,
   children,
 }) {
   const Contenedor = onSubmit ? "form" : "div";
   const dialogoRef = useModal(onCerrar, cerrarDeshabilitado);
+  const hayPie = total !== undefined || aviso || acciones || accionesIzquierda;
 
   return (
     <div
@@ -56,61 +130,93 @@ export function ModalShell({
         // página que quedó atrás del overlay.
         role="dialog"
         aria-modal="true"
-        aria-label={titulo}
+        aria-label={etiqueta ?? titulo}
         onClick={(e) => e.stopPropagation()}
         onSubmit={onSubmit}
+        noValidate={validacionPropia || undefined}
       >
-        <div className="shell__header">
-          {/* Con `contextoDestacado` el contexto sube arriba del título como
-              etiqueta (punto + mayúsculas): sirve cuando es un nombre corto
-              ("Aluar Sur"). Por defecto queda debajo y en texto plano, que es
-              lo que necesitan los modales cuyo contexto es una frase larga
-              (ej. "Sobre: <descripción>" en ModalNota). */}
-          <div className="shell__titulo">
-            {contexto && contextoDestacado && (
-              <span className="shell__contexto shell__contexto--destacado">
-                <span className="shell__contexto-punto" />
-                {contexto}
-              </span>
-            )}
-            <h2>{titulo}</h2>
-            {contexto && !contextoDestacado && <span className="shell__contexto">{contexto}</span>}
-          </div>
-          <span className="shell__espaciador" />
-          <button
-            type="button"
-            className="btn-icono"
-            onClick={onCerrar}
-            disabled={cerrarDeshabilitado}
-            title="Cerrar"
-            aria-label="Cerrar"
-          >
-            <X size={17} strokeWidth={2} />
-          </button>
-        </div>
+        <ModalHeader
+          icono={icono}
+          titulo={titulo}
+          contexto={contexto}
+          iconoContexto={iconoContexto}
+          onCerrar={onCerrar}
+          cerrarDeshabilitado={cerrarDeshabilitado}
+        />
 
         {/* `modal-form` no aporta layout acá (lo pisa .shell__cuerpo): está
             para que sigan aplicando los estilos de label/input/select, que en
             ModalCompra.css cuelgan de ese ancestro. */}
+        {encabezadoExtra}
+
         <div className="shell__cuerpo modal-form">{children}</div>
 
-        <div className="shell__footer">
-          {total !== undefined && (
-            <div className="shell__footer-total">
-              <span className="shell__footer-total-label">{totalLabel}</span>
-              <span className="shell__footer-total-monto">{formatMoneda(total)}</span>
-            </div>
-          )}
-          {aviso && (
-            <span className="shell__footer-aviso">
-              <CircleAlert size={14} strokeWidth={2.25} />
-              {aviso}
-            </span>
-          )}
-          <div className="shell__footer-acciones">{acciones}</div>
-        </div>
+        {desglose && <div className="shell__desglose">{desglose}</div>}
+
+        {hayPie && (
+          <div className={`shell__footer${totalGrande ? " shell__footer--grande" : ""}`}>
+            {accionesIzquierda && (
+              <div className="shell__footer-izquierda">{accionesIzquierda}</div>
+            )}
+            {total !== undefined && (
+              <div className="shell__footer-total">
+                <span className="shell__footer-total-label">{totalLabel}</span>
+                <span className="shell__footer-total-monto">{formatMoneda(total)}</span>
+                {totalSecundario && (
+                  <span className="shell__footer-total-secundario">{totalSecundario}</span>
+                )}
+              </div>
+            )}
+            {aviso && (
+              <span className="shell__footer-aviso">
+                <CircleAlert size={14} strokeWidth={2} aria-hidden="true" />
+                {aviso}
+              </span>
+            )}
+            <div className="shell__footer-acciones">{acciones}</div>
+          </div>
+        )}
       </Contenedor>
     </div>
+  );
+}
+
+/**
+ * El pie de un formulario de alta o edición: "Cancelar" y el botón de
+ * guardar, los dos en el tamaño de pie de modal (`.btn--lg`, DESIGN.md §8).
+ * Era el mismo bloque de 20 líneas copiado en cada modal.
+ */
+export function AccionesFormulario({
+  guardando = false,
+  textoGuardar,
+  onCancelar,
+  deshabilitado = false,
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onCancelar}
+        className="btn btn--lg btn-secondary"
+        disabled={guardando}
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        className="btn btn--lg btn-primary"
+        disabled={guardando || deshabilitado}
+      >
+        {guardando ? (
+          <>
+            <LogoCargando size={14} variante="blanco" />
+            Guardando...
+          </>
+        ) : (
+          textoGuardar
+        )}
+      </button>
+    </>
   );
 }
 

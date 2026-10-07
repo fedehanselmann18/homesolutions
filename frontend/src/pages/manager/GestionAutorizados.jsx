@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { UserPlus } from "lucide-react";
 
 import {
   autorizarUsuario,
@@ -10,6 +9,7 @@ import { obtenerMensajeError } from "../../utils/errorHandling";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { useToast } from "../../context/useToast";
 import { Cargando } from "../../components/shared/Cargando";
+import { EstadoError } from "../../components/shared/EstadoError";
 import { PageHeader } from "../../components/shared/PageHeader";
 import ModalConfirmar from "../../components/modals/ModalConfirmar";
 import SeccionAutorizados from "../../components/manager/SeccionAutorizados";
@@ -90,7 +90,6 @@ export function GestionAutorizados() {
   return (
     <div className="manager-pagina">
       <PageHeader
-        icono={<UserPlus size={20} strokeWidth={2} />}
         titulo="Autorizar gente nueva"
         subtitulo="El nombre autorizado acá es el que esa persona va a elegir en la pantalla de registro."
       />
@@ -98,7 +97,7 @@ export function GestionAutorizados() {
       {cargando ? (
         <Cargando texto="Cargando autorizados..." />
       ) : errorCarga ? (
-        <p className="manager-pagina__error">{errorCarga}</p>
+        <EstadoError mensaje={errorCarga} />
       ) : (
         <div className="manager-pagina__tarjeta">
           <SeccionAutorizados

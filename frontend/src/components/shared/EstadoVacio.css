@@ -13,7 +13,7 @@
 }
 
 .estado-vacio-mensaje {
-  font-size: var(--text-btn);
+  font-size: var(--text-sm);
   color: var(--color-tinta-muted);
   margin: 0;
 }

@@ -213,9 +213,7 @@ describe("smoke de modales", () => {
 
   it("ModalDetalleCompra muestra el desglose completo", () => {
     render(<ModalDetalleCompra compra={compra} productos={productos} onCerrar={noop} />);
-    // "Neto" aparece dos veces a propósito: en la leyenda de la barra de
-    // composición y en la fila del desglose numérico.
-    expect(screen.getAllByText("Neto").length).toBeGreaterThan(0);
+    expect(screen.getByText("Neto")).toBeInTheDocument();
     expect(screen.getByText("IVA 21%")).toBeInTheDocument();
     expect(screen.getByText("Notas de crédito")).toBeInTheDocument();
     expect(screen.getAllByText("Total").length).toBeGreaterThan(0);
@@ -239,15 +237,19 @@ describe("smoke de modales", () => {
 
   it("un gasto nuevo precarga la cotización sugerida del día", async () => {
     const { container } = render(<ModalGasto onGuardar={noop} onCerrar={noop} />);
-    // Gasto nuevo arranca en el paso del comprobante: se pasa a mano.
-    await userEvent.click(screen.getByRole("button", { name: /cargar los datos a mano/i }));
 
+    // DESIGN.md §9: el dólar es un hint debajo del monto, con "cambiar".
+    expect(screen.getByText(/Dólar blue \$\s1\.250,00 del 01\/03\/2026/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "cambiar" }));
     expect(container.querySelector('input[name="cotizacion_dolar"]')).toHaveValue(1250);
-    expect(screen.getByText(/Sugerido: blue \$\s1\.250,00 del 01\/03\/2026/)).toBeInTheDocument();
   });
 
-  it("al editar, la cotización es la congelada del movimiento, no la sugerida", () => {
+  it("al editar, la cotización es la congelada del movimiento, no la sugerida", async () => {
     const { container } = render(<ModalCobro cobro={cobro} onGuardar={noop} onCerrar={noop} />);
+    expect(container.querySelector(".campos-cotizacion")).toHaveTextContent(
+      /Dólar blue \$\s1\.000,00/
+    );
+    await userEvent.click(screen.getByRole("button", { name: "cambiar" }));
     expect(container.querySelector('input[name="cotizacion_dolar"]')).toHaveValue(1000);
   });
 
@@ -257,7 +259,7 @@ describe("smoke de modales", () => {
     expect(screen.getByText(/Productos devueltos: Rheem Membrana 4mm x2/)).toBeInTheDocument();
   });
 
-  it("ModalDetalleCompra togglea pago y envío desde el modal", async () => {
+  it("ModalDetalleCompra togglea pago y envío desde sus badges", async () => {
     const onTogglePago = vi.fn();
     const onToggleEnvio = vi.fn();
     render(
@@ -271,74 +273,242 @@ describe("smoke de modales", () => {
       />
     );
 
-    const switches = screen.getAllByRole("switch");
-    expect(switches).toHaveLength(2);
-    // pendiente / entregado
-    expect(switches[0]).toHaveAttribute("aria-checked", "false");
-    expect(switches[1]).toHaveAttribute("aria-checked", "true");
+    // DESIGN.md §9: nada de switches. El estado es el badge, y el badge es el
+    // control que lo cambia (como en la fila del libro).
+    expect(screen.queryAllByRole("switch")).toHaveLength(0);
+    await userEvent.click(screen.getByRole("button", { name: /impaga hace .* — marcar pagado/i }));
+    expect(onTogglePago).toHaveBeenCalledTimes(1);
+    await userEvent.click(screen.getByRole("button", { name: /entregado — marcar sin entregar/i }));
+    expect(onToggleEnvio).toHaveBeenCalled();
 
-    await userEvent.click(switches[0]);
-    expect(onTogglePago).toHaveBeenCalled();
+    // Impaga: "Marcar pagado" es la acción principal del pie.
+    await userEvent.click(screen.getByRole("button", { name: "Marcar pagado" }));
+    expect(onTogglePago).toHaveBeenCalledTimes(2);
   });
 
-  it("no muestra switches a un usuario de lectura", () => {
+  it("a un usuario de lectura los estados no le cambian nada", () => {
     render(<ModalDetalleCompra compra={compra} productos={productos} onCerrar={noop} />);
+    expect(screen.getByRole("button", { name: /impaga hace/i })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Marcar pagado" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /borrar/i })).not.toBeInTheDocument();
+  });
+
+  it("el detalle tiene header claro con el tipo y Borrar a la izquierda del pie", async () => {
+    const onEliminar = vi.fn();
+    render(
+      <ModalDetalleGasto gasto={gasto} onCerrar={noop} onEditar={noop} onEliminar={onEliminar} />
+    );
+    expect(screen.getByRole("dialog", { name: "Gasto: Flete y descarga" })).toBeInTheDocument();
+    expect(document.querySelector(".shell__header")).toHaveTextContent("Gasto");
+    await userEvent.click(screen.getByRole("button", { name: /borrar/i }));
+    expect(onEliminar).toHaveBeenCalled();
+  });
+
+  it("avisa con una banda cuando falta el comprobante", () => {
+    render(<ModalDetalleGasto gasto={gasto} onCerrar={noop} onAgregarComprobante={noop} />);
+    expect(screen.getByRole("status")).toHaveTextContent("Falta adjuntar el comprobante");
+    expect(screen.getByRole("button", { name: /adjuntar/i })).toBeInTheDocument();
+  });
+
+  // v5 (variantes 5c/5d): gasto y cobro son un ModalShell de 560px. El
+  // comprobante va primero, el tipo de factura es un control de opción y el
+  // monto lleva la moneda adentro con la conversión al lado.
+
+  it("gasto y cobro dicen en el título si se carga o se edita", () => {
+    const { unmount: u1 } = render(<ModalGasto gasto={gasto} onGuardar={noop} onCerrar={noop} />);
+    expect(screen.getByRole("dialog", { name: "Editar gasto" })).toBeInTheDocument();
+    u1();
+
+    const { unmount: u2 } = render(
+      <ModalCobro proyectoActual={{ id: 1, nombre: "Olleros" }} onGuardar={noop} onCerrar={noop} />
+    );
+    expect(screen.getByRole("dialog", { name: "Nuevo cobro" })).toBeInTheDocument();
+    // El proyecto va en el header, no como un campo deshabilitado.
+    expect(document.querySelector(".shell__contexto")).toHaveTextContent("Olleros");
+    expect(screen.queryByDisplayValue(/proyecto actual/)).toBeNull();
+    u2();
+  });
+
+  it("el monto del gasto lleva los pesos adentro y el equivalente en dólares al lado", () => {
+    const { container } = render(<ModalGasto gasto={gasto} onGuardar={noop} onCerrar={noop} />);
+
+    const caja = container.querySelector(".campo--monto");
+    expect(caja.querySelector(".campo__prefijo")).toHaveTextContent("$");
+    expect(caja.querySelector("input")).toHaveValue(84500);
+    // Equivalente con la cotización que quedó congelada (1250).
+    expect(caja.querySelector(".campo__sufijo")).toHaveTextContent("≈ US$ 68");
+  });
+
+  it("el tipo de factura es un control de opción, sin selects ni switches", () => {
+    render(<ModalGasto gasto={gasto} onGuardar={noop} onCerrar={noop} />);
+    const grupo = screen.getByRole("radiogroup", { name: "Comprobante" });
+    expect(grupo).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Factura B" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
     expect(screen.queryAllByRole("switch")).toHaveLength(0);
   });
 
-  // Los tres modales de edición comparten el lenguaje de la ficha de detalle
-  // (EditarShell): header oscuro con el tipo del movimiento y, en los que
-  // tienen un total derivado, el riel con el resumen.
+  it("al guardar sin datos, cada campo dice qué le falta y el pie los cuenta", async () => {
+    const onGuardar = vi.fn();
+    render(<ModalGasto onGuardar={onGuardar} onCerrar={noop} />);
+    await userEvent.click(screen.getByRole("button", { name: "Crear gasto" }));
 
-  it("los modales de edición usan el header con el tipo de movimiento", () => {
-    const { unmount: u1 } = render(<ModalGasto gasto={gasto} onGuardar={noop} onCerrar={noop} />);
-    expect(screen.getByText(/Gasto · Editar/)).toBeInTheDocument();
-    u1();
-
-    const { unmount: u2 } = render(<ModalCobro cobro={cobro} onGuardar={noop} onCerrar={noop} />);
-    expect(screen.getByText(/Cobro · Editar/)).toBeInTheDocument();
-    u2();
-
-    render(<ModalCompra compra={compra} onGuardar={noop} onCerrar={noop} />);
-    expect(screen.getByText(/Compra · Editar/)).toBeInTheDocument();
-  });
-
-  it("ModalGasto no lleva riel: su monto se tipea, va al footer", () => {
-    const { container } = render(<ModalGasto gasto={gasto} onGuardar={noop} onCerrar={noop} />);
-
-    expect(container.querySelector(".mov-edit__riel")).toBeNull();
-    expect(container.querySelector(".mov-edit__footer-total-monto")).toHaveTextContent("$ 84.500");
-    // Equivalente en USD con la cotización que quedó congelada (1250).
-    expect(container.querySelector(".mov-edit__footer-total-secundario")).toHaveTextContent(
-      "US$ 68"
+    expect(onGuardar).not.toHaveBeenCalled();
+    expect(screen.getByText("Escribí una descripción corta.")).toBeInTheDocument();
+    expect(screen.getByText("Elegí el tipo de comprobante.")).toBeInTheDocument();
+    expect(document.querySelector(".shell__footer-aviso")).toHaveTextContent(
+      /Faltan 4 campos: Descripción, Monto, Fecha, Comprobante/
     );
   });
 
-  it("ModalCobro muestra en el riel el neto y las notas que lo explican", () => {
+  it("ModalCobro muestra el neto y las notas que lo explican", () => {
     // El cobro de la fixture es 3200 USD bruto con una nota de crédito de
     // 150 USD -> neto 3050 USD.
     const { container } = render(<ModalCobro cobro={cobro} onGuardar={noop} onCerrar={noop} />);
 
-    const riel = container.querySelector(".mov-edit__riel");
-    expect(riel).toBeTruthy();
-    expect(riel).toHaveTextContent("Neto");
-    expect(riel).toHaveTextContent("US$ 3.050");
+    const neto = container.querySelector(".cobro-neto");
+    expect(neto).toHaveTextContent("Neto con notas");
+    expect(neto).toHaveTextContent("US$ 3.050");
     // La nota va desplegada, sin toggle, igual que en Compra.
-    expect(riel).toHaveTextContent("Ajuste");
+    expect(neto).toHaveTextContent("Ajuste");
     expect(container.querySelector(".seccion-notas-item-toggle")).toBeNull();
   });
 
-  it("un cobro sin notas no muestra la sección de notas en el riel", () => {
+  it("un cobro sin notas no muestra el neto", () => {
     const sinNotas = { ...cobro, notas: [] };
     const { container } = render(<ModalCobro cobro={sinNotas} onGuardar={noop} onCerrar={noop} />);
 
-    expect(container.querySelector(".mov-edit__notas")).toBeNull();
-    expect(container.querySelector(".mov-edit__riel")).toHaveTextContent("US$ 3.200");
+    expect(container.querySelector(".cobro-neto")).toBeNull();
+    expect(container.querySelector(".campo--monto input")).toHaveValue(3200);
   });
 
-  it("ModalCompra nuevo arranca en el paso del comprobante", () => {
+  it("un cobro nuevo muestra adónde llega lo cobrado del proyecto", async () => {
+    const { container } = render(
+      <ModalCobro
+        proyectoActual={{ id: 1, nombre: "Torre", precio_acordado_usd: 19000, cobrado_usd: 11020 }}
+        onGuardar={noop}
+        onCerrar={noop}
+      />
+    );
+    await userEvent.type(container.querySelector(".campo--monto input"), "2500");
+    expect(container.querySelector(".cobro-avance")).toHaveTextContent(
+      "Con este cobro llegás al 71%"
+    );
+  });
+
+  // Nueva compra: el híbrido 5ab (DESIGN.md §14).
+
+  it("Nueva compra arranca en el paso 1, con el comprobante y la IA al lado del archivo", () => {
     render(<ModalCompra onGuardar={noop} onCerrar={noop} />);
-    expect(screen.getByText(/arrastrá la factura o el remito/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /cargar los datos a mano/i })).toBeInTheDocument();
+    const pasos = screen.getByRole("list", { name: "Pasos de la compra" });
+    expect(pasos).toHaveTextContent("Comprobante y datos");
+    expect(pasos).toHaveTextContent("Condiciones");
+    expect(pasos).toHaveTextContent("Productos e impuestos");
+    expect(screen.getByRole("button", { name: /Comprobante y datos/ })).toHaveAttribute(
+      "aria-current",
+      "step"
+    );
+    expect(screen.getByText(/arrastrá la factura o/i)).toBeInTheDocument();
+    // Sin el paso "IA primero": el formulario está desde el principio.
+    expect(screen.getByLabelText("Descripción")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /cargar los datos a mano/i })).toBeNull();
+  });
+
+  it("Siguiente no avanza con datos faltantes y dice cuáles en cada campo", async () => {
+    render(
+      <ModalCompra
+        proveedores={[{ id: 3, nombre: "Aluar Sur" }]}
+        onGuardar={noop}
+        onCerrar={noop}
+      />
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+
+    expect(screen.getByRole("button", { name: /Comprobante y datos/ })).toHaveAttribute(
+      "aria-current",
+      "step"
+    );
+    expect(screen.getByText("Elegí el proveedor.")).toBeInTheDocument();
+    expect(screen.getByText("Escribí una descripción corta.")).toBeInTheDocument();
+  });
+
+  it("en Condiciones, factura y pago son controles de opción a la vista, sin switches", async () => {
+    render(
+      <ModalCompra
+        compra={compra}
+        productosDisponibles={productos}
+        onGuardar={noop}
+        onCerrar={noop}
+      />
+    );
+    await userEvent.click(screen.getByRole("button", { name: /Condiciones/ }));
+
+    expect(screen.getByRole("radio", { name: "Factura A" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    expect(screen.getByRole("radio", { name: "Cuenta corriente" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    expect(screen.getByRole("radio", { name: "Pendiente" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    expect(screen.getByRole("radio", { name: "Entregado" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    expect(screen.queryAllByRole("switch")).toHaveLength(0);
+    expect(screen.queryAllByRole("combobox")).toHaveLength(0);
+  });
+
+  it("el pie tiene el desglose en su fila y el total abajo; al editar se guarda desde cualquier paso", () => {
+    const { container } = render(
+      <ModalCompra
+        compra={compra}
+        productosDisponibles={productos}
+        onGuardar={noop}
+        onCerrar={noop}
+      />
+    );
+    const desglose = container.querySelector(".shell__desglose");
+    expect(desglose).toHaveTextContent("Neto $ 1.284.000 (1 producto)");
+    expect(desglose).toHaveTextContent("impuestos $ 386.883");
+    expect(desglose).toHaveTextContent("notas de crédito −$ 120.000");
+    expect(container.querySelector(".shell__footer-total-monto")).toHaveTextContent("$ 1.550.883");
+    expect(screen.getByRole("button", { name: "Guardar cambios" })).toBeInTheDocument();
+  });
+});
+
+describe("proveedor y producto: errores en cada campo", () => {
+  it("proveedor sin nombre no se guarda y dice qué falta", async () => {
+    const onGuardar = vi.fn();
+    render(<ModalProveedor onGuardar={onGuardar} onCerrar={noop} />);
+    await userEvent.click(screen.getByRole("button", { name: "Crear proveedor" }));
+    expect(onGuardar).not.toHaveBeenCalled();
+    expect(screen.getByText("Escribí el nombre del proveedor.")).toBeInTheDocument();
+    expect(screen.getByText("Falta 1 campo: Nombre")).toBeInTheDocument();
+  });
+
+  it("proveedor con un email mal escrito marca el email", async () => {
+    const onGuardar = vi.fn();
+    render(<ModalProveedor onGuardar={onGuardar} onCerrar={noop} />);
+    await userEvent.type(screen.getByLabelText("Nombre"), "CobreSur");
+    await userEvent.type(screen.getByLabelText(/Email/), "ventas@cobresur");
+    await userEvent.click(screen.getByRole("button", { name: "Crear proveedor" }));
+    expect(onGuardar).not.toHaveBeenCalled();
+    expect(screen.getByText("Revisá el email.")).toBeInTheDocument();
+  });
+
+  it("producto vacío marca marca, modelo, tipo y precio", async () => {
+    const onGuardar = vi.fn();
+    render(<ModalProducto onGuardar={onGuardar} onCerrar={noop} />);
+    expect(screen.getByText("Elegí el tipo para ver sus categorías.")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Crear producto" }));
+    expect(onGuardar).not.toHaveBeenCalled();
+    expect(screen.getByText("Faltan 4 campos: Marca, Modelo, Tipo, Precio")).toBeInTheDocument();
   });
 });

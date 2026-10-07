@@ -1,0 +1,194 @@
+/* Saldo de la obra + gráfico por mes — Movimientos v2, el bloque de arriba
+   de la tabla. Cobros en oliva y egresos en gris claro: el gráfico es de
+   datos (rampa oliva, DESIGN.md §2), no de estado. */
+.saldo-obra {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  margin-bottom: var(--space-6);
+}
+
+.saldo-obra__cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.saldo-obra__cifras {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+  min-width: 0;
+}
+
+.saldo-obra__titulo,
+.saldo-obra__resumen {
+  font-size: var(--text-base);
+  color: var(--color-tinta-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.saldo-obra__saldo {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-tinta);
+}
+
+.saldo-obra__saldo-usd {
+  font-size: var(--text-base);
+  font-weight: 500;
+  letter-spacing: normal;
+  color: var(--color-tinta-tenue);
+}
+
+/* Un .btn con relleno suave por fuera; adentro, el <select> nativo invisible
+   ocupando todo el botón: se abre la lista del sistema (teclado y lector de
+   pantalla incluidos) sin dibujar un menú propio. */
+.saldo-obra__periodo {
+  position: relative;
+  flex-shrink: 0;
+  background: var(--color-relleno);
+  color: var(--color-tinta);
+}
+
+.saldo-obra__periodo:hover {
+  background: var(--color-linea);
+}
+
+.saldo-obra__periodo > select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.saldo-obra__periodo:has(select:focus-visible) {
+  outline: 2px solid var(--color-oliva);
+  outline-offset: 2px;
+}
+
+/* Grilla: eje Y de 48px y las barras; abajo, los meses alineados a sus
+   columnas. Las marcas del eje caen sobre las líneas de la grilla de fondo
+   (cada 90px): el eje mide 180 + una línea de texto y se corre media línea
+   para arriba y para abajo, así cada número queda centrado en su línea. */
+.saldo-obra__grafico {
+  display: grid;
+  grid-template-columns: var(--space-12) minmax(0, 1fr);
+  gap: 0 var(--space-3);
+}
+
+.saldo-obra__eje {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 194px;
+  margin: -7px 0;
+  font-size: var(--text-xs);
+  line-height: 14px;
+  color: var(--color-tinta-tenue);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.saldo-obra__barras {
+  position: relative;
+  display: grid;
+  align-items: end;
+  height: 180px;
+  border-bottom: 1px solid var(--color-linea-fuerte);
+  background-image: linear-gradient(var(--color-linea-suave) 1px, transparent 1px);
+  background-size: 100% 90px;
+}
+
+/* Sin movimientos en el período: el eje queda (para leer el cero) y el
+   mensaje va encima de las barras vacías. */
+.saldo-obra__vacio {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-sm);
+  color: var(--color-tinta-tenue);
+}
+
+.saldo-obra__mes {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: var(--space-1-5);
+  height: 100%;
+}
+
+.saldo-obra__barra {
+  width: 28px;
+  max-width: 40%;
+  border-radius: 3px 3px 0 0;
+}
+
+.saldo-obra__barra--cobro,
+.saldo-obra__muestra--cobro {
+  background: var(--color-oliva);
+}
+
+.saldo-obra__barra--egreso,
+.saldo-obra__muestra--egreso {
+  background: var(--color-linea-fuerte);
+}
+
+.saldo-obra__meses {
+  display: grid;
+  padding-top: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--color-tinta-muted);
+  text-align: center;
+}
+
+.saldo-obra__leyenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+.saldo-obra__leyenda > span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+}
+
+.saldo-obra__muestra {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+}
+
+.saldo-obra__unidad {
+  color: var(--color-tinta-tenue);
+}
+
+/* En el teléfono el diseño deja sólo el saldo: el gráfico de barras no entra
+   con lectura a 375px, y la planilla ya está justo abajo. */
+@media (max-width: 640px) {
+  .saldo-obra {
+    gap: 0;
+    margin-bottom: var(--space-5);
+  }
+
+  .saldo-obra__resumen,
+  .saldo-obra__periodo,
+  .saldo-obra__grafico,
+  .saldo-obra__leyenda {
+    display: none;
+  }
+}

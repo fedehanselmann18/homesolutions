@@ -1,12 +1,15 @@
 .main-layout {
   display: flex;
   min-height: 100vh;
-  background: var(--color-base-1);
+  /* v5: la página es blanca y la separación la hacen los bordes (DESIGN.md
+     §0). --color-superficie-suave sigue existiendo para sus otros usos (header de
+     planilla, hover de fila, pies de modal): no se repunta a blanco. */
+  background: var(--color-superficie);
 }
 
 .main-content {
   flex: 1;
-  padding: var(--space-8) var(--space-12);
+  padding: var(--space-8) var(--space-10);
   font-family: var(--font-ui);
   color: var(--color-tinta);
   min-width: 0; /* evita overflow horizontal con tablas anchas */

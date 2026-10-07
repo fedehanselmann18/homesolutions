@@ -1,0 +1,183 @@
+/* Acciones de la fase — variante 4h "Lista + panel de la fase"
+   (docs/MODALSUIUXChange/HS Proyecto.dc.html): el libro a la izquierda y un
+   panel fijo de 288px a la derecha. */
+
+.acciones-fase {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 288px;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+.acciones-fase__lista {
+  min-width: 0;
+}
+
+/* Panel suave (DESIGN.md §10). Fijo: acompaña el scroll de una lista larga. */
+.panel-fase {
+  position: sticky;
+  top: var(--space-6);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-5);
+  border: 1px solid var(--color-linea-suave);
+  border-radius: var(--radius-lg);
+  background: var(--color-superficie-suave);
+}
+
+.panel-fase__gastado {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.panel-fase__label {
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+.panel-fase__monto {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.panel-fase__barra {
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-pill);
+  background: var(--color-linea);
+}
+
+.panel-fase__barra > span {
+  display: block;
+  height: 100%;
+  background: var(--color-oliva);
+}
+
+.panel-fase__barra > .panel-fase__relleno--excedido {
+  background: var(--color-error);
+}
+
+.panel-fase__totales {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-linea);
+  font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
+}
+
+.panel-fase__totales > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.panel-fase__totales dt {
+  color: var(--color-tinta-muted);
+}
+
+.panel-fase__totales dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.panel-fase__pendientes {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-linea);
+}
+
+.panel-fase__pendientes ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.panel-fase__titulo {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 700;
+}
+
+.panel-fase__pendiente {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 2px 0;
+  border: none;
+  background: none;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--color-tinta);
+  text-align: left;
+  cursor: pointer;
+}
+
+.panel-fase__pendiente:hover > span:last-child {
+  text-decoration: underline;
+}
+
+.panel-fase__punto {
+  position: relative;
+  top: -1px;
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+  background: var(--color-atencion);
+}
+
+.panel-fase__pendiente--vencido .panel-fase__punto {
+  background: var(--color-error);
+}
+
+.panel-fase__vacio {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+.panel-fase__mas {
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-oliva-dark);
+  cursor: pointer;
+}
+
+.panel-fase__mas:hover {
+  text-decoration: underline;
+}
+
+.panel-fase__terminar {
+  width: 100%;
+  height: 34px;
+}
+
+/* Bajo 1100px (con el sidebar al lado) el libro necesita todo el ancho: el
+   panel pasa arriba, donde se lee primero lo que falta. */
+@media (max-width: 1100px) {
+  .acciones-fase {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-fase {
+    position: static;
+    order: -1;
+  }
+}

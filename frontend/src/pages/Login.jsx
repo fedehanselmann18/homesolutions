@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ChevronDown } from "lucide-react";
 import { useAuth } from "../context/useAuth";
 import { getOpcionesLogin } from "../services/usuarioService";
 import { obtenerMensajeError } from "../utils/errorHandling";
@@ -8,6 +7,7 @@ import { usePageTitle } from "../hooks/usePageTitle";
 import logoHS from "../assets/HS_logo_blanco.png";
 import "./Auth.css";
 import { LogoCargando } from "../components/shared/LogoCargando";
+import { ErrorCampo } from "../components/shared/ErrorCampo";
 
 export function Login() {
   usePageTitle("Iniciar sesión");
@@ -94,23 +94,21 @@ export function Login() {
                 placeholder="Nombre de usuario"
               />
             ) : (
-              <span className="auth-campo__select">
-                <select
-                  value={nombreUsuario}
-                  onChange={(e) => setNombreUsuario(e.target.value)}
-                  disabled={cargandoUsuarios}
-                >
-                  <option value="" disabled>
-                    {cargandoUsuarios ? "Cargando..." : "Seleccioná tu usuario"}
+              <select
+                className="campo"
+                value={nombreUsuario}
+                onChange={(e) => setNombreUsuario(e.target.value)}
+                disabled={cargandoUsuarios}
+              >
+                <option value="" disabled>
+                  {cargandoUsuarios ? "Cargando..." : "Seleccioná tu usuario"}
+                </option>
+                {nombresUsuario.map((nombre) => (
+                  <option key={nombre} value={nombre}>
+                    {nombre}
                   </option>
-                  {nombresUsuario.map((nombre) => (
-                    <option key={nombre} value={nombre}>
-                      {nombre}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown size={16} />
-              </span>
+                ))}
+              </select>
             )}
           </label>
 
@@ -137,9 +135,13 @@ export function Login() {
             />
           </label>
 
-          {error && <p className="auth-panel__error">{error}</p>}
+          <ErrorCampo texto={error} />
 
-          <button type="submit" className="btn btn-primary auth-panel__submit" disabled={enviando}>
+          <button
+            type="submit"
+            className="btn btn-primary btn--lg auth-panel__submit"
+            disabled={enviando}
+          >
             {enviando ? (
               <>
                 <LogoCargando size={14} variante="blanco" />

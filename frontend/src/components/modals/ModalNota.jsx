@@ -1,18 +1,27 @@
-import { useState } from "react";
-import { X } from "lucide-react";
+import { useRef, useState } from "react";
+import { CalendarDays, CircleAlert, Plus, X } from "lucide-react";
 import { TIPOS_NOTA, ORIGENES_NOTA_COMPRA, ORIGENES_NOTA_COBRO } from "../../constants/notas";
 import { TIPOS_FACTURA } from "../../constants/tipoFactura";
-import { OLIVA, OLIVA_TINT } from "../../constants/colores";
+import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { restanteDetalleCompra } from "../../utils/notas";
 import { formatMoneda } from "../../utils/formato";
+import { describirArchivo } from "../../utils/archivos";
+import { textoEquivalente } from "../../utils/moneda";
 import { obtenerMensajeError } from "../../utils/errorHandling";
-import "./ModalNota.css";
-import ModalShell from "./ModalShell";
-import { LogoCargando } from "../shared/LogoCargando";
-import { CamposCotizacion } from "./CamposCotizacion";
+import ModalShell, { AccionesFormulario } from "./ModalShell";
+import { CampoMonto, CamposCotizacion } from "./CamposCotizacion";
+import { ControlOpcion } from "../shared/ControlOpcion";
+import { ZonaArchivo, FilaArchivo } from "../shared/ComprobantesUploader";
 import { useCotizacionDia } from "../../hooks/useCotizacionDia";
 
 const EXTENSIONES_PERMITIDAS = ".pdf,.jpg,.jpeg,.png";
+
+const OPCIONES_TIPO = TIPOS_NOTA.map((t) => ({
+  valor: t.value,
+  label: t.value === "nota_credito" ? "Crédito" : "Débito",
+  icono: TIPOS_MOVIMIENTO[t.value].icono,
+}));
+const OPCIONES_FACTURA = TIPOS_FACTURA.map((t) => ({ valor: t.value, label: t.label }));
 
 let contadorFilaTemp = 0;
 const nuevaFilaId = () => `tmp-${++contadorFilaTemp}`;
@@ -73,6 +82,8 @@ export function ModalNota({
     fecha: "",
   });
   const [archivo, setArchivo] = useState(null);
+  const [arrastrando, setArrastrando] = useState(false);
+  const inputArchivoRef = useRef(null);
   const [detalles, setDetalles] = useState([]); // líneas de producto devuelto
   const [impuestos, setImpuestos] = useState([]); // impuestos de la devolución
   const [error, setError] = useState("");
@@ -193,6 +204,11 @@ export function ModalNota({
       return;
     }
 
+    if (!form.tipo_factura) {
+      setError("Elegí el tipo de comprobante.");
+      return;
+    }
+
     let payloadExtra = {};
     if (usaSelectorProducto) {
       const lineasValidas = detalles.filter((f) => f.detalle_compra_id && Number(f.cantidad) > 0);
@@ -244,270 +260,287 @@ export function ModalNota({
     }
   };
 
+  const cambiar = (name, value) => handleChange({ target: { name, value } });
+  const opcionesOrigen = [
+    { valor: "", label: "Sin especificar" },
+    ...origenes.map((o) => ({ valor: o.value, label: o.label })),
+  ];
+  const tipoInfo = TIPOS_MOVIMIENTO[form.tipo];
+
   return (
     <ModalShell
       titulo={form.tipo === "nota_debito" ? "Nueva nota de débito" : "Nueva nota de crédito"}
-      contexto={entidad?.descripcion ? `Sobre: ${entidad.descripcion}` : undefined}
+      icono={tipoInfo.icono}
+      contexto={entidad?.descripcion}
+      iconoContexto={TIPOS_MOVIMIENTO[contexto]?.icono}
+      // 760 sólo con la tabla de productos devueltos (DESIGN.md §14).
       ancho={usaSelectorProducto}
-      clase="modal-contenido--peligro"
       capaSuperior
       onCerrar={onCerrar}
       onSubmit={handleSubmit}
       cerrarDeshabilitado={guardando}
       acciones={
-        <>
-          <button
-            type="button"
-            onClick={onCerrar}
-            className="btn btn-secondary"
-            disabled={guardando}
-          >
-            Cancelar
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={guardando}>
-            {guardando ? (
-              <>
-                <LogoCargando size={14} variante="blanco" />
-                Guardando...
-              </>
-            ) : (
-              "Guardar nota"
-            )}
-          </button>
-        </>
+        <AccionesFormulario
+          guardando={guardando}
+          onCancelar={onCerrar}
+          textoGuardar="Guardar nota"
+        />
       }
     >
-      <div className="modal-form-fila">
-        <label>
-          Tipo
-          <select name="tipo" value={form.tipo} onChange={handleChange}>
-            {TIPOS_NOTA.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label>
-          Tipo de factura
-          <select name="tipo_factura" value={form.tipo_factura} onChange={handleChange} required>
-            <option value="" disabled>
-              Seleccioná un tipo
-            </option>
-            {TIPOS_FACTURA.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
-        </label>
+      {/* Comprobante primero (DESIGN.md §14): en una nota es obligatorio. */}
+      <div className="comprobantes-uploader">
+        <input
+          ref={inputArchivoRef}
+          type="file"
+          accept={EXTENSIONES_PERMITIDAS}
+          hidden
+          onChange={(e) => {
+            setArchivo(e.target.files?.[0] ?? null);
+            e.target.value = "";
+          }}
+        />
+        {archivo ? (
+          <ul className="filas-archivo">
+            <FilaArchivo
+              nombre={archivo.name}
+              meta={describirArchivo(archivo)}
+              onQuitar={() => setArchivo(null)}
+              disabled={guardando}
+            />
+          </ul>
+        ) : (
+          <ZonaArchivo
+            texto="Arrastrá la nota o"
+            extra="Obligatorio"
+            arrastrando={arrastrando}
+            disabled={guardando}
+            onElegir={() => inputArchivoRef.current?.click()}
+            onSoltar={(files) => setArchivo(files[0])}
+            onArrastrando={setArrastrando}
+          />
+        )}
       </div>
 
-      <div className="modal-form-fila">
-        <label>
-          Origen
-          <select name="origen" value={form.origen} onChange={handleChange}>
-            <option value="">Sin especificar</option>
-            {origenes.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
+      <div className="modal-form-fila modal-form-fila--fecha">
+        <ControlOpcion
+          etiqueta="Tipo"
+          opciones={OPCIONES_TIPO}
+          valor={form.tipo}
+          onCambiar={(valor) => cambiar("tipo", valor)}
+          variante="segmentado"
+          disabled={guardando}
+        />
         <label>
           Fecha
-          <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required />
+          <div className="campo">
+            <CalendarDays aria-hidden="true" />
+            <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required />
+          </div>
         </label>
       </div>
 
-      {usaSelectorProducto ? (
-        <>
-          <div className="modal-form-seccion">
-            <div className="modal-form-seccion-header">
-              <span>{esDevolucion ? "Productos devueltos" : "Productos de reposición"}</span>
-              <button type="button" className="modal-btn-agregar-fila" onClick={agregarFilaDetalle}>
-                + Agregar producto
-              </button>
-            </div>
+      <ControlOpcion
+        etiqueta="Comprobante"
+        opciones={OPCIONES_FACTURA}
+        valor={form.tipo_factura}
+        onCambiar={(valor) => cambiar("tipo_factura", valor)}
+        disabled={guardando}
+      />
 
-            {detalles.length > 0 && (
-              <div className="modal-form-fila-dinamica modal-form-fila-dinamica--detalle modal-form-fila-dinamica--headers">
+      <ControlOpcion
+        etiqueta="Origen"
+        opciones={opcionesOrigen}
+        valor={form.origen}
+        onCambiar={(valor) => cambiar("origen", valor)}
+        disabled={guardando}
+      />
+
+      {usaSelectorProducto ? (
+        <div className="modal-form-bloque">
+          <h3 className="modal-form-bloque__titulo">
+            {esDevolucion ? "Productos devueltos" : "Productos de reposición"}
+            <button
+              type="button"
+              className="btn btn--sm btn-secondary"
+              onClick={agregarFilaDetalle}
+              disabled={guardando}
+            >
+              <Plus size={14} strokeWidth={2} aria-hidden="true" />
+              Agregar producto
+            </button>
+          </h3>
+
+          {detalles.length === 0 ? (
+            <p className="modal-form-seccion-vacio">Todavía no agregaste ningún producto.</p>
+          ) : (
+            <div className="tabla-form tabla-form--nota">
+              <div className="tabla-form__cabecera">
                 <span>Producto</span>
-                <span>Cantidad</span>
-                <span>Precio unit.</span>
-                <span>Subtotal</span>
+                <span className="tabla-form__num">Cant.</span>
+                <span className="tabla-form__num">Unitario</span>
+                <span className="tabla-form__num">Subtotal</span>
                 <span />
               </div>
-            )}
-
-            {detalles.map((fila) => {
-              const linea = (entidad?.detalle ?? []).find((d) => d.id === fila.detalle_compra_id);
-              const restante = restanteParaFila(fila);
-              return (
-                <div
-                  key={fila._id}
-                  className="modal-form-fila-dinamica modal-form-fila-dinamica--detalle"
-                >
-                  <div className="modal-form-fila-dinamica-producto">
-                    <select
-                      value={fila.detalle_compra_id}
-                      onChange={(e) =>
-                        actualizarFilaDetalle(fila._id, "detalle_compra_id", e.target.value)
-                      }
-                      required
-                    >
-                      <option value="">Producto...</option>
-                      {(entidad?.detalle ?? []).map((d) => {
-                        const p = productos.find((pr) => pr.id === d.producto_id);
-                        const restanteLinea = esDevolucion
-                          ? restanteDetalleCompra(entidad, d.id)
-                          : Infinity;
-                        const sinSaldo =
-                          esDevolucion && restanteLinea <= 0 && d.id !== fila.detalle_compra_id;
-                        return (
-                          <option key={d.id} value={d.id} disabled={sinSaldo}>
-                            {p ? `${p.marca} ${p.modelo}` : "Producto"} · comprado x{d.cantidad}
-                            {sinSaldo ? " (sin saldo)" : ""}
-                          </option>
-                        );
-                      })}
-                    </select>
-                    {fila.detalle_compra_id && esDevolucion && (
-                      <span
-                        className="badge badge--sm modal-form-fila-dinamica-tipo"
-                        style={{ color: OLIVA, backgroundColor: OLIVA_TINT }}
+              {detalles.map((fila) => {
+                const linea = (entidad?.detalle ?? []).find((d) => d.id === fila.detalle_compra_id);
+                const restante = restanteParaFila(fila);
+                return (
+                  <div key={fila._id} className="tabla-form__fila">
+                    <div className="tabla-form__producto">
+                      <select
+                        className="campo campo--sm"
+                        value={fila.detalle_compra_id}
+                        onChange={(e) =>
+                          actualizarFilaDetalle(fila._id, "detalle_compra_id", e.target.value)
+                        }
+                        aria-label="Producto"
+                        required
                       >
-                        Disponible: {restante}
-                      </span>
-                    )}
+                        <option value="">Elegí el producto…</option>
+                        {(entidad?.detalle ?? []).map((d) => {
+                          const p = productos.find((pr) => pr.id === d.producto_id);
+                          const restanteLinea = esDevolucion
+                            ? restanteDetalleCompra(entidad, d.id)
+                            : Infinity;
+                          const sinSaldo =
+                            esDevolucion && restanteLinea <= 0 && d.id !== fila.detalle_compra_id;
+                          return (
+                            <option key={d.id} value={d.id} disabled={sinSaldo}>
+                              {p ? `${p.marca} ${p.modelo}` : "Producto"} · comprado x{d.cantidad}
+                              {sinSaldo ? " (sin saldo)" : ""}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      {fila.detalle_compra_id && esDevolucion && (
+                        <span className="tabla-form__hint">Quedan {restante} para devolver</span>
+                      )}
+                    </div>
+                    <input
+                      className="campo campo--sm tabla-form__num"
+                      type="number"
+                      aria-label="Cantidad"
+                      value={fila.cantidad}
+                      onChange={(e) => actualizarFilaDetalle(fila._id, "cantidad", e.target.value)}
+                      min="0"
+                      max={fila.detalle_compra_id && esDevolucion ? restante : undefined}
+                      step="0.01"
+                      required
+                      disabled={!fila.detalle_compra_id}
+                    />
+                    <span
+                      className="tabla-form__num tabla-form__tenue"
+                      title="Precio de la compra original"
+                    >
+                      {linea ? formatMoneda(Number(linea.precio_unitario)) : "—"}
+                    </span>
+                    <span className="tabla-form__num tabla-form__fuerte">
+                      {linea
+                        ? formatMoneda((Number(fila.cantidad) || 0) * Number(linea.precio_unitario))
+                        : "—"}
+                    </span>
+                    <button
+                      type="button"
+                      className="btn-icono btn-icono--sm"
+                      onClick={() => eliminarFilaDetalle(fila._id)}
+                      aria-label="Quitar producto"
+                    >
+                      <X aria-hidden="true" />
+                    </button>
                   </div>
-                  <input
-                    type="number"
-                    placeholder="Cantidad"
-                    value={fila.cantidad}
-                    onChange={(e) => actualizarFilaDetalle(fila._id, "cantidad", e.target.value)}
-                    min="0"
-                    max={fila.detalle_compra_id && esDevolucion ? restante : undefined}
-                    step="0.01"
-                    required
-                    disabled={!fila.detalle_compra_id}
-                  />
-                  <span
-                    className="modal-form-fila-dinamica-precio"
-                    title="Precio de catálogo de la compra original"
-                  >
-                    {linea ? formatMoneda(Number(linea.precio_unitario)) : "—"}
-                  </span>
-                  <span className="modal-form-fila-dinamica-subtotal">
-                    {linea
-                      ? formatMoneda((Number(fila.cantidad) || 0) * Number(linea.precio_unitario))
-                      : "—"}
-                  </span>
-                  <button
-                    type="button"
-                    className="btn-icono btn-icono--contorno btn-icono--peligro"
-                    onClick={() => eliminarFilaDetalle(fila._id)}
-                  >
-                    <X size={14} strokeWidth={2.25} />
-                  </button>
-                </div>
-              );
-            })}
-            {detalles.length === 0 && (
-              <p className="modal-form-seccion-vacio">Todavía no agregaste ningún producto.</p>
-            )}
-          </div>
-
-          <div className="modal-form-seccion">
-            <div className="modal-form-seccion-header">
-              <span>Impuestos (opcional)</span>
-              <button
-                type="button"
-                className="modal-btn-agregar-fila"
-                onClick={agregarFilaImpuesto}
-              >
-                + Agregar impuesto
-              </button>
+                );
+              })}
             </div>
+          )}
 
-            {impuestos.map((fila) => (
-              <div
-                key={fila._id}
-                className="modal-form-fila-dinamica modal-form-fila-dinamica--2col"
+          <h3 className="modal-form-bloque__titulo">
+            <span>
+              Impuestos <span className="label-campo__opcional">(opcional)</span>
+            </span>
+            <button
+              type="button"
+              className="btn btn--sm btn-secondary"
+              onClick={agregarFilaImpuesto}
+              disabled={guardando}
+            >
+              <Plus size={14} strokeWidth={2} aria-hidden="true" />
+              Agregar impuesto
+            </button>
+          </h3>
+          {impuestos.map((fila) => (
+            <div key={fila._id} className="tabla-form__impuesto">
+              <select
+                className="campo campo--sm"
+                value={fila.impuesto_id}
+                onChange={(e) => actualizarFilaImpuesto(fila._id, "impuesto_id", e.target.value)}
+                aria-label="Impuesto"
+                required
               >
-                <select
-                  value={fila.impuesto_id}
-                  onChange={(e) => actualizarFilaImpuesto(fila._id, "impuesto_id", e.target.value)}
-                  required
-                >
-                  <option value="">Impuesto...</option>
-                  {impuestosDisponibles.map((imp) => (
-                    <option key={imp.id} value={imp.id}>
-                      {imp.nombre}
-                    </option>
-                  ))}
-                </select>
+                <option value="">Impuesto…</option>
+                {impuestosDisponibles.map((imp) => (
+                  <option key={imp.id} value={imp.id}>
+                    {imp.nombre}
+                  </option>
+                ))}
+              </select>
+              <div className="campo campo--sm">
+                <span className="campo__prefijo">$</span>
                 <input
                   type="number"
-                  placeholder="Monto"
+                  aria-label="Monto del impuesto"
                   value={fila.monto}
                   onChange={(e) => actualizarFilaImpuesto(fila._id, "monto", e.target.value)}
                   min="0"
                   step="0.01"
                   required
                 />
-                <button
-                  type="button"
-                  className="btn-icono btn-icono--contorno btn-icono--peligro"
-                  onClick={() => eliminarFilaImpuesto(fila._id)}
-                >
-                  <X size={14} strokeWidth={2.25} />
-                </button>
               </div>
-            ))}
-            {impuestos.length === 0 && (
-              <p className="modal-form-seccion-vacio">Sin impuestos cargados todavía.</p>
-            )}
-          </div>
+              <button
+                type="button"
+                className="btn-icono btn-icono--sm"
+                onClick={() => eliminarFilaImpuesto(fila._id)}
+                aria-label="Quitar impuesto"
+              >
+                <X aria-hidden="true" />
+              </button>
+            </div>
+          ))}
 
-          <div className="modal-form-resumen">
-            <div className="modal-form-resumen-fila">
-              <span>Productos</span>
-              <span>{formatMoneda(totalLineas)}</span>
+          <dl className="tabla-form__totales">
+            <div>
+              <dt>Productos</dt>
+              <dd>{formatMoneda(totalLineas)}</dd>
             </div>
-            <div className="modal-form-resumen-fila">
-              <span>Impuestos</span>
-              <span>{formatMoneda(totalImpuestosDevolucion)}</span>
+            <div>
+              <dt>Impuestos</dt>
+              <dd>{formatMoneda(totalImpuestosDevolucion)}</dd>
             </div>
-            <div className="modal-form-resumen-fila modal-form-resumen-fila--total">
-              <span>Total nota</span>
-              <span>{formatMoneda(montoDevolucion)}</span>
+            <div className="tabla-form__total">
+              <dt>Total de la nota</dt>
+              <dd>
+                {formatMoneda(montoDevolucion)}
+                {textoEquivalente(montoDevolucion, "ars", cotizacion.valor) && (
+                  <span className="tabla-form__tenue">
+                    {" "}
+                    {textoEquivalente(montoDevolucion, "ars", cotizacion.valor)}
+                  </span>
+                )}
+              </dd>
             </div>
-          </div>
-        </>
+          </dl>
+        </div>
       ) : (
-        <label>
-          Monto ({monedaMonto === "usd" ? "US$" : "$"})
-          <input
-            type="number"
-            name="monto"
-            value={form.monto}
-            onChange={handleChange}
-            min="0"
-            step="0.01"
-            required
-          />
-        </label>
+        <CampoMonto
+          value={form.monto}
+          onChange={handleChange}
+          moneda={monedaMonto}
+          equivalente={textoEquivalente(form.monto, monedaMonto, cotizacion.valor)}
+          disabled={guardando}
+        />
       )}
 
       <CamposCotizacion
         cotizacion={cotizacion}
-        monto={usaSelectorProducto ? montoDevolucion : form.monto}
-        monedaMonto={monedaMonto}
-        claseFila="modal-form-fila"
         mostrarError={intentoGuardar}
         disabled={guardando}
       />
@@ -524,17 +557,12 @@ export function ModalNota({
         />
       </label>
 
-      <label>
-        Comprobante
-        <input
-          type="file"
-          accept={EXTENSIONES_PERMITIDAS}
-          onChange={(e) => setArchivo(e.target.files?.[0] ?? null)}
-          required
-        />
-      </label>
-
-      {error && <p className="modal-nota-error">{error}</p>}
+      {error && (
+        <p className="campo-error" role="alert">
+          <CircleAlert aria-hidden="true" />
+          {error}
+        </p>
+      )}
     </ModalShell>
   );
 }

@@ -1,15 +1,24 @@
 import { useState, useEffect } from "react";
-import ModalShell from "./ModalShell";
-import { LogoCargando } from "../shared/LogoCargando";
+import { Building2, Layers } from "lucide-react";
 
-const ESTADOS_OPCIONES = [
-  { value: "por_empezar", label: "Por empezar" },
-  { value: "en_curso", label: "En curso" },
-  { value: "terminada", label: "Terminada" },
-  { value: "auditada", label: "Auditada" },
-];
+import ModalShell, { AccionesFormulario } from "./ModalShell";
+import { ControlOpcion } from "../shared/ControlOpcion";
+import { ESTADO_LABELS } from "../../constants/estados";
 
-export function ModalFase({ fase, onGuardar, onCerrar }) {
+// El estado de una fase se elige mirando el mismo semáforo del resto de la
+// app (estados.js): cada tile lleva el ícono de su badge.
+const ESTADOS_OPCIONES = Object.entries(ESTADO_LABELS).map(([valor, info]) => ({
+  valor,
+  label: info.label,
+  icono: info.icono,
+}));
+
+/**
+ * Alta y edición de una fase — variante 5e. `contexto` es dónde se carga
+ * ("Fase 5 de Edificio Olleros"): lo arma quien lo abre, que sabe en qué
+ * proyecto está y cuántas fases hay.
+ */
+export function ModalFase({ fase, contexto, onGuardar, onCerrar }) {
   const esEdicion = Boolean(fase);
 
   const [form, setForm] = useState({
@@ -50,54 +59,53 @@ export function ModalFase({ fase, onGuardar, onCerrar }) {
   return (
     <ModalShell
       titulo={esEdicion ? "Editar fase" : "Nueva fase"}
+      icono={Layers}
+      contexto={contexto}
+      iconoContexto={Building2}
       onCerrar={onCerrar}
       onSubmit={handleSubmit}
       cerrarDeshabilitado={guardando}
       acciones={
-        <>
-          <button
-            type="button"
-            onClick={onCerrar}
-            className="btn btn-secondary"
-            disabled={guardando}
-          >
-            Cancelar
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={guardando}>
-            {guardando ? (
-              <>
-                <LogoCargando size={14} variante="blanco" />
-                Guardando...
-              </>
-            ) : esEdicion ? (
-              "Guardar cambios"
-            ) : (
-              "Crear fase"
-            )}
-          </button>
-        </>
+        <AccionesFormulario
+          guardando={guardando}
+          onCancelar={onCerrar}
+          textoGuardar={esEdicion ? "Guardar cambios" : "Crear fase"}
+        />
       }
     >
       <label>
         Nombre
-        <input type="text" name="nombre" value={form.nombre} onChange={handleChange} required />
+        <input
+          type="text"
+          name="nombre"
+          value={form.nombre}
+          onChange={handleChange}
+          placeholder="Ej: Entrega y garantía"
+          required
+        />
       </label>
 
       <label>
-        Descripción
-        <textarea name="descripcion" value={form.descripcion} onChange={handleChange} rows={3} />
+        <span>
+          Descripción <span className="label-campo__opcional">(opcional)</span>
+        </span>
+        <textarea
+          name="descripcion"
+          value={form.descripcion}
+          onChange={handleChange}
+          placeholder="Qué incluye esta etapa"
+          rows={3}
+        />
       </label>
 
-      <label>
-        Estado
-        <select name="estado" value={form.estado} onChange={handleChange}>
-          {ESTADOS_OPCIONES.map((op) => (
-            <option key={op.value} value={op.value}>
-              {op.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <ControlOpcion
+        etiqueta="Estado"
+        opciones={ESTADOS_OPCIONES}
+        valor={form.estado}
+        onCambiar={(estado) => setForm((prev) => ({ ...prev, estado }))}
+        variante="tiles"
+        disabled={guardando}
+      />
     </ModalShell>
   );
 }

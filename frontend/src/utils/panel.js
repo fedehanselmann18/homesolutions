@@ -1,5 +1,7 @@
 import { calcularAnalisis } from "./analisis";
 import { esCompraImpaga, esCompraSinEntregar, diasDesde, DIAS_FASE_ESTANCADA } from "./seguimiento";
+import { describirFaseActual, ESTADOS_FASE_CERRADA } from "./fases";
+import { DIAS_DEUDA_VENCIDA } from "../constants/estadoCompra";
 import { notasDeCompras, notasDeCobros } from "./notas";
 import {
   MONEDA_ANALISIS_DEFAULT,
@@ -14,9 +16,8 @@ import {
 const MOVIMIENTOS_RECIENTES = 8;
 const MESES_EVOLUCION = 6;
 
-// Una fase "auditada" ya está cerrada: cuenta como terminada para el avance,
-// mismo criterio que usa la pestaña de Fases del proyecto.
-const ESTADOS_FASE_CERRADA = ["terminada", "auditada"];
+// Cuántos pendientes muestra "Para resolver" antes del "ver todo".
+const PENDIENTES_VISIBLES = 6;
 
 function sumar(items, obtenerMonto) {
   return items.reduce((acc, item) => acc + (obtenerMonto(item) || 0), 0);
@@ -105,9 +106,103 @@ function armarActividad(resumenes, moneda) {
   return movimientos.sort((a, b) => b.fecha.localeCompare(a.fecha)).slice(0, MOVIMIENTOS_RECIENTES);
 }
 
-function armarEvolucion(gastos, cobros, compras, hoy, moneda) {
+const sinComprobante = (movimiento) => (movimiento.comprobantes ?? []).length === 0;
+
+/**
+ * "Para resolver" del Panel (variante 4i): lo pendiente de los proyectos en
+ * curso en una sola lista, ordenada por urgencia -- primero lo que ya es un
+ * problema (deuda de DIAS_DEUDA_VENCIDA días o más), después lo que pide
+ * atención, y dentro de cada nivel lo más viejo arriba. Mismos criterios que
+ * la pestaña Seguimiento de cada proyecto, que es adonde lleva cada ítem.
+ *
+ * Cada ítem: { key, tipo, titulo, proyectoId, proyectoNombre, proveedor,
+ * dias, nivel, monto, moneda } con tipo "pago" | "envio" | "comprobante" |
+ * "fase" y nivel "problema" | "atencion". Los montos van en la moneda en que
+ * se cargó el movimiento: pesos las compras y gastos, dólares los cobros.
+ */
+function armarParaResolver(enCurso, nombreProveedor, hoy) {
+  const items = [];
+  enCurso.forEach(
+    ({ proyecto, comprasDelProyecto, gastosDelProyecto, cobrosDelProyecto, fasesDelProyecto }) => {
+      const comun = { proyectoId: proyecto.id, proyectoNombre: proyecto.nombre };
+      comprasDelProyecto.forEach((c) => {
+        const base = {
+          ...comun,
+          titulo: c.descripcion,
+          proveedor: nombreProveedor(c.proveedor_id),
+          dias: diasDesde(c.fecha, hoy),
+          monto: precioTotalCompra(c, "ars"),
+          moneda: "ars",
+        };
+        if (esCompraImpaga(c)) {
+          items.push({
+            ...base,
+            key: `pago-${c.id}`,
+            tipo: "pago",
+            nivel: base.dias >= DIAS_DEUDA_VENCIDA ? "problema" : "atencion",
+          });
+        }
+        if (esCompraSinEntregar(c)) {
+          items.push({ ...base, key: `envio-${c.id}`, tipo: "envio", nivel: "atencion" });
+        }
+        if (sinComprobante(c)) {
+          items.push({ ...base, key: `comp-c-${c.id}`, tipo: "comprobante", nivel: "atencion" });
+        }
+      });
+      gastosDelProyecto.filter(sinComprobante).forEach((g) =>
+        items.push({
+          ...comun,
+          key: `comp-g-${g.id}`,
+          tipo: "comprobante",
+          nivel: "atencion",
+          titulo: g.descripcion,
+          dias: diasDesde(g.fecha, hoy),
+          monto: montoGasto(g, "ars"),
+          moneda: "ars",
+        })
+      );
+      cobrosDelProyecto.filter(sinComprobante).forEach((c) =>
+        items.push({
+          ...comun,
+          key: `comp-k-${c.id}`,
+          tipo: "comprobante",
+          nivel: "atencion",
+          titulo: c.descripcion,
+          dias: diasDesde(c.fecha, hoy),
+          monto: montoCobroNeto(c, "usd"),
+          moneda: "usd",
+        })
+      );
+      fasesDelProyecto
+        .filter((f) => f.estado === "en_curso" && f.fecha_en_curso_desde)
+        .map((f) => ({ fase: f, dias: diasDesde(f.fecha_en_curso_desde, hoy) }))
+        .filter(({ dias }) => dias >= DIAS_FASE_ESTANCADA)
+        .forEach(({ fase, dias }) =>
+          items.push({
+            ...comun,
+            key: `fase-${fase.id}`,
+            tipo: "fase",
+            nivel: "atencion",
+            titulo: fase.nombre,
+            dias,
+            monto: null,
+          })
+        );
+    }
+  );
+
+  const peso = { problema: 1, atencion: 0 };
+  return items.sort((a, b) => peso[b.nivel] - peso[a.nivel] || b.dias - a.dias);
+}
+
+/**
+ * Cobrado y gastado por mes, de los últimos `cantidad` meses hasta el de
+ * `hoy` inclusive (los meses sin movimientos van en cero). Lo usan el Panel y
+ * el saldo de la obra en Acciones.
+ */
+export function armarEvolucion(gastos, cobros, compras, hoy, moneda, cantidad = MESES_EVOLUCION) {
   const meses = [];
-  for (let i = MESES_EVOLUCION - 1; i >= 0; i--) {
+  for (let i = cantidad - 1; i >= 0; i--) {
     const fecha = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
     meses.push({
       mes: claveMesDeDate(fecha),
@@ -157,7 +252,10 @@ export function calcularPanel({
   hoy = new Date(),
   moneda = MONEDA_ANALISIS_DEFAULT,
   cotizacionActual = null,
+  // Opcional: sólo para nombrar al proveedor en "Para resolver".
+  proveedores = [],
 }) {
+  const nombresProveedor = new Map(proveedores.map((p) => [p.id, p.nombre]));
   const proyectoDeFase = new Map(fases.map((f) => [f.id, f.proyecto_id]));
 
   const fasesPorProyecto = agrupar(fases, (f) => f.proyecto_id);
@@ -255,17 +353,22 @@ export function calcularPanel({
       pctCobrado: analisis.totales.pctCobrado,
       fasesCerradas: cerradas,
       fasesTotales: fasesDelProyecto.length,
+      faseActual: describirFaseActual(fasesDelProyecto),
       pctFases: fasesDelProyecto.length ? (cerradas / fasesDelProyecto.length) * 100 : 0,
       // Pendientes de compra del proyecto: mismo criterio que la pestaña
       // Seguimiento, que es donde se ve el detalle de cada una.
       comprasImpagas: impagas.length,
+      // Impagas hace DIAS_DEUDA_VENCIDA días o más: lo que pasa el contador
+      // de alertas de la card de proyecto de "atención" a "problema".
+      comprasVencidas: impagas.filter((c) => diasDesde(c.fecha, hoy) >= DIAS_DEUDA_VENCIDA).length,
       montoImpago: sumar(impagas, (c) => precioTotalCompra(c, moneda)),
       comprasSinEntregar: comprasDelProyecto.filter(esCompraSinEntregar).length,
       fasesEstancadas: estancadas,
-      // Estado por fase, en el mismo orden que devuelve la API (igual que
-      // Fases.jsx) -- lo usa la barra de segmentos de la tabla de
-      // "Proyectos en curso" (dirección 1a) para pintar cada fase.
-      fasesResumen: fasesDelProyecto.map((f) => ({ id: f.id, estado: f.estado })),
+      // Estado por fase, en el orden de la obra -- lo usa la barra de
+      // segmentos de la card de proyecto (variante 4L) para pintar cada fase.
+      fasesResumen: [...fasesDelProyecto]
+        .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+        .map((f) => ({ id: f.id, estado: f.estado })),
     };
   }
 
@@ -289,6 +392,18 @@ export function calcularPanel({
   const fasesEstancadasEnCurso = sumar(proyectosActivos, (p) => p.fasesEstancadas);
   const requiereAccion = comprasImpagasEnCurso + comprasSinEntregarEnCurso + fasesEstancadasEnCurso;
 
+  // Deuda con proveedores: TODAS las compras impagas, del proyecto que sean
+  // (una deuda no deja de serlo porque la obra terminó). En pesos, que es la
+  // moneda en que se le paga a un proveedor.
+  const impagas = compras.filter(esCompraImpaga);
+  const deudaProveedores = {
+    monto: sumar(impagas, (c) => precioTotalCompra(c, "ars")),
+    compras: impagas.length,
+    vencidas: impagas.filter((c) => diasDesde(c.fecha, hoy) >= DIAS_DEUDA_VENCIDA).length,
+  };
+
+  const paraResolver = armarParaResolver(enCurso, (id) => nombresProveedor.get(id) ?? null, hoy);
+
   return {
     kpis: {
       enCurso: enCurso.length,
@@ -303,7 +418,10 @@ export function calcularPanel({
       comprasImpagasEnCurso,
       comprasSinEntregarEnCurso,
       fasesEstancadasEnCurso,
+      deudaProveedores,
     },
+    paraResolver: paraResolver.slice(0, PENDIENTES_VISIBLES),
+    totalParaResolver: paraResolver.length,
     proyectosActivos,
     proyectosResumen,
     moneda,

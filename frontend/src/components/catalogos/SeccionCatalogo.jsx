@@ -6,7 +6,6 @@ import useAuth from "../../context/useAuth";
 import { useToast } from "../../context/useToast";
 import { obtenerMensajeError } from "../../utils/errorHandling";
 import { getTipoProducto } from "../../constants/tipoProducto";
-import { TINTE_PASTILLA } from "../../constants/tipoMovimiento";
 
 import ModalCatalogoSimple from "../modals/ModalCatalogoSimple";
 import ModalCategoria from "../modals/ModalCategoria";
@@ -123,9 +122,9 @@ export function SeccionCatalogo({
     contenido = (
       <div className={claseTabla}>
         <div className="planilla__header">
-          <span className="label-ficha">Nombre</span>
-          {conTipo && <span className="label-ficha">Tipo</span>}
-          {esAdmin && <span className="label-ficha seccion-catalogo__col-acciones">Acciones</span>}
+          <span>Nombre</span>
+          {conTipo && <span>Tipo</span>}
+          {esAdmin && <span />}
         </div>
 
         {registros.map((registro) => {
@@ -135,33 +134,31 @@ export function SeccionCatalogo({
               <span className="seccion-catalogo__nombre">{registro.nombre}</span>
 
               {tipo && (
-                <span
-                  className="badge seccion-catalogo__tipo"
-                  style={{ color: tipo.color, backgroundColor: `${tipo.color}${TINTE_PASTILLA}` }}
-                >
+                <span className="seccion-catalogo__tipo">
+                  {tipo.icono && <tipo.icono size={14} strokeWidth={1.75} aria-hidden="true" />}
                   {tipo.label}
                 </span>
               )}
 
               {esAdmin && (
-                <span className="seccion-catalogo__col-acciones">
+                <span className="acciones seccion-catalogo__col-acciones">
                   <button
                     type="button"
-                    className="btn-icono btn-icono--sm btn-icono--contorno"
+                    className="btn-icono btn-icono--sm"
                     onClick={() => abrirEdicion(registro)}
                     aria-label={`Editar ${registro.nombre}`}
                     title="Editar"
                   >
-                    <Pencil size={14} strokeWidth={2} aria-hidden="true" />
+                    <Pencil aria-hidden="true" />
                   </button>
                   <button
                     type="button"
-                    className="btn-icono btn-icono--sm btn-icono--contorno btn-icono--peligro"
+                    className="btn-icono btn-icono--sm btn-icono--peligro"
                     onClick={() => setRegistroAEliminar(registro)}
                     aria-label={`Eliminar ${registro.nombre}`}
                     title="Eliminar"
                   >
-                    <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
+                    <Trash2 aria-hidden="true" />
                   </button>
                 </span>
               )}

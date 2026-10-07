@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { Settings } from "lucide-react";
 
 import {
   actualizarConfiguracion,
@@ -11,6 +10,7 @@ import { obtenerMensajeError } from "../../utils/errorHandling";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { useToast } from "../../context/useToast";
 import { Cargando } from "../../components/shared/Cargando";
+import { EstadoError } from "../../components/shared/EstadoError";
 import { PageHeader } from "../../components/shared/PageHeader";
 import SeccionConfiguracion from "../../components/manager/SeccionConfiguracion";
 import "./GestionManager.css";
@@ -79,7 +79,6 @@ export function GestionConfiguracion() {
   return (
     <div className="manager-pagina">
       <PageHeader
-        icono={<Settings size={20} strokeWidth={2} />}
         titulo="Configuración"
         subtitulo="Valores editables sin redeployar y estado de las integraciones externas. Solo lo ve esta cuenta."
       />
@@ -87,7 +86,7 @@ export function GestionConfiguracion() {
       {cargando ? (
         <Cargando texto="Cargando configuración..." />
       ) : errorCarga ? (
-        <p className="manager-pagina__error">{errorCarga}</p>
+        <EstadoError mensaje={errorCarga} />
       ) : (
         <div className="manager-pagina__tarjeta">
           <SeccionConfiguracion

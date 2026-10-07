@@ -1,197 +1,111 @@
 import { useRef, useState } from "react";
-import { X, Plus, Pencil } from "lucide-react";
+import { AlertTriangle, CalendarDays, Download, Pencil, Plus, Trash2, X } from "lucide-react";
 
-import { formatMoneda } from "../../utils/formato";
-import { iconoParaArchivo, nombreDeArchivo } from "../../utils/archivos";
+import { formatMoneda, formatFechaLarga } from "../../utils/formato";
+import { extensionDeArchivo, iconoParaArchivo, nombreDeArchivo } from "../../utils/archivos";
 import { obtenerMensajeError } from "../../utils/errorHandling";
-import { useModal } from "../../hooks/useModal";
+import { ModalShell } from "./ModalShell";
 
-import "./modal-base.css";
 import "./ModalDetalle.css";
-import { TINTE_PASTILLA } from "../../constants/tipoMovimiento";
 
 /**
- * Piezas compartidas por los tres modales de detalle (Compra / Gasto / Cobro),
- * con el lenguaje visual de la dirección 3a del rediseño (ver claudedesign/).
+ * Piezas compartidas por los tres modales de detalle (Compra / Gasto / Cobro).
+ * Geometría de HS Modales (DESIGN.md §14) y estructura de contenido de
+ * docs/GENERALUIUXChange/Movimientos v2.dc.html: cabecera con el importe,
+ * banda si falta el comprobante, detalles en grilla, productos con su total,
+ * archivos y, al pie, Borrar a la izquierda y Editar / la acción a la derecha.
  */
 
+/**
+ * El shell del detalle es el mismo `ModalShell` de los modales de carga: header
+ * claro con el ícono del tipo y la fecha como contexto. `accionPrimaria` es
+ * `{ texto, onClick }` (ej. "Marcar pagado" en una compra impaga).
+ */
 export function DetalleShell({
   tipo,
-  icono: Icono,
-  contexto,
+  icono,
   fecha,
   titulo,
-  subtitulo,
-  totalLabel = "Total",
-  total,
-  // Doble moneda: la moneda en que se cargó el movimiento va como cifra
-  // principal; `totalSecundario` es la otra, congelada, ya formateada.
-  totalMoneda = "ars",
-  totalSecundario,
-  totalColor,
   onCerrar,
-  // Opcional: pasar de "ver" a "editar" sin volver a la lista. Es una prop y
-  // no algo fijo del shell porque Gasto/Cobro todavía no tienen su modal de
-  // edición rediseñado -- sin el handler, el footer queda igual que antes.
   onEditar,
+  onEliminar,
+  accionPrimaria,
   children,
 }) {
-  const dialogoRef = useModal(onCerrar);
-
   return (
-    <div className="modal-overlay" onClick={onCerrar}>
-      <div
-        ref={dialogoRef}
-        tabIndex={-1}
-        className="modal-contenido detalle"
-        role="dialog"
-        aria-modal="true"
-        aria-label={`${tipo}: ${titulo}`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="detalle__header">
-          <span className="detalle__tipo">
-            {Icono && <Icono size={13} strokeWidth={2.25} />}
-            {tipo}
-          </span>
-          {contexto && <span className="detalle__separador" />}
-          {contexto && <span className="detalle__contexto">{contexto}</span>}
-          <span className="detalle__espaciador" />
-          <span className="detalle__fecha">{fecha}</span>
-          <button
-            type="button"
-            className="btn-icono detalle__cerrar"
-            onClick={onCerrar}
-            title="Cerrar"
-            aria-label="Cerrar"
-          >
-            <X size={17} strokeWidth={2} />
+    <ModalShell
+      titulo={tipo}
+      etiqueta={`${tipo}: ${titulo}`}
+      icono={icono}
+      contexto={formatFechaLarga(fecha)}
+      iconoContexto={CalendarDays}
+      clase="detalle"
+      onCerrar={onCerrar}
+      accionesIzquierda={
+        onEliminar && (
+          <button type="button" className="detalle__borrar" onClick={onEliminar}>
+            <Trash2 size={14} strokeWidth={1.75} aria-hidden="true" />
+            Borrar
           </button>
-        </div>
-
-        <div className="detalle__cuerpo">
-          <div className="detalle__titular">
-            <div className="detalle__titular-texto">
-              <h2>{titulo}</h2>
-              {subtitulo && <span className="detalle__subtitulo">{subtitulo}</span>}
-            </div>
-            <div className="detalle__total">
-              <span className="detalle__total-label">{totalLabel}</span>
-              <span
-                className="detalle__total-monto"
-                style={totalColor ? { color: totalColor } : undefined}
-              >
-                {formatMoneda(total, totalMoneda)}
-              </span>
-              {totalSecundario && (
-                <span className="detalle__total-secundario">{totalSecundario}</span>
-              )}
-            </div>
-          </div>
-
-          {children}
-        </div>
-
-        <div className="detalle__footer">
-          <button type="button" className="btn btn-secondary" onClick={onCerrar}>
-            Cerrar
-          </button>
-          {onEditar && (
-            <button type="button" className="btn btn-primary detalle__editar" onClick={onEditar}>
-              <Pencil size={14} strokeWidth={2} />
+        )
+      }
+      acciones={
+        <>
+          {onEditar ? (
+            <button type="button" className="btn btn--lg btn-secondary" onClick={onEditar}>
+              <Pencil size={14} strokeWidth={1.75} aria-hidden="true" />
               Editar
             </button>
+          ) : (
+            !accionPrimaria && (
+              <button type="button" className="btn btn--lg btn-secondary" onClick={onCerrar}>
+                Cerrar
+              </button>
+            )
           )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Barra que descompone el total en sus partes, con la leyenda de importes
- * debajo. `segmentos`: [{ label, monto, color, signo }] -- signo -1 pinta el
- * importe en rojo con el menos adelante (notas de crédito), +1 en naranja con
- * el más (notas de débito), y sin signo queda neutro (neto, impuestos).
- */
-export function BarraComposicion({ segmentos, moneda = "ars" }) {
-  const visibles = segmentos.filter((s) => Math.abs(s.monto) > 0);
-  if (visibles.length === 0) return null;
-
-  const suma = visibles.reduce((acc, s) => acc + Math.abs(s.monto), 0);
-
-  return (
-    <div className="detalle__composicion">
-      <div className="detalle__barra">
-        {visibles.map((s) => (
-          <span
-            key={s.label}
-            style={{ width: `${(Math.abs(s.monto) / suma) * 100}%`, background: s.color }}
-            title={`${s.label} ${formatMoneda(s.monto, moneda)}`}
-          />
-        ))}
-      </div>
-      <div className="detalle__leyenda">
-        {visibles.map((s) => (
-          <span key={s.label} className="detalle__leyenda-item">
-            <span className="detalle__leyenda-punto" style={{ background: s.color }} />
-            {s.label}{" "}
-            <strong
-              className={`detalle__leyenda-monto${
-                s.signo === -1
-                  ? " detalle__leyenda-monto--resta"
-                  : s.signo === 1
-                    ? " detalle__leyenda-monto--suma"
-                    : ""
-              }`}
+          {accionPrimaria && (
+            <button
+              type="button"
+              className="btn btn--lg btn-primary"
+              onClick={accionPrimaria.onClick}
             >
-              {s.signo === -1 ? "-" : s.signo === 1 ? "+" : ""}
-              {formatMoneda(Math.abs(s.monto), moneda)}
-            </strong>
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-export function SeccionDetalle({ titulo, children }) {
-  return (
-    <div className="detalle__seccion">
-      <div className="detalle__seccion-titulo">
-        <span>{titulo}</span>
-        <span className="detalle__seccion-linea" />
-      </div>
+              {accionPrimaria.texto}
+            </button>
+          )}
+        </>
+      }
+    >
       {children}
-    </div>
+    </ModalShell>
   );
 }
 
 /**
- * Chips de los comprobantes (factura, remito...). Ver un archivo abre el blob
- * autenticado en una pestaña nueva; agregar/eliminar sólo aparecen si el
- * componente padre pasó los handlers (es decir, si el usuario es admin).
- *
- * Las notas de crédito/débito NO van acá: tienen plata propia, origen,
- * fecha y el detalle de qué productos se devolvieron, y eso no entra en un
- * chip -- las muestra SeccionNotas.
+ * Título del movimiento con sus badges debajo, y a la derecha el importe en la
+ * moneda en que se cargó, el equivalente y la cotización usada
+ * (`secundario`, ya formateado: "US$ 1.702 · dólar blue $ 1.250,00").
  */
-export function ChipsComprobantes({ comprobantes = [], onVer, onAgregar, onEliminar }) {
+export function CabeceraMovimiento({ titulo, badges, monto, moneda = "ars", secundario }) {
+  return (
+    <div className="detalle__cabecera">
+      <div className="detalle__cabecera-texto">
+        <h3 className="detalle__titulo">{titulo}</h3>
+        {badges && <div className="detalle__badges">{badges}</div>}
+      </div>
+      <div className="detalle__total">
+        <span className="detalle__total-monto cifra">{formatMoneda(monto, moneda)}</span>
+        {secundario && <span className="detalle__total-secundario cifra">{secundario}</span>}
+      </div>
+    </div>
+  );
+}
+
+// El input de archivo y su manejo de errores, compartido por la banda de
+// "falta el comprobante" y la lista de archivos: los dos suben al mismo lado.
+function useAdjuntar(onAgregar) {
   const inputRef = useRef(null);
   const [error, setError] = useState("");
   const [ocupado, setOcupado] = useState(false);
-
-  const abrirArchivo = async (comprobante) => {
-    setError("");
-    try {
-      const blob = await onVer(comprobante);
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank", "noopener,noreferrer");
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch (err) {
-      setError(obtenerMensajeError(err));
-    }
-  };
 
   const ejecutar = async (accion) => {
     setError("");
@@ -205,105 +119,189 @@ export function ChipsComprobantes({ comprobantes = [], onVer, onAgregar, onElimi
     }
   };
 
+  const input = onAgregar ? (
+    <input
+      ref={inputRef}
+      type="file"
+      multiple
+      hidden
+      onChange={(e) => {
+        const files = e.target.files;
+        if (files?.length) ejecutar(() => onAgregar(files));
+        e.target.value = "";
+      }}
+    />
+  ) : null;
+
+  return { input, abrir: () => inputRef.current?.click(), ejecutar, ocupado, error, setError };
+}
+
+/** Banda ámbar arriba del detalle cuando el movimiento no tiene comprobante. */
+export function BandaFaltante({ texto = "Falta adjuntar el comprobante", onAgregar }) {
+  const { input, abrir, ocupado, error } = useAdjuntar(onAgregar);
   return (
-    <div className="detalle__chips">
-      {comprobantes.length === 0 && !onAgregar && (
-        <span className="detalle__cargado-por">Sin comprobantes cargados.</span>
-      )}
-
-      {comprobantes.map((c) => {
-        const nombre = nombreDeArchivo(c.archivo_path);
-        const Icono = iconoParaArchivo(nombre);
-        return (
-          <span key={c.id} className="detalle__chip">
-            <button
-              type="button"
-              className="detalle__chip-boton"
-              disabled={!onVer}
-              onClick={() => abrirArchivo(c)}
-            >
-              <Icono size={13} strokeWidth={2} />
-              {nombre}
-            </button>
-            {onEliminar && (
-              <button
-                type="button"
-                className="detalle__chip-quitar"
-                title="Eliminar comprobante"
-                disabled={ocupado}
-                onClick={() => ejecutar(() => onEliminar(c.id))}
-              >
-                <X size={13} strokeWidth={2.25} />
-              </button>
-            )}
-          </span>
-        );
-      })}
-
+    <div className="detalle__faltante" role="status">
+      <span className="detalle__faltante-texto">
+        <AlertTriangle size={16} strokeWidth={1.75} aria-hidden="true" />
+        {texto}
+      </span>
       {onAgregar && (
         <>
-          <input
-            ref={inputRef}
-            type="file"
-            multiple
-            hidden
-            onChange={(e) => {
-              const files = e.target.files;
-              if (files?.length) ejecutar(() => onAgregar(files));
-              e.target.value = "";
-            }}
-          />
+          {input}
           <button
             type="button"
-            className="detalle__chip detalle__chip--agregar"
+            className="btn btn--sm btn-secondary"
             disabled={ocupado}
-            onClick={() => inputRef.current?.click()}
+            onClick={abrir}
           >
-            <Plus size={13} strokeWidth={2.25} />
-            Comprobante
+            <Plus size={14} strokeWidth={1.75} aria-hidden="true" />
+            Adjuntar
           </button>
         </>
       )}
-
       {error && <p className="detalle__error">{error}</p>}
     </div>
   );
 }
 
-/**
- * Tile de estado (pago / envío) con switch. Sin `onToggle` queda de sólo
- * lectura, que es lo que ve un usuario que no es admin.
- */
-export function TileEstado({ label, estado, activo, onToggle, titulo }) {
-  const Icono = estado.icono;
+/** Bloque con su título subrayado ("Detalles", "4 productos", "Archivos"). */
+export function SeccionDetalle({ titulo, accion, children }) {
   return (
-    <div className={`detalle__estado${activo ? " detalle__estado--activo" : ""}`}>
-      <span
-        className="detalle__estado-icono"
-        style={{ background: `${estado.color}${TINTE_PASTILLA}`, color: estado.color }}
-      >
-        {Icono && <Icono size={15} strokeWidth={2.25} />}
-      </span>
-      <span className="detalle__estado-texto">
-        <span className="detalle__estado-label">{label}</span>
-        <span className="detalle__estado-valor" style={{ color: estado.color }}>
-          {estado.label}
-        </span>
-      </span>
-      <span className="detalle__estado-espaciador" />
-      {onToggle && (
-        <button
-          type="button"
-          role="switch"
-          aria-checked={activo}
-          aria-label={titulo}
-          title={titulo}
-          className={`detalle__switch${activo ? " detalle__switch--on" : ""}`}
-          onClick={onToggle}
+    <section className="detalle__seccion">
+      <div className="detalle__seccion-titulo">
+        <h4>{titulo}</h4>
+        {accion}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/**
+ * Grilla de 3 columnas: label chico arriba y valor abajo. `punto` es el color
+ * pleno de un estado (el semáforo de la fila, en chico).
+ */
+export function GrillaDetalles({ campos }) {
+  return (
+    <dl className="detalle__grilla">
+      {campos.filter(Boolean).map(({ label, valor, punto }) => (
+        <div key={label} className="detalle__campo">
+          <dt>{label}</dt>
+          <dd>
+            {punto && <span className="detalle__punto" style={{ background: punto }} />}
+            {valor}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+/**
+ * Bloque de totales alineado a la derecha: Neto / impuestos / notas / Total.
+ * `filas`: [{ label, valor, variante? }] con variante "total" | "resta" | "suma".
+ */
+export function TotalesDetalle({ filas }) {
+  return (
+    <div className="detalle__totales cifra">
+      {filas.map(({ label, valor, variante }) => (
+        <div
+          key={label}
+          className={`detalle__totales-fila${variante ? ` detalle__totales-fila--${variante}` : ""}`}
         >
-          <span className="detalle__switch-perilla" />
-        </button>
-      )}
+          <span>{label}</span>
+          <span>{valor}</span>
+        </div>
+      ))}
     </div>
+  );
+}
+
+/**
+ * Los comprobantes (factura, remito...) como filas de archivo. Ver un archivo
+ * abre el blob autenticado en una pestaña nueva; agregar y eliminar sólo
+ * aparecen si el padre pasó los handlers (es decir, si el usuario es admin).
+ *
+ * Las notas de crédito/débito NO van acá: tienen plata propia, origen, fecha y
+ * el detalle de qué productos se devolvieron -- las muestra SeccionNotas.
+ */
+export function ArchivosDetalle({ comprobantes = [], onVer, onAgregar, onEliminar }) {
+  const { input, abrir, ejecutar, ocupado, error, setError } = useAdjuntar(onAgregar);
+
+  const abrirArchivo = async (comprobante) => {
+    setError("");
+    try {
+      const blob = await onVer(comprobante);
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank", "noopener,noreferrer");
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (err) {
+      setError(obtenerMensajeError(err));
+    }
+  };
+
+  return (
+    <SeccionDetalle
+      titulo="Archivos"
+      accion={
+        onAgregar && (
+          <>
+            {input}
+            <button type="button" className="chip chip--agregar" disabled={ocupado} onClick={abrir}>
+              <Plus aria-hidden="true" />
+              Comprobante
+            </button>
+          </>
+        )
+      }
+    >
+      {comprobantes.length === 0 ? (
+        <p className="detalle__vacio">Sin comprobantes cargados.</p>
+      ) : (
+        <ul className="detalle__archivos">
+          {comprobantes.map((c) => {
+            const nombre = nombreDeArchivo(c.archivo_path);
+            const Icono = iconoParaArchivo(nombre);
+            return (
+              <li key={c.id} className="detalle__archivo">
+                <span className="detalle__archivo-icono">
+                  <Icono size={16} strokeWidth={1.75} aria-hidden="true" />
+                </span>
+                <span className="detalle__archivo-texto">
+                  <span className="detalle__archivo-nombre">{nombre}</span>
+                  <span className="detalle__archivo-tipo">
+                    {extensionDeArchivo(nombre).slice(1).toUpperCase() || "Archivo"}
+                  </span>
+                </span>
+                {onVer && (
+                  <button
+                    type="button"
+                    className="btn-icono"
+                    title="Ver comprobante"
+                    aria-label={`Ver ${nombre}`}
+                    onClick={() => abrirArchivo(c)}
+                  >
+                    <Download aria-hidden="true" />
+                  </button>
+                )}
+                {onEliminar && (
+                  <button
+                    type="button"
+                    className="btn-icono btn-icono--peligro"
+                    title="Eliminar comprobante"
+                    aria-label={`Eliminar ${nombre}`}
+                    disabled={ocupado}
+                    onClick={() => ejecutar(() => onEliminar(c.id))}
+                  >
+                    <X aria-hidden="true" />
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {error && <p className="detalle__error">{error}</p>}
+    </SeccionDetalle>
   );
 }

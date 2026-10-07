@@ -18,7 +18,7 @@ import "./LogoCargando.css";
  * mientras que girar o rebotar se siente más a "cargando indefinidamente".
  *
  * La variante importa: el isotipo oliva es EXACTAMENTE el mismo color que
- * --color-terracota (#6f7f45), así que sobre un fondo sólido de ese color
+ * --color-oliva (#6f7f45), así que sobre un fondo sólido de ese color
  * (un .btn-primary, el .ia-boton) queda invisible (contraste 1:1). Ahí va el
  * blanco, que además acompaña al texto blanco del botón; el oliva queda para
  * fondos claros.

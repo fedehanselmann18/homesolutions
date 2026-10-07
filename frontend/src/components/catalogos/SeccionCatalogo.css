@@ -47,13 +47,19 @@
 
 .seccion-catalogo__nombre {
   font-size: var(--text-base);
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-tinta);
   overflow-wrap: anywhere;
 }
 
+/* El tipo es un dato, no un estado: ícono + texto tenue, como en el catálogo
+   de un proveedor (la pastilla de color se fue en el prompt 18d). */
 .seccion-catalogo__tipo {
-  justify-self: start;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
 }
 
 .seccion-catalogo__col-acciones {

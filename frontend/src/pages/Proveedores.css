@@ -1,14 +1,57 @@
+/* Lista de proveedores — variante 4N: "Con deuda" en cards de a dos, "Al
+   día" en filas. El encabezado, el buscador y los botones son PageHeader,
+   Buscador y `.btn`/`.campo`. */
+
 .proveedores-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);
   font-family: var(--font-ui);
 }
 
-/* El encabezado, el buscador y los botones ya no viven acá: son PageHeader,
-   Buscador y `.btn`/.campo. Sólo queda la grilla y la fila de filtros. */
+.proveedores-container > .page-header {
+  margin-bottom: 0;
+}
+
+.proveedores-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.proveedores-seccion__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2-5);
+  border-bottom: 1px solid var(--color-linea);
+}
+
+/* La lista de "Al día" arranca pegada a la línea del header: es su borde de
+   arriba, no hace falta aire entre los dos. */
+.proveedores-seccion__header + .planilla {
+  margin-top: calc(-1 * var(--space-3));
+}
+
+.proveedores-seccion__titulo {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-tinta);
+}
+
+.proveedores-deudas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
 
 .proveedores-filtros {
   display: flex;
-  gap: var(--space-3);
-  margin-bottom: var(--space-6);
+  gap: var(--space-2);
 }
 
 .proveedores-filtros__select {
@@ -16,15 +59,16 @@
   min-width: 200px;
 }
 
-.proveedores-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--space-4);
+@media (max-width: 900px) {
+  .proveedores-deudas {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 640px) {
   .proveedores-filtros {
     flex-direction: column;
+    width: 100%;
   }
 
   .proveedores-filtros__select {

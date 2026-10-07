@@ -164,8 +164,9 @@ describe("BotonIA", () => {
     const logo = container.querySelector(".logo-cargando");
     expect(logo).toBeTruthy();
     expect(screen.getByText("Leyendo catálogo...")).toBeInTheDocument();
-    // Sobre el fondo sólido del botón va el isotipo blanco: el oliva es el
-    // mismo color que el fondo y quedaría invisible.
-    expect(logo.getAttribute("src")).toMatch(/blanco/);
+    // v5: el botón es `.btn-marca` (fondo tint), así que va el isotipo en
+    // oliva, no el blanco de cuando el botón era oliva lleno.
+    expect(logo.getAttribute("src")).not.toMatch(/blanco/);
+    expect(screen.getByRole("button")).toHaveClass("btn-marca");
   });
 });

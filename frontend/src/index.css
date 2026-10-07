@@ -21,16 +21,11 @@
    también lo que la vuelve menos tolerante al desorden: sin fondos de colores
    que tapen, un padding inconsistente se ve.
 
-   Los nombres de variable quedan de paletas anteriores
-   (terracota/musgo/arcilla/acero) para no tocar cada .css que las consume — lo
-   que cambia es el valor, no el rol semántico de cada token. Hay un renombre
-   pendiente, con su mapeo, en DESIGN.md §20; va en un commit propio SIN ningún
-   cambio de valor, para que el diff sea legible.
-
-   Esta pieza es la 0 de docs/PLAN_UIUX_ROLLOUT.md: sólo tokens, ningún
-   componente. Lo que todavía NO está migrado y se ve raro a propósito hasta su
-   pieza: el sidebar sigue negro (pieza 3) y el fondo de página queda en #f9f8f6
-   en vez de blanco (pieza 3, ver la nota de --color-base-1). */
+   Los nombres dicen el rol: oliva, éxito, atención, error, relleno, línea
+   fuerte. Hasta el prompt 20 del rollout arrastraban los de paletas muertas
+   (terracota, musgo, arcilla, óxido, acero, base-1/2, gris-claro-marca), que
+   no eran el color que pintaban; el renombre fue un commit propio sin ningún
+   cambio de valor (DESIGN.md §20). */
 :root {
   /* ── Color ─────────────────────────────────────────────────────────────────
      La paleta del manual (HS_IID_Manual §5) tiene exactamente CINCO colores:
@@ -49,15 +44,15 @@
      más. */
 
   /* acento de marca — el oliva */
-  --color-terracota: #6f7f45;
-  --color-terracota-dark: #4f5b30;
-  --color-terracota-tint: #eef0e3;
+  --color-oliva: #6f7f45;
+  --color-oliva-dark: #4f5b30;
+  --color-oliva-tint: #eef0e3;
   /* Fondo de SELECCIÓN de un control (nav activo, chip activo). Es casi el
      mismo color que -tint y tiene otro rol a propósito: el tint dice "este
      dato está resuelto", el sel dice "este control está activo". En los
      diseños nunca aparecen juntos, y separarlos evita que un badge de "Pagado"
      y una pestaña seleccionada terminen siendo la misma cosa. */
-  --color-terracota-sel: #f1f2ea;
+  --color-oliva-sel: #f1f2ea;
 
   /* Éxito / positivo: sigue siendo VERDE, y es a propósito. El semáforo de
      estados es FUNCIONAL, no de marca (ver DESIGN.md §2): un estado tiene que
@@ -67,9 +62,9 @@
      El pleno se oscureció de #16a34a a #15803d porque se usa como color de TEXTO
      (ProveedorCard, Dashboard, ProveedorDetalle) y #16a34a daba 3.30:1 sobre
      blanco, por debajo del mínimo. */
-  --color-musgo: #15803d;
-  --color-musgo-dark: #11672f;
-  --color-musgo-tint: #dcf3e3;
+  --color-exito: #15803d;
+  --color-exito-dark: #11672f;
+  --color-exito-tint: #dcf3e3;
 
   /* texto — TRES niveles. La v4 tenía dos y alcanzaba porque el fondo gris
      cargaba parte de la jerarquía; en una app blanca la carga el texto solo.
@@ -84,20 +79,13 @@
   --color-tinta-muted: #5a5a58;
   --color-tinta-tenue: #8c8b86;
 
-  /* superficies — rampa cálida derivada del gris claro del manual */
+  /* superficies — rampa cálida derivada del gris claro del manual.
+     superficie-suave: header de planilla, hover de fila, pie de modal.
+     relleno: el fondo de un control sin borde (buscador, botón de período,
+     segmentado) y el tint del par neutro de un badge. */
   --color-superficie: #ffffff;
   --color-superficie-suave: #f9f8f6;
-  --color-base-2: #f3f2ee;
-
-  /* --color-base-1 cargaba DOS roles en la v4: fondo de página y superficie
-     suave (header de planilla, hover de fila, buscador, pies de modal). En la
-     v5 son roles distintos -- la página es blanca y la superficie suave es
-     #f9f8f6 -- así que acá queda apuntando al segundo, que es el de 26 de sus
-     28 usos. El fondo de página pasa a --color-superficie cuando se toque el
-     shell (pieza 3 de docs/PLAN_UIUX_ROLLOUT.md); hasta entonces queda un pelo
-     cálido en vez de blanco puro, que es un desvío mucho más chico que perder
-     el header de la planilla y el hover de las filas. Nombre borrado en §20. */
-  --color-base-1: #f9f8f6;
+  --color-relleno: #f3f2ee;
 
   /* líneas — DOS niveles, y no es capricho. --color-linea es el CONTORNO de un
      bloque ("acá empieza y termina esto"); --color-linea-suave separa filas
@@ -112,15 +100,10 @@
      oliva. Entran sólo en badges y en el error de un campo; el pleno queda para
      el borde de un input inválido y el punto de alerta del sidebar. Si aparecen
      en más de dos lugares de una pantalla, la pantalla está mal. */
-  --color-arcilla: #d97706;
-  --color-arcilla-tint: #fef3e2;
-  --color-oxido: #dc2626;
-  --color-oxido-tint: #fdecea;
-
-  /* --color-acero (#64748b) era un gris frío que tampoco está en el manual: se
-     retira apuntando al gris cálido. Nombre borrado en el renombre de §20. */
-  --color-acero: #5a5a58;
-  --color-acero-tint: #f3f2ee;
+  --color-atencion: #d97706;
+  --color-atencion-tint: #fef3e2;
+  --color-error: #dc2626;
+  --color-error-tint: #fdecea;
 
   /* borde del botón de marca (la acción de IA): oliva desaturado. En la v4 ese
      botón era contorno oliva; en los diseños es relleno en tint con este borde,
@@ -143,30 +126,30 @@
      pleno no llega a contraste suficiente sobre su propio tint. En la v5 estos
      tres son la mitad de cada par fondo/texto del semáforo (ver DESIGN.md §2),
      así que dejaron de ser un caso puntual de TablaProyectos.css y son la forma
-     normal de pintar un badge. --color-oxido-texto no existía y hacía falta. */
-  --color-terracota-texto: #4f5b30;
-  --color-arcilla-texto: #9a4a07;
-  --color-oxido-texto: #b42318;
-  --color-acero-texto: #5a5a58;
+     normal de pintar un badge. --color-error-texto no existía y hacía falta.
+     El neutro no tiene uno propio: su texto es --color-tinta-muted. */
+  --color-oliva-texto: #4f5b30;
+  --color-atencion-texto: #9a4a07;
+  --color-error-texto: #b42318;
 
   /* color — los otros tres de la paleta del manual. Ya no son "para usos
      puntuales": --color-oliva-claro es el tramo completado de una barra de
      progreso y la segunda serie de un gráfico, y los dos grises son el origen
      del que se derivó toda la rampa de superficies de arriba.
-     --color-gris-claro-marca es además el hover de borde de una card, el
+     --color-linea-fuerte es además el hover de borde de una card, el
      separador de breadcrumb y el borde punteado de un chip de "agregar". */
   --color-oliva-claro: #a8b36a;
-  --color-gris-claro-marca: #d9d7d2;
+  --color-linea-fuerte: #d9d7d2;
   --color-gris-oscuro-marca: #5a5a58;
 
   /* tints suaves para hover de fila en tablas -- más tenues que
-     --color-terracota-tint y --color-oxido-tint, pensados para pintar la fila
+     --color-oliva-tint y --color-error-tint, pensados para pintar la fila
      entera sin competir con el semáforo de color (borde/texto) que ya lleva
      cada fila. En la v5 el hover de fila por defecto es
      --color-superficie-suave; estos dos quedan sólo para la fila que lleva
      color de estado, y se revisan en la pieza 2a del rollout. */
-  --color-terracota-tint-fila: #f7f9f3;
-  --color-oxido-tint-fila: #fdf7f7;
+  --color-oliva-tint-fila: #f7f9f3;
+  --color-error-tint-fila: #fdf7f7;
 
   /* color — superficies oscuras de marca. En la v5 el sidebar pasa a blanco
      (ver DESIGN.md §13), así que esto queda SÓLO para el panel izquierdo del
@@ -183,8 +166,10 @@
   --color-oscuro-texto-tenue: #4a4a48;
   --color-oscuro-item-texto: #b8b8b6;
 
-  /* tipografía — Public Sans es la fuente oficial de marca (ver manual §4) */
-  --font-display: "Public Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  /* tipografía — Public Sans es la fuente oficial de marca (ver manual §4), y
+     la única: títulos y UI son la misma familia. Hubo un --font-display que
+     valía exactamente esto; se colapsó en el prompt 20 (DESIGN.md §20). La
+     jerarquía de un título la dan el peso 700 y el tracking, no otra fuente. */
   --font-ui: "Public Sans", -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* escala tipográfica — única fuente de verdad para el tamaño de texto.
@@ -193,7 +178,7 @@
      a componente: había ~230 declaraciones literales contra 92 usos de token,
      y varias eran el token escrito a mano.
 
-     v5: los diez pasos están RECALIBRADOS a los px exactos de los diseños. Los
+     v5: los pasos están RECALIBRADOS a los px exactos de los diseños. Los
      nombres no cambian (cero cambios en componentes), los valores sí. Siguen en
      rem y no en px para que el usuario que subió el tamaño de fuente del
      navegador siga viendo la app más grande; los valores de abajo SON los px
@@ -203,13 +188,14 @@
      - --text-2xs  (11) abreviatura de mes, badge chico
      - --text-xs   (12) meta-texto, contador, hint, header de tabla, badge
      - --text-sm   (13) EL MÁS USADO: texto secundario, label de campo, botón, chip
-     - --text-btn  (13) alias de --text-sm, ver abajo
      - --text-base (14) texto de UI por defecto, valor de input, nombre en fila
      - --text-md   (15) nombre destacado en una fila, título de bloque de form
      - --text-lg   (16) título de sección, nombre en una card
      - --text-xl   (18) título de modal
      - --text-2xl  (24) título de una página de detalle, total grande de modal
      - --text-3xl  (28) título de una página de listado y números grandes de KPI
+     - --text-4xl  (36) LA cifra de una pantalla, una sola: la ganancia neta del
+                        análisis (4d). Si aparece una segunda, no es la cifra.
 
      Los títulos BAJAN respecto a la v4 (3xl de 32 a 28, 2xl de 25.6 a 24): los
      diseños apoyan la jerarquía en el peso 700 y en el letter-spacing negativo,
@@ -217,17 +203,15 @@
   --text-2xs: 0.6875rem;
   --text-xs: 0.75rem;
   --text-sm: 0.8125rem;
-  /* --text-btn ya NO está fuera de orden: en los diseños el texto de botón es
-     13px, o sea exactamente --text-sm. Queda como alias para no tocar sus 28
-     usos, pero dejó de ser un paso propio de la escala -- hoy es documentación
-     de que ese texto es de un control. Candidato a colapsar (DESIGN.md §20). */
-  --text-btn: 0.8125rem;
+  /* Hubo un --text-btn: alias exacto de --text-sm que la mayoría de sus usos
+     ni siquiera ponía en un botón. Se colapsó en el prompt 20. */
   --text-base: 0.875rem;
   --text-md: 0.9375rem;
   --text-lg: 1rem;
   --text-xl: 1.125rem;
   --text-2xl: 1.5rem;
   --text-3xl: 1.75rem;
+  --text-4xl: 2.25rem;
 
   /* espaciado — escala de 4px, con dos medios pasos.
 
@@ -307,7 +291,7 @@
   --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.05);
   --shadow-overlay: 0 12px 32px rgba(24, 24, 27, 0.16);
   --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.22);
-  --shadow-foco: 0 0 0 3px var(--color-terracota-tint);
+  --shadow-foco: 0 0 0 3px var(--color-oliva-tint);
 
   /* movimiento — 93 de las 99 transiciones de la app ya usaban este valor. */
   --transicion: 0.15s ease;
@@ -377,7 +361,7 @@ body {
      contenedor de scroll. Si un navegador viejo no lo soporta, la declaración
      se descarta y el recorte lo sigue haciendo el <html> de arriba. */
   overflow-x: clip;
-  background: var(--color-base-1);
+  background: var(--color-superficie);
   color: var(--color-tinta);
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;
@@ -404,7 +388,7 @@ textarea {
 /* Scrollbar fino con el thumb en oliva de marca, en vez del gris de sistema. */
 * {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-terracota-tint) transparent;
+  scrollbar-color: var(--color-oliva-tint) transparent;
 }
 
 *::-webkit-scrollbar {
@@ -417,21 +401,21 @@ textarea {
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: var(--color-terracota-tint);
+  background-color: var(--color-oliva-tint);
   border-radius: var(--radius-pill);
   border: 2px solid transparent;
   background-clip: padding-box;
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-terracota);
+  background-color: var(--color-oliva);
 }
 
 h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-weight: 700;
   letter-spacing: -0.015em;
   margin: 0;
@@ -451,8 +435,8 @@ table {
 }
 
 ::selection {
-  background: var(--color-terracota-tint);
-  color: var(--color-terracota-dark);
+  background: var(--color-oliva-tint);
+  color: var(--color-oliva-dark);
 }
 
 /* Foco visible y consistente en toda la app — reemplaza los outlines
@@ -463,28 +447,41 @@ input:focus-visible,
 select:focus-visible,
 textarea:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid var(--color-terracota);
+  outline: 2px solid var(--color-oliva);
   outline-offset: 2px;
 }
 
-/* Botones propios — reemplazan los <button> sin estilo/genéricos repetidos
-   en cada .css. Cantos rectos, sin sombra, color con intención. */
+/* Botones — DESIGN.md §8. `.btn` da la forma y una variante da el color;
+   siempre las dos clases.
+
+   v5: la base pasa de padding a ALTO FIJO. Con `padding: 10px 18px` el alto
+   salía del contenido y un botón al lado de un input o dentro de una fila
+   nunca medía lo mismo que su vecino; con el alto declarado alinean solos.
+   El borde de 1px va en todas las variantes (transparente en las rellenas)
+   para que todas midan igual. */
 .btn {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  justify-content: center;
+  gap: var(--space-1-5);
+  height: 32px;
+  padding: 0 var(--space-3);
   font-family: var(--font-ui);
-  font-size: var(--text-btn);
+  font-size: var(--text-sm);
   font-weight: 600;
-  padding: 10px 18px;
+  line-height: 1;
+  white-space: nowrap;
   border-radius: var(--radius-sm);
   border: 1px solid transparent;
   cursor: pointer;
   transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-  line-height: 1.2;
+    background-color var(--transicion),
+    border-color var(--transicion),
+    color var(--transicion);
+}
+
+.btn > svg {
+  flex-shrink: 0;
 }
 
 .btn:disabled {
@@ -492,60 +489,73 @@ textarea:focus-visible,
   cursor: not-allowed;
 }
 
+/* Acción de fila, encabezado denso. */
+.btn--sm {
+  height: 30px;
+}
+
+/* Pie de modal. */
+.btn--lg {
+  height: 38px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-base);
+}
+
+/* Las rellenas a 18px de costado: sin borde visible, con 16 el texto se ve
+   apretado contra el canto del relleno. Es el único 18 fuera de una card. */
+.btn--lg.btn-primary,
+.btn--lg.btn-marca {
+  padding: 0 18px;
+}
+
+/* La acción principal de la pantalla. Una sola por vista: es el único oliva
+   sólido que puede haber. */
 .btn-primary {
-  background: var(--color-terracota);
-  border-color: var(--color-terracota);
+  background: var(--color-oliva);
+  border-color: var(--color-oliva);
   color: var(--color-superficie);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--color-terracota-dark);
-  border-color: var(--color-terracota-dark);
+  background: var(--color-oliva-dark);
+  border-color: var(--color-oliva-dark);
 }
 
 .btn-secondary {
-  background: transparent;
+  background: var(--color-superficie);
   border-color: var(--color-linea);
   color: var(--color-tinta);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  border-color: var(--color-tinta);
-  background: var(--color-base-2);
+  background: var(--color-superficie-suave);
+  border-color: var(--color-linea-fuerte);
 }
 
-/* Acción secundaria que pertenece a la marca -- hoy, "Importar catálogo" con
-   IA. Existe porque esa misma acción estaba en dos pantallas (el header de
-   Proveedores y el de la ficha de proveedor) con dos estilos inventados por
-   separado, los dos oliva en contorno. No es un secundario alternativo: si la
-   acción no es de marca, va .btn-secondary. */
+/* Acción secundaria que pertenece a la marca -- "Importar catálogo" y
+   "Autocompletar con IA". v5: deja de ser contorno oliva y pasa a RELLENO en
+   tint con un borde oliva desaturado: se lee como acento de marca sin
+   competir con el primario. Si la acción no es de marca, va .btn-secondary. */
 .btn-marca {
-  background: transparent;
-  border-color: var(--color-terracota);
-  color: var(--color-terracota-dark);
+  background: var(--color-oliva-tint);
+  border-color: var(--color-ia-borde);
+  color: var(--color-oliva-dark);
 }
 
 .btn-marca:hover:not(:disabled) {
-  background: var(--color-terracota-tint);
+  border-color: var(--color-oliva);
 }
 
 .btn-peligro {
   background: transparent;
-  border-color: var(--color-oxido);
-  color: var(--color-oxido);
+  border-color: var(--color-error);
+  color: var(--color-error);
 }
 
 .btn-peligro:hover:not(:disabled) {
-  background: var(--color-oxido);
+  background: var(--color-error);
   color: var(--color-superficie);
-}
-
-/* Única variante de tamaño. Existe porque los encabezados de listado ya
-   usaban un botón más chico (9px 16px en ProyectoHeader.css), no para abrir
-   la puerta a una escala de tamaños de botón. */
-.btn--sm {
-  padding: 7px 12px;
-  font-size: var(--text-sm);
 }
 
 /* Botón de sólo ícono: acción de fila (editar/eliminar), cerrar un modal,
@@ -557,13 +567,16 @@ textarea:focus-visible,
    ProveedorDetalle) se montaban encima de una tercera y necesitaban 20
    `!important` para ganarle al color.
 
-   La forma la da esta clase; el tamaño del ícono adentro es 14px siempre. */
+   v5: 32×32 (--sm 28×28), para medir igual que el botón de toolbar que
+   tienen al lado. El ícono lo achica o agranda esta clase y no el `size` del
+   JSX: el CSS le gana al atributo del <svg>, así que todos miden lo mismo
+   aunque cada llamado pase otro número. Siempre con `aria-label`. */
 .btn-icono {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
   padding: 0;
   border: 1px solid transparent;
@@ -574,11 +587,18 @@ textarea:focus-visible,
   transition:
     background-color var(--transicion),
     border-color var(--transicion),
-    color var(--transicion);
+    color var(--transicion),
+    opacity var(--transicion);
+}
+
+.btn-icono > svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 .btn-icono:hover:not(:disabled) {
-  background: var(--color-base-2);
+  background: var(--color-relleno);
   color: var(--color-tinta);
 }
 
@@ -589,37 +609,66 @@ textarea:focus-visible,
 
 /* Denso: dentro de una fila de tabla o de una tarjeta compacta. */
 .btn-icono--sm {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
+}
+
+.btn-icono--sm > svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* Con borde: cuando el botón tiene que leerse como control aunque la fila no
-   esté en hover (la planilla de fases, las filas de un formulario). */
+   esté en hover (las filas de un formulario). */
 .btn-icono--contorno {
   border-color: var(--color-linea);
   background: var(--color-superficie);
 }
 
 .btn-icono--contorno:hover:not(:disabled) {
-  border-color: var(--color-tinta);
-  background: var(--color-superficie);
+  border-color: var(--color-linea-fuerte);
+  background: var(--color-superficie-suave);
 }
 
 .btn-icono--peligro {
-  color: var(--color-oxido);
+  color: var(--color-error);
 }
 
 .btn-icono--peligro.btn-icono--contorno {
-  border-color: var(--color-oxido-tint);
+  border-color: var(--color-error-tint);
 }
 
 .btn-icono--peligro:hover:not(:disabled) {
-  background: var(--color-oxido-tint);
-  border-color: var(--color-oxido);
-  color: var(--color-oxido);
+  background: var(--color-error-tint);
+  border-color: var(--color-error);
+  color: var(--color-error);
 }
 
-/* Campo de formulario — input, select y textarea.
+/* Acciones de fila — DESIGN.md §8, la excepción que se mantiene.
+
+   Los diseños las muestran sólo en hover. Eso se adopta SÓLO con puntero fino
+   (mouse): en touch el hover no existe y quedarían inalcanzables, que es el
+   bug que la v4 ya arregló una vez (8f79861). El `:focus-within` no es
+   opcional: sin él tampoco se llega por teclado.
+
+   Uso: el contenedor de los botones lleva `.acciones` y la fila, `.planilla__fila`
+   o `.fila-con-acciones` (para listas que no son planilla). */
+@media (hover: hover) and (pointer: fine) {
+  .planilla__fila .acciones,
+  .fila-con-acciones .acciones {
+    opacity: 0;
+    transition: opacity var(--transicion);
+  }
+
+  .planilla__fila:hover .acciones,
+  .planilla__fila:focus-within .acciones,
+  .fila-con-acciones:hover .acciones,
+  .fila-con-acciones:focus-within .acciones {
+    opacity: 1;
+  }
+}
+
+/* Campo de formulario — input, select y textarea. DESIGN.md §9.
 
    Había siete recetas distintas para el mismo campo (9px 12px en los modales,
    10px 12px en Manager, 12px en Auth, 9px 12px con otro fondo en los selects
@@ -632,7 +681,12 @@ textarea:focus-visible,
    manager no llevan la clase en el markup (son decenas de inputs), así que se
    enganchan acá en vez de redeclarar las mismas propiedades en cada .css.
    Regla para no volver atrás: si un campo necesita otra geometría, va un
-   modificador de --sm, no un bloque nuevo en el .css del componente. */
+   modificador de --sm, no un bloque nuevo en el .css del componente.
+
+   v5: ALTO FIJO de 40px y fondo BLANCO. En la v4 el campo en reposo era gris
+   sobre una página gris y no hacía nada; en una página blanca el campo blanco
+   con borde es más limpio, y deja al buscador como el único control con
+   relleno, a propósito. El foco es borde oliva + anillo de 3px en tint. */
 .campo,
 .modal-form input,
 .modal-form select,
@@ -642,20 +696,32 @@ textarea:focus-visible,
 .manager-campo input,
 .manager-campo select {
   width: 100%;
+  height: 40px;
+  padding: 0 var(--space-3);
   font-family: var(--font-ui);
-  font-size: var(--text-md);
+  font-size: var(--text-base);
   font-weight: 400;
   text-transform: none;
   letter-spacing: normal;
-  padding: 9px 12px;
   border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-base-1);
+  border-radius: var(--radius-md);
+  background-color: var(--color-superficie);
   color: var(--color-tinta);
-  transition: border-color var(--transicion);
+  transition:
+    border-color var(--transicion),
+    box-shadow var(--transicion);
+}
+
+.campo::placeholder,
+.modal-form input::placeholder,
+.modal-form textarea::placeholder,
+.auth-campo input::placeholder,
+.manager-campo input::placeholder {
+  color: var(--color-tinta-tenue);
 }
 
 .campo:focus,
+.campo:focus-within,
 .modal-form input:focus,
 .modal-form select:focus,
 .modal-form textarea:focus,
@@ -664,14 +730,16 @@ textarea:focus-visible,
 .manager-campo input:focus,
 .manager-campo select:focus {
   outline: none;
-  border-color: var(--color-terracota);
-  background-color: var(--color-superficie);
+  border-color: var(--color-oliva);
+  box-shadow: var(--shadow-foco);
 }
 
 .campo:disabled,
 .modal-form input:disabled,
 .modal-form select:disabled,
+.modal-form textarea:disabled,
 .auth-campo input:disabled,
+.auth-campo select:disabled,
 .manager-campo input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -681,53 +749,244 @@ textarea:focus-visible,
    usuario tocó el campo. Con `:invalid` los campos sin placeholder y todos
    los `type="date"` arrancaban en rojo con el formulario recién abierto. */
 .campo:user-invalid,
-.modal-form input:user-invalid {
-  border-color: var(--color-oxido);
+.modal-form input:user-invalid,
+.campo--error,
+.modal-form .campo--error {
+  border-color: var(--color-error);
 }
 
-/* Denso: filas de una tabla editable (el catálogo de la importación por IA),
-   donde el campo estándar rompería el alto de fila. */
-.campo--sm {
-  padding: 6px 8px;
+.campo--error:focus,
+.campo--error:focus-within,
+.modal-form .campo--error:focus {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px var(--color-error-tint);
+}
+
+/* Denso: fila de una tabla editable (el catálogo de la importación por IA),
+   toolbar de lista, donde el campo de 40 rompería el alto de fila. */
+.campo--sm,
+.modal-form .campo--sm {
+  height: 32px;
+  padding: 0 var(--space-2-5);
+  border-radius: var(--radius-sm);
   font-size: var(--text-sm);
 }
 
-.campo--error {
-  border-color: var(--color-oxido);
+/* El chevron de un select chico necesita su lugar (el padding de arriba se
+   lo pisaba). */
+select.campo--sm,
+.modal-form select.campo--sm {
+  padding-right: var(--space-8);
+  background-position: right var(--space-2) center;
 }
 
+/* Monto destacado. Con la moneda adentro va como campo compuesto (abajo):
+   `<div class="campo campo--monto"><span class="campo__prefijo">$</span>
+   <input …/><span class="campo__sufijo">≈ US$ 19</span></div>`. */
+.campo--monto,
+.campo--monto > input {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Textarea y checkbox no son cajas de 40px. */
 textarea.campo,
 .modal-form textarea {
-  resize: vertical;
+  display: block;
+  height: auto;
   min-height: 4.5rem;
+  padding: var(--space-2-5) var(--space-3);
+  resize: vertical;
+}
+
+.modal-form input[type="checkbox"],
+.modal-form input[type="radio"],
+.manager-campo input[type="checkbox"] {
+  width: auto;
+  height: auto;
+  padding: 0;
+  box-shadow: none;
 }
 
 .modal-form input[type="file"] {
-  padding: 7px 10px;
-  font-size: var(--text-base);
+  padding: var(--space-2) var(--space-2-5);
+  font-size: var(--text-sm);
 }
 
-/* La flecha del select es un SVG inline porque `appearance: none` se lleva
-   puesta la nativa. El color va hardcodeado (no acepta var() adentro de una
-   data URI): es --color-tinta-muted. */
-/* Auth y Manager quedan fuera a propósito: dibujan el chevron con un <svg>
-   real posicionado encima (.auth-campo__select svg), así que si además les
-   pusiéramos este background-image quedarían con dos flechas. */
-select.campo,
-.modal-form select {
-  appearance: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
-  background-repeat: no-repeat;
-  background-position: right 0.7rem center;
-  background-size: 1rem;
-  padding-right: 2rem;
+/* Campo compuesto: la CAJA es el `.campo` (un div) y el input va adentro sin
+   borde propio, para poder llevar ícono, prefijo de moneda o conversión dentro
+   del mismo borde (DESIGN.md §9, "El monto y la conversión"). El foco lo pinta
+   la caja con :focus-within. */
+div.campo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.campo > input,
+.campo > select {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
+  color: inherit;
+}
+
+.campo > input:focus,
+.campo > select:focus,
+.campo > input:user-invalid {
+  outline: none;
+  border: none;
+  box-shadow: none;
+}
+
+/* El input de adentro de una caja compuesta no pinta su propio error: lo
+   dice la caja (`.campo--error` o `:has()` del inválido). */
+div.campo:has(> input:user-invalid) {
+  border-color: var(--color-error);
+}
+
+/* Fecha dentro de una caja con ícono: el calendario nativo de Chrome se
+   vuelve invisible y ocupa todo el input, así se abre clickeando en cualquier
+   parte y no quedan dos íconos (el nuestro a la izquierda y el suyo). */
+.campo > input[type="date"] {
+  position: relative;
+}
+
+.campo > input[type="date"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  opacity: 0;
   cursor: pointer;
 }
 
-/* Badge / etiqueta de estado — único lugar de la app con radio grande a
-   propósito (ver docs/DESIGN.md §7). Esta clase da la FORMA; el color lo pone
-   quien la usa: inline con el color del tipo (ver constants/tipoMovimiento)
-   o con uno de los modificadores semánticos de abajo.
+.campo > svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--color-tinta-tenue);
+}
+
+.campo__prefijo {
+  flex-shrink: 0;
+  color: var(--color-tinta-tenue);
+}
+
+.campo__sufijo {
+  flex-shrink: 0;
+  font-size: var(--text-xs);
+  font-weight: 400;
+  color: var(--color-tinta-muted);
+  white-space: nowrap;
+}
+
+/* La flecha del select es un SVG inline porque `appearance: none` se lleva
+   puesta la nativa. El color va escrito (no acepta var() adentro de una data
+   URI): es --color-tinta-tenue, el de todo ícono dentro de un campo. */
+/* Auth y Manager también lo usan: ponen `class="campo"` en sus selects (antes
+   dibujaban el chevron con un <svg> propio encima). */
+select.campo,
+.modal-form select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238c8b86' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right var(--space-3) center;
+  background-size: 16px;
+  padding-right: var(--space-9);
+  cursor: pointer;
+}
+
+/* Label de campo — DESIGN.md §3 y §9. v5: caja normal, 13px, peso 500, en
+   muted. Era `.label-ficha`: 12px en mayúsculas con tracking abierto, un
+   nombre que describía una ficha que ya no existe.
+
+   Los selectores que la acompañan son el mismo ALIAS que el de `.campo`: los
+   formularios de los modales, de auth y de manager envuelven texto + input en
+   un <label> que no lleva la clase. La distancia al campo la pone el gap del
+   label (--space-1-5); el tamaño del input lo pone `.campo`, así que no
+   hereda los 13px. El "(opcional)" va adentro, con `.label-campo__opcional`. */
+.label-campo,
+.modal-form label,
+.auth-campo,
+.manager-campo {
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  letter-spacing: normal;
+  text-transform: none;
+  color: var(--color-tinta-muted);
+}
+
+.label-campo__opcional {
+  font-weight: 400;
+  color: var(--color-tinta-tenue);
+}
+
+/* Error de validación mostrado debajo de un campo de formulario (onChange,
+   no recién al hacer submit) — usado por los modales de compra/gasto/cobro.
+   Misma posición que el hint, nunca los dos a la vez. */
+.campo-error {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-error-texto);
+}
+
+.campo-error > svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+/* Hint: de dónde sale un dato o qué se espera ("Dólar blue $ 1.450 del
+   01/10 · cambiar"). Misma posición que el error, nunca los dos a la vez. */
+.campo-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-1-5);
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+.campo-hint > svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  color: var(--color-tinta-tenue);
+}
+
+/* Un link dentro de un hint ("cambiar"): botón sin caja, en oliva. */
+.campo-hint__accion {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-ui);
+  font-size: inherit;
+  font-weight: 600;
+  color: var(--color-oliva-dark);
+  cursor: pointer;
+}
+
+.campo-hint__accion:hover {
+  text-decoration: underline;
+}
+
+/* Badge / etiqueta de estado — DESIGN.md §12. Esta clase da la FORMA; el
+   color lo pone quien la usa: inline con el par del dato (ver
+   constants/estados.js) o con uno de los modificadores semánticos de abajo.
 
    Antes había doce reimplementaciones de esta misma pastilla repartidas por
    la app (`.proveedor-detalle-badge` era un clon exacto, `.comparador-chip` y
@@ -735,69 +994,270 @@ select.campo,
    `border-radius: 999px` a mano teniendo el token) con nueve tamaños de letra
    distintos -- mientras esta clase no la usaba nadie.
 
-   Los chips INTERACTIVOS no entran acá: `.chips-cat-chip` (toggle de
-   categoría), `.detalle__chip` y `.comprobantes-chip` (archivo clickeable)
-   son controles, no etiquetas, y tienen hover/foco propios. */
+   v5: deja de ser pastilla y pasa a RECTÁNGULO de 4px. En los diseños los
+   badges van pegados a cifras en filas densas y la pastilla redonda compite
+   con el texto; el rectángulo se apoya en la línea de base y desaparece como
+   forma. El pill queda para los controles (`.chip`) y lo que es redondo.
+   El alto sale del `line-height`, no de `padding-block`: así mide 22px exactos
+   con cualquier fuente. No le agregues padding vertical ni borde.
+
+   Los chips INTERACTIVOS no entran acá: van con `.chip`, abajo. */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 3px 10px;
-  border-radius: var(--radius-pill);
-  border: 1px solid transparent;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+  line-height: 22px;
+  border-radius: var(--radius-xs);
   font-family: var(--font-ui);
   font-size: var(--text-xs);
   font-weight: 600;
-  letter-spacing: 0.02em;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 
-/* Variante chica: dentro de una tarjeta densa o de una fila de formulario. */
+.badge > svg {
+  flex-shrink: 0;
+}
+
+/* Dentro de una fila densa. */
 .badge--sm {
-  gap: 4px;
-  padding: 1px 7px;
+  padding: 0 var(--space-1-5);
+  line-height: 20px;
   font-size: var(--text-2xs);
 }
 
-/* Colores semánticos, para cuando el badge no lleva el color de un tipo. */
+/* Pares de DESIGN.md §2. Para cuando el color no viene del dato. */
 .badge--neutro {
-  background-color: var(--color-base-2);
+  background-color: var(--color-relleno);
   color: var(--color-tinta-muted);
 }
 
 .badge--marca {
-  background-color: var(--color-terracota-tint);
-  color: var(--color-terracota-dark);
+  background-color: var(--color-oliva-tint);
+  color: var(--color-oliva-dark);
 }
 
 .badge--exito {
-  background-color: var(--color-musgo-tint);
-  color: var(--color-musgo-dark);
+  background-color: var(--color-exito-tint);
+  color: var(--color-exito-dark);
+}
+
+.badge--atencion {
+  background-color: var(--color-atencion-tint);
+  color: var(--color-atencion-texto);
 }
 
 .badge--peligro {
-  background-color: var(--color-oxido-tint);
-  color: var(--color-oxido);
+  background-color: var(--color-error-tint);
+  color: var(--color-error-texto);
 }
 
-/* Planilla — la tabla en grid que usan el listado de proyectos (también dentro
-   del Panel) y el de fases de un proyecto.
+/* Chip — DESIGN.md §12. Es un CONTROL, no un badge: tiene hover, foco y
+   estado. Vive acá como utilidad propia justamente para que nadie vuelva a
+   resolverlo con `.badge` + `onClick`.
 
-   Las dos estaban escritas por separado y eran idénticas salvo por
-   `grid-template-columns`: mismo borde, mismo radio, mismo `overflow: hidden`,
-   mismo header con fondo base-1 y padding 10px/16px, mismas filas con
-   12px/16px, mismo separador y misma transición. Hasta la media query de
-   scroll horizontal era la misma. Esta clase da ese chrome; cada uso pone
-   nada más sus columnas.
+   - `.chip--activo`: el filtro aplicado.
+   - `.chip--agregar`: "+ Agregar", con borde punteado.
+   - `.chip--quitable`: un filtro aplicado que se saca con su ×.
+   - `.chip--opcion`: el de formularios (Tipo de factura, Condición de pago),
+     más alto y con el radio de un campo.
+   Un chip puede llevar un contador a la derecha con `.chip__contador`. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  height: 30px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-pill);
+  background: var(--color-superficie);
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1;
+  color: var(--color-tinta);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--transicion),
+    border-color var(--transicion),
+    box-shadow var(--transicion);
+}
+
+.chip > svg {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+}
+
+.chip:hover:not(:disabled) {
+  border-color: var(--color-linea-fuerte);
+}
+
+/* Tiene borde propio, así que el foco es el de los campos (DESIGN.md §16). */
+.chip:focus-visible {
+  outline: none;
+  border-color: var(--color-oliva);
+  box-shadow: var(--shadow-foco);
+}
+
+.chip:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chip--activo,
+.chip--activo:hover:not(:disabled) {
+  border-color: var(--color-oliva);
+  background: var(--color-oliva-sel);
+  font-weight: 600;
+}
+
+.chip__contador {
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-tinta-tenue);
+  font-variant-numeric: tabular-nums;
+}
+
+.chip--agregar {
+  border-style: dashed;
+  border-color: var(--color-linea-fuerte);
+  color: var(--color-tinta-muted);
+}
+
+.chip--agregar:hover:not(:disabled) {
+  border-color: var(--color-tinta-tenue);
+  color: var(--color-tinta);
+}
+
+.chip--quitable {
+  padding-right: var(--space-1);
+  border-color: transparent;
+  background: var(--color-relleno);
+  cursor: default;
+}
+
+.chip--quitable:hover:not(:disabled) {
+  border-color: transparent;
+}
+
+.chip__quitar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-tinta-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--transicion),
+    color var(--transicion);
+}
+
+.chip__quitar:hover {
+  background: var(--color-linea);
+  color: var(--color-tinta);
+}
+
+.chip__quitar > svg {
+  width: 12px;
+  height: 12px;
+}
+
+.chip--opcion {
+  height: 34px;
+  border-radius: var(--radius-md);
+}
+
+/* Segmentado — DESIGN.md §9. Vive acá porque lo usan dos componentes: el
+   selector de vista de una lista (FiltrosSegmentados, "US$ / Pesos") y el
+   control de opción de un formulario (ControlOpcion).
+
+   Track track en la línea suave con 3px de aire, botones
+   de 32px (26 + 3 + 3 del track) y la opción activa en blanco, levantada con
+   la sombra de hover. Es el único lugar donde esa sombra no es de una card:
+   acá dice "esta pieza está arriba de la otra", que es lo mismo. */
+.segmentado {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-md);
+  background: var(--color-linea-suave);
+}
+
+.segmentado__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1-5);
+  height: 26px;
+  padding: 0 var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-tinta-muted);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--transicion),
+    color var(--transicion),
+    box-shadow var(--transicion);
+}
+
+.segmentado__btn:hover {
+  color: var(--color-tinta);
+}
+
+.segmentado__btn--activo,
+.segmentado__btn--activo:hover {
+  background: var(--color-superficie);
+  color: var(--color-tinta);
+  font-weight: 600;
+  box-shadow: var(--shadow-hover);
+}
+
+/* En un formulario el segmentado mide lo mismo que un campo (40px: 34 + 3 +
+   3) y ocupa el ancho de su columna, con las opciones en partes iguales. */
+.segmentado--campo {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  width: 100%;
+}
+
+.segmentado--campo .segmentado__btn {
+  height: 34px;
+}
+
+.segmentado__btn:focus-visible {
+  outline: 2px solid var(--color-oliva);
+  outline-offset: -2px;
+}
+
+/* Planilla — la tabla en grid de la app. DESIGN.md §11. Da el chrome; cada
+   uso pone nada más sus `grid-template-columns`.
 
    El contenedor no fija `display: grid`: eso va en el header y la fila, porque
    entre medio puede haber otras cosas (los separadores de grupo del listado
-   agrupado por estado). */
+   agrupado por estado).
+
+   v5: PIERDE SU CAJA. Era una card con filas adentro (borde + radio); en los
+   diseños las listas no tienen contorno: las filas se separan entre sí con
+   --color-linea-suave y la lista se apoya directo en el blanco de la página.
+   El header deja de ser obligatorio: en una lista donde cada fila ya dice qué
+   es cada dato, es una fila de labels que no agrega nada. */
 .planilla {
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
+  min-width: 0;
 }
 
 .planilla__header,
@@ -808,14 +1268,19 @@ select.campo,
 }
 
 .planilla__header {
-  padding: var(--space-2-5) var(--space-4);
-  background-color: var(--color-base-1);
-  border-bottom: 1px solid var(--color-linea);
+  min-height: 32px;
+  padding: 0 var(--space-4);
+  background-color: var(--color-superficie-suave);
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-tinta-muted);
 }
 
 .planilla__fila {
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--color-linea);
+  min-height: 54px;
+  padding: var(--space-2) var(--space-4);
+  border-bottom: 1px solid var(--color-linea-suave);
   cursor: pointer;
   transition: background-color var(--transicion);
 }
@@ -824,32 +1289,12 @@ select.campo,
   border-bottom: none;
 }
 
-/* `--fila-hover` la setea cada fila cuando el hover lleva el color de su
-   estado (el listado de proyectos); donde no, cae al gris de base. */
+/* `--fila-hover` la puede setear una fila cuyo hover lleva otro color; donde
+   no, cae a la superficie suave. */
 .planilla__fila:hover {
-  background-color: var(--fila-hover, var(--color-base-1));
-}
-
-/* Etiqueta tipo "ficha" para labels de formulario y meta-texto — mayúsculas
-   reservadas a este uso, nunca a títulos (ver docs/DESIGN.md §3). */
-.label-ficha {
-  font-family: var(--font-ui);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--color-tinta-muted);
+  background-color: var(--fila-hover, var(--color-superficie-suave));
 }
 
 .cifra {
   font-variant-numeric: tabular-nums;
-}
-
-/* Error de validación mostrado debajo de un campo de formulario (onChange,
-   no recién al hacer submit) — usado por los modales de compra/gasto/cobro. */
-.campo-error {
-  margin: 2px 0 0;
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--color-oxido);
 }

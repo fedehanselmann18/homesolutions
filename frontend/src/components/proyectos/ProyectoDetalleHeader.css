@@ -1,45 +1,71 @@
-/* components/ProyectoDetalleHeader.css — carátula de legajo corta: sin card
-   flotante ni sombra, la identidad viene de la tipografía y la regla
-   izquierda de color de estado. Breadcrumb + título + estado + meta, nada
-   más antes de las tabs (ver docs/DESIGN.md, "headers cortos"). */
+/* components/ProyectoDetalleHeader.css — carátula de legajo corta, sin card
+   flotante ni sombra. En la v5 tampoco lleva la regla izquierda del color de
+   estado: la identidad la da la tipografía (h1 a 700) y el estado lo dice el
+   badge. Breadcrumb + título + estado + meta, nada más antes de las tabs
+   (ver docs/DESIGN.md §13 y docs/GENERALUIUXChange/HSProyectoHeader.dc.html). */
 
 .proyecto-header {
-  border-left: 4px solid var(--color-tinta-muted);
-  padding: var(--space-2) 0 0 var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
   font-family: var(--font-ui);
+}
+
+/* El espacio lo pone el gap del header; el margen propio del breadcrumb es
+   para las páginas que lo apilan suelto. */
+.proyecto-header > .breadcrumbs {
+  margin: 0;
 }
 
 .proyecto-header__top {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  margin-bottom: 4px;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
 .proyecto-header__nombre {
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: var(--text-2xl);
-  font-weight: 600;
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--color-tinta);
   margin: 0;
-  letter-spacing: -0.01em;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.proyecto-header__top .badge {
+  flex-shrink: 0;
 }
 
 .proyecto-header__meta {
-  font-size: var(--text-sm);
-  color: var(--color-tinta-muted);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1-5) var(--space-5);
   margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-base);
+  color: var(--color-tinta-muted);
 }
 
-.proyecto-header__estado {
+.proyecto-header__meta li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  min-width: 0;
+}
+
+.proyecto-header__meta svg {
   flex-shrink: 0;
+  color: var(--color-tinta-tenue);
 }
 
 @media (max-width: 640px) {
   .proyecto-header__top {
     flex-direction: column;
     align-items: flex-start;
-    gap: 8px;
+    gap: var(--space-2);
   }
 }

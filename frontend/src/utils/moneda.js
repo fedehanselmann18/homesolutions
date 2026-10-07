@@ -82,3 +82,17 @@ export function formatMontoDeItem({ monto, montoOtra, moneda }) {
     ? formatMonedaDual(montoOtra, monto)
     : formatMonedaDual(monto, montoOtra, { principal: "ars" });
 }
+
+/**
+ * "≈ US$ 19": el equivalente de un monto en la otra moneda con la cotización
+ * del form, para el sufijo del CampoMonto. Es un preview: la cifra que se
+ * guarda la calcula el backend con la misma cuenta (app/tipo_cambio.py).
+ */
+export function textoEquivalente(monto, monedaMonto, cotizacion) {
+  const montoNumero = Number(monto);
+  const valor = Number(cotizacion);
+  if (!(montoNumero > 0) || !(valor > 0)) return null;
+  return monedaMonto === "ars"
+    ? `≈ ${formatMoneda(montoNumero / valor, "usd")}`
+    : `≈ ${formatMoneda(montoNumero * valor, "ars")}`;
+}

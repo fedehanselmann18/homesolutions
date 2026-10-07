@@ -1,4 +1,6 @@
-/* Dashboard.css -- Panel general (ruta "/") */
+/* Dashboard.css -- Panel general (ruta "/"), variante 4i de
+   docs/GENERALUIUXChange/HS General.dc.html: saludo, tres números, el
+   gráfico de los últimos meses y dos listas (proyectos / para resolver). */
 
 .panel {
   display: flex;
@@ -7,219 +9,286 @@
   font-family: var(--font-ui);
 }
 
-.panel-header {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+/* El saludo es el título de la página; el PageHeader trae margen abajo
+   pensado para cuando lleva línea, y acá el espacio lo pone el gap. */
+.panel > .page-header {
+  margin-bottom: 0;
 }
 
-/* --- KPIs: franja de números, sin cards -- separados por reglas verticales --- */
+/* --- KPIs: tres números, separados por una línea, sin cards --- */
 
 .panel-kpis {
-  display: flex;
-  flex-wrap: wrap;
-  border-top: 1px solid var(--color-linea);
-  border-bottom: 1px solid var(--color-linea);
-  padding: var(--space-4) 0;
-}
-
-.panel-kpis > * {
-  flex: 1 1 200px;
-  /* Sin esto un ítem flex no baja de su ancho de contenido (min-width:auto),
-     así que el importe más largo empujaba la celda y se salía del box. */
-  min-width: 0;
-  padding: 0 var(--space-6);
-  border-left: 1px solid var(--color-linea);
-}
-
-.panel-kpis > *:first-child {
-  padding-left: 0;
-  border-left: none;
-}
-
-/* En mobile la franja de 5 KPIs apilados alargaba demasiado el Panel antes
-   de llegar a lo que de verdad se usa parado en la obra: la lista de
-   proyectos en curso y los gráficos. Se oculta entera -- los mismos números
-   están en el detalle de cada proyecto. */
-@media (max-width: 640px) {
-  .panel-kpis {
-    display: none;
-  }
-}
-
-/* --- Secciones: separadas por línea, no por caja --- */
-
-.panel-seccion {
-  padding-top: var(--space-6);
-  border-top: 1px solid var(--color-linea);
-}
-
-.panel-fila {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-8);
 }
 
-.panel-fila .panel-seccion:nth-child(2) {
-  border-top: none;
-  padding-top: 0;
+.panel-kpis > * {
+  /* Sin esto un ítem de grid no baja de su ancho de contenido y el importe
+     más largo empujaba la celda. */
+  min-width: 0;
 }
 
-@media (min-width: 900px) {
-  .panel-fila .panel-seccion:nth-child(2) {
-    border-top: none;
-    border-left: 1px solid var(--color-linea);
-    padding-left: var(--space-8);
-  }
+.panel-kpis > * + * {
+  padding-left: var(--space-8);
+  border-left: 1px solid var(--color-linea);
 }
 
-/* Título/descripción a la izquierda, `accion` (si viene) a la derecha --
-   ej. los filtros En curso/A iniciar/Terminados de "Proyectos en curso". */
-.panel-seccion-header {
+/* --- gráfico --- */
+
+.panel-grafico {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.panel-grafico__header {
+  display: flex;
   justify-content: space-between;
-  gap: var(--space-4);
+  align-items: center;
   flex-wrap: wrap;
+  gap: var(--space-3);
 }
 
-.panel-seccion-titulo {
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  font-weight: 600;
-  color: var(--color-tinta);
-  margin: 0 0 2px;
-}
-
-.panel-seccion-descripcion {
+.panel-leyenda {
+  display: flex;
+  gap: var(--space-5);
   font-size: var(--text-sm);
   color: var(--color-tinta-muted);
-  margin: 0 0 var(--space-4);
 }
 
-/* --- KPI destacado: mismo TarjetaKpi de siempre, con un fondo que ocupa
-   toda la celda (dirección 1a) en vez de agrandar el número. La celda de
-   .panel-kpis ya trae padding horizontal + separador vertical -- acá sólo se
-   extiende el fondo al padding vertical de la franja (--space-4), que vive
-   en el contenedor .panel-kpis, no en cada celda. --- */
-
-.panel-kpi-realce {
-  margin: calc(var(--space-4) * -1) 0;
-  /* Sólo se agrega el padding vertical de la franja: el horizontal lo pone
-     `.panel-kpis > *` y redeclarar `padding` entero se lo comía. */
-  padding-top: var(--space-4);
-  padding-bottom: var(--space-4);
-  background-color: var(--color-terracota-tint-fila);
+.panel-leyenda__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
 }
 
-/* --- Tooltip del gráfico --- */
+.panel-leyenda__cuadro {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-xs);
+}
 
 .panel-tooltip {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  background-color: var(--color-superficie);
+  gap: var(--space-1);
+  padding: var(--space-2-5) var(--space-3);
   border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-superficie);
   box-shadow: var(--shadow-overlay);
   font-size: var(--text-sm);
-  color: var(--color-tinta);
+  color: var(--color-tinta-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 .panel-tooltip strong {
   color: var(--color-tinta);
   text-transform: capitalize;
-  font-family: var(--font-display);
 }
 
-/* --- Actividad reciente --- */
+/* --- las dos listas --- */
 
-.panel-actividad {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.panel-listas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-10);
+}
+
+.panel-lista {
   display: flex;
   flex-direction: column;
-}
-
-.panel-actividad-item {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: 10px 0;
-  border-bottom: 1px solid var(--color-linea);
-}
-
-.panel-actividad-item:last-child {
-  border-bottom: none;
-}
-/* Ancho fijo -- no `min-width` -- para que la columna de tipos alinee aunque
-   las palabras midan distinto ("Cobro" vs "Compra") y, sobre todo, para que
-   la descripción de todas las filas arranque siempre en el mismo x.
-
-   El `white-space: normal` es a propósito: `.badge` trae `nowrap`, y con eso
-   "Nota de crédito" / "Nota de débito" -- mucho más largas que el resto -- se
-   salían de la pastilla (el fondo quedaba en 58px y el texto seguía de largo
-   por afuera). Dejándolas envolver, esas dos ocupan dos renglones dentro de
-   la pastilla, pero el texto queda adentro y la columna no se corre de lugar.
-
-   Va `justify-content` y no `text-align`: `.badge` es `inline-flex`, así que
-   el texto es un ítem flex y lo alinea el eje principal. Con `text-align`
-   -- que es lo que había cuando esto era un <span> suelto -- el texto queda
-   pegado a la izquierda de la pastilla. El `text-align: center` de acá es
-   para centrar las dos líneas entre sí cuando la etiqueta envuelve. */
-.panel-actividad-tipo {
-  flex-shrink: 0;
-  width: 58px;
-  justify-content: center;
-  white-space: normal;
-  text-align: center;
-  line-height: 1.25;
-  padding-top: 3px;
-  padding-bottom: 3px;
-}
-
-.panel-actividad-texto {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  flex: 1;
   min-width: 0;
 }
 
-.panel-actividad-descripcion {
-  font-size: var(--text-sm);
+.panel-lista__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2-5);
+  border-bottom: 1px solid var(--color-linea);
+}
+
+.panel-lista__titulo {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 700;
   color: var(--color-tinta);
+}
+
+.panel-lista__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-oliva);
+  text-decoration: none;
+}
+
+.panel-lista__link:hover {
+  color: var(--color-tinta);
+}
+
+.panel-lista__resto {
+  font-size: var(--text-sm);
+  color: var(--color-tinta-tenue);
+}
+
+.panel-lista__items {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.panel-lista__items > li {
+  border-bottom: 1px solid var(--color-linea-suave);
+}
+
+/* Las filas son botones para que se puedan recorrer con teclado; se les saca
+   el chrome de botón y el hover es el de toda fila (superficie suave). */
+.panel-proyecto,
+.panel-pendiente {
+  display: grid;
+  width: 100%;
+  padding: var(--space-3) 0;
+  border: none;
+  background: none;
+  font-family: var(--font-ui);
+  color: var(--color-tinta);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--transicion);
+}
+
+.panel-proyecto:hover,
+.panel-pendiente:hover {
+  background: var(--color-superficie-suave);
+}
+
+.panel-proyecto {
+  grid-template-columns: minmax(0, 1fr) 120px;
+  gap: var(--space-1) var(--space-4);
+  align-items: center;
+}
+
+.panel-proyecto__nombre {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+
+.panel-proyecto__punto {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: var(--radius-pill);
+}
+
+.panel-proyecto__monto {
+  text-align: right;
+  font-size: var(--text-base);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* La fase va alineada con el nombre, no con el punto: 7px de punto + 8 de gap. */
+.panel-proyecto__fase {
+  padding-left: 15px;
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+.panel-proyecto__rotulo {
+  text-align: right;
+  font-size: var(--text-xs);
+  color: var(--color-tinta-tenue);
+}
+
+.panel-pendiente {
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 2px var(--space-3);
+  align-items: center;
+  padding: var(--space-2-5) 0;
+}
+
+.panel-pendiente__icono {
+  grid-row: span 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  background: var(--color-relleno);
+  color: var(--color-tinta-muted);
+}
+
+.panel-pendiente__titulo {
+  min-width: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.panel-actividad-detalle {
-  font-size: var(--text-xs);
+.panel-pendiente .badge {
+  justify-self: end;
+}
+
+.panel-pendiente__contexto {
+  min-width: 0;
+  font-size: var(--text-sm);
   color: var(--color-tinta-muted);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.panel-actividad-monto {
+.panel-pendiente__monto {
+  text-align: right;
   font-size: var(--text-sm);
   font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .panel-listas {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+}
+
+@media (max-width: 640px) {
+  .panel-kpis {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .panel-kpis > * + * {
+    padding: var(--space-4) 0 0;
+    border-left: none;
+    border-top: 1px solid var(--color-linea);
+  }
 }
 
 /* --- Skeleton de carga: misma estructura que el panel real, con bloques
-   placeholder en vez de contenido, mientras se resuelve el fetch inicial. --- */
+   placeholder en vez de contenido, mientras se resuelve el fetch inicial.
+   Es la única pantalla con skeleton, a propósito (DESIGN.md §16). --- */
 
 .skeleton {
   background: linear-gradient(
     90deg,
-    var(--color-base-2) 25%,
+    var(--color-relleno) 25%,
     var(--color-linea) 37%,
-    var(--color-base-2) 63%
+    var(--color-relleno) 63%
   );
   background-size: 400% 100%;
   animation: skeleton-shimmer 1.4s ease infinite;
@@ -236,59 +305,44 @@
 }
 
 .skeleton--titulo {
-  width: 160px;
-  height: 2rem;
-}
-
-.skeleton--subtitulo {
-  width: 260px;
-  height: 0.9rem;
-  margin-top: 8px;
+  width: 220px;
+  height: var(--space-8);
 }
 
 .panel-kpi-skeleton {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: var(--space-2);
 }
 
 .skeleton--kpi-label {
-  width: 70%;
-  height: 0.72rem;
+  width: 60%;
+  height: var(--space-3);
 }
 
 .skeleton--kpi-valor {
-  width: 90%;
-  height: 1.6rem;
+  width: 80%;
+  height: var(--space-7);
 }
 
 .skeleton--kpi-detalle {
-  width: 55%;
-  height: 0.72rem;
-}
-
-.skeleton--seccion-titulo {
-  width: 200px;
-  height: 1.05rem;
-  margin-bottom: var(--space-4);
-}
-
-.skeleton--proyecto-fila {
-  height: 64px;
-  border-radius: 0;
-  border-bottom: 1px solid var(--color-linea);
-}
-
-.skeleton--proyecto-fila:last-child {
-  border-bottom: none;
+  width: 50%;
+  height: var(--space-3);
 }
 
 .skeleton--grafico {
-  height: 260px;
+  height: 200px;
 }
 
-.skeleton--actividad {
-  height: 260px;
+.skeleton--seccion-titulo {
+  width: 160px;
+  height: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.skeleton--fila {
+  height: 54px;
+  margin-top: var(--space-2);
 }
 
 /* La regla de `prefers-reduced-motion` es global (index.css) y ya cubre

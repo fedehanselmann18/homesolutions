@@ -1,15 +1,23 @@
 import { useState, useEffect, useMemo } from "react";
-import ModalShell from "./ModalShell";
-import { LogoCargando } from "../shared/LogoCargando";
-import { CamposCotizacion } from "./CamposCotizacion";
+import { Building2, CalendarDays, MapPin } from "lucide-react";
+
+import ModalShell, { AccionesFormulario } from "./ModalShell";
+import { CampoMonto, CamposCotizacion } from "./CamposCotizacion";
+import { ControlOpcion } from "../shared/ControlOpcion";
 import { useCotizacionDia } from "../../hooks/useCotizacionDia";
+import { textoEquivalente } from "../../utils/moneda";
 
 const ESTADOS_OPCIONES = [
-  { value: "a_iniciar", label: "A iniciar" },
-  { value: "en_curso", label: "En curso" },
-  { value: "terminado", label: "Terminado" },
+  { valor: "a_iniciar", label: "A iniciar" },
+  { valor: "en_curso", label: "En curso" },
+  { valor: "terminado", label: "Terminado" },
 ];
 
+/**
+ * Alta y edición de un proyecto — variante 5f. El precio acordado va aparte,
+ * en un panel suave ("Acuerdo con el cliente"): es lo único del formulario
+ * que es un compromiso con alguien, no un dato de la obra.
+ */
 export function ModalProyecto({ proyecto, onGuardar, onCerrar }) {
   const esEdicion = Boolean(proyecto);
 
@@ -73,94 +81,88 @@ export function ModalProyecto({ proyecto, onGuardar, onCerrar }) {
   return (
     <ModalShell
       titulo={esEdicion ? "Editar proyecto" : "Nuevo proyecto"}
+      icono={Building2}
+      contexto={esEdicion ? proyecto.nombre : undefined}
       onCerrar={onCerrar}
       onSubmit={handleSubmit}
       cerrarDeshabilitado={guardando}
       acciones={
-        <>
-          <button
-            type="button"
-            onClick={onCerrar}
-            className="btn btn-secondary"
-            disabled={guardando}
-          >
-            Cancelar
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={guardando}>
-            {guardando ? (
-              <>
-                <LogoCargando size={14} variante="blanco" />
-                Guardando...
-              </>
-            ) : esEdicion ? (
-              "Guardar cambios"
-            ) : (
-              "Crear proyecto"
-            )}
-          </button>
-        </>
+        <AccionesFormulario
+          guardando={guardando}
+          onCancelar={onCerrar}
+          textoGuardar={esEdicion ? "Guardar cambios" : "Crear proyecto"}
+        />
       }
     >
       <label>
         Nombre
-        <input type="text" name="nombre" value={form.nombre} onChange={handleChange} required />
+        <input
+          type="text"
+          name="nombre"
+          value={form.nombre}
+          onChange={handleChange}
+          placeholder="Ej: Salón de eventos · Martínez"
+          required
+        />
       </label>
 
       <label>
         Dirección
-        <input
-          type="text"
-          name="direccion"
-          value={form.direccion}
-          onChange={handleChange}
-          required
+        <div className="campo">
+          <MapPin aria-hidden="true" />
+          <input
+            type="text"
+            name="direccion"
+            value={form.direccion}
+            onChange={handleChange}
+            required
+          />
+        </div>
+      </label>
+
+      <div className="modal-form-fila modal-form-fila--fecha">
+        <label>
+          Inicio
+          <div className="campo">
+            <CalendarDays aria-hidden="true" />
+            <input
+              type="date"
+              name="fecha_inicio"
+              value={form.fecha_inicio}
+              onChange={handleChange}
+              required
+            />
+          </div>
+        </label>
+
+        <ControlOpcion
+          etiqueta="Estado"
+          opciones={ESTADOS_OPCIONES}
+          valor={form.estado}
+          onCambiar={(estado) => setForm((prev) => ({ ...prev, estado }))}
+          variante="segmentado"
+          disabled={guardando}
         />
-      </label>
+      </div>
 
-      <label>
-        Fecha de inicio
-        <input
-          type="date"
-          name="fecha_inicio"
-          value={form.fecha_inicio}
-          onChange={handleChange}
-          required
-        />
-      </label>
-
-      <label>
-        Estado
-        <select name="estado" value={form.estado} onChange={handleChange}>
-          {ESTADOS_OPCIONES.map((op) => (
-            <option key={op.value} value={op.value}>
-              {op.label}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label>
-        Precio acordado (US$)
-        <input
-          type="number"
+      <div className="modal-form-panel">
+        <span className="modal-form-panel__titulo">Acuerdo con el cliente</span>
+        <CampoMonto
+          etiqueta="Precio acordado"
           name="precio_acordado_usd"
           value={form.precio_acordado_usd}
           onChange={handleChange}
-          min="0"
-          step="0.01"
-          required
+          moneda="usd"
+          equivalente={textoEquivalente(form.precio_acordado_usd, "usd", cotizacion.valor)}
+          disabled={guardando}
         />
-      </label>
-
-      <CamposCotizacion
-        cotizacion={cotizacion}
-        monto={form.precio_acordado_usd}
-        monedaMonto="usd"
-        claseFila="modal-form-fila"
-        etiqueta="Dólar de la firma (opcional)"
-        requerido={false}
-        disabled={guardando}
-      />
+        <CamposCotizacion
+          cotizacion={cotizacion}
+          etiqueta="Dólar de la firma"
+          requerido={false}
+          disabled={guardando}
+        />
+      </div>
     </ModalShell>
   );
 }

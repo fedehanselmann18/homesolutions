@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { History } from "lucide-react";
 
 import { getUsuarios } from "../../services/usuarioService";
 import { usePageTitle } from "../../hooks/usePageTitle";
@@ -32,7 +31,6 @@ export function GestionAuditoria() {
   return (
     <div className="manager-pagina">
       <PageHeader
-        icono={<History size={20} strokeWidth={2} />}
         titulo="Historial"
         subtitulo="Quién hizo qué y cuándo, en toda la app. Solo lo ve esta cuenta."
       />

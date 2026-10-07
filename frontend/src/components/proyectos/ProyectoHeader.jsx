@@ -25,7 +25,7 @@ export function ProyectosHeader({
           />
           {canManage && (
             <button type="button" className="btn btn-primary" onClick={onCrearProyecto}>
-              <Plus size={16} strokeWidth={2} />
+              <Plus size={16} strokeWidth={1.75} aria-hidden="true" />
               Nuevo proyecto
             </button>
           )}

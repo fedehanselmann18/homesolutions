@@ -16,18 +16,6 @@
   border-bottom: none;
 }
 
-.page-header__icono {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  flex-shrink: 0;
-  border-radius: var(--radius-sm);
-  background: var(--color-terracota-tint);
-  color: var(--color-terracota-dark);
-}
-
 .page-header__texto {
   min-width: 0;
 }
@@ -40,24 +28,21 @@
 }
 
 .page-header__titulo {
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: var(--text-3xl);
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--color-tinta);
   margin: 0;
 }
 
+/* El conteo al lado del título ("4 cargados"): v5 sin mayúsculas ni caja,
+   en tenue -- está para contar, no para leer (DESIGN.md §2, Texto). */
 .page-header__chip {
-  font-size: var(--text-2xs);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--color-tinta-muted);
-  border: 1px solid var(--color-linea);
-  padding: 3px 7px;
-  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--color-tinta-tenue);
   white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .page-header__subtitulo {

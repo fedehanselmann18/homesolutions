@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { DollarSign, Percent, Receipt, Tag } from "lucide-react";
 
-import { useCategorias, useCategoriasGasto, useImpuestos } from "../hooks/queries";
+import { useCategorias, useCategoriasGasto, useCotizaciones, useImpuestos } from "../hooks/queries";
 import { queryKeys } from "../lib/queryKeys";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { crearImpuesto, actualizarImpuesto, eliminarImpuesto } from "../services/impuestosService";
@@ -22,10 +23,10 @@ import { SeccionCotizaciones } from "../components/catalogos/SeccionCotizaciones
 import "./Catalogos.css";
 
 const TABS = [
-  { key: "impuestos", label: "Impuestos" },
-  { key: "categoriasGasto", label: "Categorías de gasto" },
-  { key: "categorias", label: "Categorías de producto" },
-  { key: "cotizaciones", label: "Cotizaciones" },
+  { key: "impuestos", label: "Impuestos", icono: Percent },
+  { key: "categoriasGasto", label: "Categorías de gasto", icono: Receipt },
+  { key: "categorias", label: "Categorías de producto", icono: Tag },
+  { key: "cotizaciones", label: "Cotizaciones", icono: DollarSign },
 ];
 
 /**
@@ -46,6 +47,17 @@ export function Catalogos() {
   const impuestosQuery = useImpuestos();
   const categoriasGastoQuery = useCategoriasGasto();
   const categoriasQuery = useCategorias();
+  const cotizacionesQuery = useCotizaciones();
+
+  // Cada pestaña cuenta lo que tiene, como "Catálogo 7" en un proveedor. Las
+  // queries son las mismas que usan las secciones (React Query las dedupea).
+  const contadores = {
+    impuestos: impuestosQuery.data?.length,
+    categoriasGasto: categoriasGastoQuery.data?.length,
+    categorias: categoriasQuery.data?.length,
+    cotizaciones: cotizacionesQuery.data?.length,
+  };
+  const tabs = TABS.map((t) => ({ ...t, contador: contadores[t.key] }));
 
   return (
     <div className="catalogos">
@@ -54,7 +66,7 @@ export function Catalogos() {
         subtitulo="Impuestos, categorías y cotizaciones del dólar que se usan al cargar compras, gastos y cobros."
       />
 
-      <Tabs tabs={TABS} activa={tabActiva} onCambiar={setTabActiva} etiqueta="Catálogos" />
+      <Tabs tabs={tabs} activa={tabActiva} onCambiar={setTabActiva} etiqueta="Catálogos" />
 
       {tabActiva === "impuestos" && (
         <SeccionCatalogo

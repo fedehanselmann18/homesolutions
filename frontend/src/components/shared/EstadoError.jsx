@@ -10,7 +10,7 @@ import "./EstadoError.css";
  * a un estado vacío: un fallo de red y una lista sin resultados se veían igual,
  * siendo que una situación es normal y la otra pide una acción. El lenguaje de
  * error ya existía en `.campo-error` y en el aviso del footer de los modales
- * (CircleAlert + `--color-oxido`); esto lo alinea con eso.
+ * (CircleAlert + `--color-error`); esto lo alinea con eso.
  *
  * `grande`: para el error de una página entera (ej. falló el fetch del
  * proyecto). Default: fila chica dentro de una sección.

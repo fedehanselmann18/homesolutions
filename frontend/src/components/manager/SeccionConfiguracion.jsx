@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RotateCcw, Save } from "lucide-react";
+import { CircleAlert, CircleCheck, RotateCcw, Save } from "lucide-react";
 
 import "./Manager.css";
 
@@ -60,7 +60,14 @@ function EstadoIntegracion({ nombre, ayuda, configurado }) {
       {configurado === undefined ? (
         <span className="badge badge--neutro">Cargando...</span>
       ) : (
-        <span className={`badge ${configurado ? "badge--exito" : "badge--peligro"}`}>
+        // Sin configurar no es un error: la app sigue andando (disco local, carga
+        // a mano). Es "atención", y lleva su ícono como todo estado.
+        <span className={`badge ${configurado ? "badge--exito" : "badge--atencion"}`}>
+          {configurado ? (
+            <CircleCheck size={12} strokeWidth={2} aria-hidden="true" />
+          ) : (
+            <CircleAlert size={12} strokeWidth={2} aria-hidden="true" />
+          )}
           {configurado ? "Configurado" : "No configurado"}
         </span>
       )}
@@ -101,14 +108,14 @@ function FilaConfiguracion({ item, guardando, onGuardar, onRestaurar }) {
           onChange={(e) => setValor(e.target.value)}
           disabled={guardando}
         />
-        <button type="submit" className="manager-accion" disabled={guardando || !cambio}>
+        <button type="submit" className="btn btn--sm btn-secondary" disabled={guardando || !cambio}>
           <Save size={14} strokeWidth={2} />
           Guardar
         </button>
         {item.personalizado && (
           <button
             type="button"
-            className="manager-accion"
+            className="btn btn--sm btn-secondary"
             onClick={onRestaurar}
             disabled={guardando}
             title="Volver al valor del .env"

@@ -1,12 +1,16 @@
 import { useMemo, useState } from "react";
+import { Plus } from "lucide-react";
 import { getComprobanteCompra, getNotaCompra } from "../../services/compraService";
 import { getComprobanteGasto } from "../../services/gastoService";
 import { getComprobanteCobro, getNotaCobro } from "../../services/cobroService";
 import useAuth from "../../context/useAuth";
 import { formatMoneda, formatFecha } from "../../utils/formato";
 import { useAccionesProyecto } from "../../hooks/useAccionesProyecto";
+import { useProyecto } from "../../hooks/queries";
+import { montoCobroNeto } from "../../utils/moneda";
 
 import LibroDeObra from "./LibroDeObra";
+import SaldoObra from "./SaldoObra";
 import ModalGasto from "../modals/ModalGasto";
 import ModalCobro from "../modals/ModalCobro";
 import ModalCompra from "../modals/ModalCompra";
@@ -17,7 +21,15 @@ import ModalDetalleCobro from "../modals/ModalDetalleCobro";
 import ModalDetalleCompra from "../modals/ModalDetalleCompra";
 import FiltrosLista from "../shared/FiltrosLista";
 import { FiltrosSegmentados } from "../shared/FiltrosSegmentados";
-import { FILTROS_VACIOS, filtrarCompras, filtrarCobros, filtrarGastos } from "../../utils/filtros";
+import {
+  FILTROS_VACIOS,
+  CAMPOS_FILTRO_POR_TIPO,
+  filtrosParaTipo,
+  filtrarCompras,
+  filtrarCobros,
+  filtrarGastos,
+  tieneAlerta,
+} from "../../utils/filtros";
 
 import "./Acciones.css";
 
@@ -26,6 +38,7 @@ const FILTROS_TIPO = [
   { key: "compras", label: "Compras" },
   { key: "gastos", label: "Gastos" },
   { key: "cobros", label: "Cobros" },
+  { key: "alertas", label: "Con alertas" },
 ];
 
 export function Acciones({ proyectoId, proyectoNombre }) {
@@ -33,6 +46,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
   const canManage = usuario?.rol === "admin";
 
   const [filtroTipo, setFiltroTipo] = useState("todo");
+  const camposFiltro = CAMPOS_FILTRO_POR_TIPO[filtroTipo];
 
   const {
     compras,
@@ -69,11 +83,35 @@ export function Acciones({ proyectoId, proyectoNombre }) {
 
   const gastosFiltrados = useMemo(() => filtrarGastos(gastos, filtros), [gastos, filtros]);
   const cobrosFiltrados = useMemo(() => filtrarCobros(cobros, filtros), [cobros, filtros]);
+  // Para el avance de cobro del modal de cobro (variante 5d): el precio sale
+  // de la query del proyecto, que ya está en caché por el header.
+  const proyectoQuery = useProyecto(proyectoId);
+  const cobradoUsd = cobros.reduce((acc, c) => acc + montoCobroNeto(c, "usd"), 0);
   const comprasFiltradas = useMemo(() => filtrarCompras(compras, filtros), [compras, filtros]);
 
-  const comprasVisibles = filtroTipo === "todo" || filtroTipo === "compras" ? comprasFiltradas : [];
-  const gastosVisibles = filtroTipo === "todo" || filtroTipo === "gastos" ? gastosFiltrados : [];
-  const cobrosVisibles = filtroTipo === "todo" || filtroTipo === "cobros" ? cobrosFiltrados : [];
+  // "Con alertas" no es un tipo: recorta los tres por el mismo criterio que
+  // pinta de ámbar o rojo una fila (ver tieneAlerta en utils/filtros.js).
+  const conAlerta = useMemo(
+    () => ({
+      compras: comprasFiltradas.filter((c) => tieneAlerta("compra", c)),
+      gastos: gastosFiltrados.filter((g) => tieneAlerta("gasto", g)),
+      cobros: cobrosFiltrados.filter((c) => tieneAlerta("cobro", c)),
+    }),
+    [comprasFiltradas, gastosFiltrados, cobrosFiltrados]
+  );
+
+  const visiblesPorFiltro = {
+    todo: { compras: comprasFiltradas, gastos: gastosFiltrados, cobros: cobrosFiltrados },
+    compras: { compras: comprasFiltradas, gastos: [], cobros: [] },
+    gastos: { compras: [], gastos: gastosFiltrados, cobros: [] },
+    cobros: { compras: [], gastos: [], cobros: cobrosFiltrados },
+    alertas: conAlerta,
+  };
+  const {
+    compras: comprasVisibles,
+    gastos: gastosVisibles,
+    cobros: cobrosVisibles,
+  } = visiblesPorFiltro[filtroTipo];
 
   const [modalGastoAbierto, setModalGastoAbierto] = useState(false);
   const [gastoEditando, setGastoEditando] = useState(null);
@@ -268,6 +306,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
     compras: comprasFiltradas.length,
     gastos: gastosFiltrados.length,
     cobros: cobrosFiltrados.length,
+    alertas: conAlerta.compras.length + conAlerta.gastos.length + conAlerta.cobros.length,
   };
 
   return (
@@ -277,44 +316,48 @@ export function Acciones({ proyectoId, proyectoNombre }) {
         {canManage && (
           <div className="acciones-header-botones">
             <button type="button" className="btn btn-secondary" onClick={handleNuevoGasto}>
-              + Gasto
+              <Plus size={14} aria-hidden="true" />
+              Gasto
             </button>
             <button type="button" className="btn btn-secondary" onClick={handleNuevoCobro}>
-              + Cobro
+              <Plus size={14} aria-hidden="true" />
+              Cobro
             </button>
             <button type="button" className="btn btn-primary" onClick={handleNuevaCompra}>
+              <Plus size={14} strokeWidth={2} aria-hidden="true" />
               Nueva compra
             </button>
           </div>
         )}
       </div>
 
-      <FiltrosSegmentados
-        opciones={FILTROS_TIPO}
-        activa={filtroTipo}
-        contadores={contadorPorFiltro}
-        etiqueta="Filtrar movimientos por tipo"
-        onCambiar={(key) => {
-          setFiltroTipo(key);
-          // La barra fina sólo existe en Compras; si se sale de ahí con
-          // filtros puestos, seguirían filtrando sin estar a la vista.
-          if (key !== "compras") setFiltros(FILTROS_VACIOS);
-        }}
-      />
+      <SaldoObra compras={compras} gastos={gastos} cobros={cobros} />
 
-      {filtroTipo === "compras" && (
-        <FiltrosLista
-          filtros={filtros}
-          onCambiar={setFiltros}
-          mostrarNotas
-          mostrarEstadoPago
-          mostrarEstadoEnvio
-          mostrarFechas={false}
+      <FiltrosLista
+        filtros={filtros}
+        onCambiar={setFiltros}
+        mostrarEstadoPago={camposFiltro.includes("estadoPago")}
+        mostrarEstadoEnvio={camposFiltro.includes("estadoEnvio")}
+        mostrarNotas={camposFiltro.includes("notas")}
+        mostrarComprobante={camposFiltro.includes("comprobante")}
+        mostrarFechas={false}
+      >
+        <FiltrosSegmentados
+          opciones={FILTROS_TIPO}
+          activa={filtroTipo}
+          contadores={contadorPorFiltro}
+          etiqueta="Filtrar movimientos por tipo"
+          onCambiar={(key) => {
+            setFiltroTipo(key);
+            // Lo que no aplica al tipo nuevo se suelta: si no, seguiría
+            // filtrando sin estar a la vista en el panel.
+            setFiltros((actuales) => filtrosParaTipo(actuales, key));
+          }}
         />
-      )}
+      </FiltrosLista>
 
       <LibroDeObra
-        titulo={`Movimientos — ${proyectoNombre}`}
+        movimientoActivo={detalle}
         compras={comprasVisibles}
         gastos={gastosVisibles}
         cobros={cobrosVisibles}
@@ -347,6 +390,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
       {modalGastoAbierto && (
         <ModalGasto
           gasto={gastoEditando}
+          contexto={proyectoNombre}
           categoriasDisponibles={categoriasGasto}
           fasesDisponibles={fases}
           onGuardar={handleGuardarGasto}
@@ -360,7 +404,12 @@ export function Acciones({ proyectoId, proyectoNombre }) {
       {modalCobroAbierto && (
         <ModalCobro
           cobro={cobroEditando}
-          proyectoActual={{ id: proyectoId, nombre: proyectoNombre }}
+          proyectoActual={{
+            id: proyectoId,
+            nombre: proyectoNombre,
+            precio_acordado_usd: proyectoQuery.data?.precio_acordado_usd,
+            cobrado_usd: cobradoUsd,
+          }}
           onGuardar={handleGuardarCobro}
           onCerrar={() => setModalCobroAbierto(false)}
           onVerComprobante={
@@ -372,6 +421,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
 
       {modalCompraAbierto && (
         <ModalCompra
+          contexto={proyectoNombre}
           compra={compraEditando}
           fasesDisponibles={fases}
           proveedores={proveedores}
@@ -400,6 +450,14 @@ export function Acciones({ proyectoId, proyectoNombre }) {
         <ModalDetalleGasto
           gasto={entidadDetalle}
           faseNombre={entidadDetalle.fase_id ? nombreFase(entidadDetalle.fase_id) : null}
+          onEliminar={
+            canManage
+              ? () => {
+                  cerrarDetalle();
+                  handleSolicitarEliminarGasto(entidadDetalle.id);
+                }
+              : undefined
+          }
           onCerrar={cerrarDetalle}
           onVerComprobante={(c) => getComprobanteGasto(entidadDetalle.id, c.id)}
           onAgregarComprobante={
@@ -422,6 +480,14 @@ export function Acciones({ proyectoId, proyectoNombre }) {
       {entidadDetalle && detalle.tipo === "cobro" && (
         <ModalDetalleCobro
           cobro={entidadDetalle}
+          onEliminar={
+            canManage
+              ? () => {
+                  cerrarDetalle();
+                  handleSolicitarEliminarCobro(entidadDetalle.id);
+                }
+              : undefined
+          }
           onCerrar={cerrarDetalle}
           onVerComprobante={(c) => getComprobanteCobro(entidadDetalle.id, c.id)}
           onVerNota={(n) => getNotaCobro(entidadDetalle.id, n.id)}
@@ -447,6 +513,14 @@ export function Acciones({ proyectoId, proyectoNombre }) {
           faseNombre={nombreFase(entidadDetalle.fase_id)}
           proveedorNombre={nombreProveedor(entidadDetalle.proveedor_id)}
           productos={productos}
+          onEliminar={
+            canManage
+              ? () => {
+                  cerrarDetalle();
+                  handleSolicitarEliminarCompra(entidadDetalle.id);
+                }
+              : undefined
+          }
           onCerrar={cerrarDetalle}
           onVerComprobante={(c) => getComprobanteCompra(entidadDetalle.id, c.id)}
           onVerNota={(n) => getNotaCompra(entidadDetalle.id, n.id)}

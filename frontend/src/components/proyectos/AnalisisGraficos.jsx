@@ -1,6 +1,6 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { formatMoneda, formatMonedaCorta } from "../../utils/formato";
-import { VERDE, PALETA_GRAFICOS } from "../../constants/colores";
+import { OLIVA, PALETA_GRAFICOS } from "../../constants/colores";
 import { EstadoVacio } from "../shared/EstadoVacio";
 
 // Compartido entre AnalisisGeneral (proyecto) y AnalisisFase: mismo lenguaje
@@ -74,7 +74,9 @@ export function ContenidoTreemap({
     );
   }
 
-  const opacidad = 0.9 - Math.min(indice ?? 0, 5) * 0.12;
+  // Los productos de un mismo tipo se separan aclarando el color, pero no
+  // por debajo de 0.6: más claro, el texto blanco deja de leerse.
+  const opacidad = 1 - Math.min(indice ?? 0, 4) * 0.1;
   const entraElTexto = width > 80 && height > 36;
 
   return (
@@ -84,7 +86,7 @@ export function ContenidoTreemap({
         y={y}
         width={width}
         height={height}
-        fill={color ?? VERDE}
+        fill={color ?? OLIVA}
         fillOpacity={opacidad}
         stroke="var(--color-superficie)"
         strokeWidth={1}

@@ -1,0 +1,108 @@
+/* Nueva compra — el híbrido 5ab (DESIGN.md §14). La caja, el pie en dos
+   niveles y los campos son de ModalShell / modal-base / index.css; acá sólo
+   los pasos y lo propio de la compra. */
+
+/* Los tres pasos, fijos debajo del header: barrita de 3px arriba del label.
+   Hechos y actual en oliva; pendientes en la línea. Son botones: se puede
+   volver a un paso clickeando su nombre. */
+.compra-pasos {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  flex-shrink: 0;
+  margin: 0;
+  padding: var(--space-4) var(--space-6) 0;
+  border-bottom: 1px solid var(--color-linea);
+  list-style: none;
+}
+
+.compra-pasos__paso {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  padding: 0 0 14px;
+  border: none;
+  background: none;
+  font-family: var(--font-ui);
+  text-align: left;
+  cursor: pointer;
+}
+
+.compra-pasos__paso:focus-visible {
+  outline: 2px solid var(--color-oliva);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+.compra-pasos__barra {
+  height: 3px;
+  border-radius: var(--radius-pill);
+  background: var(--color-linea);
+}
+
+.compra-pasos__paso--hecho .compra-pasos__barra,
+.compra-pasos__paso--actual .compra-pasos__barra {
+  background: var(--color-oliva);
+}
+
+.compra-pasos__label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-tinta-muted);
+}
+
+.compra-pasos__paso--hecho .compra-pasos__label {
+  color: var(--color-oliva-dark);
+}
+
+.compra-pasos__paso--actual .compra-pasos__label {
+  font-weight: 700;
+  color: var(--color-tinta);
+}
+
+.compra-pasos__numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-pill);
+  background: var(--color-relleno);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+}
+
+.compra-pasos__paso--actual .compra-pasos__numero {
+  background: var(--color-tinta);
+  color: var(--color-superficie);
+}
+
+/* La fecha no necesita todo el ancho. */
+.compra-fecha {
+  max-width: 260px;
+}
+
+.compra-tipo {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+@media (max-width: 640px) {
+  .compra-pasos {
+    padding: var(--space-3) var(--space-4) 0;
+  }
+
+  /* En 390px entra la barra y el número; el nombre, sólo el del actual. */
+  .compra-pasos__paso:not(.compra-pasos__paso--actual) .compra-pasos__texto {
+    display: none;
+  }
+
+  .compra-fecha {
+    max-width: none;
+  }
+}

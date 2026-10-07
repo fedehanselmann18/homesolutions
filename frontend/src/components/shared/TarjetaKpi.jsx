@@ -1,4 +1,4 @@
-import { VERDE } from "../../constants/colores";
+import { EXITO } from "../../constants/colores";
 import "./TarjetaKpi.css";
 
 /**
@@ -6,7 +6,7 @@ import "./TarjetaKpi.css";
  * dibujar, pero el número que se muestra al lado puede pasarse de 100 (ej.
  * un proyecto que gastó más de lo acordado) — eso lo decide quien la usa.
  */
-export function BarraProgreso({ porcentaje, color = VERDE }) {
+export function BarraProgreso({ porcentaje, color = EXITO }) {
   return (
     <div className="kpi-progreso">
       <div
@@ -24,27 +24,31 @@ export function BarraProgreso({ porcentaje, color = VERDE }) {
  * - `porcentaje`: si viene, dibuja la barra de progreso debajo del valor.
  * - `destacado`: pinta el valor con `color` (se usa para plata en verde/rojo).
  * - `plano`: sin borde ni fondo, para meterla adentro de otra tarjeta.
+ * - `detalleColor`: el detalle en otro color cuando ES el dato (ej. "1 compra
+ *   con más de 90 días" en el texto del par de problema).
  */
 export function TarjetaKpi({
   titulo,
   valor,
   detalle,
   porcentaje,
-  color = VERDE,
+  color = EXITO,
   destacado,
   plano,
+  detalleColor,
 }) {
   return (
     <div className={`kpi ${plano ? "kpi--plano" : ""}`}>
       {titulo && <span className="kpi-titulo">{titulo}</span>}
-      <span
-        className={`kpi-valor ${destacado ? "kpi-valor--destacado" : ""}`}
-        style={destacado ? { color } : undefined}
-      >
+      <span className="kpi-valor" style={destacado ? { color } : undefined}>
         {valor}
       </span>
       {porcentaje !== undefined && <BarraProgreso porcentaje={porcentaje} color={color} />}
-      {detalle && <span className="kpi-detalle">{detalle}</span>}
+      {detalle && (
+        <span className="kpi-detalle" style={detalleColor ? { color: detalleColor } : undefined}>
+          {detalle}
+        </span>
+      )}
     </div>
   );
 }

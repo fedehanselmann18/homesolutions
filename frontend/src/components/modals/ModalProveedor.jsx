@@ -1,6 +1,20 @@
 import { useState, useEffect } from "react";
-import ModalShell from "./ModalShell";
-import { LogoCargando } from "../shared/LogoCargando";
+import { Mail, MapPin, Phone, Truck } from "lucide-react";
+
+import { avisoFaltantes, validarRequerido } from "../../utils/formValidation";
+import { ErrorCampo } from "../shared/ErrorCampo";
+import ModalShell, { AccionesFormulario } from "./ModalShell";
+
+// El email es opcional, pero si se escribe tiene que poder usarse.
+const EMAIL_VALIDO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const validarCampo = (name, value) => {
+  if (name === "nombre") return validarRequerido(value, "Escribí el nombre del proveedor.");
+  if (name === "email" && value && !EMAIL_VALIDO.test(value)) return "Revisá el email.";
+  return null;
+};
+
+const ETIQUETAS = { nombre: "Nombre", email: "Email" };
 
 export function ModalProveedor({ proveedor, onGuardar, onCerrar }) {
   const esEdicion = Boolean(proveedor);
@@ -13,6 +27,8 @@ export function ModalProveedor({ proveedor, onGuardar, onCerrar }) {
     email: "",
   });
   const [guardando, setGuardando] = useState(false);
+  const [errores, setErrores] = useState({});
+  const [intentoGuardar, setIntentoGuardar] = useState(false);
 
   useEffect(() => {
     if (proveedor) {
@@ -29,10 +45,22 @@ export function ModalProveedor({ proveedor, onGuardar, onCerrar }) {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    // Como en gasto y compra: un campo que ya marcó error se revalida al
+    // escribir, para que el error se vaya apenas se corrige.
+    if (errores[name] || intentoGuardar) {
+      setErrores((prev) => ({ ...prev, [name]: validarCampo(name, value) }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const nuevosErrores = Object.fromEntries(
+      Object.keys(ETIQUETAS).map((campo) => [campo, validarCampo(campo, form[campo])])
+    );
+    setErrores(nuevosErrores);
+    setIntentoGuardar(true);
+    if (Object.values(nuevosErrores).some(Boolean)) return;
+
     setGuardando(true);
     try {
       await onGuardar({
@@ -47,44 +75,47 @@ export function ModalProveedor({ proveedor, onGuardar, onCerrar }) {
     }
   };
 
+  const faltantes = Object.keys(ETIQUETAS)
+    .filter((campo) => errores[campo])
+    .map((campo) => ETIQUETAS[campo]);
+
   return (
     <ModalShell
       titulo={esEdicion ? "Editar proveedor" : "Nuevo proveedor"}
+      icono={Truck}
+      contexto={esEdicion ? proveedor.nombre : undefined}
       onCerrar={onCerrar}
       onSubmit={handleSubmit}
+      validacionPropia
+      aviso={avisoFaltantes(faltantes)}
       cerrarDeshabilitado={guardando}
       acciones={
-        <>
-          <button
-            type="button"
-            onClick={onCerrar}
-            className="btn btn-secondary"
-            disabled={guardando}
-          >
-            Cancelar
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={guardando}>
-            {guardando ? (
-              <>
-                <LogoCargando size={14} variante="blanco" />
-                Guardando...
-              </>
-            ) : esEdicion ? (
-              "Guardar cambios"
-            ) : (
-              "Crear proveedor"
-            )}
-          </button>
-        </>
+        <AccionesFormulario
+          guardando={guardando}
+          onCancelar={onCerrar}
+          textoGuardar={esEdicion ? "Guardar cambios" : "Crear proveedor"}
+        />
       }
     >
       <label>
         Nombre
-        <input type="text" name="nombre" value={form.nombre} onChange={handleChange} required />
+        <input
+          type="text"
+          name="nombre"
+          value={form.nombre}
+          onChange={handleChange}
+          placeholder="Ej: CobreSur Materiales"
+          aria-invalid={errores.nombre ? true : undefined}
+          className={errores.nombre ? "campo--error" : undefined}
+          required
+        />
+        <ErrorCampo texto={errores.nombre} />
       </label>
 
       <label>
-        CUIT/CUIL (opcional)
+        <span>
+          CUIT/CUIL <span className="label-campo__opcional">(opcional)</span>
+        </span>
         <input
           type="text"
           name="cuit"
@@ -95,19 +126,41 @@ export function ModalProveedor({ proveedor, onGuardar, onCerrar }) {
       </label>
 
       <label>
-        Dirección
-        <input type="text" name="direccion" value={form.direccion} onChange={handleChange} />
+        <span>
+          Dirección <span className="label-campo__opcional">(opcional)</span>
+        </span>
+        <div className="campo">
+          <MapPin aria-hidden="true" />
+          <input type="text" name="direccion" value={form.direccion} onChange={handleChange} />
+        </div>
       </label>
 
       <div className="modal-form-fila">
         <label>
-          Teléfono
-          <input type="text" name="telefono" value={form.telefono} onChange={handleChange} />
+          <span>
+            Teléfono <span className="label-campo__opcional">(opcional)</span>
+          </span>
+          <div className="campo">
+            <Phone aria-hidden="true" />
+            <input type="tel" name="telefono" value={form.telefono} onChange={handleChange} />
+          </div>
         </label>
 
         <label>
-          Email
-          <input type="email" name="email" value={form.email} onChange={handleChange} />
+          <span>
+            Email <span className="label-campo__opcional">(opcional)</span>
+          </span>
+          <div className={`campo${errores.email ? " campo--error" : ""}`}>
+            <Mail aria-hidden="true" />
+            <input
+              type="email"
+              name="email"
+              value={form.email}
+              onChange={handleChange}
+              aria-invalid={errores.email ? true : undefined}
+            />
+          </div>
+          <ErrorCampo texto={errores.email} />
         </label>
       </div>
     </ModalShell>

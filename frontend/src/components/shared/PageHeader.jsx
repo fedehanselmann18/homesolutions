@@ -15,11 +15,9 @@ import "./PageHeader.css";
  * `chip` y `subtitulo` son excluyentes: el chip es para un conteo corto
  * ("12 cargados"), la bajada para una frase.
  */
-export function PageHeader({ titulo, subtitulo, chip, acciones, sinLinea = false, icono }) {
+export function PageHeader({ titulo, subtitulo, chip, acciones, sinLinea = false }) {
   return (
     <header className={`page-header${sinLinea ? " page-header--sin-linea" : ""}`}>
-      {icono && <span className="page-header__icono">{icono}</span>}
-
       <div className="page-header__texto">
         <div className="page-header__titulo-grupo">
           <h1 className="page-header__titulo">{titulo}</h1>
