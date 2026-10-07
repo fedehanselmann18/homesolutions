@@ -193,7 +193,7 @@
      a componente: había ~230 declaraciones literales contra 92 usos de token,
      y varias eran el token escrito a mano.
 
-     v5: los diez pasos están RECALIBRADOS a los px exactos de los diseños. Los
+     v5: los pasos están RECALIBRADOS a los px exactos de los diseños. Los
      nombres no cambian (cero cambios en componentes), los valores sí. Siguen en
      rem y no en px para que el usuario que subió el tamaño de fuente del
      navegador siga viendo la app más grande; los valores de abajo SON los px
@@ -210,6 +210,8 @@
      - --text-xl   (18) título de modal
      - --text-2xl  (24) título de una página de detalle, total grande de modal
      - --text-3xl  (28) título de una página de listado y números grandes de KPI
+     - --text-4xl  (36) LA cifra de una pantalla, una sola: la ganancia neta del
+                        análisis (4d). Si aparece una segunda, no es la cifra.
 
      Los títulos BAJAN respecto a la v4 (3xl de 32 a 28, 2xl de 25.6 a 24): los
      diseños apoyan la jerarquía en el peso 700 y en el letter-spacing negativo,
@@ -228,6 +230,7 @@
   --text-xl: 1.125rem;
   --text-2xl: 1.5rem;
   --text-3xl: 1.75rem;
+  --text-4xl: 2.25rem;
 
   /* espaciado — escala de 4px, con dos medios pasos.
 

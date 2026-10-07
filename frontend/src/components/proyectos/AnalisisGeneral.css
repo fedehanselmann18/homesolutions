@@ -7,48 +7,258 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
+  padding-top: var(--space-6);
   font-family: var(--font-ui);
 }
 
-.analisis-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-3);
+/* --- Resultado + cascada (variante 4d) --- */
+
+.analisis-resultado {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: var(--space-10);
+  align-items: start;
 }
 
-/* Cómo leer los pesos cuando el análisis está en ARS: va pegado al header,
-   como texto secundario (DESIGN.md §3). */
+.analisis-resumen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.analisis-ganancia {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+}
+
+.analisis-ganancia__label {
+  font-size: var(--text-base);
+  color: var(--color-tinta-muted);
+}
+
+.analisis-ganancia__monto {
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.analisis-ganancia__monto--perdida {
+  color: var(--color-oxido-texto);
+}
+
+.analisis-ganancia__detalle {
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+.analisis-datos {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  border-top: 1px solid var(--color-linea);
+}
+
+.analisis-datos > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) 0;
+  border-bottom: 1px solid var(--color-linea-suave);
+  font-size: var(--text-base);
+}
+
+.analisis-datos > div:last-child {
+  border-bottom: none;
+}
+
+.analisis-datos dt {
+  color: var(--color-tinta-muted);
+}
+
+.analisis-datos dd {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.analisis-datos dd.analisis-datos--excedido {
+  color: var(--color-oxido-texto);
+}
+
+/* Cómo leer los pesos cuando el análisis está en ARS: texto secundario
+   pegado a las cifras que explica (DESIGN.md §3). */
 .analisis-nota-moneda {
   margin: 0;
   font-size: var(--text-sm);
   color: var(--color-tinta-muted);
 }
 
-.analisis-btn-reporte {
-  background-color: var(--color-terracota);
-  color: var(--color-superficie);
-  border: 1px solid var(--color-terracota);
-  padding: 9px 18px;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-ui);
+.analisis-controles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.analisis-rentabilidad {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.analisis-rentabilidad__titulo {
+  margin: 0;
+  padding-bottom: var(--space-3);
+  font-size: var(--text-xl);
+  font-weight: 700;
+}
+
+/* La cascada: etiqueta | pista | valor. Las divisiones del fondo caen en los
+   ticks del eje de abajo, que reparten el dominio en partes iguales. */
+.cascada {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+}
+
+.cascada__fila {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) 144px;
+  gap: var(--space-4);
+  align-items: center;
+  height: 44px;
+}
+
+.cascada__fila--subtotal,
+.cascada__fila--neto,
+.cascada__fila--perdida {
+  border-top: 1px solid var(--color-gris-claro-marca);
+}
+
+.cascada__label {
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-tinta-muted);
+}
+
+.cascada__fila--subtotal .cascada__label,
+.cascada__fila--neto .cascada__label,
+.cascada__fila--perdida .cascada__label {
+  font-weight: 700;
+  color: var(--color-tinta);
+}
+
+.cascada__pista {
+  position: relative;
+  height: 20px;
+  background-image: linear-gradient(90deg, var(--color-linea-suave) 1px, transparent 1px);
+  background-size: calc(100% / var(--cascada-divisiones, 5)) 100%;
+}
+
+.cascada__barra {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 2px;
+  border-radius: var(--radius-xs);
+}
+
+.cascada__fila--suma .cascada__barra,
+.cascada__fila--neto .cascada__barra {
+  background: var(--color-terracota);
+}
+
+.cascada__fila--resta .cascada__barra {
+  background: var(--color-gris-claro-marca);
+}
+
+.cascada__fila--subtotal .cascada__barra {
+  background: var(--color-tinta);
+}
+
+.cascada__fila--perdida .cascada__barra {
+  background: var(--color-oxido);
+}
+
+.cascada__valor {
+  font-size: var(--text-base);
   font-weight: 600;
-  font-size: var(--text-btn);
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
 }
 
-.analisis-btn-reporte:hover:not(:disabled) {
-  background-color: var(--color-terracota-dark);
-  border-color: var(--color-terracota-dark);
+.cascada__fila--resta .cascada__valor {
+  color: var(--color-tinta-muted);
 }
 
-.analisis-btn-reporte:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.cascada__fila--perdida .cascada__valor {
+  color: var(--color-oxido-texto);
+}
+
+.cascada__fila--eje {
+  height: auto;
+  padding-top: var(--space-1);
+}
+
+.cascada__eje {
+  position: relative;
+  height: 16px;
+  font-size: var(--text-xs);
+  color: var(--color-tinta-tenue);
+  font-variant-numeric: tabular-nums;
+}
+
+.cascada__eje > span {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.cascada__eje > span:first-child {
+  transform: none;
+}
+
+.cascada__eje > span:last-child {
+  transform: translateX(-100%);
+}
+
+@media (max-width: 1100px) {
+  .analisis-resultado {
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+  }
+
+  .analisis-resumen {
+    max-width: 420px;
+  }
+}
+
+@media (max-width: 640px) {
+  .analisis-resumen {
+    max-width: none;
+  }
+
+  .cascada__fila {
+    grid-template-columns: 88px minmax(0, 1fr) auto;
+    gap: var(--space-2-5);
+  }
+
+  .cascada__label,
+  .cascada__valor {
+    font-size: var(--text-sm);
+  }
+
+  /* En 390px el eje no entra con montos en pesos: las cifras ya están
+     escritas al lado de cada barra. */
+  .cascada__fila--eje {
+    display: none;
+  }
 }
 
 /* Las tarjetas de KPI y la barra de progreso viven en
@@ -73,9 +283,8 @@
   border-left: none;
 }
 
-/* En mobile se oculta la franja de KPIs del principio (Cobrado/Gastado/
-   Disponible en Análisis General; Gastado en esta fase/etc. en Análisis de
-   la fase, que comparte esta clase): alargaba la pestaña antes de llegar a
+/* En mobile se oculta la franja de KPIs del principio (hoy sólo la usa
+   Análisis de la fase: Análisis General abre con el resultado, prompt 15): alargaba la pestaña antes de llegar a
    los gráficos, que es el contenido propio de esta tab. */
 @media (max-width: 640px) {
   .analisis-kpis {
@@ -267,10 +476,8 @@
 
 .analisis-tabla th {
   font-size: var(--text-xs);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-tinta-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
 .analisis-tabla td {

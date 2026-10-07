@@ -80,22 +80,24 @@ export const GRIS_CLARO = "#d9d7d2"; // --color-gris-claro-marca (egresos en un 
 export const LINEA_SUAVE = "#efeee9"; // --color-linea-suave (separador entre filas)
 
 // Paleta categórica para los gráficos de torta/treemap, donde hacen falta más
-// series que colores tiene la marca.
+// series que colores tiene la marca (DESIGN.md §2).
 //
-// PENDIENTE (DESIGN.md §2): el violeta y el cian no existen en ningún otro lugar
-// del sistema y rompen la regla de color. La salida no es inventar colores sino
-// una rampa monocroma del oliva más los grises cálidos, que además es lo
-// correcto para series sin orden semántico. Eso se hace en la pieza del gráfico
-// del rollout, mirándolo contra una torta real; acá sólo se arregla lo que el
-// repunte de VERDE rompió: VERDE y OLIVA pasaron a ser el mismo hex, así que la
-// serie tenía dos tramos de color idéntico. Se reemplaza por OLIVA_CLARO.
+// v5: una rampa monocroma del oliva más los grises cálidos, en vez de inventar
+// colores. Antes tenía un violeta y un cian que no existían en ningún otro
+// lugar del sistema, y un naranja y un rojo que en el resto de la app quieren
+// decir "atención" y "error": una categoría de gasto pintada de rojo se leía
+// como un problema. Las series de una torta no tienen orden semántico, así que
+// no necesitan tonos distintos sino que dos vecinas se distingan: el orden
+// alterna claro / oscuro y oliva / gris para eso.
+export const OLIVA_MUY_CLARO = "#c9cfae"; // sólo gráficos: 5° paso de la rampa
+export const OLIVA_PROFUNDO = "#3d4624"; // sólo gráficos: 7° paso de la rampa
 export const PALETA_GRAFICOS = [
   OLIVA,
   OLIVA_CLARO,
-  NARANJA,
+  OLIVA_OSCURO,
   GRIS,
-  "#7c3aed",
-  "#0891b2",
-  ROJO,
-  "#52525b",
+  OLIVA_MUY_CLARO,
+  TINTA_TENUE,
+  OLIVA_PROFUNDO,
+  GRIS_CLARO,
 ];
