@@ -247,75 +247,6 @@
   color: var(--color-tinta);
 }
 
-/* --- Prueba: sidebar negro (como la v4), con los --color-oscuro-* del
-   login. Es un modificador para poder volver al blanco sacando la clase en
-   Sidebar.jsx (y el isotipo de vuelta a HS_iso_negro). --- */
-
-.sidebar--oscuro {
-  background: var(--color-oscuro);
-  border-right-color: var(--color-oscuro);
-  color: var(--color-oscuro-texto);
-}
-
-.sidebar--oscuro .sidebar-link {
-  color: var(--color-oscuro-texto-muted);
-}
-
-.sidebar--oscuro .sidebar-link:hover,
-.sidebar--oscuro .sidebar-obra:hover,
-.sidebar--oscuro .sidebar-logout:hover {
-  background: var(--color-oscuro-hover);
-  color: var(--color-oscuro-texto);
-}
-
-/* El activo: fondo un paso más claro que el hover, texto blanco y el ícono
-   en oliva claro (el oliva pleno no se lee sobre negro). */
-.sidebar--oscuro .sidebar-link-active,
-.sidebar--oscuro .sidebar-link-active:hover {
-  background: var(--color-oscuro-borde);
-  color: var(--color-oscuro-texto);
-}
-
-.sidebar--oscuro .sidebar-link-active .sidebar-link-icono {
-  color: var(--color-oliva-claro);
-}
-
-.sidebar--oscuro .sidebar-link-contador,
-.sidebar--oscuro .sidebar-user-role,
-.sidebar--oscuro .sidebar-logout {
-  color: var(--color-oscuro-texto-muted);
-}
-
-.sidebar--oscuro .sidebar-grupo-titulo {
-  color: var(--color-oscuro-texto-muted);
-}
-
-.sidebar--oscuro .sidebar-obra {
-  color: var(--color-oscuro-item-texto);
-}
-
-.sidebar--oscuro .sidebar-obra.active {
-  background: var(--color-oscuro-borde);
-  color: var(--color-oscuro-texto);
-}
-
-.sidebar--oscuro .sidebar-obra-punto--ok {
-  background: var(--color-oliva-claro);
-}
-
-.sidebar--oscuro .sidebar-footer {
-  border-top-color: var(--color-oscuro-borde);
-}
-
-.sidebar--oscuro .sidebar-avatar {
-  background: var(--color-oliva);
-  color: var(--color-oscuro-texto);
-}
-
-.sidebar--oscuro .sidebar-user-name {
-  color: var(--color-oscuro-texto);
-}
-
 /* Mobile: el sidebar pasa a ser una barra superior horizontal y compacta.
    Este breakpoint lo comparte con MainLayout.css: se mueven juntos. */
 @media (max-width: 768px) {
@@ -332,10 +263,6 @@
     padding-top: calc(var(--space-2) + env(safe-area-inset-top));
     border-right: none;
     border-bottom: 1px solid var(--color-linea);
-  }
-
-  .sidebar--oscuro {
-    border-bottom-color: var(--color-oscuro);
   }
 
   .sidebar-header {
