@@ -9,8 +9,8 @@
   font-family: var(--font-ui);
 }
 
-/* El saludo es el título de la página; el PageHeader trae margen abajo
-   pensado para cuando lleva línea, y acá el espacio lo pone el gap. */
+/* El saludo es el título de la página, con la misma línea abajo que el resto
+   de las páginas; el espacio hasta los KPIs lo pone el gap del panel. */
 .panel > .page-header {
   margin-bottom: 0;
 }

@@ -205,7 +205,7 @@ export function Dashboard() {
   if (totalProyectos === 0) {
     return (
       <div className="panel">
-        <PageHeader sinLinea titulo={saludo} />
+        <PageHeader titulo={saludo} />
         <EstadoVacio
           mensaje="Todavía no hay proyectos cargados. Creá el primero desde la sección Proyectos."
           grande
@@ -216,7 +216,7 @@ export function Dashboard() {
 
   return (
     <div className="panel">
-      <PageHeader sinLinea titulo={saludo} acciones={<SelectorMoneda />} />
+      <PageHeader titulo={saludo} acciones={<SelectorMoneda />} />
 
       <div className="panel-kpis">
         <TarjetaKpi
