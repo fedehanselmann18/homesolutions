@@ -5,6 +5,17 @@ import { pluralizar } from "./formato";
 export const ESTADOS_FASE_CERRADA = ["terminada", "auditada"];
 
 /**
+ * Dónde está una fase en la obra: "cerrada", "actual" o "pendiente". Es
+ * PROGRESO (el punto de la línea de tiempo de Fases, el número del header de
+ * una fase), no ESTADO: el estado es el badge del semáforo de estados.js.
+ */
+export function etapaDeFase(estado) {
+  if (ESTADOS_FASE_CERRADA.includes(estado)) return "cerrada";
+  if (estado === "en_curso") return "actual";
+  return "pendiente";
+}
+
+/**
  * "Fase 3 de 4 · Montaje": en qué fase va un proyecto. La fase actual es la
  * primera en curso por `orden`, y N es su posición en la lista ordenada (no
  * `fase.orden`, que puede tener huecos). Sin ninguna en curso no se inventa

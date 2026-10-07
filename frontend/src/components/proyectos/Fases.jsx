@@ -18,21 +18,15 @@ import { getEstadoLabel } from "../../constants/estados";
 import { EstadoVacio } from "../shared/EstadoVacio";
 import { calcularAnalisis } from "../../utils/analisis";
 import { diasDesde } from "../../utils/seguimiento";
-import { ESTADOS_FASE_CERRADA } from "../../utils/fases";
+import { etapaDeFase } from "../../utils/fases";
 import { formatMoneda, formatNumero, pluralizar } from "../../utils/formato";
 import { obtenerDetalleBackend } from "../../utils/errorHandling";
 
 // Variante 4b ("Línea de tiempo"): cada fase es un punto de una línea vertical
-// y una tarjeta. El punto dice dónde está la obra (cerrada / actual / por
-// venir) y es PROGRESO, así que va en el oliva de la marca; el ESTADO de la
-// fase sigue siendo el badge del semáforo (estados.js), el mismo que el header
-// del proyecto. Son dos cosas distintas y no comparten color (DESIGN.md §2).
-function etapaDeFase(estado) {
-  if (ESTADOS_FASE_CERRADA.includes(estado)) return "cerrada";
-  if (estado === "en_curso") return "actual";
-  return "pendiente";
-}
-
+// y una tarjeta. El punto dice dónde está la obra (etapaDeFase: cerrada /
+// actual / por venir) y va en el oliva de la marca; el ESTADO de la fase sigue
+// siendo el badge del semáforo (estados.js), el mismo que el header del
+// proyecto. Son dos cosas distintas y no comparten color (DESIGN.md §2).
 function EstadoFase({ estado }) {
   const info = getEstadoLabel(estado);
   const Icono = info.icono;

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { describirFaseActual } from "./fases";
+import { describirFaseActual, etapaDeFase } from "./fases";
 
 const fase = (orden, estado, nombre = `F${orden}`) => ({ orden, estado, nombre });
 
@@ -20,5 +20,15 @@ describe("describirFaseActual", () => {
 
   it("un proyecto sin fases no tiene fase actual", () => {
     expect(describirFaseActual([])).toBeNull();
+  });
+});
+
+describe("etapaDeFase", () => {
+  it("terminada y auditada están cerradas, en curso es la actual, el resto pendiente", () => {
+    expect(etapaDeFase("terminada")).toBe("cerrada");
+    expect(etapaDeFase("auditada")).toBe("cerrada");
+    expect(etapaDeFase("en_curso")).toBe("actual");
+    expect(etapaDeFase("por_empezar")).toBe("pendiente");
+    expect(etapaDeFase("otro")).toBe("pendiente");
   });
 });

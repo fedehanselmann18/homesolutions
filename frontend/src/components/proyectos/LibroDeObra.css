@@ -292,6 +292,83 @@
   }
 }
 
+/* Compacto (Fase · Acciones, variante 4h): dos renglones por movimiento —
+   tipo | título + importe / contexto + comprobante + estados — y las acciones
+   a la derecha de los dos. Sólo arriba de 640px: abajo manda la versión
+   mobile de siempre, que ya es de dos renglones. */
+@media (min-width: 641px) {
+  .libro--compacto .libro__columnas,
+  .libro--compacto .libro__saldo-fila {
+    display: none;
+  }
+
+  .libro--compacto .libro__fila,
+  .libro--compacto .libro__dia {
+    min-width: 0;
+  }
+
+  .libro--compacto .libro__fila {
+    grid-template-columns: 28px minmax(0, 1fr) 20px auto;
+    grid-template-areas:
+      "tipo titulo   titulo importe"
+      "tipo contexto comp   estados";
+    gap: var(--space-1-5) var(--space-3);
+    padding-top: var(--space-3);
+    padding-bottom: var(--space-3);
+  }
+
+  .libro--compacto.libro--admin .libro__fila {
+    grid-template-columns: 28px minmax(0, 1fr) 20px auto auto;
+    grid-template-areas:
+      "tipo titulo   titulo importe  acciones"
+      "tipo contexto comp   estados acciones";
+  }
+
+  .libro--compacto .libro__tipo {
+    grid-area: tipo;
+    align-self: start;
+  }
+
+  .libro--compacto .libro__movimiento {
+    display: contents;
+  }
+
+  .libro--compacto .libro__movimiento-titulo {
+    grid-area: titulo;
+  }
+
+  .libro--compacto .libro__movimiento-contexto {
+    grid-area: contexto;
+  }
+
+  .libro--compacto .libro__importe-col {
+    grid-area: importe;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-end;
+    gap: var(--space-2);
+  }
+
+  .libro--compacto .libro__estados {
+    grid-area: estados;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    padding-top: 0;
+  }
+
+  .libro--compacto .libro__comprobante-col {
+    grid-area: comp;
+    align-self: center;
+    padding-top: 0;
+  }
+
+  .libro--compacto .libro__acciones {
+    grid-area: acciones;
+    align-self: center;
+  }
+}
+
 @media (max-width: 640px) {
   .libro__columnas {
     display: none;

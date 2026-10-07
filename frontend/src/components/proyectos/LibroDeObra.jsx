@@ -68,6 +68,10 @@ export function LibroDeObra({
   // En una fase no entra plata, así que el acumulado no es un "saldo": el
   // rótulo se ajusta desde donde se use.
   saldoLabel = "Saldo",
+  // Dos renglones por movimiento en vez de siete columnas, para cuando el
+  // libro va en una columna angosta (Acciones de la fase, al lado de su
+  // panel). Sin la columna de saldo: ese total lo da quien lo usa.
+  compacto = false,
   // { tipo, id } del movimiento cuyo detalle está abierto: su fila queda
   // marcada, así al cerrar el modal se ve de dónde se venía.
   movimientoActivo,
@@ -195,7 +199,9 @@ export function LibroDeObra({
   }
 
   return (
-    <div className={`libro${mostrarAcciones ? " libro--admin" : ""}`}>
+    <div
+      className={`libro${mostrarAcciones ? " libro--admin" : ""}${compacto ? " libro--compacto" : ""}`}
+    >
       {errorComprobante && (
         <p className="libro__error" role="alert">
           {errorComprobante}

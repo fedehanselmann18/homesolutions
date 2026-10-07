@@ -1,129 +1,133 @@
+/* Detalle de una fase — variante 4h (docs/MODALSUIUXChange/HS Proyecto.dc.html).
+
+   v5: se fueron la regla de color del estado a la izquierda del header, el
+   breadcrumb + "Volver al proyecto" (dos caminos al mismo lugar) y el botón
+   verde "Marcar como terminada" (ahora "Terminar fase", secundario, en el
+   panel de Acciones). */
+
 .fase-detalle {
-  font-family: var(--font-ui);
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  font-family: var(--font-ui);
 }
 
-.fase-detalle-volver {
+.fase-detalle__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2-5);
+}
+
+.fase-detalle__volver {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   align-self: flex-start;
-  font-family: var(--font-ui);
+  gap: var(--space-1-5);
   font-size: var(--text-sm);
-  font-weight: 600;
   color: var(--color-tinta-muted);
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
+  text-decoration: none;
 }
 
-.fase-detalle-volver:hover {
+.fase-detalle__volver:hover {
   color: var(--color-tinta);
 }
 
-.fase-detalle-header {
-  border-left: 4px solid var(--color-tinta-muted);
-  padding: var(--space-2) 0 0 var(--space-4);
-}
-
-.fase-detalle-header-top {
+.fase-detalle__fila {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  margin-bottom: 6px;
 }
 
-.fase-detalle-header-titulo {
+.fase-detalle__titulo {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   min-width: 0;
 }
 
-.fase-detalle-header-acciones {
+/* El mismo punto de la línea de tiempo de Fases.css: progreso, en oliva. */
+.fase-detalle__numero {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
-}
-.fase-detalle-numero {
-  flex-shrink: 0;
-}
-
-.fase-detalle-nombre {
-  font-family: var(--font-display);
-  font-size: var(--text-2xl);
-  font-weight: 600;
-  color: var(--color-tinta);
-  margin: 0;
-  letter-spacing: -0.01em;
+  border: 2px solid var(--color-gris-claro-marca);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-tinta-tenue);
 }
 
-.fase-detalle-descripcion {
-  font-size: var(--text-base);
-  color: var(--color-tinta-muted);
-  margin: 0 0 var(--space-3);
-  max-width: 60ch;
-}
-.fase-detalle-estado {
-  flex-shrink: 0;
+.fase-detalle__numero--actual {
+  border-color: var(--color-terracota);
+  color: var(--color-terracota);
 }
 
-.fase-detalle-datos {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-8);
-  margin-top: var(--space-2);
-}
-
-.fase-detalle-dato {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: var(--text-base);
-  font-weight: 500;
-  color: var(--color-tinta);
-}
-
-.fase-detalle-dato svg {
-  color: var(--color-tinta-muted);
-  flex-shrink: 0;
-}
-
-.fase-detalle-btn-terminar {
-  font-family: var(--font-ui);
-  font-size: var(--text-base);
-  font-weight: 600;
-  padding: 9px 18px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-musgo);
-  background-color: var(--color-musgo);
+.fase-detalle__numero--cerrada {
+  border-color: var(--color-terracota);
+  background: var(--color-terracota);
   color: var(--color-superficie);
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease;
 }
 
-.fase-detalle-btn-terminar:hover {
-  background-color: var(--color-musgo-dark);
-  border-color: var(--color-musgo-dark);
+.fase-detalle__nombre {
+  margin: 0;
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  overflow-wrap: anywhere;
 }
 
-/* Shell de tabs de la fase (Acciones/Seguimiento/Análisis) -- misma
-   composición documentada en docs/redesign/04_shell_tabs.md: inactivas en
-   tinta muted, la activa en terracota con borde inferior, separadas del
-   contenido por una línea horizontal completa. */
+.fase-detalle__acciones {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-2);
+}
 
+.fase-detalle__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1-5) var(--space-5);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-base);
+  color: var(--color-tinta-muted);
+}
+
+.fase-detalle__meta li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+}
+
+.fase-detalle__meta svg {
+  flex-shrink: 0;
+  color: var(--color-tinta-tenue);
+}
+
+/* Lo que va debajo de las tabs trae su propio aire (las tabs no tienen
+   margen abajo): la lista de acciones arranca pegada a los filtros. */
+.fase-detalle .acciones-fase {
+  padding-top: var(--space-6);
+}
+
+/* Mobile: la fila del título se abre para que los botones queden al final
+   del header, debajo de la descripción. */
 @media (max-width: 640px) {
-  .fase-detalle-header-top {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+  .fase-detalle__fila {
+    display: contents;
+  }
+
+  .fase-detalle__acciones {
+    order: 1;
+    padding-top: var(--space-1);
+  }
+
+  .fase-detalle__nombre {
+    font-size: var(--text-2xl);
   }
 }
