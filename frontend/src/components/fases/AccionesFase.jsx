@@ -4,7 +4,14 @@ import FiltrosLista from "../shared/FiltrosLista";
 import { FiltrosSegmentados } from "../shared/FiltrosSegmentados";
 import { EstadoVacio } from "../shared/EstadoVacio";
 import LibroDeObra from "../proyectos/LibroDeObra";
-import { FILTROS_VACIOS, filtrarCompras, filtrarGastos, tieneAlerta } from "../../utils/filtros";
+import {
+  FILTROS_VACIOS,
+  CAMPOS_FILTRO_POR_TIPO,
+  filtrosParaTipo,
+  filtrarCompras,
+  filtrarGastos,
+  tieneAlerta,
+} from "../../utils/filtros";
 
 import "../proyectos/Acciones.css";
 
@@ -41,6 +48,7 @@ export function AccionesFase({
   onAbrirDetalleGasto,
 }) {
   const [filtroTipo, setFiltroTipo] = useState("todo");
+  const camposFiltro = CAMPOS_FILTRO_POR_TIPO[filtroTipo];
   const [filtros, setFiltros] = useState(FILTROS_VACIOS);
 
   const comprasFiltradas = useMemo(() => filtrarCompras(compras, filtros), [compras, filtros]);
@@ -71,27 +79,26 @@ export function AccionesFase({
 
   return (
     <div>
-      <FiltrosSegmentados
-        opciones={FILTROS_TIPO}
-        activa={filtroTipo}
-        contadores={contadorPorFiltro}
-        etiqueta="Filtrar movimientos por tipo"
-        onCambiar={(key) => {
-          setFiltroTipo(key);
-          if (key !== "compras") setFiltros(FILTROS_VACIOS);
-        }}
-      />
-
-      {filtroTipo === "compras" && (
-        <FiltrosLista
-          filtros={filtros}
-          onCambiar={setFiltros}
-          mostrarNotas
-          mostrarEstadoPago
-          mostrarEstadoEnvio
-          mostrarFechas={false}
+      <FiltrosLista
+        filtros={filtros}
+        onCambiar={setFiltros}
+        mostrarEstadoPago={camposFiltro.includes("estadoPago")}
+        mostrarEstadoEnvio={camposFiltro.includes("estadoEnvio")}
+        mostrarNotas={camposFiltro.includes("notas")}
+        mostrarComprobante={camposFiltro.includes("comprobante")}
+        mostrarFechas={false}
+      >
+        <FiltrosSegmentados
+          opciones={FILTROS_TIPO}
+          activa={filtroTipo}
+          contadores={contadorPorFiltro}
+          etiqueta="Filtrar movimientos por tipo"
+          onCambiar={(key) => {
+            setFiltroTipo(key);
+            setFiltros((actuales) => filtrosParaTipo(actuales, key));
+          }}
         />
-      )}
+      </FiltrosLista>
 
       <LibroDeObra
         compras={comprasVisibles}

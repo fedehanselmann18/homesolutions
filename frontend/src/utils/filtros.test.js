@@ -4,6 +4,7 @@ import {
   filtrarCobros,
   filtrarGastos,
   tieneAlerta,
+  filtrosParaTipo,
   hayFiltrosActivos,
   FILTROS_VACIOS,
 } from "./filtros";
@@ -152,5 +153,16 @@ describe("tieneAlerta", () => {
   it("un gasto o un cobro con comprobante no tienen nada pendiente", () => {
     expect(tieneAlerta("gasto", conComprobante)).toBe(false);
     expect(tieneAlerta("cobro", conComprobante)).toBe(false);
+  });
+});
+
+describe("filtrosParaTipo", () => {
+  it("suelta los filtros que no aplican al tipo nuevo y deja los que sí", () => {
+    const filtros = { ...FILTROS_VACIOS, estadoPago: "pendiente", tipoFactura: "factura_a" };
+    expect(filtrosParaTipo(filtros, "gastos")).toEqual({
+      ...FILTROS_VACIOS,
+      tipoFactura: "factura_a",
+    });
+    expect(filtrosParaTipo(filtros, "compras")).toEqual(filtros);
   });
 });

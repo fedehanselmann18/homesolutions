@@ -19,6 +19,8 @@ import FiltrosLista from "../shared/FiltrosLista";
 import { FiltrosSegmentados } from "../shared/FiltrosSegmentados";
 import {
   FILTROS_VACIOS,
+  CAMPOS_FILTRO_POR_TIPO,
+  filtrosParaTipo,
   filtrarCompras,
   filtrarCobros,
   filtrarGastos,
@@ -40,6 +42,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
   const canManage = usuario?.rol === "admin";
 
   const [filtroTipo, setFiltroTipo] = useState("todo");
+  const camposFiltro = CAMPOS_FILTRO_POR_TIPO[filtroTipo];
 
   const {
     compras,
@@ -317,29 +320,28 @@ export function Acciones({ proyectoId, proyectoNombre }) {
         )}
       </div>
 
-      <FiltrosSegmentados
-        opciones={FILTROS_TIPO}
-        activa={filtroTipo}
-        contadores={contadorPorFiltro}
-        etiqueta="Filtrar movimientos por tipo"
-        onCambiar={(key) => {
-          setFiltroTipo(key);
-          // La barra fina sólo existe en Compras; si se sale de ahí con
-          // filtros puestos, seguirían filtrando sin estar a la vista.
-          if (key !== "compras") setFiltros(FILTROS_VACIOS);
-        }}
-      />
-
-      {filtroTipo === "compras" && (
-        <FiltrosLista
-          filtros={filtros}
-          onCambiar={setFiltros}
-          mostrarNotas
-          mostrarEstadoPago
-          mostrarEstadoEnvio
-          mostrarFechas={false}
+      <FiltrosLista
+        filtros={filtros}
+        onCambiar={setFiltros}
+        mostrarEstadoPago={camposFiltro.includes("estadoPago")}
+        mostrarEstadoEnvio={camposFiltro.includes("estadoEnvio")}
+        mostrarNotas={camposFiltro.includes("notas")}
+        mostrarComprobante={camposFiltro.includes("comprobante")}
+        mostrarFechas={false}
+      >
+        <FiltrosSegmentados
+          opciones={FILTROS_TIPO}
+          activa={filtroTipo}
+          contadores={contadorPorFiltro}
+          etiqueta="Filtrar movimientos por tipo"
+          onCambiar={(key) => {
+            setFiltroTipo(key);
+            // Lo que no aplica al tipo nuevo se suelta: si no, seguiría
+            // filtrando sin estar a la vista en el panel.
+            setFiltros((actuales) => filtrosParaTipo(actuales, key));
+          }}
         />
-      )}
+      </FiltrosLista>
 
       <LibroDeObra
         movimientoActivo={detalle}
