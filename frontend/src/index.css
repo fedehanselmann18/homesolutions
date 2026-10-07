@@ -781,11 +781,20 @@ textarea:focus-visible,
 
 /* Denso: fila de una tabla editable (el catálogo de la importación por IA),
    toolbar de lista, donde el campo de 40 rompería el alto de fila. */
-.campo--sm {
+.campo--sm,
+.modal-form .campo--sm {
   height: 32px;
   padding: 0 var(--space-2-5);
   border-radius: var(--radius-sm);
   font-size: var(--text-sm);
+}
+
+/* El chevron de un select chico necesita su lugar (el padding de arriba se
+   lo pisaba). */
+select.campo--sm,
+.modal-form select.campo--sm {
+  padding-right: var(--space-8);
+  background-position: right var(--space-2) center;
 }
 
 /* Monto destacado. Con la moneda adentro va como campo compuesto (abajo):

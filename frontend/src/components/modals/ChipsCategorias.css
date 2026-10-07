@@ -14,20 +14,17 @@
   gap: 8px;
 }
 
+/* Mismo label que un campo (`.label-campo`, DESIGN.md §9). */
 .chips-cat-label {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  font-size: var(--text-sm);
+  font-weight: 500;
   color: var(--color-tinta-muted);
 }
 
 .chips-cat-contador {
   font-size: var(--text-xs);
   font-weight: 400;
-  text-transform: none;
-  letter-spacing: normal;
-  color: var(--color-tinta-muted);
+  color: var(--color-tinta-tenue);
 }
 
 .chips-cat-limpiar {
@@ -54,69 +51,27 @@
   min-width: 0;
 }
 
-.chips-cat-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-family: var(--font-ui);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  text-transform: none;
-  letter-spacing: normal;
-  padding: 5px 12px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--color-linea);
-  background-color: var(--color-superficie);
-  color: var(--color-tinta-muted);
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-}
-
-.chips-cat-chip:hover {
-  border-color: var(--color-terracota);
-  color: var(--color-tinta);
-}
-
-.chips-cat-chip--elegida {
-  background-color: var(--color-terracota);
-  border-color: var(--color-terracota);
-  color: var(--color-superficie);
-}
-
-.chips-cat-chip--elegida:hover {
-  background-color: var(--color-terracota-dark);
-  border-color: var(--color-terracota-dark);
-  color: var(--color-superficie);
-}
-
 /* --- estado vacío + creación inline --- */
 
+/* Panel suave (DESIGN.md §10), como el resto de los avisos de un form. */
 .chips-cat-vacio {
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: var(--space-4);
-  border: 1px dashed var(--color-linea);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-base-1);
+  border-radius: var(--radius-lg);
+  background-color: var(--color-superficie-suave);
 }
 
 .chips-cat-vacio-titulo {
   font-size: var(--text-btn);
   font-weight: 600;
-  text-transform: none;
-  letter-spacing: normal;
   color: var(--color-tinta);
 }
 
 .chips-cat-vacio-detalle {
   font-size: var(--text-sm);
   font-weight: 400;
-  text-transform: none;
-  letter-spacing: normal;
   color: var(--color-tinta-muted);
 }
 
@@ -125,61 +80,4 @@
   gap: 6px;
   align-items: center;
   min-width: 0;
-}
-
-.chips-cat-crear input {
-  flex: 1;
-  min-width: 0;
-  font-family: var(--font-ui);
-  font-size: var(--text-btn);
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: normal;
-  padding: 7px 10px;
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-  background-color: var(--color-superficie);
-  color: var(--color-tinta);
-  box-sizing: border-box;
-}
-
-.chips-cat-crear input:focus {
-  outline: none;
-  border-color: var(--color-terracota);
-}
-
-.chips-cat-crear-boton {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-  font-family: var(--font-ui);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  text-transform: none;
-  letter-spacing: normal;
-  padding: 7px 12px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--color-terracota);
-  background-color: var(--color-superficie);
-  color: var(--color-terracota-dark);
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.chips-cat-crear-boton:hover:not(:disabled) {
-  background-color: var(--color-terracota-tint);
-}
-
-.chips-cat-crear-boton:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.chips-cat-error {
-  font-size: var(--text-sm);
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: normal;
-  color: var(--color-oxido);
 }

@@ -12,9 +12,6 @@ import "./ModalShell.css";
  * de operación, título y, a la derecha del título, el contexto (el proyecto,
  * la fecha) separado por una línea. Lo comparten el shell de abajo y el de
  * edición de movimientos (EditarShell), así el header es uno solo.
- *
- * `contextoDestacado` queda por compatibilidad: en la v5 el contexto va
- * siempre al lado del título, no arriba en mayúsculas.
  */
 export function ModalHeader({
   icono: Icono,

@@ -1,7 +1,12 @@
 /* ModalImportarCatalogo.css */
 
-.modal-contenido--importar-catalogo {
-  max-width: 860px;
+/* v5: el paso de productos usa el ancho de 760 del shell (`shell--ancho`,
+   DESIGN.md §14). Antes tenía su propio 860, uno de los cinco anchos de la v4. */
+
+.catalogo-carga-texto {
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--color-tinta-muted);
 }
 
 /* --- Paso proveedor --- */
@@ -50,10 +55,8 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  font-size: var(--text-sm);
+  font-weight: 500;
   color: var(--color-tinta-muted);
 }
 
@@ -115,12 +118,11 @@
 
 .catalogo-tabla th {
   text-align: left;
-  padding: 6px 8px;
-  font-size: var(--text-2xs);
+  padding: 8px;
+  font-size: var(--text-xs);
   font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
   color: var(--color-tinta-muted);
+  background: var(--color-superficie-suave);
   border-bottom: 1px solid var(--color-linea);
 }
 

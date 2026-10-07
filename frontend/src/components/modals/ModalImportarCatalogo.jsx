@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Check } from "lucide-react";
+import { Check, FileSpreadsheet, Truck } from "lucide-react";
 
 import { useLecturaCatalogoIA } from "../../hooks/useLecturaCatalogoIA";
 import { useToast } from "../../context/useToast";
@@ -470,10 +470,10 @@ export function ModalImportarCatalogo({
   return (
     <ModalShell
       titulo="Importar catálogo"
+      icono={FileSpreadsheet}
       contexto={proveedor?.nombre}
-      contextoDestacado
+      iconoContexto={Truck}
       ancho={paso === "productos"}
-      clase={paso === "productos" ? "modal-contenido--importar-catalogo" : ""}
       onCerrar={onCerrar}
       cerrarDeshabilitado={guardando || creandoProveedor}
       aviso={
