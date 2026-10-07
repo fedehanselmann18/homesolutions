@@ -99,9 +99,7 @@ function ProyectoDetalle() {
         <Acciones proyectoId={proyecto.id} proyectoNombre={proyecto.nombre} />
       )}
       {tabActiva === "analisis" && <AnalisisGeneral proyectoId={proyecto.id} />}
-      {tabActiva === "seguimiento" && (
-        <Seguimiento proyectoId={proyecto.id} />
-      )}
+      {tabActiva === "seguimiento" && <Seguimiento proyectoId={proyecto.id} />}
     </div>
   );
 }
