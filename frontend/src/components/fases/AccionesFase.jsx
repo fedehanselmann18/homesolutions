@@ -4,7 +4,7 @@ import FiltrosLista from "../shared/FiltrosLista";
 import { FiltrosSegmentados } from "../shared/FiltrosSegmentados";
 import { EstadoVacio } from "../shared/EstadoVacio";
 import LibroDeObra from "../proyectos/LibroDeObra";
-import { FILTROS_VACIOS, filtrarCompras, filtrarGastos } from "../../utils/filtros";
+import { FILTROS_VACIOS, filtrarCompras, filtrarGastos, tieneAlerta } from "../../utils/filtros";
 
 import "../proyectos/Acciones.css";
 
@@ -14,6 +14,7 @@ const FILTROS_TIPO = [
   { key: "todo", label: "Todo" },
   { key: "compras", label: "Compras" },
   { key: "gastos", label: "Gastos" },
+  { key: "alertas", label: "Con alertas" },
 ];
 
 /**
@@ -49,13 +50,23 @@ export function AccionesFase({
     return <EstadoVacio mensaje="No hay compras ni gastos registrados para esta fase." />;
   }
 
-  const comprasVisibles = filtroTipo === "gastos" ? [] : comprasFiltradas;
-  const gastosVisibles = filtroTipo === "compras" ? [] : gastosFiltrados;
+  // "Con alertas": mismo criterio que la lista del proyecto (utils/filtros.js).
+  const comprasConAlerta = comprasFiltradas.filter((c) => tieneAlerta("compra", c));
+  const gastosConAlerta = gastosFiltrados.filter((g) => tieneAlerta("gasto", g));
+
+  const visiblesPorFiltro = {
+    todo: [comprasFiltradas, gastosFiltrados],
+    compras: [comprasFiltradas, []],
+    gastos: [[], gastosFiltrados],
+    alertas: [comprasConAlerta, gastosConAlerta],
+  };
+  const [comprasVisibles, gastosVisibles] = visiblesPorFiltro[filtroTipo];
 
   const contadorPorFiltro = {
     todo: comprasFiltradas.length + gastosFiltrados.length,
     compras: comprasFiltradas.length,
     gastos: gastosFiltrados.length,
+    alertas: comprasConAlerta.length + gastosConAlerta.length,
   };
 
   return (

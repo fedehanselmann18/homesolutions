@@ -17,7 +17,13 @@ import ModalDetalleCobro from "../modals/ModalDetalleCobro";
 import ModalDetalleCompra from "../modals/ModalDetalleCompra";
 import FiltrosLista from "../shared/FiltrosLista";
 import { FiltrosSegmentados } from "../shared/FiltrosSegmentados";
-import { FILTROS_VACIOS, filtrarCompras, filtrarCobros, filtrarGastos } from "../../utils/filtros";
+import {
+  FILTROS_VACIOS,
+  filtrarCompras,
+  filtrarCobros,
+  filtrarGastos,
+  tieneAlerta,
+} from "../../utils/filtros";
 
 import "./Acciones.css";
 
@@ -26,6 +32,7 @@ const FILTROS_TIPO = [
   { key: "compras", label: "Compras" },
   { key: "gastos", label: "Gastos" },
   { key: "cobros", label: "Cobros" },
+  { key: "alertas", label: "Con alertas" },
 ];
 
 export function Acciones({ proyectoId, proyectoNombre }) {
@@ -71,9 +78,29 @@ export function Acciones({ proyectoId, proyectoNombre }) {
   const cobrosFiltrados = useMemo(() => filtrarCobros(cobros, filtros), [cobros, filtros]);
   const comprasFiltradas = useMemo(() => filtrarCompras(compras, filtros), [compras, filtros]);
 
-  const comprasVisibles = filtroTipo === "todo" || filtroTipo === "compras" ? comprasFiltradas : [];
-  const gastosVisibles = filtroTipo === "todo" || filtroTipo === "gastos" ? gastosFiltrados : [];
-  const cobrosVisibles = filtroTipo === "todo" || filtroTipo === "cobros" ? cobrosFiltrados : [];
+  // "Con alertas" no es un tipo: recorta los tres por el mismo criterio que
+  // pinta de ámbar o rojo una fila (ver tieneAlerta en utils/filtros.js).
+  const conAlerta = useMemo(
+    () => ({
+      compras: comprasFiltradas.filter((c) => tieneAlerta("compra", c)),
+      gastos: gastosFiltrados.filter((g) => tieneAlerta("gasto", g)),
+      cobros: cobrosFiltrados.filter((c) => tieneAlerta("cobro", c)),
+    }),
+    [comprasFiltradas, gastosFiltrados, cobrosFiltrados]
+  );
+
+  const visiblesPorFiltro = {
+    todo: { compras: comprasFiltradas, gastos: gastosFiltrados, cobros: cobrosFiltrados },
+    compras: { compras: comprasFiltradas, gastos: [], cobros: [] },
+    gastos: { compras: [], gastos: gastosFiltrados, cobros: [] },
+    cobros: { compras: [], gastos: [], cobros: cobrosFiltrados },
+    alertas: conAlerta,
+  };
+  const {
+    compras: comprasVisibles,
+    gastos: gastosVisibles,
+    cobros: cobrosVisibles,
+  } = visiblesPorFiltro[filtroTipo];
 
   const [modalGastoAbierto, setModalGastoAbierto] = useState(false);
   const [gastoEditando, setGastoEditando] = useState(null);
@@ -268,6 +295,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
     compras: comprasFiltradas.length,
     gastos: gastosFiltrados.length,
     cobros: cobrosFiltrados.length,
+    alertas: conAlerta.compras.length + conAlerta.gastos.length + conAlerta.cobros.length,
   };
 
   return (

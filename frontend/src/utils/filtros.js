@@ -127,3 +127,16 @@ export function hayFiltrosActivos(filtros) {
     (filtros.comprobante && filtros.comprobante !== "todos")
   );
 }
+
+/**
+ * El filtro "Con alertas" de la lista de movimientos (Movimientos v2): un
+ * movimiento pide atención si le falta el comprobante, o si es una compra
+ * impaga o sin entregar. Es el mismo criterio que la columna de comprobante y
+ * los badges de estado de la fila, así que el contador del chip coincide con
+ * lo que se ve en ámbar o rojo.
+ */
+export function tieneAlerta(tipo, movimiento) {
+  if ((movimiento.comprobantes ?? []).length === 0) return true;
+  if (tipo !== "compra") return false;
+  return movimiento.estado_pago === "pendiente" || movimiento.estado_envio === "pedido";
+}

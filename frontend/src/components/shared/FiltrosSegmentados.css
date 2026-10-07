@@ -1,51 +1,53 @@
-.filtros-seg {
+/* Chips de filtro: la forma es `.chip` (index.css); acá sólo la fila. */
+.filtros-chips {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
 }
 
-.filtros-seg__btn {
+/* Segmentado — DESIGN.md §9: track en la línea suave con 3px de aire, botones
+   de 32px (26 + 3 + 3 del track) y la opción activa en blanco, levantada con
+   la sombra de hover. Es el único lugar donde esa sombra no es de una card:
+   acá dice "esta pieza está arriba de la otra", que es lo mismo. */
+.segmentado {
   display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-family: var(--font-ui);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  padding: 7px 14px;
-  border-radius: var(--radius-pill);
-  border: 1px solid var(--color-linea);
-  background: var(--color-superficie);
-  color: var(--color-tinta-muted);
-  cursor: pointer;
-  transition:
-    color 0.15s ease,
-    background-color 0.15s ease,
-    border-color 0.15s ease;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 3px;
+  border-radius: var(--radius-md);
+  background: var(--color-linea-suave);
 }
 
-.filtros-seg__btn:hover {
-  border-color: var(--color-tinta);
+.segmentado__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1-5);
+  height: 26px;
+  padding: 0 var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-tinta-muted);
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--transicion),
+    color var(--transicion),
+    box-shadow var(--transicion);
+}
+
+.segmentado__btn:hover {
   color: var(--color-tinta);
 }
 
-.filtros-seg__btn--activo,
-.filtros-seg__btn--activo:hover {
-  background: var(--color-terracota-tint);
-  border-color: var(--color-terracota);
-  color: var(--color-terracota-dark);
-}
-
-.filtros-seg__contador {
-  font-size: var(--text-xs);
-  font-weight: 700;
-  padding: 1px 7px;
-  border-radius: var(--radius-pill);
-  background: var(--color-base-2);
-  color: var(--color-tinta-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.filtros-seg__btn--activo .filtros-seg__contador {
+.segmentado__btn--activo,
+.segmentado__btn--activo:hover {
   background: var(--color-superficie);
-  color: inherit;
+  color: var(--color-tinta);
+  font-weight: 600;
+  box-shadow: var(--shadow-hover);
 }
