@@ -1,15 +1,15 @@
-import { Sparkles, FileText, CircleAlert } from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 import { LogoCargando } from "../shared/LogoCargando";
 
 import "./PiezasIA.css";
 
 /**
- * Piezas del flujo "IA primero" (dirección 5c del rediseño, ver
- * claudedesign/): en Compra/Gasto/Cobro el comprobante es el protagonista —
- * el modal abre con la zona de carga grande y leer el archivo es la acción
- * principal; el formulario aparece después, ya prellenado y con cada campo
- * marcado como leído del comprobante.
+ * Piezas de la lectura con IA de un comprobante. v5 (DESIGN.md §14): el botón
+ * va en la fila del archivo, al lado de lo que lee, y cada campo que completó
+ * queda marcado. Se fueron el paso "IA primero" (la pantalla con sólo la zona
+ * de carga), el banner del comprobante leído y el resumen rojo de faltantes:
+ * el formulario está siempre a la vista y los errores van en cada campo.
  */
 
 export function BotonIA({
@@ -33,95 +33,6 @@ export function BotonIA({
       {leyendo ? <LogoCargando size={15} /> : <Sparkles size={15} strokeWidth={2} />}
       {leyendo ? textoLeyendo : children}
     </button>
-  );
-}
-
-/**
- * Estado inicial: la zona de carga ocupa el modal y leer el comprobante es la
- * acción principal. `children` es el uploader de comprobantes.
- *
- * textoBoton/textoLeyendo/textoManual son opcionales -- por default queda el
- * texto de comprobantes (Compra/Gasto/Cobro); ModalImportarCatalogo los pisa
- * porque acá no se "autocompleta" un formulario, se lee un catálogo entero.
- */
-export function PasoComprobante({
-  children,
-  hayArchivo,
-  leyendo,
-  onLeer,
-  onCargarAMano,
-  textoBoton = "Autocompletar con IA",
-  textoLeyendo = "Leyendo comprobante...",
-  textoManual = "Cargar los datos a mano",
-}) {
-  return (
-    <div className="ia-paso">
-      {children}
-      <BotonIA
-        onClick={onLeer}
-        disabled={!hayArchivo || leyendo}
-        leyendo={leyendo}
-        atenuado={!hayArchivo}
-        textoLeyendo={textoLeyendo}
-      >
-        {textoBoton}
-      </BotonIA>
-      <button type="button" className="ia-paso-manual" onClick={onCargarAMano}>
-        {textoManual}
-      </button>
-    </div>
-  );
-}
-
-/** Banner del comprobante ya leído, con la opción de volver a pasarlo por la IA. */
-export function BannerIA({
-  nombreArchivo,
-  resumen,
-  onVolverALeer,
-  leyendo,
-  disabled,
-  textoLeyendo = "Leyendo comprobante...",
-}) {
-  return (
-    <div className="ia-banner">
-      <span className="ia-banner-icono">
-        <FileText size={22} strokeWidth={2} />
-      </span>
-      <div className="ia-banner-texto">
-        <span className="ia-banner-archivo">{nombreArchivo}</span>
-        <span className="ia-banner-resumen">{resumen}</span>
-      </div>
-      <span className="ia-banner-espaciador" />
-      {onVolverALeer && (
-        <BotonIA
-          onClick={onVolverALeer}
-          disabled={disabled || leyendo}
-          leyendo={leyendo}
-          textoLeyendo={textoLeyendo}
-        >
-          Volver a leer
-        </BotonIA>
-      )}
-    </div>
-  );
-}
-
-/** Resumen de lo que falta completar, arriba del formulario. */
-export function ResumenValidacion({ faltantes }) {
-  if (faltantes.length === 0) return null;
-
-  return (
-    <div className="ia-validacion">
-      <CircleAlert size={16} strokeWidth={2.25} className="ia-validacion-icono" />
-      <div className="ia-validacion-texto">
-        <span className="ia-validacion-titulo">
-          {faltantes.length === 1
-            ? "Falta completar 1 campo antes de guardar"
-            : `Faltan completar ${faltantes.length} campos antes de guardar`}
-        </span>
-        <span className="ia-validacion-detalle">{faltantes.join(" · ")}</span>
-      </div>
-    </div>
   );
 }
 

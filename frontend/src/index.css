@@ -769,12 +769,14 @@ textarea:focus-visible,
    los `type="date"` arrancaban en rojo con el formulario recién abierto. */
 .campo:user-invalid,
 .modal-form input:user-invalid,
-.campo--error {
+.campo--error,
+.modal-form .campo--error {
   border-color: var(--color-oxido);
 }
 
 .campo--error:focus,
-.campo--error:focus-within {
+.campo--error:focus-within,
+.modal-form .campo--error:focus {
   border-color: var(--color-oxido);
   box-shadow: 0 0 0 3px var(--color-oxido-tint);
 }

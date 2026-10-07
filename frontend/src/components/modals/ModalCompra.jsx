@@ -1,36 +1,100 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  CalendarDays,
+  Check,
+  CircleAlert,
+  CircleCheck,
+  Clock,
+  PackageCheck,
+  Plus,
+  Sparkles,
+  Truck,
+  X,
+} from "lucide-react";
+
 import { ComprobantesUploader } from "../shared/ComprobantesUploader";
+import { ControlOpcion } from "../shared/ControlOpcion";
 import { SeccionNotas } from "../shared/SeccionNotas";
-import { formatMoneda, formatFecha } from "../../utils/formato";
+import { formatMoneda } from "../../utils/formato";
 import { TIPOS_FACTURA } from "../../constants/tipoFactura";
 import { getTipoProducto } from "../../constants/tipoProducto";
-import { getCondicionPagoLabel, getEstadoPago, getEstadoEnvio } from "../../constants/estadoCompra";
+import { getCondicionPagoLabel } from "../../constants/estadoCompra";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
-import { OLIVA_CLARO } from "../../constants/colores";
+import { NARANJA_TEXTO, OLIVA_OSCURO } from "../../constants/colores";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { useExtraccionIA } from "../../hooks/useExtraccionIA";
 import { useToast } from "../../context/useToast";
-import { validarRequerido, validarFecha } from "../../utils/formValidation";
-import { EditarShell, SeccionForm, TotalRiel, BarraComposicion, TileEstado } from "./PiezasEditar";
-import { PasoComprobante, BannerIA, ResumenValidacion, MarcaIA } from "./PiezasIA";
-import { TINTE_PASTILLA } from "../../constants/tipoMovimiento";
+import { avisoFaltantes, validarRequerido, validarFecha } from "../../utils/formValidation";
+import ModalShell from "./ModalShell";
+import { BotonIA, MarcaIA } from "./PiezasIA";
 import { LogoCargando } from "../shared/LogoCargando";
 import { CamposCotizacion } from "./CamposCotizacion";
 import { useCotizacionDia } from "../../hooks/useCotizacionDia";
 
-const validarCampo = (name, value) => {
-  if (name === "descripcion") return validarRequerido(value, "La descripción es obligatoria.");
-  if (name === "fecha") return validarFecha(value);
-  return null;
+import "./ModalCompra.css";
+
+const OPCIONES_FACTURA = TIPOS_FACTURA.map((t) => ({ valor: t.value, label: t.label }));
+const OPCIONES_CONDICION = ["contado", "cuenta_corriente", "cheque", "transferencia"].map(
+  (valor) => ({ valor, label: getCondicionPagoLabel(valor) })
+);
+// Pago y envío son dos valores de un dato, no un interruptor (DESIGN.md §9):
+// segmentado con el ícono y el color de texto de su badge.
+const OPCIONES_PAGO = [
+  { valor: "pendiente", label: "Pendiente", icono: Clock, color: NARANJA_TEXTO },
+  { valor: "pagado", label: "Pagado", icono: CircleCheck, color: OLIVA_OSCURO },
+];
+const OPCIONES_ENVIO = [
+  { valor: "pedido", label: "Pedido", icono: Truck },
+  { valor: "entregado", label: "Entregado", icono: PackageCheck, color: OLIVA_OSCURO },
+];
+
+// Los tres pasos de 5b. Cada uno valida sus campos antes de avanzar.
+const PASOS = [
+  { label: "Comprobante y datos", campos: ["proveedor_id", "fase_id", "descripcion", "fecha"] },
+  { label: "Condiciones", campos: ["tipo_factura", "condicion_pago"] },
+  { label: "Productos e impuestos", campos: [] },
+];
+
+const ETIQUETAS = {
+  proveedor_id: "Proveedor",
+  fase_id: "Fase",
+  descripcion: "Descripción",
+  fecha: "Fecha",
+  tipo_factura: "Tipo de factura",
+  condicion_pago: "Condición de pago",
 };
 
-const CONDICION_PAGO_OPCIONES = ["contado", "cuenta_corriente", "cheque", "transferencia"];
 let contadorFilaTemp = 0;
 const nuevaFilaId = () => `tmp-${++contadorFilaTemp}`;
 
+function ErrorCampo({ texto }) {
+  if (!texto) return null;
+  return (
+    <p className="campo-error">
+      <CircleAlert aria-hidden="true" />
+      {texto}
+    </p>
+  );
+}
+
+/**
+ * Nueva compra y edición — el híbrido 5ab de DESIGN.md §14.
+ *
+ * - Shell de 5b: 760px y tres pasos con su barrita de progreso. Los pasos se
+ *   pueden recorrer clickeando su nombre; "Siguiente" valida el paso.
+ * - Chips de 5a: tipo de factura y condición de pago quedan visibles en su
+ *   paso (no detrás de un "Editar"), y pago y envío son segmentados.
+ * - Pie en dos niveles: el desglose en su fila sobre el suave, y abajo el
+ *   total grande con los botones. El pie es fijo: el total no se pierde.
+ *
+ * `contexto` es dónde se carga (el proyecto, o proyecto · fase): va en el
+ * header con el proveedor elegido, no como campos deshabilitados.
+ */
 export function ModalCompra({
   compra,
+  contexto,
   fasesDisponibles = [],
   faseFija,
   proveedores = [],
@@ -54,6 +118,7 @@ export function ModalCompra({
     estado_pago: "pendiente",
     estado_envio: "pedido",
   });
+  const [paso, setPaso] = useState(0);
   const [detalle, setDetalle] = useState([]);
   const [impuestos, setImpuestos] = useState([]);
   const [comprobantesCambios, setComprobantesCambios] = useState({ archivos: [], eliminarIds: [] });
@@ -66,13 +131,6 @@ export function ModalCompra({
   // Los impuestos heredan la misma (ver docs/PLAN_TIPO_CAMBIO.md).
   const cotizacion = useCotizacionDia({ fecha: form.fecha, inicial: compra });
   const [intentoGuardar, setIntentoGuardar] = useState(false);
-
-  // Flujo "IA primero" (dirección 5c): una compra nueva arranca mostrando sólo
-  // la zona de carga del comprobante; el formulario aparece cuando la IA lo
-  // leyó o cuando se elige cargar los datos a mano. Editar salta directo al
-  // formulario, que para eso ya hay datos.
-  const [mostrarFormulario, setMostrarFormulario] = useState(esEdicion);
-  const [lecturaIA, setLecturaIA] = useState(null); // { archivo, campos, productos }
   const [camposIA, setCamposIA] = useState(new Set());
   const claseIA = (campo) => (camposIA.has(campo) ? "campo-ia" : "");
 
@@ -80,7 +138,7 @@ export function ModalCompra({
     if (compra) {
       setForm({
         // Con faseFija/proveedorFijo esos campos no se pueden cambiar desde
-        // acá (ver más abajo, donde el selector se reemplaza por texto fijo).
+        // acá: no se dibuja su selector.
         fase_id: faseFija?.id ?? compra.fase_id ?? "",
         proveedor_id: proveedorFijo?.id ?? compra.proveedor_id ?? "",
         descripcion: compra.descripcion ?? "",
@@ -149,29 +207,32 @@ export function ModalCompra({
     return producto ? `${producto.marca} ${producto.modelo}` : null;
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-    setErrores((prev) => ({ ...prev, [name]: validarCampo(name, value) }));
-
-    // Las líneas de detalle quedan atadas a un proveedor -- si cambia,
-    // los productos ya elegidos dejan de tener sentido.
-    if (name === "proveedor_id") {
-      setDetalle([]);
-    }
+  const validarCampo = (name, value) => {
+    if (name === "descripcion") return validarRequerido(value, "Escribí una descripción corta.");
+    if (name === "fecha") return validarFecha(value);
+    if (name === "fase_id") return faseFija || value ? null : "Elegí la fase.";
+    if (name === "proveedor_id") return proveedorFijo || value ? null : "Elegí el proveedor.";
+    if (name === "tipo_factura") return value ? null : "Elegí el tipo de factura.";
+    if (name === "condicion_pago") return value ? null : "Elegí la condición de pago.";
+    return null;
   };
 
-  // Toma el primer comprobante recién arrastrado/seleccionado (todavía sin
-  // subir) y le pide a la IA que lo lea. precio_neto sigue sin tocarse a
-  // mano (se calcula solo de las líneas de detalle) pero, si la IA logra
-  // identificar el proveedor Y reconoce productos de SU catálogo en la
-  // factura, agrega esas líneas -- con la cantidad que leyó y el precio
-  // de catálogo del producto (nunca un precio leído de la factura).
-  const handleAutocompletarIA = async () => {
-    const archivo = comprobantesCambios.archivos[0];
-    if (!archivo) return;
+  const cambiar = (name, value) => {
+    setForm((prev) => ({ ...prev, [name]: value }));
+    setErrores((prev) => ({ ...prev, [name]: validarCampo(name, value) }));
+    // Las líneas de detalle quedan atadas a un proveedor -- si cambia,
+    // los productos ya elegidos dejan de tener sentido.
+    if (name === "proveedor_id") setDetalle([]);
+  };
+  const handleChange = (e) => cambiar(e.target.name, e.target.value);
 
-    let productosReconocidos = 0;
+  // Le pide a la IA que lea el primer comprobante recién elegido (todavía sin
+  // subir). precio_neto sigue sin tocarse a mano (se calcula solo de las
+  // líneas de detalle) pero, si la IA identifica el proveedor Y reconoce
+  // productos de SU catálogo en la factura, agrega esas líneas -- con la
+  // cantidad que leyó y el precio de catálogo del producto (nunca un precio
+  // leído de la factura).
+  const handleAutocompletarIA = async (archivo) => {
     try {
       const resultado = await extraer(archivo, "compra", {
         fases: fasesDisponibles.map((f) => ({ id: f.id, nombre: f.nombre })),
@@ -206,6 +267,7 @@ export function ModalCompra({
           ? prev.proveedor_id
           : (resultado.proveedor_id ?? prev.proveedor_id),
       }));
+      setErrores({});
 
       if (resultado.detalle?.length) {
         const productosDeEseProveedor = productosDisponibles.filter(
@@ -223,27 +285,19 @@ export function ModalCompra({
             };
           })
           .filter(Boolean);
-        if (filasNuevas.length) {
-          setDetalle((prev) => [...prev, ...filasNuevas]);
-          productosReconocidos = filasNuevas.length;
-        }
+        if (filasNuevas.length) setDetalle((prev) => [...prev, ...filasNuevas]);
       }
 
       if (resultado.impuestos?.length) {
-        const filasImpuestos = resultado.impuestos.map((linea) => ({
-          _id: nuevaFilaId(),
-          impuesto_id: linea.impuesto_id,
-          monto: linea.monto,
-        }));
-        setImpuestos((prev) => [...prev, ...filasImpuestos]);
+        setImpuestos((prev) => [
+          ...prev,
+          ...resultado.impuestos.map((linea) => ({
+            _id: nuevaFilaId(),
+            impuesto_id: linea.impuesto_id,
+            monto: linea.monto,
+          })),
+        ]);
       }
-
-      setLecturaIA({
-        archivo: archivo.name,
-        campos: leidos.size,
-        productos: productosReconocidos,
-      });
-      setMostrarFormulario(true);
 
       if (resultado.advertencias?.length) {
         resultado.advertencias.forEach((a) => toast.error(a));
@@ -256,30 +310,26 @@ export function ModalCompra({
   };
 
   // --- Detalle (productos) ---
-  const agregarFilaDetalle = () => {
+  // El precio unitario no se tipea: es el precio de catálogo del producto
+  // elegido (Producto.precio) -- acá se "congela" en la línea de la compra,
+  // así después no cambia si el proveedor actualiza su lista de precios.
+  const agregarProducto = (productoId) => {
+    const producto = productosDelProveedor.find((p) => p.id === productoId);
+    if (!producto) return;
     setDetalle((prev) => [
       ...prev,
-      { _id: nuevaFilaId(), producto_id: "", cantidad: "", precio_unitario: "" },
+      {
+        _id: nuevaFilaId(),
+        producto_id: producto.id,
+        cantidad: 1,
+        precio_unitario: producto.precio,
+      },
     ]);
   };
 
   const actualizarFilaDetalle = (id, campo, valor) => {
     setDetalle((prev) =>
       prev.map((fila) => (fila._id === id ? { ...fila, [campo]: valor } : fila))
-    );
-  };
-
-  // El precio unitario no se tipea: es el precio de catálogo del producto
-  // elegido (Producto.precio) -- acá se "congela" en la línea de la compra,
-  // así después no cambia si el proveedor actualiza su lista de precios.
-  const seleccionarProducto = (id, productoId) => {
-    const producto = productosDelProveedor.find((p) => p.id === productoId);
-    setDetalle((prev) =>
-      prev.map((fila) =>
-        fila._id === id
-          ? { ...fila, producto_id: productoId, precio_unitario: producto?.precio ?? "" }
-          : fila
-      )
     );
   };
 
@@ -302,16 +352,40 @@ export function ModalCompra({
     setImpuestos((prev) => prev.filter((fila) => fila._id !== id));
   };
 
+  // --- Pasos y validación ---
+  const erroresDe = (campos) =>
+    Object.fromEntries(campos.map((campo) => [campo, validarCampo(campo, form[campo])]));
+  const pasoValido = (indice, encontrados) =>
+    PASOS[indice].campos.every((campo) => !encontrados[campo]) &&
+    (indice !== 0 || !cotizacion.error);
+
+  const avanzar = () => {
+    const encontrados = erroresDe(PASOS[paso].campos);
+    setErrores((prev) => ({ ...prev, ...encontrados }));
+    if (!pasoValido(paso, encontrados)) {
+      setIntentoGuardar(true);
+      return;
+    }
+    setPaso((p) => Math.min(p + 1, PASOS.length - 1));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Enter en un campo de un paso intermedio de una compra nueva avanza, no
+    // guarda: el formulario todavía no está completo.
+    if (!esEdicion && paso < PASOS.length - 1) {
+      avanzar();
+      return;
+    }
 
-    const nuevosErrores = {
-      descripcion: validarCampo("descripcion", form.descripcion),
-      fecha: validarCampo("fecha", form.fecha),
-    };
-    setErrores(nuevosErrores);
+    const encontrados = erroresDe(Object.keys(ETIQUETAS));
+    setErrores(encontrados);
     setIntentoGuardar(true);
-    if (Object.values(nuevosErrores).some(Boolean) || cotizacion.error) return;
+    const conError = PASOS.findIndex((_, i) => !pasoValido(i, encontrados));
+    if (conError !== -1) {
+      setPaso(conError);
+      return;
+    }
 
     setGuardando(true);
     try {
@@ -343,474 +417,447 @@ export function ModalCompra({
     }
   };
 
-  const faltantes = [
-    !faseFija && !form.fase_id ? "Fase" : null,
-    !proveedorFijo && !form.proveedor_id ? "Proveedor" : null,
-    !form.descripcion ? "Descripción" : null,
-    !form.fecha ? "Fecha" : null,
-    !form.tipo_factura ? "Tipo de factura" : null,
-    !form.condicion_pago ? "Condición de pago" : null,
-    cotizacion.error ? "Cotización" : null,
-  ].filter(Boolean);
+  const faltantes = intentoGuardar
+    ? [
+        ...Object.keys(ETIQUETAS)
+          .filter((campo) => errores[campo])
+          .map((campo) => ETIQUETAS[campo]),
+        ...(cotizacion.error ? ["Cotización"] : []),
+      ]
+    : [];
 
-  // El contexto del header se arma de lo que está elegido ahora (no sólo de
-  // faseFija/proveedorFijo), así el header acompaña mientras se edita.
+  // El contexto del header acompaña lo que está elegido ahora.
   const nombreProveedorElegido =
     proveedorFijo?.nombre ?? proveedores.find((p) => p.id === form.proveedor_id)?.nombre;
-  const nombreFaseElegida =
-    faseFija?.nombre ?? fasesDisponibles.find((f) => f.id === form.fase_id)?.nombre;
-  const contexto = [nombreProveedorElegido, nombreFaseElegida].filter(Boolean).join(" · ");
+  const contextoHeader = [contexto ?? faseFija?.nombre, nombreProveedorElegido]
+    .filter(Boolean)
+    .join(" · ");
 
-  const uploader = (
-    <ComprobantesUploader
-      key="comprobantes"
-      existentes={compra?.comprobantes ?? []}
-      onVerExistente={onVerComprobante}
-      onCambio={setComprobantesCambios}
-      disabled={guardando}
-      prominente={!mostrarFormulario}
-    />
+  const ultimoPaso = paso === PASOS.length - 1;
+  const cantidadProductos = detalle.filter((f) => f.producto_id).length;
+  const desglose = [
+    `Neto ${formatMoneda(precioNeto)}${
+      cantidadProductos > 0
+        ? ` (${cantidadProductos} ${cantidadProductos === 1 ? "producto" : "productos"})`
+        : ""
+    }`,
+    `impuestos ${formatMoneda(totalImpuestos)}`,
+    notasCredito > 0 && `notas de crédito −${formatMoneda(notasCredito)}`,
+    notasDebito > 0 && `notas de débito +${formatMoneda(notasDebito)}`,
+    precioTotalUsd > 0 && `≈ ${formatMoneda(precioTotalUsd, "usd")}`,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  const pasos = (
+    <ol className="compra-pasos" aria-label="Pasos de la compra">
+      {PASOS.map((p, i) => {
+        const estado = i < paso ? "hecho" : i === paso ? "actual" : "pendiente";
+        return (
+          <li key={p.label}>
+            <button
+              type="button"
+              className={`compra-pasos__paso compra-pasos__paso--${estado}`}
+              aria-current={i === paso ? "step" : undefined}
+              onClick={() => setPaso(i)}
+              disabled={guardando}
+            >
+              <span className="compra-pasos__barra" aria-hidden="true" />
+              <span className="compra-pasos__label">
+                {estado === "hecho" ? (
+                  <Check size={14} strokeWidth={2.4} aria-hidden="true" />
+                ) : (
+                  <span className="compra-pasos__numero">{i + 1}</span>
+                )}
+                <span className="compra-pasos__texto">{p.label}</span>
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ol>
   );
 
-  const estadoPago = getEstadoPago(form.estado_pago);
-  const estadoEnvio = getEstadoEnvio(form.estado_envio);
-
-  // Los estados son campos del formulario como cualquier otro: el switch
-  // cambia el form y recién se guarda con el submit (a diferencia de la
-  // ficha de detalle, donde togglear pega contra la API al instante).
-  const toggleEstado = (campo, valorA, valorB) =>
-    setForm((prev) => ({ ...prev, [campo]: prev[campo] === valorA ? valorB : valorA }));
+  const botonGuardar = (
+    <button type="submit" className="btn btn--lg btn-primary" disabled={guardando}>
+      {guardando ? (
+        <>
+          <LogoCargando size={14} variante="blanco" />
+          Guardando...
+        </>
+      ) : esEdicion ? (
+        "Guardar cambios"
+      ) : (
+        "Crear compra"
+      )}
+    </button>
+  );
 
   return (
-    <EditarShell
-      tipo={TIPOS_MOVIMIENTO.compra.singular}
+    <ModalShell
+      titulo={esEdicion ? "Editar compra" : "Nueva compra"}
       icono={TIPOS_MOVIMIENTO.compra.icono}
-      esEdicion={esEdicion}
-      contexto={contexto}
-      fecha={form.fecha ? formatFecha(form.fecha) : null}
-      conRiel
-      guardando={guardando}
+      contexto={contextoHeader || undefined}
+      iconoContexto={Building2}
+      ancho
       onCerrar={onCerrar}
       onSubmit={handleSubmit}
-      aviso={
-        mostrarFormulario && faltantes.length > 0
-          ? `Revisá ${faltantes.length} ${faltantes.length === 1 ? "campo" : "campos"}`
-          : null
+      validacionPropia
+      cerrarDeshabilitado={guardando}
+      encabezadoExtra={pasos}
+      desglose={desglose}
+      total={precioTotal}
+      totalGrande
+      aviso={avisoFaltantes(faltantes)}
+      acciones={
+        <>
+          {paso === 0 ? (
+            <button
+              type="button"
+              className="btn btn--lg btn-secondary"
+              onClick={onCerrar}
+              disabled={guardando}
+            >
+              Cancelar
+            </button>
+          ) : (
+            <button
+              type="button"
+              className="btn btn--lg btn-secondary"
+              onClick={() => setPaso((p) => p - 1)}
+              disabled={guardando}
+            >
+              <ArrowLeft size={15} strokeWidth={2} aria-hidden="true" />
+              Atrás
+            </button>
+          )}
+          {/* Al editar se puede guardar desde cualquier paso: los datos ya
+              están completos y uno entra a cambiar una cosa puntual. */}
+          {!ultimoPaso && (
+            <button
+              type="button"
+              className={`btn btn--lg ${esEdicion ? "btn-secondary" : "btn-primary"}`}
+              onClick={avanzar}
+              disabled={guardando}
+            >
+              Siguiente
+            </button>
+          )}
+          {(ultimoPaso || esEdicion) && botonGuardar}
+        </>
       }
-      textoGuardar={esEdicion ? "Guardar cambios" : "Crear compra"}
-      guardarDeshabilitado={!mostrarFormulario}
     >
-      {!mostrarFormulario ? (
-        // Flujo "IA primero": una compra nueva arranca sólo con la zona de
-        // carga, sin riel ni formulario, hasta que la IA lea el comprobante
-        // o se elija cargar a mano.
-        <div className="mov-edit__paso">
-          <PasoComprobante
-            hayArchivo={comprobantesCambios.archivos.length > 0}
-            leyendo={extrayendo}
-            onLeer={handleAutocompletarIA}
-            onCargarAMano={() => setMostrarFormulario(true)}
-          >
-            {uploader}
-          </PasoComprobante>
-        </div>
-      ) : (
-        <div className="mov-edit__grid">
-          <div className="mov-edit__form">
-            {lecturaIA && (
-              <BannerIA
-                nombreArchivo={lecturaIA.archivo}
-                resumen={`Leído con IA · ${lecturaIA.campos} ${lecturaIA.campos === 1 ? "campo" : "campos"}${lecturaIA.productos > 0 ? ` y ${lecturaIA.productos} ${lecturaIA.productos === 1 ? "producto" : "productos"}` : ""} completados`}
-                onVolverALeer={handleAutocompletarIA}
+      {paso === 0 && (
+        <>
+          <ComprobantesUploader
+            existentes={compra?.comprobantes ?? []}
+            onVerExistente={onVerComprobante}
+            onCambio={setComprobantesCambios}
+            disabled={guardando}
+            textoVacio="Arrastrá la factura o"
+            extraVacio={
+              <>
+                <Sparkles size={12} strokeWidth={2} aria-hidden="true" />
+                Autocompletá con IA
+              </>
+            }
+            accionArchivo={(archivo) => (
+              <BotonIA
+                onClick={() => handleAutocompletarIA(archivo)}
+                disabled={guardando || extrayendo}
                 leyendo={extrayendo}
-                disabled={guardando}
-              />
+              >
+                {camposIA.size > 0 ? "Volver a leer" : "Autocompletar con IA"}
+              </BotonIA>
+            )}
+          />
+
+          {(!proveedorFijo || !faseFija) && (
+            <div className="modal-form-fila">
+              {!proveedorFijo && (
+                <label className={claseIA("proveedor_id")}>
+                  Proveedor
+                  <select
+                    name="proveedor_id"
+                    value={form.proveedor_id}
+                    onChange={handleChange}
+                    className={errores.proveedor_id ? "campo--error" : undefined}
+                  >
+                    <option value="">Elegí el proveedor…</option>
+                    {proveedores.map((prov) => (
+                      <option key={prov.id} value={prov.id}>
+                        {prov.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  <ErrorCampo texto={errores.proveedor_id} />
+                  {camposIA.has("proveedor_id") && <MarcaIA />}
+                </label>
+              )}
+              {!faseFija && (
+                <label className={claseIA("fase_id")}>
+                  Fase
+                  <select
+                    name="fase_id"
+                    value={form.fase_id}
+                    onChange={handleChange}
+                    className={errores.fase_id ? "campo--error" : undefined}
+                  >
+                    <option value="">Elegí la fase…</option>
+                    {fasesDisponibles.map((fase) => (
+                      <option key={fase.id} value={fase.id}>
+                        {fase.nombre}
+                      </option>
+                    ))}
+                  </select>
+                  <ErrorCampo texto={errores.fase_id} />
+                  {camposIA.has("fase_id") && <MarcaIA />}
+                </label>
+              )}
+            </div>
+          )}
+
+          <label className={claseIA("descripcion")}>
+            Descripción
+            <input
+              type="text"
+              name="descripcion"
+              value={form.descripcion}
+              onChange={handleChange}
+              placeholder="Ej: Equipos para pisos 1 a 4"
+              className={errores.descripcion ? "campo--error" : undefined}
+            />
+            <ErrorCampo texto={errores.descripcion} />
+            {camposIA.has("descripcion") && !errores.descripcion && <MarcaIA />}
+          </label>
+
+          <label className={`compra-fecha ${claseIA("fecha")}`}>
+            Fecha
+            <div className={`campo${errores.fecha ? " campo--error" : ""}`}>
+              <CalendarDays aria-hidden="true" />
+              <input type="date" name="fecha" value={form.fecha} onChange={handleChange} />
+            </div>
+            <ErrorCampo texto={errores.fecha} />
+            {camposIA.has("fecha") && !errores.fecha && <MarcaIA />}
+          </label>
+
+          <CamposCotizacion
+            cotizacion={cotizacion}
+            mostrarError={intentoGuardar}
+            disabled={guardando}
+          />
+        </>
+      )}
+
+      {paso === 1 && (
+        <>
+          <ControlOpcion
+            etiqueta="Tipo de factura"
+            opciones={OPCIONES_FACTURA}
+            valor={form.tipo_factura}
+            onCambiar={(valor) => cambiar("tipo_factura", valor)}
+            error={errores.tipo_factura}
+            hint={camposIA.has("tipo_factura") ? <MarcaIA /> : null}
+            disabled={guardando}
+          />
+          <ControlOpcion
+            etiqueta="Condición de pago"
+            opciones={OPCIONES_CONDICION}
+            valor={form.condicion_pago}
+            onCambiar={(valor) => cambiar("condicion_pago", valor)}
+            error={errores.condicion_pago}
+            disabled={guardando}
+          />
+          {/* Los estados son campos del formulario como cualquier otro: se
+              guardan con el submit (a diferencia de la ficha de detalle, donde
+              el badge pega contra la API al instante). */}
+          <div className="modal-form-fila">
+            <ControlOpcion
+              etiqueta="Pago"
+              opciones={OPCIONES_PAGO}
+              valor={form.estado_pago}
+              onCambiar={(valor) => cambiar("estado_pago", valor)}
+              variante="segmentado"
+              disabled={guardando}
+            />
+            <ControlOpcion
+              etiqueta="Envío"
+              opciones={OPCIONES_ENVIO}
+              valor={form.estado_envio}
+              onCambiar={(valor) => cambiar("estado_envio", valor)}
+              variante="segmentado"
+              disabled={guardando}
+            />
+          </div>
+        </>
+      )}
+
+      {paso === 2 && (
+        <>
+          <div className="modal-form-bloque">
+            <h3 className="modal-form-bloque__titulo">Productos</h3>
+            {!form.proveedor_id ? (
+              <p className="modal-form-seccion-vacio">
+                Elegí el proveedor para ver su catálogo.{" "}
+                <button type="button" className="campo-hint__accion" onClick={() => setPaso(0)}>
+                  Ir al paso 1
+                </button>
+              </p>
+            ) : (
+              <select
+                className="campo"
+                aria-label="Agregar un producto del catálogo"
+                value=""
+                onChange={(e) => agregarProducto(e.target.value)}
+                disabled={guardando || productosDelProveedor.length === 0}
+              >
+                <option value="">
+                  {productosDelProveedor.length === 0
+                    ? `${nombreProveedorElegido} no tiene productos cargados`
+                    : `Agregar del catálogo de ${nombreProveedorElegido}…`}
+                </option>
+                {productosDelProveedor.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.marca} {p.modelo} · {formatMoneda(Number(p.precio) || 0)}
+                  </option>
+                ))}
+              </select>
             )}
 
-            <ResumenValidacion faltantes={faltantes} />
-
-            <SeccionForm
-              titulo="Comprobantes"
-              accion={
-                !lecturaIA && (
-                  <button
-                    type="button"
-                    className="mov-edit__seccion-accion"
-                    onClick={handleAutocompletarIA}
-                    disabled={guardando || extrayendo || comprobantesCambios.archivos.length === 0}
-                    title={
-                      comprobantesCambios.archivos.length === 0
-                        ? "Primero arrastrá o elegí un comprobante"
-                        : "Leer el comprobante y prellenar los campos"
-                    }
-                  >
-                    {extrayendo ? (
-                      <>
-                        <LogoCargando size={13} />
-                        Leyendo...
-                      </>
-                    ) : (
-                      "Autocompletar con IA"
-                    )}
-                  </button>
-                )
-              }
-            >
-              {uploader}
-            </SeccionForm>
-
-            <SeccionForm titulo="Datos generales">
-              <div className="mov-edit__campos">
-                {faseFija ? (
-                  <label className="mov-edit__campo">
-                    Fase
-                    <input type="text" value={faseFija.nombre} disabled readOnly />
-                  </label>
-                ) : (
-                  <label className={`mov-edit__campo ${claseIA("fase_id")}`}>
-                    Fase
-                    <select name="fase_id" value={form.fase_id} onChange={handleChange} required>
-                      <option value="">Seleccionar fase...</option>
-                      {fasesDisponibles.map((fase) => (
-                        <option key={fase.id} value={fase.id}>
-                          {fase.nombre}
-                        </option>
-                      ))}
-                    </select>
-                    {camposIA.has("fase_id") && <MarcaIA />}
-                  </label>
-                )}
-
-                {proveedorFijo ? (
-                  <label className="mov-edit__campo">
-                    Proveedor
-                    <input type="text" value={proveedorFijo.nombre} disabled readOnly />
-                  </label>
-                ) : (
-                  <label className={`mov-edit__campo ${claseIA("proveedor_id")}`}>
-                    Proveedor
-                    <select
-                      name="proveedor_id"
-                      value={form.proveedor_id}
-                      onChange={handleChange}
-                      required
-                    >
-                      <option value="">Seleccionar proveedor...</option>
-                      {proveedores.map((prov) => (
-                        <option key={prov.id} value={prov.id}>
-                          {prov.nombre}
-                        </option>
-                      ))}
-                    </select>
-                    {camposIA.has("proveedor_id") && <MarcaIA />}
-                  </label>
-                )}
-              </div>
-
-              <label
-                className={`mov-edit__campo mov-edit__campo--titulo ${claseIA("descripcion")}`}
-              >
-                Descripción
-                <input
-                  type="text"
-                  name="descripcion"
-                  value={form.descripcion}
-                  onChange={handleChange}
-                  required
-                />
-                {errores.descripcion && <p className="campo-error">{errores.descripcion}</p>}
-                {camposIA.has("descripcion") && !errores.descripcion && <MarcaIA />}
-              </label>
-
-              <label className={`mov-edit__campo mov-edit__campo--corto ${claseIA("fecha")}`}>
-                Fecha
-                <input
-                  type="date"
-                  name="fecha"
-                  value={form.fecha}
-                  onChange={handleChange}
-                  required
-                />
-                {errores.fecha && <p className="campo-error">{errores.fecha}</p>}
-                {camposIA.has("fecha") && !errores.fecha && <MarcaIA />}
-              </label>
-
-              <CamposCotizacion
-                cotizacion={cotizacion}
-                monto={precioNeto + totalImpuestos}
-                monedaMonto="ars"
-                claseFila="mov-edit__campos"
-                claseCampo="mov-edit__campo"
-                mostrarError={intentoGuardar}
-                disabled={guardando}
-              />
-            </SeccionForm>
-
-            <SeccionForm titulo="Condiciones">
-              <div className="mov-edit__campos">
-                <label className={`mov-edit__campo ${claseIA("tipo_factura")}`}>
-                  Tipo de factura
-                  <select
-                    name="tipo_factura"
-                    value={form.tipo_factura}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="" disabled>
-                      Selecciona un tipo de factura
-                    </option>
-                    {TIPOS_FACTURA.map((tipo) => (
-                      <option key={tipo.value} value={tipo.value}>
-                        {tipo.label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="mov-edit__campo">
-                  Condición de pago
-                  <select
-                    name="condicion_pago"
-                    value={form.condicion_pago}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Seleccionar...</option>
-                    {CONDICION_PAGO_OPCIONES.map((op) => (
-                      <option key={op} value={op}>
-                        {getCondicionPagoLabel(op)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-
-              <div className="mov-edit__campo mov-edit__campo--corto">
-                <span>Precio neto (calculado)</span>
-                <span className="mov-edit__calculado">{formatMoneda(precioNeto)}</span>
-              </div>
-            </SeccionForm>
-
-            <SeccionForm
-              titulo="Productos"
-              accion={
-                <button
-                  type="button"
-                  className="mov-edit__seccion-accion"
-                  onClick={agregarFilaDetalle}
-                  disabled={!form.proveedor_id}
-                >
-                  + Agregar producto
-                </button>
-              }
-            >
-              {!form.proveedor_id && <p className="mov-edit__vacio">Elegí un proveedor primero.</p>}
-
-              {detalle.length > 0 && (
-                <div className="mov-edit__fila mov-edit__fila--producto mov-edit__fila--headers">
+            {detalle.length > 0 && (
+              <div className="tabla-form">
+                <div className="tabla-form__cabecera">
                   <span>Producto</span>
-                  <span>Cant.</span>
-                  <span className="mov-edit__num">Precio unit.</span>
-                  <span className="mov-edit__num">Subtotal</span>
+                  <span className="tabla-form__num">Cant.</span>
+                  <span className="tabla-form__num">Unitario</span>
+                  <span className="tabla-form__num">Subtotal</span>
                   <span />
                 </div>
-              )}
-
-              {detalle.map((fila) => {
-                const productoElegido = productosDelProveedor.find(
-                  (p) => p.id === fila.producto_id
-                );
-                const tipoProducto = productoElegido ? getTipoProducto(productoElegido.tipo) : null;
-                return (
-                  <div key={fila._id} className="mov-edit__fila mov-edit__fila--producto">
-                    <div className="mov-edit__fila-producto">
-                      <select
-                        value={fila.producto_id}
-                        onChange={(e) => seleccionarProducto(fila._id, e.target.value)}
-                        required
-                      >
-                        <option value="">Producto...</option>
-                        {productosDelProveedor.map((p) => (
-                          <option key={p.id} value={p.id}>
-                            {p.marca} {p.modelo}
-                          </option>
-                        ))}
-                      </select>
-                      {tipoProducto && (
-                        <span
-                          className="badge badge--sm mov-edit__badge"
-                          style={{
-                            color: tipoProducto.color,
-                            backgroundColor: `${tipoProducto.color}${TINTE_PASTILLA}`,
-                          }}
-                        >
-                          {tipoProducto.icono && (
-                            <tipoProducto.icono size={11} strokeWidth={2.25} />
-                          )}{" "}
-                          {tipoProducto.label}
+                {detalle.map((fila) => {
+                  const producto = productosDisponibles.find((p) => p.id === fila.producto_id);
+                  const tipo = producto ? getTipoProducto(producto.tipo) : null;
+                  const IconoTipo = tipo?.icono;
+                  return (
+                    <div key={fila._id} className="tabla-form__fila">
+                      <span className="tabla-form__producto">
+                        <span className="tabla-form__nombre">
+                          {producto ? `${producto.marca} ${producto.modelo}` : "Producto eliminado"}
                         </span>
-                      )}
+                        {tipo && (
+                          <span className="tabla-form__hint compra-tipo">
+                            {IconoTipo && (
+                              <IconoTipo size={12} strokeWidth={1.75} aria-hidden="true" />
+                            )}
+                            {tipo.label}
+                          </span>
+                        )}
+                      </span>
+                      <input
+                        className="campo campo--sm tabla-form__num"
+                        type="number"
+                        aria-label={`Cantidad de ${producto?.modelo ?? "producto"}`}
+                        value={fila.cantidad}
+                        onChange={(e) =>
+                          actualizarFilaDetalle(fila._id, "cantidad", e.target.value)
+                        }
+                        min="0"
+                        step="0.01"
+                      />
+                      <span
+                        className="tabla-form__num tabla-form__tenue"
+                        title="Precio de catálogo, no se edita"
+                      >
+                        {formatMoneda(Number(fila.precio_unitario) || 0)}
+                      </span>
+                      <span className="tabla-form__num tabla-form__fuerte">
+                        {formatMoneda(
+                          (Number(fila.cantidad) || 0) * (Number(fila.precio_unitario) || 0)
+                        )}
+                      </span>
+                      <button
+                        type="button"
+                        className="btn-icono btn-icono--sm"
+                        aria-label={`Quitar ${producto?.modelo ?? "producto"}`}
+                        onClick={() => eliminarFilaDetalle(fila._id)}
+                      >
+                        <X aria-hidden="true" />
+                      </button>
                     </div>
-                    <input
-                      type="number"
-                      placeholder="Cant."
-                      value={fila.cantidad}
-                      onChange={(e) => actualizarFilaDetalle(fila._id, "cantidad", e.target.value)}
-                      min="0"
-                      step="0.01"
-                      required
-                    />
-                    <span
-                      className="mov-edit__num mov-edit__precio"
-                      title="Precio de catálogo, no se puede editar"
-                    >
-                      {fila.producto_id ? formatMoneda(Number(fila.precio_unitario) || 0) : "—"}
-                    </span>
-                    <span className="mov-edit__num mov-edit__subtotal">
-                      {fila.producto_id
-                        ? formatMoneda(
-                            (Number(fila.cantidad) || 0) * (Number(fila.precio_unitario) || 0)
-                          )
-                        : "—"}
-                    </span>
-                    <button
-                      type="button"
-                      className="btn-icono btn-icono--contorno btn-icono--peligro"
-                      title="Quitar"
-                      onClick={() => eliminarFilaDetalle(fila._id)}
-                    >
-                      <X size={13} strokeWidth={2.25} />
-                    </button>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
+            )}
+          </div>
 
-              {form.proveedor_id && detalle.length === 0 && (
-                <p className="mov-edit__vacio">Sin productos cargados todavía.</p>
-              )}
-            </SeccionForm>
-
-            <SeccionForm
-              titulo="Impuestos"
-              accion={
-                <button
-                  type="button"
-                  className="mov-edit__seccion-accion"
-                  onClick={agregarFilaImpuesto}
+          <div className="modal-form-bloque">
+            <h3 className="modal-form-bloque__titulo">
+              Impuestos
+              <button
+                type="button"
+                className="btn btn--sm btn-secondary"
+                onClick={agregarFilaImpuesto}
+                disabled={guardando}
+              >
+                <Plus size={14} strokeWidth={2} aria-hidden="true" />
+                Agregar impuesto
+              </button>
+            </h3>
+            {impuestos.length === 0 && (
+              <p className="modal-form-seccion-vacio">Sin impuestos cargados todavía.</p>
+            )}
+            {impuestos.map((fila) => (
+              <div key={fila._id} className="tabla-form__impuesto">
+                <select
+                  className="campo campo--sm"
+                  value={fila.impuesto_id}
+                  onChange={(e) => actualizarFilaImpuesto(fila._id, "impuesto_id", e.target.value)}
+                  aria-label="Impuesto"
                 >
-                  + Agregar impuesto
-                </button>
-              }
-            >
-              {impuestos.map((fila) => (
-                <div key={fila._id} className="mov-edit__fila mov-edit__fila--impuesto">
-                  <select
-                    value={fila.impuesto_id}
-                    onChange={(e) =>
-                      actualizarFilaImpuesto(fila._id, "impuesto_id", e.target.value)
-                    }
-                    required
-                  >
-                    <option value="">Impuesto...</option>
-                    {impuestosDisponibles.map((imp) => (
-                      <option key={imp.id} value={imp.id}>
-                        {imp.nombre}
-                      </option>
-                    ))}
-                  </select>
+                  <option value="">Impuesto…</option>
+                  {impuestosDisponibles.map((imp) => (
+                    <option key={imp.id} value={imp.id}>
+                      {imp.nombre}
+                    </option>
+                  ))}
+                </select>
+                <div className="campo campo--sm">
+                  <span className="campo__prefijo">$</span>
                   <input
                     type="number"
-                    placeholder="Monto"
+                    aria-label="Monto del impuesto"
                     value={fila.monto}
                     onChange={(e) => actualizarFilaImpuesto(fila._id, "monto", e.target.value)}
                     min="0"
                     step="0.01"
-                    className="mov-edit__num"
-                    required
                   />
-                  <button
-                    type="button"
-                    className="btn-icono btn-icono--contorno btn-icono--peligro"
-                    title="Quitar"
-                    onClick={() => eliminarFilaImpuesto(fila._id)}
-                  >
-                    <X size={13} strokeWidth={2.25} />
-                  </button>
                 </div>
-              ))}
-              {impuestos.length === 0 && (
-                <p className="mov-edit__vacio">Sin impuestos cargados todavía.</p>
-              )}
-            </SeccionForm>
+                <button
+                  type="button"
+                  className="btn-icono btn-icono--sm"
+                  aria-label="Quitar impuesto"
+                  onClick={() => eliminarFilaImpuesto(fila._id)}
+                >
+                  <X aria-hidden="true" />
+                </button>
+              </div>
+            ))}
           </div>
 
-          <aside className="mov-edit__riel">
-            <TotalRiel
-              monto={precioTotal}
-              secundario={precioTotalUsd > 0 ? `≈ ${formatMoneda(precioTotalUsd, "usd")}` : null}
+          {/* Las notas son de sólo lectura: una nota impacta contra la API al
+              instante, así que si se pudieran cargar desde acá "Cancelar" ya
+              no cancelaría todo. Se agregan y se borran desde la ficha. */}
+          {notas.length > 0 && (
+            <SeccionNotas
+              notas={notas}
+              contexto="compra"
+              resolverProducto={resolverProductoDeNota}
+              onVer={onVerNota}
+              canManage={false}
             />
-
-            <BarraComposicion
-              segmentos={[
-                { label: "Neto", monto: precioNeto, color: TIPOS_MOVIMIENTO.compra.color },
-                { label: "Impuestos", monto: totalImpuestos, color: OLIVA_CLARO },
-                {
-                  label: "Nota de crédito",
-                  monto: notasCredito,
-                  color: TIPOS_MOVIMIENTO.nota_credito.color,
-                  signo: -1,
-                },
-                {
-                  label: "Nota de débito",
-                  monto: notasDebito,
-                  color: TIPOS_MOVIMIENTO.nota_debito.color,
-                  signo: 1,
-                },
-              ]}
-            />
-
-            <div className="mov-edit__seccion-titulo">
-              <span>Estados</span>
-              <span className="mov-edit__seccion-linea" />
-            </div>
-            <div className="mov-edit__estados">
-              <TileEstado
-                label="Pago"
-                estado={estadoPago}
-                activo={form.estado_pago === "pagado"}
-                onToggle={() => toggleEstado("estado_pago", "pagado", "pendiente")}
-                titulo={form.estado_pago === "pagado" ? "Marcar sin pagar" : "Marcar pagado"}
-              />
-              <TileEstado
-                label="Envío"
-                estado={estadoEnvio}
-                activo={form.estado_envio === "entregado"}
-                onToggle={() => toggleEstado("estado_envio", "entregado", "pedido")}
-                titulo={
-                  form.estado_envio === "entregado" ? "Marcar sin entregar" : "Marcar entregado"
-                }
-              />
-            </div>
-
-            {/* Las notas van debajo de los estados y son de sólo lectura:
-                  una nota impacta contra la API al instante, así que si se
-                  pudieran cargar desde acá "Cancelar" ya no cancelaría todo.
-                  Se agregan y se borran desde la ficha de detalle. */}
-            {notas.length > 0 && (
-              <div className="mov-edit__notas">
-                <SeccionNotas
-                  notas={notas}
-                  contexto="compra"
-                  resolverProducto={resolverProductoDeNota}
-                  onVer={onVerNota}
-                  canManage={false}
-                />
-              </div>
-            )}
-          </aside>
-        </div>
+          )}
+        </>
       )}
-    </EditarShell>
+    </ModalShell>
   );
 }
 

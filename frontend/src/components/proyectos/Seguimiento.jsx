@@ -433,6 +433,7 @@ export function Seguimiento({ proyectoId }) {
 
       {editando?.tipo === "compra" && (
         <ModalCompra
+          contexto={datos.proyecto.nombre}
           compra={editando.entidad}
           fasesDisponibles={datos.fases}
           proveedores={datos.proveedores}

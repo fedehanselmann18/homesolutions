@@ -398,9 +398,87 @@ describe("smoke de modales", () => {
     );
   });
 
-  it("ModalCompra nuevo arranca en el paso del comprobante", () => {
+  // Nueva compra: el híbrido 5ab (DESIGN.md §14).
+
+  it("Nueva compra arranca en el paso 1, con el comprobante y la IA al lado del archivo", () => {
     render(<ModalCompra onGuardar={noop} onCerrar={noop} />);
-    expect(screen.getByText(/arrastrá el comprobante o/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /cargar los datos a mano/i })).toBeInTheDocument();
+    const pasos = screen.getByRole("list", { name: "Pasos de la compra" });
+    expect(pasos).toHaveTextContent("Comprobante y datos");
+    expect(pasos).toHaveTextContent("Condiciones");
+    expect(pasos).toHaveTextContent("Productos e impuestos");
+    expect(screen.getByRole("button", { name: /Comprobante y datos/ })).toHaveAttribute(
+      "aria-current",
+      "step"
+    );
+    expect(screen.getByText(/arrastrá la factura o/i)).toBeInTheDocument();
+    // Sin el paso "IA primero": el formulario está desde el principio.
+    expect(screen.getByLabelText("Descripción")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /cargar los datos a mano/i })).toBeNull();
+  });
+
+  it("Siguiente no avanza con datos faltantes y dice cuáles en cada campo", async () => {
+    render(
+      <ModalCompra
+        proveedores={[{ id: 3, nombre: "Aluar Sur" }]}
+        onGuardar={noop}
+        onCerrar={noop}
+      />
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+
+    expect(screen.getByRole("button", { name: /Comprobante y datos/ })).toHaveAttribute(
+      "aria-current",
+      "step"
+    );
+    expect(screen.getByText("Elegí el proveedor.")).toBeInTheDocument();
+    expect(screen.getByText("Escribí una descripción corta.")).toBeInTheDocument();
+  });
+
+  it("en Condiciones, factura y pago son controles de opción a la vista, sin switches", async () => {
+    render(
+      <ModalCompra
+        compra={compra}
+        productosDisponibles={productos}
+        onGuardar={noop}
+        onCerrar={noop}
+      />
+    );
+    await userEvent.click(screen.getByRole("button", { name: /Condiciones/ }));
+
+    expect(screen.getByRole("radio", { name: "Factura A" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    expect(screen.getByRole("radio", { name: "Cuenta corriente" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    expect(screen.getByRole("radio", { name: "Pendiente" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    expect(screen.getByRole("radio", { name: "Entregado" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    expect(screen.queryAllByRole("switch")).toHaveLength(0);
+    expect(screen.queryAllByRole("combobox")).toHaveLength(0);
+  });
+
+  it("el pie tiene el desglose en su fila y el total abajo; al editar se guarda desde cualquier paso", () => {
+    const { container } = render(
+      <ModalCompra
+        compra={compra}
+        productosDisponibles={productos}
+        onGuardar={noop}
+        onCerrar={noop}
+      />
+    );
+    const desglose = container.querySelector(".shell__desglose");
+    expect(desglose).toHaveTextContent("Neto $ 1.284.000 (1 producto)");
+    expect(desglose).toHaveTextContent("impuestos $ 386.883");
+    expect(desglose).toHaveTextContent("notas de crédito −$ 120.000");
+    expect(container.querySelector(".shell__footer-total-monto")).toHaveTextContent("$ 1.550.883");
+    expect(screen.getByRole("button", { name: "Guardar cambios" })).toBeInTheDocument();
   });
 });

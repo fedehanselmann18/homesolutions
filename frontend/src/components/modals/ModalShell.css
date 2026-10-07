@@ -147,6 +147,33 @@
   color: var(--color-tinta);
 }
 
+.shell__footer-total-secundario {
+  font-size: var(--text-xs);
+  color: var(--color-tinta-muted);
+}
+
+/* Pie de una carga en pasos (5ab): el total manda, a la izquierda. */
+.shell__footer--grande .shell__footer-total-label {
+  font-size: var(--text-sm);
+}
+
+.shell__footer--grande .shell__footer-total-monto {
+  font-size: var(--text-2xl);
+  letter-spacing: -0.02em;
+}
+
+/* Desglose del total sobre el pie, en su propia fila (5ab): en 5b el total
+   y su subline se peleaban en una barra de 14px de padding. */
+.shell__desglose {
+  flex-shrink: 0;
+  padding: var(--space-2-5) var(--space-6);
+  border-top: 1px solid var(--color-linea);
+  background: var(--color-superficie-suave);
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 .shell__footer-aviso {
   display: inline-flex;
   align-items: center;
@@ -178,6 +205,10 @@
 
   .shell__cuerpo {
     padding: var(--space-4);
+  }
+
+  .shell__desglose {
+    padding: var(--space-2) var(--space-4);
   }
 
   .shell__footer {

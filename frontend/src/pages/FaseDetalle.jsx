@@ -397,6 +397,7 @@ export function FaseDetalle() {
 
       {modalCompraAbierto && (
         <ModalCompra
+          contexto={`${proyecto.nombre} · ${fase.nombre}`}
           compra={compraEditando}
           faseFija={fase}
           proveedores={proveedores}

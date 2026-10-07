@@ -414,6 +414,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
 
       {modalCompraAbierto && (
         <ModalCompra
+          contexto={proyectoNombre}
           compra={compraEditando}
           fasesDisponibles={fases}
           proveedores={proveedores}

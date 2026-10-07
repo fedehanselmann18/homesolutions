@@ -10,8 +10,7 @@ import "./ModalShell.css";
 /**
  * Header de un modal — DESIGN.md §14: cuadradito de 32px con el ícono del tipo
  * de operación, título y, a la derecha del título, el contexto (el proyecto,
- * la fecha) separado por una línea. Lo comparten el shell de abajo y el de
- * edición de movimientos (EditarShell), así el header es uno solo.
+ * la fecha) separado por una línea.
  */
 export function ModalHeader({
   icono: Icono,
@@ -91,6 +90,15 @@ export function ModalShell({
   cerrarDeshabilitado = false,
   totalLabel = "Total",
   total,
+  // El total de una carga en pasos (Nueva compra): --text-2xl y la otra
+  // moneda debajo, en vez del total chico de un pie normal.
+  totalGrande = false,
+  totalSecundario,
+  // Debajo del header, fijo: los pasos de Nueva compra.
+  encabezadoExtra,
+  // Una fila propia sobre el pie, en el suave: el desglose del total
+  // ("Neto $ … · impuestos $ … · ≈ US$ …"), variante 5ab.
+  desglose,
   aviso,
   acciones,
   accionesIzquierda,
@@ -139,10 +147,14 @@ export function ModalShell({
         {/* `modal-form` no aporta layout acá (lo pisa .shell__cuerpo): está
             para que sigan aplicando los estilos de label/input/select, que en
             ModalCompra.css cuelgan de ese ancestro. */}
+        {encabezadoExtra}
+
         <div className="shell__cuerpo modal-form">{children}</div>
 
+        {desglose && <div className="shell__desglose">{desglose}</div>}
+
         {hayPie && (
-          <div className="shell__footer">
+          <div className={`shell__footer${totalGrande ? " shell__footer--grande" : ""}`}>
             {accionesIzquierda && (
               <div className="shell__footer-izquierda">{accionesIzquierda}</div>
             )}
@@ -150,6 +162,9 @@ export function ModalShell({
               <div className="shell__footer-total">
                 <span className="shell__footer-total-label">{totalLabel}</span>
                 <span className="shell__footer-total-monto">{formatMoneda(total)}</span>
+                {totalSecundario && (
+                  <span className="shell__footer-total-secundario">{totalSecundario}</span>
+                )}
               </div>
             )}
             {aviso && (
