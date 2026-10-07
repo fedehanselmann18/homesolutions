@@ -23,7 +23,6 @@ const FILTROS_TIPO = [
  * detalle de lectura.
  */
 export function AccionesFase({
-  faseNombre,
   canManage,
   nombreProveedor,
   compras,
@@ -84,7 +83,6 @@ export function AccionesFase({
       )}
 
       <LibroDeObra
-        titulo={`Movimientos — ${faseNombre}`}
         compras={comprasVisibles}
         gastos={gastosVisibles}
         nombreProveedor={nombreProveedor}

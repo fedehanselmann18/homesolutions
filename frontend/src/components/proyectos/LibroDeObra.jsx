@@ -1,44 +1,63 @@
 import { useMemo, useState } from "react";
-import { FileMinus, FilePlus, Pencil, Trash2, FileSignature } from "lucide-react";
+import {
+  AlertTriangle,
+  Building2,
+  FileMinus,
+  FilePlus,
+  FileSignature,
+  Layers,
+  Paperclip,
+  Pencil,
+  Trash2,
+  Truck,
+} from "lucide-react";
 
-import { formatMoneda, formatFecha } from "../../utils/formato";
-import { iconoParaArchivo, nombreDeArchivo } from "../../utils/archivos";
-import { getEstadoPago, getEstadoEnvio } from "../../constants/estadoCompra";
+import { formatMoneda, pluralizar } from "../../utils/formato";
+import { nombreDeArchivo } from "../../utils/archivos";
+import { getEstadoPagoConAntiguedad, getEstadoEnvio } from "../../constants/estadoCompra";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
 import { montoCobroNeto, montoGasto, precioTotalCompra } from "../../utils/moneda";
-import { esCompraImpaga, esCompraSinEntregar, diasDesde } from "../../utils/seguimiento";
+import { diasDesde } from "../../utils/seguimiento";
 import { TIPOS_MOVIMIENTO as TIPOS, signoTexto } from "../../constants/tipoMovimiento";
 
 import "./LibroDeObra.css";
 import { EstadoVacio } from "../shared/EstadoVacio";
-import { TINTE_PASTILLA } from "../../constants/tipoMovimiento";
+
+// Cuántos movimientos por página. Una obra larga junta cientos, y el libro
+// pinta todos sus días: sin cortar, la página se vuelve un scroll infinito.
+export const MOVIMIENTOS_POR_PAGINA = 50;
 
 const capitalizar = (texto) => texto.charAt(0).toUpperCase() + texto.slice(1);
 
-const diaConNombre = (fecha) =>
-  `${capitalizar(
-    new Date(`${fecha}T00:00:00`).toLocaleDateString("es-AR", { weekday: "long" })
-  )} ${formatFecha(fecha)}`;
+// "Jueves 5 de marzo" (y el año sólo si no es el actual), como en el diseño.
+// La fecha viene como "YYYY-MM-DD": con la hora explícita no se corre de día
+// por la zona horaria.
+// Se arma por partes porque es-AR pone una coma después del día de la semana
+// ("jueves, 5 de marzo") que el diseño no tiene.
+function diaConNombre(fecha) {
+  const dia = new Date(`${fecha}T00:00:00`);
+  const parte = (opciones) => dia.toLocaleDateString("es-AR", opciones);
+  const anio = dia.getFullYear() !== new Date().getFullYear() ? ` de ${dia.getFullYear()}` : "";
+  return `${capitalizar(parte({ weekday: "long" }))} ${dia.getDate()} de ${parte({ month: "long" })}${anio}`;
+}
 
-const conSigno = (monto, signo) => `${signoTexto(signo)}${formatMoneda(Math.abs(monto))}`;
-
-// Doble moneda (ver docs/PLAN_TIPO_CAMBIO.md): el libro es la caja, así que
-// importes y saldo van en PESOS nominales, lo que efectivamente entró y salió
-// (decisión #5). Cada movimiento usa su cifra en pesos congelada; el USD de
-// cada uno va en el contexto de la fila como referencia.
-const usd = (monto) => `≈ ${formatMoneda(monto, "usd")}`;
+const conSigno = (monto, signo, moneda) =>
+  `${signoTexto(signo)}${formatMoneda(Math.abs(monto), moneda)}`;
 
 /**
- * Libro de obra (dirección 3b del rediseño, ver claudedesign/): compras,
- * gastos y cobros del proyecto en una sola planilla en vez de tres grillas de
- * tarjetas separadas. Las filas se agrupan por día con subtotal, cada una
- * lleva su tipo (compra / gasto / cobro) y una columna de saldo acumulado
- * calculado del movimiento más viejo al más nuevo. Click en la fila abre el
- * modal de detalle de lectura; los estados de pago/envío se togglean desde la
- * fila misma sin abrirlo.
+ * Libro de obra: compras, gastos y cobros del proyecto en una sola lista,
+ * agrupada por día con su subtotal, con un saldo acumulado calculado del
+ * movimiento más viejo al más nuevo. Click en la fila abre el detalle; los
+ * estados de pago/envío de una compra se togglean desde su badge, sin abrirlo.
+ * Diseño: docs/GENERALUIUXChange/Movimientos v2.dc.html, variante 3a.
+ *
+ * Doble moneda (decisión 6 del rediseño, #5 de docs/PLAN_TIPO_CAMBIO.md): el
+ * libro es la caja, así que el SALDO y los subtotales van en pesos nominales,
+ * lo que efectivamente entró y salió. Cada fila muestra su importe en la
+ * moneda en que se cargó -- compras y gastos en pesos, cobros en dólares -- y
+ * la otra moneda debajo, como equivalente.
  */
 export function LibroDeObra({
-  titulo,
   compras = [],
   gastos = [],
   cobros = [],
@@ -52,12 +71,15 @@ export function LibroDeObra({
   // Un admin puede tener permiso para editar y aun así no corresponder que
   // edite desde acá: en la ficha del proveedor la compra se consulta, pero
   // se carga y se corrige desde su proyecto, que es donde tiene contexto de
-  // fase. Los estados de pago/envío SÍ se togglean igual (ver EstadoBoton),
+  // fase. Los estados de pago/envío SÍ se togglean igual (ver EstadoBadge),
   // que es la acción que uno quiere a mano mirando lo que le debe a alguien.
   permitirEdicion = true,
   // En una fase no entra plata, así que el acumulado no es un "saldo": el
   // rótulo se ajusta desde donde se use.
   saldoLabel = "Saldo",
+  // { tipo, id } del movimiento cuyo detalle está abierto: su fila queda
+  // marcada, así al cerrar el modal se ve de dónde se venía.
+  movimientoActivo,
   onAbrirDetalle,
   onTogglePagoCompra,
   onToggleEnvioCompra,
@@ -67,8 +89,10 @@ export function LibroDeObra({
   onVerComprobante,
 }) {
   const [errorComprobante, setErrorComprobante] = useState("");
+  const [pagina, setPagina] = useState(0);
 
   const movimientos = useMemo(() => {
+    const hoy = new Date();
     const items = [
       ...compras.map((compra) => ({
         key: `compra-${compra.id}`,
@@ -76,29 +100,17 @@ export function LibroDeObra({
         entidad: compra,
         fecha: compra.fecha,
         importe: precioTotalCompra(compra, "ars"),
+        mostrado: { monto: precioTotalCompra(compra, "ars"), moneda: "ars" },
+        equivalente: { monto: precioTotalCompra(compra, "usd"), moneda: "usd" },
         titulo: compra.descripcion,
-        // Lo que le falta a la compra, en rojo al lado del título: hace
-        // cuántos días está impaga (la señal que dispara el "sin pagar" de
-        // los KPI, y que se pierde si sólo se ve la fecha) y si además
-        // todavía no llegó. Las dos cosas se acumulan: una compra puede
-        // estar impaga Y sin entregar.
-        alerta:
-          [
-            esCompraImpaga(compra) ? `${diasDesde(compra.fecha, new Date())} días sin pagar` : null,
-            esCompraSinEntregar(compra) ? "sin entregar" : null,
-          ]
-            .filter(Boolean)
-            .join(" · ") || null,
-        contexto: [
-          nombreProyecto?.(compra),
-          nombreProveedor?.(compra.proveedor_id),
-          nombreFase?.(compra.fase_id),
+        proyecto: nombreProyecto?.(compra),
+        fase: nombreFase?.(compra.fase_id),
+        proveedor: nombreProveedor?.(compra.proveedor_id),
+        meta: [
           getTipoFacturaLabel(compra.tipo_factura),
-          compra.detalle?.length
-            ? `${compra.detalle.length} ${compra.detalle.length === 1 ? "producto" : "productos"}`
-            : null,
-          usd(precioTotalCompra(compra, "usd")),
+          compra.detalle?.length ? pluralizar(compra.detalle.length, "producto") : null,
         ],
+        diasImpaga: diasDesde(compra.fecha, hoy),
       })),
       ...gastos.map((gasto) => ({
         key: `gasto-${gasto.id}`,
@@ -106,12 +118,14 @@ export function LibroDeObra({
         entidad: gasto,
         fecha: gasto.fecha,
         importe: montoGasto(gasto, "ars"),
+        mostrado: { monto: montoGasto(gasto, "ars"), moneda: "ars" },
+        equivalente: { monto: montoGasto(gasto, "usd"), moneda: "usd" },
         titulo: gasto.descripcion,
-        contexto: [
+        fase: gasto.fase_id ? nombreFase?.(gasto.fase_id) : null,
+        meta: [
+          gasto.fase_id ? null : "Gasto general",
           getTipoFacturaLabel(gasto.tipo_factura),
-          gasto.fase_id ? nombreFase?.(gasto.fase_id) : "Gasto general",
           gasto.categorias?.map((c) => c.nombre).join(", ") || null,
-          usd(montoGasto(gasto, "usd")),
         ],
       })),
       ...cobros.map((cobro) => ({
@@ -119,12 +133,14 @@ export function LibroDeObra({
         tipo: "cobro",
         entidad: cobro,
         fecha: cobro.fecha,
+        // El saldo suma los pesos congelados del cobro; lo que se muestra en
+        // la fila es su cifra de verdad, la de dólares.
         importe: montoCobroNeto(cobro, "ars"),
+        mostrado: { monto: montoCobroNeto(cobro, "usd"), moneda: "usd" },
+        equivalente: { monto: montoCobroNeto(cobro, "ars"), moneda: "ars" },
         titulo: cobro.descripcion,
-        contexto: [
+        meta: [
           getTipoFacturaLabel(cobro.tipo_factura),
-          // El cobro se cargó en dólares: esa es su cifra de verdad.
-          formatMoneda(montoCobroNeto(cobro, "usd"), "usd"),
           Number(cobro.monto_usd) !== montoCobroNeto(cobro, "usd")
             ? `Bruto ${formatMoneda(cobro.monto_usd, "usd")}`
             : null,
@@ -145,27 +161,15 @@ export function LibroDeObra({
     return cronologicos.reverse();
   }, [compras, gastos, cobros, nombreFase, nombreProveedor, nombreProyecto]);
 
-  // Sólo los tipos que realmente aparecen en la planilla: una lista que es
-  // toda de compras (la ficha de un proveedor) no tiene por qué anunciar
-  // "Cobros $ 0 · Gastos $ 0".
-  const totalesPorTipo = useMemo(
-    () =>
-      ["cobro", "compra", "gasto"]
-        .map((tipo) => ({
-          tipo,
-          items: movimientos.filter((m) => m.tipo === tipo),
-        }))
-        .filter(({ items }) => items.length > 0)
-        .map(({ tipo, items }) => ({
-          tipo,
-          total: items.reduce((acc, m) => acc + m.importe, 0),
-        })),
-    [movimientos]
-  );
+  const totalPaginas = Math.max(1, Math.ceil(movimientos.length / MOVIMIENTOS_POR_PAGINA));
+  // Si un filtro achica la lista, la página en la que se estaba puede dejar
+  // de existir: se cae a la última que sí existe en vez de mostrar nada.
+  const paginaVisible = Math.min(pagina, totalPaginas - 1);
 
   const dias = useMemo(() => {
+    const desde = paginaVisible * MOVIMIENTOS_POR_PAGINA;
     const porFecha = new Map();
-    for (const m of movimientos) {
+    for (const m of movimientos.slice(desde, desde + MOVIMIENTOS_POR_PAGINA)) {
       if (!porFecha.has(m.fecha)) porFecha.set(m.fecha, []);
       porFecha.get(m.fecha).push(m);
     }
@@ -174,9 +178,7 @@ export function LibroDeObra({
       items,
       subtotal: items.reduce((acc, m) => acc + TIPOS[m.tipo].signo * m.importe, 0),
     }));
-  }, [movimientos]);
-
-  const saldoFinal = movimientos.length > 0 ? movimientos[0].saldo : 0;
+  }, [movimientos, paginaVisible]);
 
   const abrirComprobante = async (movimiento) => {
     const comprobante = (movimiento.entidad.comprobantes ?? [])[0];
@@ -203,82 +205,81 @@ export function LibroDeObra({
 
   return (
     <div className={`libro${mostrarAcciones ? " libro--admin" : ""}`}>
-      <div className="libro__cabecera">
-        <span className="libro__titulo">{titulo}</span>
-        <span className="libro__espaciador" />
-        {totalesPorTipo.map(({ tipo, total }) => (
-          <span key={tipo} className="libro__leyenda">
-            <span className="libro__punto" style={{ background: TIPOS[tipo].color }} />
-            {TIPOS[tipo].plural} {formatMoneda(total)}
+      {errorComprobante && (
+        <p className="libro__error" role="alert">
+          {errorComprobante}
+        </p>
+      )}
+
+      <div className="libro__scroll">
+        <div className="libro__columnas">
+          <span />
+          <span>Movimiento</span>
+          <span>Estado</span>
+          <span className="libro__col-comprobante" title="Comprobante">
+            <Paperclip size={14} strokeWidth={1.75} aria-label="Comprobante" />
           </span>
+          <span className="libro__num">Importe</span>
+          <span className="libro__num">{saldoLabel} $</span>
+          {mostrarAcciones && <span />}
+        </div>
+
+        {dias.map((dia) => (
+          <div key={dia.fecha} className="libro__grupo">
+            <div className="libro__dia">
+              <span className="libro__dia-fecha">{diaConNombre(dia.fecha)}</span>
+              <span className="libro__dia-subtotal cifra">
+                Subtotal del día {conSigno(dia.subtotal, dia.subtotal >= 0 ? 1 : -1)}
+              </span>
+            </div>
+
+            {dia.items.map((m) => (
+              <FilaMovimiento
+                key={m.key}
+                movimiento={m}
+                activa={movimientoActivo?.tipo === m.tipo && movimientoActivo?.id === m.entidad.id}
+                canManage={canManage}
+                mostrarAcciones={mostrarAcciones}
+                onAbrirDetalle={onAbrirDetalle}
+                onTogglePagoCompra={onTogglePagoCompra}
+                onToggleEnvioCompra={onToggleEnvioCompra}
+                onEditar={onEditar}
+                onEliminar={onEliminar}
+                onAgregarNota={onAgregarNota}
+                onAbrirComprobante={abrirComprobante}
+              />
+            ))}
+          </div>
         ))}
       </div>
 
-      {errorComprobante && <p className="libro__error">{errorComprobante}</p>}
-
-      {/* En la fila el estado de una compra es sólo un ícono: acá se dice una
-          vez qué significa cada uno. Sin compras no hay estados que explicar. */}
-      {compras.length > 0 && (
-        <div className="libro__referencias">
-          <span className="libro__referencias-grupo">
-            <span className="label-campo">Pago</span>
-            <Referencia estado={getEstadoPago("pendiente")} />
-            <Referencia estado={getEstadoPago("pagado")} />
-          </span>
-          <span className="libro__referencias-grupo">
-            <span className="label-campo">Envío</span>
-            <Referencia estado={getEstadoEnvio("pedido")} />
-            <Referencia estado={getEstadoEnvio("entregado")} />
-          </span>
-        </div>
-      )}
-
-      <div className="libro__columnas">
-        <span>Tipo</span>
-        <span>Movimiento</span>
-        <span>Comprobantes</span>
-        <span>Estado</span>
-        <span className="libro__num">Importe</span>
-        <span className="libro__num">Saldo</span>
-        {mostrarAcciones && <span />}
-      </div>
-
-      {dias.map((dia) => (
-        <div key={dia.fecha}>
-          <div className="libro__dia">
-            <span className="libro__dia-fecha">{diaConNombre(dia.fecha)}</span>
-            <span className="libro__dia-linea" />
-            <span className="libro__dia-subtotal cifra">
-              Subtotal del día {conSigno(dia.subtotal, dia.subtotal >= 0 ? 1 : -1)}
+      <div className="libro__pie">
+        <span className="libro__resultados">
+          {movimientos.length === 1 ? "1 resultado" : `${movimientos.length} resultados`}
+        </span>
+        {totalPaginas > 1 && (
+          <div className="libro__paginacion">
+            <span className="libro__pagina cifra">
+              Página {paginaVisible + 1} de {totalPaginas}
             </span>
+            <button
+              type="button"
+              className="btn btn--sm btn-secondary"
+              disabled={paginaVisible === 0}
+              onClick={() => setPagina(paginaVisible - 1)}
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              className="btn btn--sm btn-secondary"
+              disabled={paginaVisible >= totalPaginas - 1}
+              onClick={() => setPagina(paginaVisible + 1)}
+            >
+              Siguiente
+            </button>
           </div>
-
-          {dia.items.map((m) => (
-            <FilaMovimiento
-              key={m.key}
-              movimiento={m}
-              canManage={canManage}
-              mostrarAcciones={mostrarAcciones}
-              onAbrirDetalle={onAbrirDetalle}
-              onTogglePagoCompra={onTogglePagoCompra}
-              onToggleEnvioCompra={onToggleEnvioCompra}
-              onEditar={onEditar}
-              onEliminar={onEliminar}
-              onAgregarNota={onAgregarNota}
-              onAbrirComprobante={abrirComprobante}
-            />
-          ))}
-        </div>
-      ))}
-
-      <div className="libro__saldo">
-        <span />
-        <span className="libro__saldo-label">{saldoLabel}</span>
-        <span />
-        <span />
-        <span />
-        <span className="libro__num libro__saldo-monto cifra">{formatMoneda(saldoFinal)}</span>
-        {mostrarAcciones && <span />}
+        )}
       </div>
     </div>
   );
@@ -286,6 +287,7 @@ export function LibroDeObra({
 
 function FilaMovimiento({
   movimiento,
+  activa,
   canManage,
   mostrarAcciones,
   onAbrirDetalle,
@@ -296,8 +298,8 @@ function FilaMovimiento({
   onAgregarNota,
   onAbrirComprobante,
 }) {
-  const { tipo, entidad, importe, saldo } = movimiento;
-  const { color, signo, icono: IconoTipo } = TIPOS[tipo];
+  const { tipo, entidad, mostrado, equivalente, saldo } = movimiento;
+  const { signo, singular, icono: IconoTipo } = TIPOS[tipo];
   const esCompra = tipo === "compra";
 
   const comprobantes = entidad.comprobantes ?? [];
@@ -305,8 +307,7 @@ function FilaMovimiento({
   const notasCredito = notas.filter((n) => n.tipo === "nota_credito").length;
   const notasDebito = notas.filter((n) => n.tipo === "nota_debito").length;
 
-  const estadoPago = esCompra ? getEstadoPago(entidad.estado_pago) : null;
-  const estadoEnvio = esCompra ? getEstadoEnvio(entidad.estado_envio) : null;
+  const meta = movimiento.meta.filter(Boolean).join(" · ");
 
   const detener = (fn) => (e) => {
     e.stopPropagation();
@@ -314,62 +315,61 @@ function FilaMovimiento({
   };
 
   return (
-    <div className="libro__fila" onClick={() => onAbrirDetalle?.(tipo, entidad)}>
-      <span className="libro__tipo" style={{ color }}>
-        <IconoTipo size={13} strokeWidth={2.25} />
-        {TIPOS[tipo].singular}
+    <div
+      className={`libro__fila fila-con-acciones${activa ? " libro__fila--activa" : ""}`}
+      onClick={() => onAbrirDetalle?.(tipo, entidad)}
+    >
+      <span className="libro__tipo" role="img" aria-label={singular} title={singular}>
+        <IconoTipo size={15} strokeWidth={1.75} aria-hidden="true" />
       </span>
 
       <span className="libro__movimiento">
         <span className="libro__movimiento-titulo">{movimiento.titulo}</span>
         <span className="libro__movimiento-contexto">
-          {movimiento.alerta && <span className="libro__alerta">{movimiento.alerta}</span>}
-          {movimiento.alerta && " · "}
-          {movimiento.contexto.filter(Boolean).join(" · ")}
+          {movimiento.proyecto && (
+            <span className="libro__contexto-item">
+              <Building2 size={13} strokeWidth={1.75} aria-hidden="true" />
+              {movimiento.proyecto}
+            </span>
+          )}
+          {movimiento.fase && (
+            <span className="libro__contexto-item">
+              <Layers size={13} strokeWidth={1.75} aria-hidden="true" />
+              {movimiento.fase}
+            </span>
+          )}
+          {movimiento.proveedor && (
+            <span className="libro__contexto-item">
+              <Truck size={13} strokeWidth={1.75} aria-hidden="true" />
+              {movimiento.proveedor}
+            </span>
+          )}
+          {meta && <span className="libro__meta">{meta}</span>}
+          {notasCredito > 0 && (
+            <span className="libro__nota" title="Notas de crédito">
+              <FileMinus size={13} strokeWidth={1.75} aria-hidden="true" />
+              {pluralizar(notasCredito, "nota de crédito", "notas de crédito")}
+            </span>
+          )}
+          {notasDebito > 0 && (
+            <span className="libro__nota" title="Notas de débito">
+              <FilePlus size={13} strokeWidth={1.75} aria-hidden="true" />
+              {pluralizar(notasDebito, "nota de débito", "notas de débito")}
+            </span>
+          )}
         </span>
-      </span>
-
-      <span className="libro__comprobantes">
-        {comprobantes.length === 0 && notasCredito === 0 && notasDebito === 0 && (
-          <span className="libro__sin-dato">—</span>
-        )}
-        {comprobantes.slice(0, 3).map((c) => {
-          const Icono = iconoParaArchivo(nombreDeArchivo(c.archivo_path));
-          return (
-            <button
-              key={c.id}
-              type="button"
-              className="libro__comprobante"
-              title={nombreDeArchivo(c.archivo_path)}
-              onClick={detener(() => onAbrirComprobante(movimiento))}
-            >
-              <Icono size={14} strokeWidth={2} />
-            </button>
-          );
-        })}
-        {comprobantes.length > 3 && (
-          <span className="libro__comprobantes-mas">+{comprobantes.length - 3}</span>
-        )}
-        {notasCredito > 0 && (
-          <span className="libro__nota libro__nota--credito" title="Notas de crédito">
-            <FileMinus size={13} strokeWidth={2} />
-            {notasCredito}
-          </span>
-        )}
-        {notasDebito > 0 && (
-          <span className="libro__nota libro__nota--debito" title="Notas de débito">
-            <FilePlus size={13} strokeWidth={2} />
-            {notasDebito}
-          </span>
-        )}
       </span>
 
       <span className="libro__estados">
         {esCompra ? (
           <>
-            <EstadoBoton
-              estado={estadoPago}
-              descripcion={entidad.estado_pago === "pagado" ? "Pagado" : "Pago pendiente"}
+            <EstadoBadge
+              estado={getEstadoPagoConAntiguedad(entidad.estado_pago, movimiento.diasImpaga)}
+              titulo={
+                entidad.estado_pago === "pagado"
+                  ? "Pagado"
+                  : `Impaga hace ${pluralizar(movimiento.diasImpaga, "día")}`
+              }
               accion={
                 entidad.estado_pago === "pagado"
                   ? "click para marcar sin pagar"
@@ -378,9 +378,9 @@ function FilaMovimiento({
               canManage={canManage}
               onClick={detener(() => onTogglePagoCompra?.(entidad))}
             />
-            <EstadoBoton
-              estado={estadoEnvio}
-              descripcion={entidad.estado_envio === "entregado" ? "Entregado" : "Pedido"}
+            <EstadoBadge
+              estado={getEstadoEnvio(entidad.estado_envio)}
+              titulo={entidad.estado_envio === "entregado" ? "Entregado" : "Sin entregar"}
               accion={
                 entidad.estado_envio === "entregado"
                   ? "click para marcar sin entregar"
@@ -391,43 +391,82 @@ function FilaMovimiento({
             />
           </>
         ) : (
-          <span className="libro__sin-dato">—</span>
+          // Un gasto o un cobro no tiene estado: es plata que ya salió o entró.
+          <span className="badge badge--marca">{tipo === "cobro" ? "Cobrado" : "Pagado"}</span>
         )}
       </span>
 
-      <span className="libro__num libro__importe cifra" style={{ color }}>
-        {conSigno(importe, signo)}
+      <span className="libro__comprobante-col">
+        {comprobantes.length > 0 ? (
+          <button
+            type="button"
+            className="libro__comprobante"
+            title={
+              comprobantes.length === 1
+                ? nombreDeArchivo(comprobantes[0].archivo_path)
+                : `${comprobantes.length} comprobantes`
+            }
+            aria-label="Ver comprobante"
+            onClick={detener(() => onAbrirComprobante(movimiento))}
+          >
+            <Paperclip size={15} strokeWidth={1.75} aria-hidden="true" />
+          </button>
+        ) : (
+          <span
+            className="libro__sin-comprobante"
+            role="img"
+            aria-label="Falta el comprobante"
+            title="Falta el comprobante"
+          >
+            <AlertTriangle size={15} strokeWidth={1.75} aria-hidden="true" />
+          </span>
+        )}
+      </span>
+
+      <span className="libro__importe-col">
+        <span className="libro__importe-linea">
+          <span className="libro__importe cifra">
+            {conSigno(mostrado.monto, signo, mostrado.moneda)}
+          </span>
+          <span className="libro__moneda">{mostrado.moneda === "usd" ? "USD" : "ARS"}</span>
+        </span>
+        <span className="libro__equivalente cifra">
+          ≈ {formatMoneda(equivalente.monto, equivalente.moneda)}
+        </span>
       </span>
 
       <span className="libro__num libro__saldo-fila cifra">{formatMoneda(saldo)}</span>
 
       {mostrarAcciones && (
-        <span className="libro__acciones">
+        <span className="libro__acciones acciones">
           {(tipo === "compra" || tipo === "cobro") && onAgregarNota && (
             <button
               type="button"
-              className="libro__accion"
+              className="btn-icono btn-icono--sm"
               title="Agregar nota de crédito/débito"
+              aria-label="Agregar nota de crédito/débito"
               onClick={detener(() => onAgregarNota(tipo, entidad))}
             >
-              <FileSignature size={13} strokeWidth={2} />
+              <FileSignature aria-hidden="true" />
             </button>
           )}
           <button
             type="button"
-            className="libro__accion"
+            className="btn-icono btn-icono--sm"
             title="Editar"
+            aria-label="Editar"
             onClick={detener(() => onEditar?.(tipo, entidad))}
           >
-            <Pencil size={13} strokeWidth={2} />
+            <Pencil aria-hidden="true" />
           </button>
           <button
             type="button"
-            className="libro__accion libro__accion--eliminar"
+            className="btn-icono btn-icono--sm btn-icono--peligro"
             title="Eliminar"
+            aria-label="Eliminar"
             onClick={detener(() => onEliminar?.(tipo, entidad.id))}
           >
-            <Trash2 size={13} strokeWidth={2} />
+            <Trash2 aria-hidden="true" />
           </button>
         </span>
       )}
@@ -435,33 +474,26 @@ function FilaMovimiento({
   );
 }
 
-// Botón de sólo ícono: aria-label además del title, que no se muestra en
-// touch ni lo lee siempre un lector de pantalla (DESIGN.md §8).
-function EstadoBoton({ estado, descripcion, accion, canManage, onClick }) {
+// El estado de una compra es un badge con su texto e ícono (DESIGN.md §12),
+// y además el control para cambiarlo: un admin lo togglea desde la fila. Para
+// un usuario de lectura es el mismo badge, deshabilitado. Con aria-label
+// además del title, que no se muestra en touch.
+function EstadoBadge({ estado, titulo, accion, canManage, onClick }) {
   const Icono = estado.icono;
-  const etiqueta = canManage ? `${descripcion} — ${accion}` : descripcion;
+  const etiqueta = canManage ? `${titulo} — ${accion}` : titulo;
   return (
     <button
       type="button"
-      className="libro__estado"
+      className="badge libro__estado"
       title={etiqueta}
       aria-label={etiqueta}
       disabled={!canManage}
-      style={{ color: estado.color, backgroundColor: `${estado.color}${TINTE_PASTILLA}` }}
+      style={{ color: estado.fg, backgroundColor: estado.bg }}
       onClick={onClick}
     >
-      {Icono && <Icono size={14} strokeWidth={2.25} aria-hidden="true" />}
-    </button>
-  );
-}
-
-function Referencia({ estado }) {
-  const Icono = estado.icono;
-  return (
-    <span className="libro__referencia">
-      <Icono size={14} strokeWidth={2.25} style={{ color: estado.color }} aria-hidden="true" />
+      {Icono && <Icono size={12} strokeWidth={2} aria-hidden="true" />}
       {estado.label}
-    </span>
+    </button>
   );
 }
 

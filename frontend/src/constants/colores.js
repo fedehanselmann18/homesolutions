@@ -66,6 +66,13 @@ export const ESTADO_VERIFICADO_TEXTO = "#6b21a8"; // --color-verificado-texto
 export const VERDE_TINT = "#dcf3e3"; // --color-musgo-tint
 export const VERDE_OSCURO = "#11672f"; // --color-musgo-dark (texto sobre el tint)
 export const BASE_2 = "#f3f2ee"; // --color-base-2 (fondo del par neutro)
+// Pares de los accents funcionales (DESIGN.md §2): atención y problema. Para
+// los badges que arma el JS (estado de pago/envío de una compra); en CSS son
+// --color-arcilla-tint/-texto y --color-oxido-tint/-texto.
+export const NARANJA_TINT = "#fef3e2"; // --color-arcilla-tint
+export const NARANJA_TEXTO = "#9a4a07"; // --color-arcilla-texto
+export const ROJO_TINT = "#fdecea"; // --color-oxido-tint
+export const ROJO_TEXTO = "#b42318"; // --color-oxido-texto
 export const TINTA_MUTED = "#5a5a58"; // --color-tinta-muted
 export const TINTA_TENUE = "#8c8b86"; // --color-tinta-tenue (meta-texto, íconos decorativos)
 export const LINEA = "#e6e4df"; // --color-linea

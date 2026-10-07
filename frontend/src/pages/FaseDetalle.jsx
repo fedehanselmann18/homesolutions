@@ -327,7 +327,6 @@ export function FaseDetalle() {
 
       {tabActiva === "acciones" && (
         <AccionesFase
-          faseNombre={fase.nombre}
           canManage={canManage}
           nombreProveedor={nombreProveedor}
           compras={comprasFase}

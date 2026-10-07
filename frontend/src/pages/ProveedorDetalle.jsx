@@ -548,7 +548,7 @@ export function ProveedorDetalle() {
           <EstadoVacio mensaje="Todavía no hay compras registradas a este proveedor." />
         ) : (
           <LibroDeObra
-            titulo={`Compras — ${proveedor.nombre}`}
+            movimientoActivo={detalleCompraId ? { tipo: "compra", id: detalleCompraId } : null}
             compras={comprasDelProveedorFiltradas}
             nombreFase={nombreFase}
             nombreProyecto={nombreProyectoDeCompra}

@@ -314,7 +314,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
       )}
 
       <LibroDeObra
-        titulo={`Movimientos — ${proyectoNombre}`}
+        movimientoActivo={detalle}
         compras={comprasVisibles}
         gastos={gastosVisibles}
         cobros={cobrosVisibles}
