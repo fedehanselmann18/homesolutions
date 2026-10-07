@@ -89,7 +89,7 @@
 
 .auth-panel__titulo h1 {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: var(--text-2xl);
   font-weight: 600;
   color: var(--color-tinta);
@@ -178,7 +178,7 @@
 
 .auth-panel__aviso h1 {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: var(--text-2xl);
   font-weight: 700;
   letter-spacing: -0.02em;

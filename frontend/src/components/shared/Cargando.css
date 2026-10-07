@@ -22,5 +22,5 @@
 }
 
 .cargando--compacto .cargando-texto {
-  font-size: var(--text-btn);
+  font-size: var(--text-sm);
 }

@@ -278,8 +278,9 @@ export const PALETA_GRAFICOS = [
 
 ## 3. Tipografía
 
-**Public Sans** es la fuente de marca (manual §4). `--font-display` y
-`--font-ui` apuntan a la misma familia. Se cargan los pesos 400–700 desde Google
+**Public Sans** es la fuente de marca (manual §4), y la única: títulos y UI usan
+`--font-ui`. (Hubo un `--font-display` con el mismo valor; se colapsó, ver §20.)
+Se cargan los pesos 400–700 desde Google
 Fonts en `index.html`.
 
 > **Nota:** los diseños usan sólo 400/500/600/700. El peso 800 que se cargaba y
@@ -287,15 +288,15 @@ Fonts en `index.html`.
 
 ### Escala
 
-Diez pasos, **recalibrados a los px exactos de los diseños**. Se mantienen los
-nombres de token (cero cambios en componentes) y cambian los valores.
+Nueve pasos, **recalibrados a los px exactos de los diseños**, más `--text-4xl`
+(36px), la cifra única de una pantalla. Se mantienen los nombres de token y
+cambian los valores.
 
 | Token | v4 | v5 | = px | Rol |
 |---|---|---|---|---|
 | `--text-2xs` | `0.66rem` | `0.6875rem` | 11px | Abreviatura de mes, `badge--sm`. |
 | `--text-xs` | `0.72rem` | `0.75rem` | 12px | Meta-texto, contador, hint, header de tabla, badge. |
 | `--text-sm` | `0.82rem` | `0.8125rem` | 13px | **El tamaño más usado.** Texto secundario, label de campo, botón, chip. |
-| `--text-btn` | `0.85rem` | `0.8125rem` | 13px | Alias de `--text-sm`. Ver abajo. |
 | `--text-base` | `0.9rem` | `0.875rem` | 14px | Texto de UI por defecto, valor de input, nombre en una fila. |
 | `--text-md` | `0.95rem` | `0.9375rem` | 15px | Nombre destacado en una fila, título de bloque de formulario. |
 | `--text-lg` | `1.05rem` | `1rem` | 16px | Título de sección, nombre en una card. |
@@ -308,12 +309,9 @@ tamaño de fuente del navegador sigue viendo la app más grande. Pasar a px romp
 eso en toda la app para ganar una coincidencia exacta con el mockup que nadie va
 a medir. Los valores de arriba **son** los px del diseño a 16px de base.
 
-**`--text-btn` queda como alias de `--text-sm`.** En la v4 estaba fuera de orden
-(`0.85rem`, entre `sm` y `base`) porque `.btn` ya usaba ese valor en 27 lugares.
-En los diseños el texto de botón es 13px, o sea exactamente `--text-sm`. Se
-mantiene el nombre para no tocar los 28 usos, pero **ya no es un paso propio de
-la escala**: es documentación de que ese texto es de un control. Candidato a
-colapsar en §18.
+**`--text-btn` ya no existe.** En la v4 estaba fuera de orden (`0.85rem`, entre
+`sm` y `base`); en los diseños el texto de botón es 13px, o sea exactamente
+`--text-sm`, y quedó un tiempo como alias. Se colapsó en el prompt 20 (§20).
 
 **Los títulos bajan.** `--text-3xl` pasa de 32px a 28px y `--text-2xl` de 25.6 a
 24. Los diseños usan títulos más chicos y apoyan la jerarquía en el peso 700 y en
@@ -1167,9 +1165,15 @@ nuevo desde cero:
   | `AZUL` · `VERDE` · `NARANJA` · `ROJO` (JS) | `NEUTRO` · `EXITO` · `ATENCION` · `ERROR` |
   | `VERDE_TINT` · `NARANJA_TINT` · `ROJO_TINT` · `BASE_2`… | `EXITO_TINT` · `ATENCION_TINT` · `ERROR_TINT` · `RELLENO`… |
 
-- **`PALETA_GRAFICOS` tiene un violeta y un cian** que no existen en el sistema.
-  Hay una propuesta de rampa monocroma en §2, sin validar contra los gráficos
-  reales.
+- **~~`--text-btn` es un alias de `--text-sm`.~~ Se colapsó** (prompt 20): sus
+  16 usos pasaron a `--text-sm`. Como marcador semántico de "texto de un
+  control" no servía: la mayoría estaban en estados vacíos, toasts y textos de
+  carga, no en botones.
+- **~~`--font-display` y `--font-ui` son la misma familia.~~ Se colapsaron en
+  `--font-ui`** (prompt 20). Ningún diseño usa una fuente de títulos distinta;
+  la jerarquía la dan el peso y el tracking.
+- **~~`PALETA_GRAFICOS` tiene un violeta y un cian.~~** Rehecha en el prompt 15
+  con la rampa monocroma de §2.
 - **Los diseños no cubren**: Catálogos, Comparador, Cuentas, Libro de Obra,
   Manager, Auth. Heredan los tokens de la fase 1 y quedan consistentes de arriba,
   pero su layout no está rediseñado. Cuando se toquen, el criterio es §0: borde y

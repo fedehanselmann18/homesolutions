@@ -166,8 +166,10 @@
   --color-oscuro-texto-tenue: #4a4a48;
   --color-oscuro-item-texto: #b8b8b6;
 
-  /* tipografía — Public Sans es la fuente oficial de marca (ver manual §4) */
-  --font-display: "Public Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  /* tipografía — Public Sans es la fuente oficial de marca (ver manual §4), y
+     la única: títulos y UI son la misma familia. Hubo un --font-display que
+     valía exactamente esto; se colapsó en el prompt 20 (DESIGN.md §20). La
+     jerarquía de un título la dan el peso 700 y el tracking, no otra fuente. */
   --font-ui: "Public Sans", -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* escala tipográfica — única fuente de verdad para el tamaño de texto.
@@ -186,7 +188,6 @@
      - --text-2xs  (11) abreviatura de mes, badge chico
      - --text-xs   (12) meta-texto, contador, hint, header de tabla, badge
      - --text-sm   (13) EL MÁS USADO: texto secundario, label de campo, botón, chip
-     - --text-btn  (13) alias de --text-sm, ver abajo
      - --text-base (14) texto de UI por defecto, valor de input, nombre en fila
      - --text-md   (15) nombre destacado en una fila, título de bloque de form
      - --text-lg   (16) título de sección, nombre en una card
@@ -202,11 +203,8 @@
   --text-2xs: 0.6875rem;
   --text-xs: 0.75rem;
   --text-sm: 0.8125rem;
-  /* --text-btn ya NO está fuera de orden: en los diseños el texto de botón es
-     13px, o sea exactamente --text-sm. Queda como alias para no tocar sus 28
-     usos, pero dejó de ser un paso propio de la escala -- hoy es documentación
-     de que ese texto es de un control. Candidato a colapsar (DESIGN.md §20). */
-  --text-btn: 0.8125rem;
+  /* Hubo un --text-btn: alias exacto de --text-sm que la mayoría de sus usos
+     ni siquiera ponía en un botón. Se colapsó en el prompt 20. */
   --text-base: 0.875rem;
   --text-md: 0.9375rem;
   --text-lg: 1rem;
@@ -417,7 +415,7 @@ h1,
 h2,
 h3,
 h4 {
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-weight: 700;
   letter-spacing: -0.015em;
   margin: 0;

@@ -26,7 +26,7 @@
    trae margen desde modal-base.css y el título de un movimiento no lo quiere. */
 .detalle__cabecera .detalle__titulo {
   margin: 0;
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: var(--text-xl);
   font-weight: 700;
   line-height: 1.3;

@@ -64,7 +64,7 @@
 }
 
 .chips-cat-vacio-titulo {
-  font-size: var(--text-btn);
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--color-tinta);
 }

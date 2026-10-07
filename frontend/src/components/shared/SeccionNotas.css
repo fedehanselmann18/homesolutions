@@ -16,7 +16,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: var(--text-btn);
+  font-size: var(--text-sm);
   font-weight: 600;
   color: var(--color-tinta);
 }
@@ -101,7 +101,7 @@
 }
 
 .seccion-notas-item-monto {
-  font-size: var(--text-btn);
+  font-size: var(--text-sm);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;

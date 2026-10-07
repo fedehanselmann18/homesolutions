@@ -7,7 +7,7 @@
 
 .comparador-seccion-titulo {
   margin: 0 0 var(--space-4);
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: var(--text-lg);
   font-weight: 600;
   color: var(--color-tinta);
@@ -37,7 +37,7 @@
 
 .comparador-grupo-nombre {
   margin: 0 0 6px;
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: var(--text-lg);
   font-weight: 600;
   color: var(--color-tinta);
@@ -55,7 +55,7 @@
 .comparador-tabla {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--text-btn);
+  font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
 }
 

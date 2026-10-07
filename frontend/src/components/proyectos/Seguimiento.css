@@ -253,7 +253,7 @@ button.bandeja__titulo-item:focus-visible {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: var(--text-lg);
   font-weight: 600;
   color: var(--color-error);
@@ -326,7 +326,7 @@ button.bandeja__titulo-item:focus-visible {
 .seguimiento-tabla {
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--text-btn);
+  font-size: var(--text-sm);
 }
 
 .seguimiento-tabla th {

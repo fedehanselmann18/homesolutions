@@ -14,7 +14,7 @@
 }
 
 .estado-error-mensaje {
-  font-size: var(--text-btn);
+  font-size: var(--text-sm);
   color: inherit;
   margin: 0;
 }

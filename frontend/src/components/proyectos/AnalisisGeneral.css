@@ -321,7 +321,7 @@
 }
 
 .analisis-seccion-titulo {
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: var(--text-lg);
   font-weight: 600;
   color: var(--color-tinta);
@@ -329,7 +329,7 @@
 }
 
 .analisis-subtitulo {
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
   font-size: var(--text-base);
   font-weight: 600;
   color: var(--color-tinta);
@@ -359,7 +359,7 @@
 
 .analisis-tooltip strong {
   color: var(--color-tinta);
-  font-family: var(--font-display);
+  font-family: var(--font-ui);
 }
 
 .analisis-tooltip-pct {
@@ -464,7 +464,7 @@
   width: 100%;
   border-collapse: collapse;
   margin-top: var(--space-4);
-  font-size: var(--text-btn);
+  font-size: var(--text-sm);
 }
 
 .analisis-tabla th,
@@ -520,7 +520,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: var(--text-btn);
+  font-size: var(--text-sm);
   color: var(--color-tinta);
 }
 
