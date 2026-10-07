@@ -30,7 +30,7 @@ import {
   RUTA_MANAGER_ARCHIVOS,
   esManager,
 } from "../constants/manager";
-import logo from "../assets/HS_logo_blanco.png";
+import isotipo from "../assets/HS_iso_negro.png";
 import "./Sidebar.css";
 
 const ITEMS_NAV = [
@@ -108,26 +108,33 @@ function NavEquipo() {
 
   return (
     <>
-      {ITEMS_NAV.map((item) => {
-        const cantidad = item.contador?.(contadores);
-        return (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === "/"}
-            className={({ isActive }) =>
-              isActive ? "sidebar-link sidebar-link-active" : "sidebar-link"
-            }
-          >
-            <item.icono size={16} strokeWidth={2} className="sidebar-link-icono" />
-            {item.label}
-            {cantidad != null && <span className="sidebar-link-contador">{cantidad}</span>}
-          </NavLink>
-        );
-      })}
+      <div className="sidebar-grupo">
+        {ITEMS_NAV.map((item) => {
+          const cantidad = item.contador?.(contadores);
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === "/"}
+              className={({ isActive }) =>
+                isActive ? "sidebar-link sidebar-link-active" : "sidebar-link"
+              }
+            >
+              <item.icono
+                size={16}
+                strokeWidth={1.75}
+                className="sidebar-link-icono"
+                aria-hidden="true"
+              />
+              <span className="sidebar-link-label">{item.label}</span>
+              {cantidad != null && <span className="sidebar-link-contador">{cantidad}</span>}
+            </NavLink>
+          );
+        })}
+      </div>
 
       {obrasEnCurso.length > 0 && (
-        <>
+        <div className="sidebar-grupo sidebar-grupo--obras">
           <div className="sidebar-grupo-titulo">En curso</div>
           {obrasEnCurso.map((proyecto) => (
             <NavLink key={proyecto.id} to={`/proyectos/${proyecto.id}`} className="sidebar-obra">
@@ -141,7 +148,7 @@ function NavEquipo() {
               {proyecto.nombre}
             </NavLink>
           ))}
-        </>
+        </div>
       )}
     </>
   );
@@ -159,12 +166,17 @@ export function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
-        <img src={logo} alt="HomeSolutions" className="sidebar-brand" />
+        <img src={isotipo} alt="" className="sidebar-brand" />
+        <span className="sidebar-brand-nombre">
+          Home
+          <br />
+          Solutions
+        </span>
       </div>
 
       <nav className="sidebar-nav">
         {esManager(usuario) ? (
-          <>
+          <div className="sidebar-grupo">
             <div className="sidebar-grupo-titulo">Gestión de cuentas</div>
             {ITEMS_NAV_MANAGER.map((item) => (
               <NavLink
@@ -174,11 +186,16 @@ export function Sidebar() {
                   isActive ? "sidebar-link sidebar-link-active" : "sidebar-link"
                 }
               >
-                <item.icono size={16} strokeWidth={2} className="sidebar-link-icono" />
-                {item.label}
+                <item.icono
+                  size={16}
+                  strokeWidth={1.75}
+                  className="sidebar-link-icono"
+                  aria-hidden="true"
+                />
+                <span className="sidebar-link-label">{item.label}</span>
               </NavLink>
             ))}
-          </>
+          </div>
         ) : (
           <NavEquipo />
         )}
@@ -196,7 +213,7 @@ export function Sidebar() {
           title="Cerrar sesión"
           aria-label="Cerrar sesión"
         >
-          <LogOut size={15} strokeWidth={2} />
+          <LogOut size={16} strokeWidth={1.75} aria-hidden="true" />
         </button>
       </div>
     </aside>

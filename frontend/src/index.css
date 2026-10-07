@@ -377,7 +377,7 @@ body {
      contenedor de scroll. Si un navegador viejo no lo soporta, la declaración
      se descarta y el recorte lo sigue haciendo el <html> de arriba. */
   overflow-x: clip;
-  background: var(--color-base-1);
+  background: var(--color-superficie);
   color: var(--color-tinta);
   font-family: var(--font-ui);
   -webkit-font-smoothing: antialiased;

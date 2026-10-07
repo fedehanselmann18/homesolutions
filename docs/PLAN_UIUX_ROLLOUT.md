@@ -56,7 +56,7 @@ Cerradas el 07/10/2026. No volver a abrirlas sin decirlo.
 | **2b** | Filtros a chips | `FiltrosSegmentados.*` | restyle | pendiente |
 | **2c** | Panel de filtros | `FiltrosLista.*` | restyle | pendiente |
 | **2d** | Modales de detalle | `ModalDetalle*.jsx`, `PiezasDetalle.jsx`, `ModalDetalle.css` | restyle | pendiente |
-| **3** | Sidebar blanco | `Sidebar.*`, `MainLayout.*` | estructural | pendiente |
+| **3** | Sidebar blanco | `Sidebar.*`, `MainLayout.*` | estructural | **hecha** 07/10 (prompt 5) |
 | **4+** | Resto | ver cola al final | | |
 
 **Por qué el header es el piloto y no Acciones.** Acciones es la página menos
@@ -436,6 +436,11 @@ arreglarlo de paso.**
 | 07/10 | 4 (utilidades) | **No existía `.badge--atencion`** (el par ámbar de §2) y `.badge--peligro` usaba el rojo pleno como texto: pasó a `--color-oxido-texto`, que es el par del spec. `.badge--exito` sigue en el verde funcional (`--color-musgo-*`) por la decisión de la pieza 0b, no en oliva como dice la tabla de §2. |
 | 07/10 | 4 (utilidades) | **Las acciones de fila en hover tienen utilidad pero todavía no consumidores**: `.acciones` dentro de `.planilla__fila` o de `.fila-con-acciones`. Fases y el libro siguen con las acciones siempre visibles (fix 8f79861) hasta sus prompts (14 y 6). |
 | 07/10 | 4 (utilidades) | **Quedan 20 `.css` con `text-transform: uppercase`** (Sidebar, PageHeader, TarjetaKpi, TablaProyectos, LibroDeObra, Seguimiento, Fases, ModalDetalle, ModalEditar, ModalShell, modal-base, Manager, ProveedorCard, ProveedorDetalle, Comparador, AnalisisGeneral, ChipsCategorias, ModalImportarCatalogo, ErrorBoundary, Auth). Son de cada pantalla y se van con su prompt; los de pantallas sin diseño (Comparador, Manager, ErrorBoundary) van en una pasada final. |
+| 07/10 | 5 (sidebar) | **El logo del sidebar pasó de `HS_logo_blanco.png` a isotipo negro + nombre en texto**, como dibuja `HSSidebar`: `HS_iso_negro.png` a 28px de alto y "Home / Solutions" en `--text-sm` / 700. El `<img>` lleva `alt=""` porque el nombre ya está escrito al lado. Login, Registro y NoAutorizado siguen con el logo blanco: son el panel oscuro de marca. |
+| 07/10 | 5 (sidebar) | **El punto de "obra al día" pasó de verde a oliva** (§2, "Progreso y datos": punto sin alerta = `--color-terracota`). No es el estado "terminado": dice "esta obra está bien de plata", y en verde se confundía con el semáforo. |
+| 07/10 | 5 (sidebar) | **El padding del `<main>` estaba en `--space-8 --space-12` (32/48)** y el canónico de §4 es 32/40. Se corrigió en MainLayout junto con el fondo; todas las páginas ganan 16px de ancho útil. |
+| 07/10 | 5 (sidebar) | **El rol del footer venía en mayúsculas con tracking** ("ADMIN"); pasó a `text-transform: capitalize` ("Admin"), igual que el nombre. El rol en la base es minúscula, así que capitalizar es lo único que hace falta. |
+| 07/10 | 5 (sidebar) | Quedan `--color-oscuro-*` fuera del login en dos lugares: la barra de saldo del libro (`LibroDeObra.css`, prompt 6) y `ErrorBoundary.css` (sin diseño, pasada final). |
 
 ---
 
