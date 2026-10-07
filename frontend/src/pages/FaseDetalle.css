@@ -54,7 +54,7 @@
   width: 32px;
   height: 32px;
   flex-shrink: 0;
-  border: 2px solid var(--color-gris-claro-marca);
+  border: 2px solid var(--color-linea-fuerte);
   border-radius: var(--radius-pill);
   font-size: var(--text-sm);
   font-weight: 700;
@@ -63,13 +63,13 @@
 }
 
 .fase-detalle__numero--actual {
-  border-color: var(--color-terracota);
-  color: var(--color-terracota);
+  border-color: var(--color-oliva);
+  color: var(--color-oliva);
 }
 
 .fase-detalle__numero--cerrada {
-  border-color: var(--color-terracota);
-  background: var(--color-terracota);
+  border-color: var(--color-oliva);
+  background: var(--color-oliva);
   color: var(--color-superficie);
 }
 

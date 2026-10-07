@@ -4,9 +4,9 @@ import "./Tabs.css";
  * Barra de pestañas de una página de detalle (proyecto, fase) y de Catálogos.
  *
  * Antes había dos: `.tabs` en ProyectoDetalle.css dibujaba pestañas de
- * carpeta (caja con borde y radio arriba, activa en --color-terracota-dark,
+ * carpeta (caja con borde y radio arriba, activa en --color-oliva-dark,
  * 0.82rem) y `.fase-detalle-tabs` en FaseDetalle.css dibujaba un subrayado
- * (sin caja, borde inferior de 2px, activa en --color-terracota, 0.9rem).
+ * (sin caja, borde inferior de 2px, activa en --color-oliva, 0.9rem).
  * Entrar a una fase desde su proyecto cambiaba la forma, el tamaño y el tono
  * de oliva de la misma navegación. Quedó el subrayado, que aguanta mejor los
  * nombres largos ("Seguimiento de la fase") y no compite con la carátula.

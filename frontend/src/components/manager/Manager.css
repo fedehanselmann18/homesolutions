@@ -76,17 +76,17 @@
 }
 
 .manager-accion:hover {
-  background: var(--color-base-1);
+  background: var(--color-superficie-suave);
   border-color: var(--color-tinta-muted);
 }
 
 .manager-accion--peligro {
-  color: var(--color-oxido);
+  color: var(--color-error);
 }
 
 .manager-accion--peligro:hover {
-  background: var(--color-oxido-tint);
-  border-color: var(--color-oxido);
+  background: var(--color-error-tint);
+  border-color: var(--color-error);
 }
 
 /* --- Autorizados --------------------------------------------------------- */
@@ -107,7 +107,7 @@
 }
 
 .manager-campo--error input {
-  border-color: var(--color-oxido);
+  border-color: var(--color-error);
   background: var(--color-superficie);
 }
 
@@ -146,8 +146,8 @@
   font-weight: 600;
   font-size: var(--text-base);
   color: var(--color-superficie);
-  background: var(--color-terracota);
-  border: 1px solid var(--color-terracota);
+  background: var(--color-oliva);
+  border: 1px solid var(--color-oliva);
   border-radius: var(--radius-sm);
   padding: 11px 16px;
   cursor: pointer;
@@ -157,8 +157,8 @@
 }
 
 .manager-submit:hover:not(:disabled) {
-  background: var(--color-terracota-dark);
-  border-color: var(--color-terracota-dark);
+  background: var(--color-oliva-dark);
+  border-color: var(--color-oliva-dark);
 }
 
 .manager-submit:disabled {
@@ -206,7 +206,7 @@
 }
 
 .manager-lista__item--tenue {
-  background: var(--color-base-1);
+  background: var(--color-superficie-suave);
 }
 
 .manager-lista__nombre {
@@ -218,8 +218,8 @@
 .manager-error {
   margin: 0 0 var(--space-3);
   font-size: var(--text-sm);
-  color: var(--color-oxido);
-  background: var(--color-oxido-tint);
+  color: var(--color-error);
+  background: var(--color-error-tint);
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);
 }
@@ -332,7 +332,7 @@
   padding: var(--space-3);
   border: 1px solid var(--color-linea);
   border-radius: var(--radius-sm);
-  background: var(--color-base-1);
+  background: var(--color-superficie-suave);
 }
 
 .manager-configuracion__integracion-nombre {

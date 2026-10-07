@@ -5,7 +5,7 @@ import { formatFecha } from "../../utils/formato";
 import { formatMontoDeItem } from "../../utils/moneda";
 import { getCondicionPagoLabel } from "../../constants/estadoCompra";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
-import { ROJO, NARANJA, GRIS } from "../../constants/colores";
+import { ERROR, ATENCION, GRIS } from "../../constants/colores";
 import { TarjetaMiniSeguimiento } from "../shared/TarjetaMiniSeguimiento";
 import { EstadoVacio } from "../shared/EstadoVacio";
 import { ModalDetalleCompra } from "../modals/ModalDetalleCompra";
@@ -129,7 +129,7 @@ export function SeguimientoFase({
                     badges={badgesCompra(compra)}
                     etiqueta={diasTexto(compra.dias)}
                     monto={formatMontoDeItem(compra)}
-                    color={ROJO}
+                    color={ERROR}
                     onClick={() => abrirDetalleCompra(compra.id)}
                   />
                 ))}
@@ -166,7 +166,7 @@ export function SeguimientoFase({
                     fecha={formatFecha(compra.fecha)}
                     badges={badgesCompra(compra)}
                     etiqueta={diasTexto(compra.dias)}
-                    color={NARANJA}
+                    color={ATENCION}
                     onClick={() => abrirDetalleCompra(compra.id)}
                   />
                 ))}

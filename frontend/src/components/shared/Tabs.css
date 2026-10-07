@@ -50,7 +50,7 @@
 .tabs__tab--activa {
   font-weight: 600;
   color: var(--color-tinta);
-  border-bottom-color: var(--color-terracota);
+  border-bottom-color: var(--color-oliva);
 }
 
 .tabs__contador {
@@ -69,6 +69,6 @@
   font-weight: 700;
   line-height: 18px;
   border-radius: var(--radius-pill);
-  background: var(--color-arcilla-tint);
-  color: var(--color-arcilla-texto);
+  background: var(--color-atencion-tint);
+  color: var(--color-atencion-texto);
 }

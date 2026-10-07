@@ -1,4 +1,4 @@
-/* DESIGN.md §13: --text-sm muted, "/" en --color-gris-claro-marca y el
+/* DESIGN.md §13: --text-sm muted, "/" en --color-linea-fuerte y el
    último tramo en tinta a 500. El gap va en el contenedor y no en cada
    separador, así el espacio a los dos lados de la "/" es el mismo. */
 .breadcrumbs {
@@ -36,5 +36,5 @@
 }
 
 .breadcrumbs-separador {
-  color: var(--color-gris-claro-marca);
+  color: var(--color-linea-fuerte);
 }

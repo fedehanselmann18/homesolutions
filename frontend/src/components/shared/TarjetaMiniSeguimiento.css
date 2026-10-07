@@ -16,8 +16,8 @@
 }
 
 .mini-seg:hover {
-  border-color: var(--color-terracota);
-  background-color: var(--color-base-1);
+  border-color: var(--color-oliva);
+  background-color: var(--color-superficie-suave);
 }
 
 .mini-seg-titulo {

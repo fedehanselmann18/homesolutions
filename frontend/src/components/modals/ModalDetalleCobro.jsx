@@ -2,7 +2,7 @@ import { formatMonedaDual } from "../../utils/formato";
 import { leyendaOtraMoneda } from "../../utils/moneda";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
-import { OLIVA, NARANJA } from "../../constants/colores";
+import { OLIVA, ATENCION } from "../../constants/colores";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { SeccionNotas } from "../shared/SeccionNotas";
 import {
@@ -71,7 +71,7 @@ export function ModalDetalleCobro({
             {
               label: "Comprobante",
               valor: getTipoFacturaLabel(cobro.tipo_factura),
-              punto: comprobantes.length > 0 ? OLIVA : NARANJA,
+              punto: comprobantes.length > 0 ? OLIVA : ATENCION,
             },
             usuarioNombre && { label: "Cargado por", valor: usuarioNombre },
           ]}

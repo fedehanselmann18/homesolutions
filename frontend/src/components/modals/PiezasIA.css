@@ -23,7 +23,7 @@
   gap: 5px;
   font-size: var(--text-xs);
   font-weight: 600;
-  color: var(--color-terracota-dark);
+  color: var(--color-oliva-dark);
 }
 
 /* Los campos que llenó la IA quedan con borde oliva sobre fondo blanco, para
@@ -31,6 +31,6 @@
 .campo-ia > input,
 .campo-ia > select,
 .campo-ia > .campo {
-  border-color: var(--color-terracota);
+  border-color: var(--color-oliva);
   background: var(--color-superficie);
 }

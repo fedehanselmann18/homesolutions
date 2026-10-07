@@ -22,9 +22,9 @@
   flex-direction: column;
   gap: var(--space-3);
   padding: var(--space-4);
-  border: 1px solid var(--color-terracota);
+  border: 1px solid var(--color-oliva);
   border-radius: var(--radius-sm);
-  background-color: var(--color-terracota-tint);
+  background-color: var(--color-oliva-tint);
 }
 
 .catalogo-proveedor-sugerido p {
@@ -75,8 +75,8 @@
   gap: 4px;
   padding: var(--space-3) 14px;
   border-radius: var(--radius-sm);
-  border: 1px solid var(--color-oxido);
-  background: var(--color-oxido-tint);
+  border: 1px solid var(--color-error);
+  background: var(--color-error-tint);
 }
 
 .catalogo-advertencias p {
@@ -134,7 +134,7 @@
 
 .catalogo-tabla input[type="checkbox"] {
   width: auto;
-  accent-color: var(--color-terracota);
+  accent-color: var(--color-oliva);
 }
 
 .catalogo-tabla input[type="text"],
@@ -147,7 +147,7 @@
   padding: 6px 8px;
   border: 1px solid var(--color-linea);
   border-radius: var(--radius-sm);
-  background-color: var(--color-base-1);
+  background-color: var(--color-superficie-suave);
   color: var(--color-tinta);
   box-sizing: border-box;
 }
@@ -155,12 +155,12 @@
 .catalogo-tabla input:focus,
 .catalogo-tabla select:focus {
   outline: none;
-  border-color: var(--color-terracota);
+  border-color: var(--color-oliva);
   background-color: var(--color-superficie);
 }
 
 .catalogo-fila--advertencia td {
-  background-color: var(--color-oxido-tint);
+  background-color: var(--color-error-tint);
 }
 
 /* --- Selector de categorías (celda de la tabla) --- */
@@ -185,13 +185,13 @@
   padding: 6px 8px;
   border: 1px solid var(--color-linea);
   border-radius: var(--radius-sm);
-  background-color: var(--color-base-1);
+  background-color: var(--color-superficie-suave);
   color: var(--color-tinta);
   cursor: pointer;
 }
 
 .catalogo-categorias-boton:hover {
-  border-color: var(--color-terracota);
+  border-color: var(--color-oliva);
 }
 
 .catalogo-categorias-popover {

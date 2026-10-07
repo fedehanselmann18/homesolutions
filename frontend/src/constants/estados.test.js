@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { getEstado, getEstadoLabel, ESTADO_LABELS } from "./estados";
-import { BASE_2, TINTA_MUTED } from "./colores";
+import { RELLENO, TINTA_MUTED } from "./colores";
 
 const FORMA = ["color", "bg", "fg", "label", "icono"];
 
@@ -20,7 +20,7 @@ describe("estados", () => {
       const estado = fn("inventado");
       expect(estado).toEqual({
         color: TINTA_MUTED,
-        bg: BASE_2,
+        bg: RELLENO,
         fg: TINTA_MUTED,
         label: "inventado",
         icono: null,

@@ -59,15 +59,15 @@
 }
 
 .fases__tramo--actual {
-  background: var(--color-terracota);
+  background: var(--color-oliva);
 }
 
 .fases__tramo--sin-fase {
-  background: var(--color-gris-claro-marca);
+  background: var(--color-linea-fuerte);
 }
 
 .fases__tramo--excedido {
-  background: var(--color-oxido);
+  background: var(--color-error);
 }
 
 .fases__presupuesto-valor {
@@ -106,7 +106,7 @@
   width: 28px;
   height: 28px;
   flex-shrink: 0;
-  border: 2px solid var(--color-gris-claro-marca);
+  border: 2px solid var(--color-linea-fuerte);
   border-radius: var(--radius-pill);
   background: var(--color-superficie);
   font-size: var(--text-xs);
@@ -116,13 +116,13 @@
 }
 
 .fases__item--actual .fases__punto {
-  border-color: var(--color-terracota);
-  color: var(--color-terracota);
+  border-color: var(--color-oliva);
+  color: var(--color-oliva);
 }
 
 .fases__item--cerrada .fases__punto {
-  border-color: var(--color-terracota);
-  background: var(--color-terracota);
+  border-color: var(--color-oliva);
+  background: var(--color-oliva);
   color: var(--color-superficie);
 }
 
@@ -134,7 +134,7 @@
 }
 
 .fases__item--cerrada .fases__tramo-linea {
-  background: var(--color-terracota);
+  background: var(--color-oliva);
 }
 
 .fases__item:last-child .fases__tramo-linea {
@@ -158,18 +158,18 @@
 }
 
 .fases__card:hover {
-  border-color: var(--color-gris-claro-marca);
+  border-color: var(--color-linea-fuerte);
 }
 
 .fases__card:focus-visible {
   outline: none;
-  border-color: var(--color-terracota);
+  border-color: var(--color-oliva);
   box-shadow: var(--shadow-foco);
 }
 
 .fases__item--actual .fases__card {
-  border-color: var(--color-terracota);
-  background: var(--color-terracota-tint-fila);
+  border-color: var(--color-oliva);
+  background: var(--color-oliva-tint-fila);
 }
 
 /* Cerrada: se atenúa, no se tacha (nota del diseño 4b). */
@@ -246,11 +246,11 @@
 }
 
 .fases__item--actual .fases__avance-barra > span {
-  background: var(--color-terracota);
+  background: var(--color-oliva);
 }
 
 .fases__avance-barra > .fases__avance-relleno--excedido {
-  background: var(--color-oxido);
+  background: var(--color-error);
 }
 
 .fases__avance-pct {

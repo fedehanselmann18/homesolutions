@@ -2,7 +2,7 @@
   display: flex;
   min-height: 100vh;
   /* v5: la página es blanca y la separación la hacen los bordes (DESIGN.md
-     §0). --color-base-1 sigue existiendo para sus otros usos (header de
+     §0). --color-superficie-suave sigue existiendo para sus otros usos (header de
      planilla, hover de fila, pies de modal): no se repunta a blanco. */
   background: var(--color-superficie);
 }

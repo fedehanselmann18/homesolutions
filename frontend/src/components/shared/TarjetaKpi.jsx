@@ -1,4 +1,4 @@
-import { VERDE } from "../../constants/colores";
+import { EXITO } from "../../constants/colores";
 import "./TarjetaKpi.css";
 
 /**
@@ -6,7 +6,7 @@ import "./TarjetaKpi.css";
  * dibujar, pero el número que se muestra al lado puede pasarse de 100 (ej.
  * un proyecto que gastó más de lo acordado) — eso lo decide quien la usa.
  */
-export function BarraProgreso({ porcentaje, color = VERDE }) {
+export function BarraProgreso({ porcentaje, color = EXITO }) {
   return (
     <div className="kpi-progreso">
       <div
@@ -32,7 +32,7 @@ export function TarjetaKpi({
   valor,
   detalle,
   porcentaje,
-  color = VERDE,
+  color = EXITO,
   destacado,
   plano,
   detalleColor,

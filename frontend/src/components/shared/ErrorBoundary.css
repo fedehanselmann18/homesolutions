@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-base-2);
+  background: var(--color-relleno);
   font-family: var(--font-ui);
   padding: var(--space-4);
 }
@@ -33,7 +33,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--color-oxido);
+  color: var(--color-error);
 }
 
 .error-boundary-card h1 {
@@ -54,8 +54,8 @@
   font-weight: 600;
   font-size: var(--text-base);
   color: var(--color-superficie);
-  background: var(--color-terracota);
-  border: 1px solid var(--color-terracota);
+  background: var(--color-oliva);
+  border: 1px solid var(--color-oliva);
   border-radius: var(--radius-sm);
   padding: 10px 20px;
   cursor: pointer;
@@ -63,5 +63,5 @@
 }
 
 .error-boundary-card button:hover {
-  background: var(--color-terracota-dark);
+  background: var(--color-oliva-dark);
 }

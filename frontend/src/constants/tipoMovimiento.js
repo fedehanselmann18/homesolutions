@@ -1,6 +1,6 @@
 import { HandCoins, Receipt, ShoppingCart, FileMinus, FilePlus } from "lucide-react";
 
-import { VERDE, ROJO, NARANJA, AZUL } from "./colores";
+import { EXITO, ERROR, ATENCION, NEUTRO } from "./colores";
 
 /**
  * Identidad visual de cada tipo de movimiento: qué color, qué ícono, cómo se
@@ -20,35 +20,35 @@ export const TIPOS_MOVIMIENTO = {
   compra: {
     singular: "Compra",
     plural: "Compras",
-    color: AZUL,
+    color: NEUTRO,
     icono: ShoppingCart,
     signo: -1,
   },
   gasto: {
     singular: "Gasto",
     plural: "Gastos",
-    color: NARANJA,
+    color: ATENCION,
     icono: Receipt,
     signo: -1,
   },
   cobro: {
     singular: "Cobro",
     plural: "Cobros",
-    color: VERDE,
+    color: EXITO,
     icono: HandCoins,
     signo: 1,
   },
   nota_credito: {
     singular: "Nota de crédito",
     plural: "Notas de crédito",
-    color: ROJO,
+    color: ERROR,
     icono: FileMinus,
     signo: -1,
   },
   nota_debito: {
     singular: "Nota de débito",
     plural: "Notas de débito",
-    color: NARANJA,
+    color: ATENCION,
     icono: FilePlus,
     signo: 1,
   },
@@ -59,7 +59,7 @@ export function getTipoMovimiento(tipo) {
     TIPOS_MOVIMIENTO[tipo] ?? {
       singular: tipo,
       plural: tipo,
-      color: NARANJA,
+      color: ATENCION,
       icono: null,
       signo: -1,
     }

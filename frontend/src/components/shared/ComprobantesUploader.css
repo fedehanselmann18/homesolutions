@@ -22,7 +22,7 @@
   padding: 0 14px;
   border: 1px dashed var(--color-ia-borde);
   border-radius: var(--radius-lg);
-  background: var(--color-terracota-tint-fila);
+  background: var(--color-oliva-tint-fila);
   font-size: var(--text-base);
   color: var(--color-tinta);
   transition:
@@ -31,8 +31,8 @@
 }
 
 .zona-archivo--activa {
-  border-color: var(--color-terracota);
-  background: var(--color-terracota-tint);
+  border-color: var(--color-oliva);
+  background: var(--color-oliva-tint);
 }
 
 .zona-archivo--deshabilitada {
@@ -41,7 +41,7 @@
 
 .zona-archivo__clip {
   flex-shrink: 0;
-  color: var(--color-terracota);
+  color: var(--color-oliva);
 }
 
 .zona-archivo__texto {
@@ -56,7 +56,7 @@
   font-family: var(--font-ui);
   font-size: inherit;
   font-weight: 600;
-  color: var(--color-terracota-dark);
+  color: var(--color-oliva-dark);
   cursor: pointer;
 }
 
@@ -85,7 +85,7 @@
 }
 
 .comprobantes-uploader__lista--activa {
-  box-shadow: 0 0 0 2px var(--color-terracota);
+  box-shadow: 0 0 0 2px var(--color-oliva);
 }
 
 .filas-archivo {
@@ -167,7 +167,7 @@
   font-family: var(--font-ui);
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--color-terracota-dark);
+  color: var(--color-oliva-dark);
   cursor: pointer;
 }
 
@@ -179,7 +179,7 @@
   margin: 0;
   padding-left: 1.1rem;
   font-size: var(--text-sm);
-  color: var(--color-oxido-texto);
+  color: var(--color-error-texto);
 }
 
 @media (max-width: 640px) {

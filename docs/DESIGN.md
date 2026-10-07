@@ -123,21 +123,20 @@ derivaban de nada del manual.
 
 | Token | Valor | Para qué |
 |---|---|---|
-| `--color-terracota` | `#6f7f45` | Acento de marca (el oliva). Acción primaria, foco, estado activo. |
-| `--color-terracota-dark` | `#4f5b30` | Texto oliva sobre su propio tint. Hover del acento relleno. |
-| `--color-terracota-tint` | `#eef0e3` | Fondo tenue del acento: badge de éxito, anillo de foco. |
-| `--color-terracota-sel` | `#f1f2ea` | Fondo de **selección/activo** en un control (nav item, chip activo). |
+| `--color-oliva` | `#6f7f45` | Acento de marca (el oliva). Acción primaria, foco, estado activo. |
+| `--color-oliva-dark` | `#4f5b30` | Texto oliva sobre su propio tint. Hover del acento relleno. |
+| `--color-oliva-tint` | `#eef0e3` | Fondo tenue del acento: badge de éxito, anillo de foco. |
+| `--color-oliva-sel` | `#f1f2ea` | Fondo de **selección/activo** en un control (nav item, chip activo). |
 | `--color-oliva-claro` | `#a8b36a` | Tramo completado de una barra de progreso; segunda serie de un gráfico. |
 
-`--color-terracota-tint` (`#eef0e3`) y `--color-terracota-sel` (`#f1f2ea`) son
+`--color-oliva-tint` (`#eef0e3`) y `--color-oliva-sel` (`#f1f2ea`) son
 casi el mismo color y tienen roles distintos a propósito: **el tint dice "este
 dato está resuelto", el sel dice "este control está activo".** En los diseños
 nunca aparecen juntos, y separarlos evita que un badge de "Pagado" y un tab
 seleccionado terminen siendo la misma cosa.
 
-> **El nombre `terracota` no describe el color; describe el rol.** Viene de una
-> paleta anterior y quedó para no tocar los 46 lugares que lo consumen. Hay un
-> plan de renombre en §18.
+> Hasta el prompt 20 del rollout este token se llamaba `--color-terracota`, de
+> una paleta anterior. Los nombres de color ahora dicen el rol (§20).
 
 ### Rampa de grises cálidos
 
@@ -147,10 +146,10 @@ Cinco pasos derivados de **gris claro `#d9d7d2`**, de más claro a más oscuro:
 |---|---|---|
 | `--color-superficie` | `#ffffff` | Toda superficie: página, card, fila, modal, sidebar. |
 | `--color-superficie-suave` | `#f9f8f6` | Hover de fila, header de tabla, panel sin borde. |
-| `--color-base-2` | `#f3f2ee` | Relleno de un control: buscador, avatar, cuadrito de ícono. |
+| `--color-relleno` | `#f3f2ee` | Relleno de un control: buscador, avatar, cuadrito de ícono. |
 | `--color-linea-suave` | `#efeee9` | Separador **entre filas de una misma lista**. Y el track del segmentado. |
 | `--color-linea` | `#e6e4df` | Todo borde de contorno: card, input, divisor de sección. |
-| `--color-gris-claro-marca` | `#d9d7d2` | Hover de borde, separador de breadcrumb, chip punteado. |
+| `--color-linea-fuerte` | `#d9d7d2` | Hover de borde, separador de breadcrumb, chip punteado. |
 
 **Dos niveles de línea, y no es capricho.** `--color-linea` (`#e6e4df`) es el
 contorno de algo: dice "acá empieza y termina este bloque". `--color-linea-suave`
@@ -158,10 +157,11 @@ contorno de algo: dice "acá empieza y termina este bloque". `--color-linea-suav
 filas, la lista se lee como veinte cajas apiladas en vez de una tabla. Es la
 diferencia entre `border` y `border-bottom` en los diseños, y está en todos.
 
-**`--color-base-1` desaparece.** Era a la vez el fondo de página y el fondo de
+**`--color-base-1` se fue.** Era a la vez el fondo de página y el fondo de
 input en reposo, dos roles que ahora son distintos: la página es blanca y el
-input también (se define por su borde). El único control con relleno gris es el
-buscador, que usa `--color-base-2`.
+input también (se define por su borde). Sus otros usos (header de planilla,
+hover de fila) son `--color-superficie-suave`. El único control con relleno gris
+es el buscador, que usa `--color-relleno`.
 
 ### Texto
 
@@ -205,10 +205,10 @@ señalar una deuda vencida con oliva. Entran bajo tres restricciones:
 
 | Rol | Fondo | Texto | Cuándo |
 |---|---|---|---|
-| Resuelto / positivo | `--color-terracota-tint` `#eef0e3` | `--color-terracota-dark` `#4f5b30` | Pagado, entregado, terminado, al día |
-| Atención | `--color-arcilla-tint` `#fef3e2` | `--color-arcilla-texto` `#9a4a07` | Vence pronto, sin entregar, sin comprobante |
-| Problema | `--color-oxido-tint` `#fdecea` | `--color-oxido-texto` `#b42318` | Deuda vencida, saldo negativo, campo inválido |
-| Neutro / pendiente | `--color-base-2` `#f3f2ee` | `--color-tinta-muted` `#5a5a58` | Presupuestado, sin empezar, opcional |
+| Resuelto / positivo | `--color-oliva-tint` `#eef0e3` | `--color-oliva-dark` `#4f5b30` | Pagado, entregado, terminado, al día |
+| Atención | `--color-atencion-tint` `#fef3e2` | `--color-atencion-texto` `#9a4a07` | Vence pronto, sin entregar, sin comprobante |
+| Problema | `--color-error-tint` `#fdecea` | `--color-error-texto` `#b42318` | Deuda vencida, saldo negativo, campo inválido |
+| Neutro / pendiente | `--color-relleno` `#f3f2ee` | `--color-tinta-muted` `#5a5a58` | Presupuestado, sin empezar, opcional |
 
 **El semáforo tiene cuatro posiciones, no cinco**: oliva = resuelto, ámbar =
 requiere atención, rojo = problema, gris = neutro o todavía no empezó. No
@@ -218,25 +218,24 @@ inventar otro mapeo por pantalla.
 
 | Token | Valor | Por qué se va |
 |---|---|---|
-| `--color-musgo` y derivados | `#16a34a` | El verde semáforo no está en el manual. Todo lo positivo pasa a oliva. |
-| `--color-acero` y derivados | `#64748b` | Gris frío, tampoco está en el manual. Pasa a `--color-tinta-muted`. |
-| `--color-base-1` | `#fafafa` | Dos roles distintos que se separan (ver arriba). |
+| `--color-acero` y derivados | `#64748b` | Gris frío, tampoco está en el manual. Pasa a `--color-tinta-muted` (y su tint a `--color-relleno`). |
+| `--color-base-1` | `#fafafa` | Dos roles distintos que se separan (ver arriba). Lo que queda es `--color-superficie-suave`. |
 | `--color-oscuro-*` | negro + grises | Dejan de ser "las superficies oscuras de la app". Quedan **sólo para el panel izquierdo del login**, que es la única pieza que sigue siendo de marca y no de producto. |
 
-El retiro de `--color-musgo` es el más invasivo: 17 usos, y además es `VERDE` en
-`colores.js`. **No se borra el token de golpe**: primero se le cambia el valor
-para que apunte al par oliva, y el borrado del nombre va junto con el renombre
-general de §18.
+`--color-musgo` **no se retiró**: quedó como el verde del estado "terminado"
+del semáforo funcional, oscurecido a `#15803d` para que alcance contraste como
+texto (ver `constants/colores.js`). En el renombre de §20 pasó a llamarse
+`--color-exito` (y `VERDE` a `EXITO` en `colores.js`).
 
 ### Progreso y datos
 
 | Cosa | Color |
 |---|---|
 | Segmento de fase completado | `--color-oliva-claro` `#a8b36a` |
-| Segmento de fase actual | `--color-terracota` `#6f7f45` |
+| Segmento de fase actual | `--color-oliva` `#6f7f45` |
 | Segmento de fase pendiente | `--color-linea` `#e6e4df` |
-| Punto de proyecto con alerta | `--color-oxido` `#dc2626` |
-| Punto de proyecto sin alerta | `--color-terracota` `#6f7f45` |
+| Punto de proyecto con alerta | `--color-error` `#dc2626` |
+| Punto de proyecto sin alerta | `--color-oliva` `#6f7f45` |
 
 En la cascada de rentabilidad (§análisis, variante 4d): **lo que suma va en
 oliva, lo que resta en gris claro, los subtotales en negro**, y el valor va
@@ -254,13 +253,13 @@ lugares** — y en este rediseño hay que tocarlos.
 Para el fondo tenue de esas pastillas se concatena `TINTE_PASTILLA` (`"1c"`, un
 alfa en hex) al color: `` `${color}${TINTE_PASTILLA}` ``.
 
-**`PALETA_GRAFICOS` queda fuera de la regla de color y hay que rehacerla.** Hoy
-es `[OLIVA, VERDE, NARANJA, AZUL, "#7c3aed", "#0891b2", ROJO, "#52525b"]`: un
+**`PALETA_GRAFICOS` se rehízo en el prompt 15.** Era
+`[OLIVA, VERDE, NARANJA, AZUL, "#7c3aed", "#0891b2", ROJO, "#52525b"]`: un
 violeta y un cian que no existen en ningún otro lugar del sistema. Para torta y
 treemap hacen falta más series que colores tiene la marca, pero la salida no es
 inventar colores nuevos — es **una rampa monocroma del oliva más los grises
 cálidos**, que además es lo correcto para series que no tienen orden semántico.
-Propuesta a validar cuando se toque el gráfico:
+Quedó así (con las constantes de `colores.js`):
 
 ```js
 export const PALETA_GRAFICOS = [
@@ -529,7 +528,7 @@ página", y si se usa en todos lados deja de significarlo.
 
 | Token | Valor | Para qué |
 |---|---|---|
-| `--shadow-hover` | `0 4px 16px rgba(0,0,0,.05)` | **Sólo hover de card clickeable**, junto con el borde a `--color-gris-claro-marca`. |
+| `--shadow-hover` | `0 4px 16px rgba(0,0,0,.05)` | **Sólo hover de card clickeable**, junto con el borde a `--color-linea-fuerte`. |
 | `--shadow-overlay` | `0 12px 32px rgba(24,24,27,.16)` | Lo que flota dentro de la página: popover, select flotante, tooltip, toast. |
 | `--shadow-modal` | `0 24px 64px rgba(0,0,0,.22)` | **Sólo el modal.** |
 | `--shadow-foco` | `0 0 0 3px #eef0e3` | Anillo de foco (ver §15). No es elevación: es estado. |
@@ -564,7 +563,7 @@ Gap ícono–texto: `--space-1-5` (6px), siempre.
 |---|---|
 | `.btn-primary` | La acción principal de la pantalla. **Una sola por vista.** Oliva relleno, texto blanco. |
 | `.btn-secondary` | Todo lo demás. Fondo blanco, borde `--color-linea`, texto `--color-tinta`. |
-| `.btn-marca` | Acción secundaria que pertenece a la marca — hoy, "Importar catálogo" y "Autocompletar con IA". Fondo `--color-terracota-tint`, borde `#d6dbbf`, texto `--color-terracota-dark`. |
+| `.btn-marca` | Acción secundaria que pertenece a la marca — hoy, "Importar catálogo" y "Autocompletar con IA". Fondo `--color-oliva-tint`, borde `#d6dbbf`, texto `--color-oliva-dark`. |
 | `.btn-peligro` | Eliminar. Contorno rojo que se rellena en hover. |
 
 **`.btn-marca` cambia de forma, no de rol.** En la v4 era contorno oliva; en los
@@ -637,7 +636,7 @@ control con relleno (el buscador) se lea como distinto a propósito.
 | Modificador | Cuándo |
 |---|---|
 | `.campo--sm` | Fila de tabla editable (alto 32px, radio `--radius-sm`). |
-| `.campo--error` | Validación fallida. Borde `--color-oxido`. |
+| `.campo--error` | Validación fallida. Borde `--color-error`. |
 | `.campo--monto` | Monto destacado: `--text-lg` / 600 / `.cifra`, con la moneda como prefijo tenue adentro. |
 
 ### Anatomía de un campo
@@ -647,13 +646,13 @@ label            --text-sm / 500 / --color-tinta-muted
   ↕ --space-1-5
 caja             40px / --radius-md / borde --color-linea
   ↕ --space-1-5
-hint o error     --text-xs / --color-tinta-muted o --color-oxido-texto
+hint o error     --text-xs / --color-tinta-muted o --color-error-texto
 ```
 
 - **Label**: `.label-campo`, caja normal (ver §3). El `(opcional)` va adentro del
   label, en `--color-tinta-tenue` / 400.
 - **Error**: `.campo-error` debajo del campo, con ícono de alerta a 14px, en
-  `--color-oxido-texto`. Se muestra `onChange`, no recién al hacer submit.
+  `--color-error-texto`. Se muestra `onChange`, no recién al hacer submit.
 - **Validación nativa**: `:user-invalid`, nunca `:invalid` — este último pinta
   de rojo campos que el usuario todavía no tocó.
 - **Hint**: misma posición que el error, en `--color-tinta-muted`. Nunca los dos
@@ -661,7 +660,7 @@ hint o error     --text-xs / --color-tinta-muted o --color-oxido-texto
 
 ### Foco
 
-Borde a `--color-terracota` **más** `--shadow-foco` (`0 0 0 3px #eef0e3`). El
+Borde a `--color-oliva` **más** `--shadow-foco` (`0 0 0 3px #eef0e3`). El
 anillo de 3px en tint oliva es lo que hace el foco inequívoco sin un outline que
 se pelee con el radio del campo. Es el mismo tratamiento en input, select,
 textarea y chip-opción.
@@ -689,8 +688,8 @@ excluyentes**:
 | Forma | Cuándo | Geometría |
 |---|---|---|
 | **Segmentado** | 2–3 opciones excluyentes y cortas (Pago: contado/cuenta corriente). | Track `--color-linea-suave`, padding 3px, radio `--radius-md`; botones de 32px, radio `--radius-sm`, el activo en blanco con `--shadow-hover` |
-| **Chip-opción** | 4–6 opciones excluyentes (Tipo de factura, Condición de pago). | 34px, radio `--radius-md`, borde; activo: borde `--color-terracota` + fondo `--color-terracota-sel` |
-| **Chip de filtro** | Filtros acumulables de una lista o un historial. | 28–30px, `--radius-pill`; el de "agregar" con borde punteado `--color-gris-claro-marca` |
+| **Chip-opción** | 4–6 opciones excluyentes (Tipo de factura, Condición de pago). | 34px, radio `--radius-md`, borde; activo: borde `--color-oliva` + fondo `--color-oliva-sel` |
+| **Chip de filtro** | Filtros acumulables de una lista o un historial. | 28–30px, `--radius-pill`; el de "agregar" con borde punteado `--color-linea-fuerte` |
 
 **Nada de switches ni de desplegables para esto.** Es el cambio de criterio más
 fuerte de los modales: en la v4 el tipo de factura era un `<select>` y los
@@ -700,7 +699,7 @@ valores de un dato. Con 6 opciones o menos, **se muestran todas**.
 
 ### Búsqueda
 
-`<Buscador>`: alto 32–36px, radio `--radius-sm`, fondo `--color-base-2`,
+`<Buscador>`: alto 32–36px, radio `--radius-sm`, fondo `--color-relleno`,
 **sin borde**, texto e ícono en `--color-tinta-muted`. Es el único control de la
 app con relleno gris, y eso es lo que lo hace reconocible de un vistazo.
 
@@ -719,7 +718,7 @@ Una card es: fondo `--color-superficie`, borde `1px solid --color-linea`,
 `--radius-lg`, padding `--space-card` (18px), gap interno `--space-4`.
 **Sin sombra en reposo.**
 
-Si es clickeable, en hover: borde a `--color-gris-claro-marca` **y**
+Si es clickeable, en hover: borde a `--color-linea-fuerte` **y**
 `--shadow-hover`. En la v4 el hover oscurecía el borde a tinta y pintaba el
 fondo; en la v5 el fondo queda blanco y el cambio lo hace la sombra. Con un
 fondo de página blanco, pintar el fondo de la card en hover la hacía desaparecer.
@@ -823,9 +822,9 @@ con `.badge` y un `onClick`.
 | Variante | Forma |
 |---|---|
 | `.chip` | 30px, `--radius-pill`, borde `--color-linea`, fondo blanco |
-| `.chip--activo` | borde `--color-terracota`, fondo `--color-terracota-sel`, peso 600 |
-| `.chip--agregar` | borde `1px dashed --color-gris-claro-marca`, texto muted, con `+` a la izquierda |
-| `.chip--quitable` | con una `×` a la derecha a 20px, fondo `--color-base-2` |
+| `.chip--activo` | borde `--color-oliva`, fondo `--color-oliva-sel`, peso 600 |
+| `.chip--agregar` | borde `1px dashed --color-linea-fuerte`, texto muted, con `+` a la izquierda |
+| `.chip--quitable` | con una `×` a la derecha a 20px, fondo `--color-relleno` |
 | `.chip--opcion` | 34px, `--radius-md` — el de formularios (§9) |
 
 Un chip puede llevar un contador a la derecha en `--text-xs` /
@@ -848,8 +847,8 @@ center` no centra nada: el texto es un ítem flex y lo alinea `justify-content`.
 | Logo | isotipo a 28px + "Home Solutions" en `--text-sm` / 700 / `line-height: 1.1` |
 | Item de nav | alto 36px, `--radius-sm`, padding `0 --space-2`, gap `--space-3`, ícono 16px |
 | Item inactivo | texto `--color-tinta-muted`, peso 500 |
-| Item activo | texto e ícono `--color-terracota`, fondo `--color-terracota-sel`, peso 600 |
-| Hover | fondo `--color-base-2` |
+| Item activo | texto e ícono `--color-oliva`, fondo `--color-oliva-sel`, peso 600 |
+| Hover | fondo `--color-relleno` |
 | Contador | a la derecha, `--text-xs`, `--color-tinta-tenue` |
 | Grupo "En curso" | label en `--text-xs` / 600 / `--color-tinta-tenue`; items de 32px con punto de 7px |
 | Footer | avatar 32px `--radius-pill` en tint oliva, nombre `--text-base` / 600, rol `--text-xs` muted, separado por `border-top` |
@@ -865,7 +864,7 @@ Los `--color-oscuro-*` quedan **sólo para el panel izquierdo del login**.
 
 Alto 40px, gap `--space-7` (28px) entre tabs, `border-bottom: 1px solid
 --color-linea` en el contenedor. La activa: `border-bottom: 2px solid
---color-terracota` con `margin-bottom: -1px`, texto `--color-tinta` / 600. Las
+--color-oliva` con `margin-bottom: -1px`, texto `--color-tinta` / 600. Las
 demás: `--color-tinta-muted` / 500. Ícono a 15px, contador a la derecha en
 `--text-xs` / `--color-tinta-tenue`.
 
@@ -878,7 +877,7 @@ Una tab puede llevar un badge de pendientes: `--text-2xs` / 700 /
 ### Breadcrumbs y título
 
 - **Breadcrumbs** (`<Breadcrumbs>`): en toda página de detalle, siempre.
-  `--text-sm`, muted, separador `/` en `--color-gris-claro-marca`, último tramo en
+  `--text-sm`, muted, separador `/` en `--color-linea-fuerte`, último tramo en
   `--color-tinta` / 500.
 - **Título de página**: `<PageHeader>`, siempre. Nunca un `<h1>` suelto. Puede
   llevar un badge de estado al lado, y debajo una fila de meta-datos con íconos a
@@ -928,7 +927,7 @@ arriba corta la curva.
 
 ### Header
 
-Cuadradito de 32px (`--radius-md`, fondo `--color-base-2`) con el ícono del tipo
+Cuadradito de 32px (`--radius-md`, fondo `--color-relleno`) con el ícono del tipo
 de operación, título en `--text-xl` / 700, y **el contexto del proyecto a la
 derecha del título**, separado por `border-left: 1px solid --color-linea` y
 `padding-left: --space-3`, en `--text-sm` / muted con su ícono.
@@ -1024,7 +1023,7 @@ animación.
 | Esperando (dentro de un control) | `<LogoCargando>` | El mismo isotipo, a 13–14px, reemplazando al ícono del botón. |
 | Cargando (Panel) | `.skeleton` | **Excepción a propósito.** Sólo donde el layout es estable y conocido de antemano. No replicar. |
 | Vacío | `<EstadoVacio>` | Isotipo de marca a baja opacidad + mensaje muted. `grande` para página entera. |
-| Error | `<EstadoError>` | Ícono `CircleAlert` + mensaje en `--color-oxido-texto`, con `role="alert"`. |
+| Error | `<EstadoError>` | Ícono `CircleAlert` + mensaje en `--color-error-texto`, con `role="alert"`. |
 | Éxito | `<ToastStack>` | Toast abajo a la derecha, con borde izquierdo del color del resultado. |
 | Deshabilitado | `:disabled` | `opacity: .5` (controles) o `.6` (campos) + `cursor: not-allowed`. |
 | Inactivo / terminado | `opacity: .75` | Card o fila de algo que ya pasó. **No se tacha.** |
@@ -1052,7 +1051,7 @@ un spinner genérico.
   pasa al gerundio ("Guardando…", "Leyendo…", "Creando…").
 - **En una página o sección**: `<Cargando>`, centrado, con el texto debajo.
 - **La variante importa.** Sobre un fondo oliva sólido (`.btn-primary`) va
-  `variante="blanco"`: el isotipo oliva es exactamente `--color-terracota`, así
+  `variante="blanco"`: el isotipo oliva es exactamente `--color-oliva`, así
   que sobre ese fondo queda invisible. Sobre `.btn-marca`, que ahora es tint
   oliva con texto oscuro, va la variante normal.
 
@@ -1063,7 +1062,7 @@ mientras que girar o rebotar se siente más a "cargando indefinidamente".
 
 Dos mecanismos, y **cuál se usa depende de si el elemento tiene borde propio**:
 
-- **Campos y chips** (tienen borde): borde a `--color-terracota` +
+- **Campos y chips** (tienen borde): borde a `--color-oliva` +
   `--shadow-foco`. Ver §9.
 - **Todo lo demás** (botones, links, filas, `[tabindex]`): la regla global de
   `:focus-visible` — outline oliva de 2px con `offset: 2px`.
@@ -1149,27 +1148,25 @@ ningún componente.
 Cosas que el sistema todavía no resuelve, anotadas para que no se descubran de
 nuevo desde cero:
 
-- **Renombrar los tokens de color.** `terracota`, `musgo`, `arcilla`, `acero`
-  vienen de paletas muertas y el documento tiene que explicar tres veces que el
-  nombre no es el color. Es un find-replace mecánico en 53 archivos, verificable
-  con los canarios de §1, y merece **su propio commit sin ningún cambio de
-  valor** para que el diff sea legible. Mapeo propuesto:
+- **~~Renombrar los tokens de color.~~ Hecho en el prompt 20**, en un commit
+  propio sin ningún cambio de valor (los canarios en cero, los tests verdes y
+  capturas de cuatro pantallas idénticas píxel a píxel antes y después).
+  Mapeo final:
 
-  | Hoy | Debería ser |
+  | Antes | Ahora |
   |---|---|
   | `--color-terracota*` | `--color-oliva*` |
-  | `--color-musgo*` | *(se borra; pasa a `--color-oliva*`)* |
+  | `--color-musgo*` | `--color-exito*` (no se borró: es el verde de "terminado") |
   | `--color-arcilla*` | `--color-atencion*` |
   | `--color-oxido*` | `--color-error*` |
-  | `--color-acero*` | *(se borra; pasa a `--color-tinta-muted`)* |
+  | `--color-acero`, `--color-acero-texto` | `--color-tinta-muted` (mismo valor) |
+  | `--color-acero-tint` | `--color-relleno` (mismo valor) |
+  | `--color-base-1` | `--color-superficie-suave` (mismo valor) |
   | `--color-base-2` | `--color-relleno` |
   | `--color-gris-claro-marca` | `--color-linea-fuerte` |
+  | `AZUL` · `VERDE` · `NARANJA` · `ROJO` (JS) | `NEUTRO` · `EXITO` · `ATENCION` · `ERROR` |
+  | `VERDE_TINT` · `NARANJA_TINT` · `ROJO_TINT` · `BASE_2`… | `EXITO_TINT` · `ATENCION_TINT` · `ERROR_TINT` · `RELLENO`… |
 
-- **`--text-btn` es un alias de `--text-sm`.** O se colapsa, o se documenta para
-  siempre como marcador semántico. Decidir, no dejarlo a medio camino.
-- **`--font-display` y `--font-ui` son la misma familia.** La distinción es
-  semántica y no produce ninguna diferencia visual. O se le da una fuente
-  distinta a display, o se colapsan.
 - **`PALETA_GRAFICOS` tiene un violeta y un cian** que no existen en el sistema.
   Hay una propuesta de rampa monocroma en §2, sin validar contra los gráficos
   reales.

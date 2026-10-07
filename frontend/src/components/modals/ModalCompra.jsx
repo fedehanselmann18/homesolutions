@@ -22,7 +22,7 @@ import { TIPOS_FACTURA } from "../../constants/tipoFactura";
 import { getTipoProducto } from "../../constants/tipoProducto";
 import { getCondicionPagoLabel } from "../../constants/estadoCompra";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
-import { NARANJA_TEXTO, OLIVA_OSCURO } from "../../constants/colores";
+import { ATENCION_TEXTO, OLIVA_OSCURO } from "../../constants/colores";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { useExtraccionIA } from "../../hooks/useExtraccionIA";
 import { useToast } from "../../context/useToast";
@@ -42,7 +42,7 @@ const OPCIONES_CONDICION = ["contado", "cuenta_corriente", "cheque", "transferen
 // Pago y envío son dos valores de un dato, no un interruptor (DESIGN.md §9):
 // segmentado con el ícono y el color de texto de su badge.
 const OPCIONES_PAGO = [
-  { valor: "pendiente", label: "Pendiente", icono: Clock, color: NARANJA_TEXTO },
+  { valor: "pendiente", label: "Pendiente", icono: Clock, color: ATENCION_TEXTO },
   { valor: "pagado", label: "Pagado", icono: CircleCheck, color: OLIVA_OSCURO },
 ];
 const OPCIONES_ENVIO = [

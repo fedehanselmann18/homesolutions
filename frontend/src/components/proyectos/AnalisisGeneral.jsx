@@ -40,7 +40,7 @@ import {
 import { useToast } from "../../context/useToast";
 import useAuth from "../../context/useAuth";
 import { Seccion, TooltipMoneda, ContenidoTreemap, Torta, COLORES_TORTA } from "./AnalisisGraficos";
-import { OLIVA, ROJO, GRIS_CLARO, NARANJA, LINEA } from "../../constants/colores";
+import { OLIVA, ERROR, GRIS_CLARO, ATENCION, LINEA } from "../../constants/colores";
 import "./AnalisisGeneral.css";
 
 // Variante 4d: lo que suma en oliva, lo que resta en gris claro, los
@@ -536,7 +536,7 @@ export function AnalisisGeneral({ proyectoId }) {
             titulo="Notas de crédito (compras)"
             valor={fm(notas.compras.credito)}
             detalle="A favor nuestro, resta a lo que le debemos al proveedor"
-            color={ROJO}
+            color={ERROR}
             destacado
             plano
           />
@@ -544,7 +544,7 @@ export function AnalisisGeneral({ proyectoId }) {
             titulo="Notas de débito (compras)"
             valor={fm(notas.compras.debito)}
             detalle="En contra nuestro, suma a lo que le debemos al proveedor"
-            color={NARANJA}
+            color={ATENCION}
             destacado
             plano
           />
@@ -552,7 +552,7 @@ export function AnalisisGeneral({ proyectoId }) {
             titulo="Notas de crédito (cobros)"
             valor={fm(notas.cobros.credito)}
             detalle="Ajuste a favor del cliente, resta a lo cobrado"
-            color={ROJO}
+            color={ERROR}
             destacado
             plano
           />
@@ -560,7 +560,7 @@ export function AnalisisGeneral({ proyectoId }) {
             titulo="Notas de débito (cobros)"
             valor={fm(notas.cobros.debito)}
             detalle="Ajuste en contra del cliente, suma a lo cobrado"
-            color={NARANJA}
+            color={ATENCION}
             destacado
             plano
           />

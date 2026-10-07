@@ -7,7 +7,7 @@ import { montoCobroNeto, precioAcordado as precioAcordadoEn } from "../../utils/
 import { useCotizacionActual } from "../../hooks/queries";
 import { useMonedaAnalisis } from "../../hooks/useMonedaAnalisis";
 import { SelectorMoneda } from "../shared/SelectorMoneda";
-import { ROJO, NARANJA } from "../../constants/colores";
+import { ERROR, ATENCION } from "../../constants/colores";
 import { TarjetaKpi } from "../shared/TarjetaKpi";
 import {
   Seccion,
@@ -95,7 +95,7 @@ export function AnalisisFase({
               ? "Precio acordado sin cotización cargada para pasarlo a pesos"
               : `${fm(precioAcordado)} acordados`
           }
-          color={kpisFase.pctPresupuesto > 100 ? ROJO : undefined}
+          color={kpisFase.pctPresupuesto > 100 ? ERROR : undefined}
         />
         <TarjetaKpi
           titulo="% del gasto total del proyecto"
@@ -113,7 +113,7 @@ export function AnalisisFase({
               ? "Todo al día"
               : `${comprasImpagasFase.length} ${comprasImpagasFase.length === 1 ? "compra" : "compras"}`
           }
-          color={montoSinPagarFase.ars > 0 ? ROJO : undefined}
+          color={montoSinPagarFase.ars > 0 ? ERROR : undefined}
           destacado
         />
       </div>
@@ -179,7 +179,7 @@ export function AnalisisFase({
             titulo="Notas de crédito (fase)"
             valor={fm(kpisFase.notasCreditoFase[moneda])}
             detalle="A favor nuestro, ya restado del gastado en esta fase"
-            color={ROJO}
+            color={ERROR}
             destacado
             plano
           />
@@ -187,7 +187,7 @@ export function AnalisisFase({
             titulo="Notas de débito (fase)"
             valor={fm(kpisFase.notasDebitoFase[moneda])}
             detalle="En contra nuestro, ya sumado al gastado en esta fase"
-            color={NARANJA}
+            color={ATENCION}
             destacado
             plano
           />

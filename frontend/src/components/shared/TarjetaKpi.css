@@ -54,7 +54,7 @@
 .kpi-progreso {
   height: 6px;
   border-radius: var(--radius-pill);
-  background-color: var(--color-base-2);
+  background-color: var(--color-relleno);
   overflow: hidden;
 }
 

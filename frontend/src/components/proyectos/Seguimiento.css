@@ -77,11 +77,11 @@
 }
 
 .bandeja__titulo--vencido .bandeja__punto {
-  background: var(--color-oxido);
+  background: var(--color-error);
 }
 
 .bandeja__titulo--pendiente .bandeja__punto {
-  background: var(--color-arcilla);
+  background: var(--color-atencion);
 }
 
 .bandeja__cantidad {
@@ -121,7 +121,7 @@
   width: 32px;
   height: 32px;
   border-radius: var(--radius-md);
-  background: var(--color-base-2);
+  background: var(--color-relleno);
   color: var(--color-tinta-muted);
 }
 
@@ -148,7 +148,7 @@
 }
 
 button.bandeja__titulo-item:focus-visible {
-  outline: 2px solid var(--color-terracota);
+  outline: 2px solid var(--color-oliva);
   outline-offset: 2px;
   border-radius: var(--radius-xs);
 }
@@ -256,13 +256,13 @@ button.bandeja__titulo-item:focus-visible {
   font-family: var(--font-display);
   font-size: var(--text-lg);
   font-weight: 600;
-  color: var(--color-oxido);
+  color: var(--color-error);
   margin: 0 0 2px;
 }
 
 .seguimiento-seccion-icono {
   flex-shrink: 0;
-  color: var(--color-oxido);
+  color: var(--color-error);
 }
 
 .seguimiento-seccion-descripcion {
@@ -317,7 +317,7 @@ button.bandeja__titulo-item:focus-visible {
 .seguimiento-alerta-columna {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--color-oxido);
+  color: var(--color-error);
   margin: var(--space-3) 0 0;
 }
 

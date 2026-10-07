@@ -29,8 +29,8 @@
 .manager-pagina__error {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--color-oxido);
-  background: var(--color-oxido-tint);
+  color: var(--color-error);
+  background: var(--color-error-tint);
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);
 }

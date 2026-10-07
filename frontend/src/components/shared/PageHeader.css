@@ -24,8 +24,8 @@
   height: 40px;
   flex-shrink: 0;
   border-radius: var(--radius-sm);
-  background: var(--color-terracota-tint);
-  color: var(--color-terracota-dark);
+  background: var(--color-oliva-tint);
+  color: var(--color-oliva-dark);
 }
 
 .page-header__texto {

@@ -47,7 +47,7 @@
 }
 
 .analisis-ganancia__monto--perdida {
-  color: var(--color-oxido-texto);
+  color: var(--color-error-texto);
 }
 
 .analisis-ganancia__detalle {
@@ -87,7 +87,7 @@
 }
 
 .analisis-datos dd.analisis-datos--excedido {
-  color: var(--color-oxido-texto);
+  color: var(--color-error-texto);
 }
 
 /* Cómo leer los pesos cuando el análisis está en ARS: texto secundario
@@ -136,7 +136,7 @@
 .cascada__fila--subtotal,
 .cascada__fila--neto,
 .cascada__fila--perdida {
-  border-top: 1px solid var(--color-gris-claro-marca);
+  border-top: 1px solid var(--color-linea-fuerte);
 }
 
 .cascada__label {
@@ -169,11 +169,11 @@
 
 .cascada__fila--suma .cascada__barra,
 .cascada__fila--neto .cascada__barra {
-  background: var(--color-terracota);
+  background: var(--color-oliva);
 }
 
 .cascada__fila--resta .cascada__barra {
-  background: var(--color-gris-claro-marca);
+  background: var(--color-linea-fuerte);
 }
 
 .cascada__fila--subtotal .cascada__barra {
@@ -181,7 +181,7 @@
 }
 
 .cascada__fila--perdida .cascada__barra {
-  background: var(--color-oxido);
+  background: var(--color-error);
 }
 
 .cascada__valor {
@@ -197,7 +197,7 @@
 }
 
 .cascada__fila--perdida .cascada__valor {
-  color: var(--color-oxido-texto);
+  color: var(--color-error-texto);
 }
 
 .cascada__fila--eje {
@@ -317,7 +317,7 @@
   padding: var(--space-4);
   border: 1px solid var(--color-linea);
   border-radius: var(--radius-sm);
-  background-color: var(--color-base-1);
+  background-color: var(--color-superficie-suave);
 }
 
 .analisis-seccion-titulo {
@@ -497,7 +497,7 @@
   height: 12px;
   border-radius: var(--radius-pill);
   overflow: hidden;
-  background-color: var(--color-base-2);
+  background-color: var(--color-relleno);
   gap: 2px;
 }
 
@@ -532,10 +532,10 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background-color: var(--color-base-2);
+  background-color: var(--color-relleno);
   font-size: var(--text-xs);
   font-weight: 700;
-  color: var(--color-musgo-dark);
+  color: var(--color-exito-dark);
 }
 
 .analisis-ranking-nombre {

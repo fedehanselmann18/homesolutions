@@ -101,7 +101,7 @@
 }
 
 .sidebar-link:hover {
-  background: var(--color-base-2);
+  background: var(--color-relleno);
   color: var(--color-tinta);
 }
 
@@ -110,8 +110,8 @@
    del item. El ícono hereda por currentColor. */
 .sidebar-link-active,
 .sidebar-link-active:hover {
-  background: var(--color-terracota-sel);
-  color: var(--color-terracota);
+  background: var(--color-oliva-sel);
+  color: var(--color-oliva);
   font-weight: 600;
 }
 
@@ -148,12 +148,12 @@
 }
 
 .sidebar-obra:hover {
-  background: var(--color-base-2);
+  background: var(--color-relleno);
 }
 
 /* NavLink le pone `.active` a la obra que se está mirando. */
 .sidebar-obra.active {
-  background: var(--color-base-2);
+  background: var(--color-relleno);
   font-weight: 600;
 }
 
@@ -167,11 +167,11 @@
 /* DESIGN.md §2, "Progreso y datos": el punto sin alerta es oliva, no el
    verde del semáforo -- no dice "terminado", dice "esta obra está bien". */
 .sidebar-obra-punto--ok {
-  background: var(--color-terracota);
+  background: var(--color-oliva);
 }
 
 .sidebar-obra-punto--alerta {
-  background: var(--color-oxido);
+  background: var(--color-error);
 }
 
 /* --- Footer: avatar de iniciales + nombre/rol + logout como ícono --- */
@@ -189,8 +189,8 @@
   height: 32px;
   min-width: 32px;
   border-radius: var(--radius-pill);
-  background: var(--color-terracota-tint);
-  color: var(--color-terracota-dark);
+  background: var(--color-oliva-tint);
+  color: var(--color-oliva-dark);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -243,7 +243,7 @@
 }
 
 .sidebar-logout:hover {
-  background: var(--color-base-2);
+  background: var(--color-relleno);
   color: var(--color-tinta);
 }
 

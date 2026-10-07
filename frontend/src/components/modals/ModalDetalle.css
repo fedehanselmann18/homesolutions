@@ -75,7 +75,7 @@
   gap: var(--space-3);
   padding: var(--space-2-5) var(--space-3) var(--space-2-5) var(--space-4);
   border-radius: var(--radius-md);
-  background: var(--color-arcilla-tint);
+  background: var(--color-atencion-tint);
 }
 
 .detalle__faltante-texto {
@@ -84,7 +84,7 @@
   gap: var(--space-2);
   font-size: var(--text-base);
   font-weight: 500;
-  color: var(--color-arcilla-texto);
+  color: var(--color-atencion-texto);
 }
 
 .detalle__faltante-texto svg {
@@ -204,11 +204,11 @@
 }
 
 .detalle__totales-fila--resta {
-  color: var(--color-oxido-texto);
+  color: var(--color-error-texto);
 }
 
 .detalle__totales-fila--suma {
-  color: var(--color-arcilla-texto);
+  color: var(--color-atencion-texto);
 }
 
 .detalle__totales-fila--total {
@@ -246,7 +246,7 @@
   height: 32px;
   flex-shrink: 0;
   border-radius: var(--radius-sm);
-  background: var(--color-base-2);
+  background: var(--color-relleno);
   color: var(--color-tinta-muted);
 }
 
@@ -281,7 +281,7 @@
   margin: 0;
   flex-basis: 100%;
   font-size: var(--text-sm);
-  color: var(--color-oxido-texto);
+  color: var(--color-error-texto);
 }
 
 /* --- pie: Borrar como ghost a la izquierda --- */
@@ -303,7 +303,7 @@
 }
 
 .detalle__borrar:hover {
-  color: var(--color-oxido);
+  color: var(--color-error);
 }
 
 @media (max-width: 640px) {

@@ -1,6 +1,6 @@
 import { leyendaOtraMoneda } from "../../utils/moneda";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
-import { OLIVA, NARANJA } from "../../constants/colores";
+import { OLIVA, ATENCION } from "../../constants/colores";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import {
   DetalleShell,
@@ -59,7 +59,7 @@ export function ModalDetalleGasto({
             {
               label: "Comprobante",
               valor: getTipoFacturaLabel(gasto.tipo_factura),
-              punto: comprobantes.length > 0 ? OLIVA : NARANJA,
+              punto: comprobantes.length > 0 ? OLIVA : ATENCION,
             },
             usuarioNombre && { label: "Cargado por", valor: usuarioNombre },
           ]}

@@ -14,8 +14,8 @@
   width: 38px;
   height: 38px;
   border-radius: var(--radius-pill);
-  background: var(--color-oxido-tint);
-  color: var(--color-oxido);
+  background: var(--color-error-tint);
+  color: var(--color-error);
   flex-shrink: 0;
 }
 

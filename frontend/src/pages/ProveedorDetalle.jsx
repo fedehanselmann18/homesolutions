@@ -46,7 +46,7 @@ import { getCategorias } from "../services/categoriaService";
 
 import useAuth from "../context/useAuth";
 import { getTipoProducto } from "../constants/tipoProducto";
-import { OLIVA, ROJO } from "../constants/colores";
+import { OLIVA, ERROR } from "../constants/colores";
 import { getEstadoPagoConAntiguedad, getEstadoEnvio } from "../constants/estadoCompra";
 import { getTipoFacturaLabel } from "../constants/tipoFactura";
 import { formatMoneda, formatFecha, pluralizar } from "../utils/formato";
@@ -483,7 +483,7 @@ export function ProveedorDetalle() {
             >
               <span
                 className="proveedor-ficha__punto"
-                style={{ background: resumen.deuda > 0 ? ROJO : OLIVA }}
+                style={{ background: resumen.deuda > 0 ? ERROR : OLIVA }}
               />
               {resumen.deuda > 0
                 ? `Deuda ${formatMoneda(resumen.deuda)} · ${pluralizar(

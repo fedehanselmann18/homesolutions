@@ -81,11 +81,11 @@
   gap: var(--space-1-5);
   padding-top: var(--space-1-5);
   font-size: var(--text-sm);
-  color: var(--color-terracota-dark);
+  color: var(--color-oliva-dark);
 }
 
 .proveedor-ficha__deuda--debe {
-  color: var(--color-oxido-texto);
+  color: var(--color-error-texto);
 }
 
 .proveedor-ficha__punto {
@@ -178,15 +178,15 @@
 }
 
 .menu-mas__item:hover {
-  background: var(--color-base-2);
+  background: var(--color-relleno);
 }
 
 .menu-mas__item--peligro {
-  color: var(--color-oxido-texto);
+  color: var(--color-error-texto);
 }
 
 .menu-mas__item--peligro:hover {
-  background: var(--color-oxido-tint);
+  background: var(--color-error-tint);
 }
 
 /* --- contenido --- */
@@ -298,7 +298,7 @@
   justify-content: center;
   height: 48px;
   border-radius: var(--radius-md);
-  background: var(--color-base-2);
+  background: var(--color-relleno);
 }
 
 .historial-fila__dia {
@@ -351,7 +351,7 @@
 }
 
 .historial-fila__falta {
-  color: var(--color-arcilla);
+  color: var(--color-atencion);
 }
 
 .historial-fila__estados {

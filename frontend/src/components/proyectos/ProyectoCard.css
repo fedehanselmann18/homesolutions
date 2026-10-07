@@ -17,7 +17,7 @@
 }
 
 .proyecto-card:hover {
-  border-color: var(--color-gris-claro-marca);
+  border-color: var(--color-linea-fuerte);
   box-shadow: var(--shadow-hover);
 }
 
@@ -55,11 +55,11 @@
 }
 
 .proyecto-card__alertas--atencion {
-  color: var(--color-arcilla-texto);
+  color: var(--color-atencion-texto);
 }
 
 .proyecto-card__alertas--problema {
-  color: var(--color-oxido-texto);
+  color: var(--color-error-texto);
 }
 
 .proyecto-card__titulo {
@@ -135,5 +135,5 @@
 }
 
 .proyecto-card__negativo {
-  color: var(--color-oxido-texto);
+  color: var(--color-error-texto);
 }

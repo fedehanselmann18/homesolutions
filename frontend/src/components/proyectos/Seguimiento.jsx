@@ -40,13 +40,13 @@ import {
   getEstadoPagoConAntiguedad,
 } from "../../constants/estadoCompra";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
-import { NARANJA, NARANJA_TINT, NARANJA_TEXTO, TINTA_MUTED, BASE_2 } from "../../constants/colores";
+import { ATENCION, ATENCION_TINT, ATENCION_TEXTO, TINTA_MUTED, RELLENO } from "../../constants/colores";
 import "./Seguimiento.css";
 
 // El badge de cada item de la bandeja, con la forma de estadoCompra.js para
 // que lo pinte BadgeEstado: el de pago y el de envío son los mismos del libro
 // de obra; los otros tres son propios de esta lista.
-const ATENCION = { color: NARANJA, bg: NARANJA_TINT, fg: NARANJA_TEXTO };
+const PAR_ATENCION = { color: ATENCION, bg: ATENCION_TINT, fg: ATENCION_TEXTO };
 function estadoDeItem(item) {
   switch (item.estado) {
     case "impaga":
@@ -61,13 +61,13 @@ function estadoDeItem(item) {
     case "sinEntregar":
       return getEstadoEnvio("pedido");
     case "sinComprobante":
-      return { ...ATENCION, label: "Sin comprobante", icono: Paperclip };
+      return { ...PAR_ATENCION, label: "Sin comprobante", icono: Paperclip };
     case "estancada":
-      return { ...ATENCION, label: `${item.dias} días sin cambios`, icono: Clock };
+      return { ...PAR_ATENCION, label: `${item.dias} días sin cambios`, icono: Clock };
     default:
       return {
         color: TINTA_MUTED,
-        bg: BASE_2,
+        bg: RELLENO,
         fg: TINTA_MUTED,
         label: "Por cobrar",
         icono: HandCoins,

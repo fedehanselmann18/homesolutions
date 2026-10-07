@@ -30,7 +30,7 @@
 }
 
 .compra-pasos__paso:focus-visible {
-  outline: 2px solid var(--color-terracota);
+  outline: 2px solid var(--color-oliva);
   outline-offset: 2px;
   border-radius: var(--radius-xs);
 }
@@ -43,7 +43,7 @@
 
 .compra-pasos__paso--hecho .compra-pasos__barra,
 .compra-pasos__paso--actual .compra-pasos__barra {
-  background: var(--color-terracota);
+  background: var(--color-oliva);
 }
 
 .compra-pasos__label {
@@ -56,7 +56,7 @@
 }
 
 .compra-pasos__paso--hecho .compra-pasos__label {
-  color: var(--color-terracota-dark);
+  color: var(--color-oliva-dark);
 }
 
 .compra-pasos__paso--actual .compra-pasos__label {
@@ -71,7 +71,7 @@
   width: 16px;
   height: 16px;
   border-radius: var(--radius-pill);
-  background: var(--color-base-2);
+  background: var(--color-relleno);
   font-size: var(--text-2xs);
   font-weight: 700;
 }

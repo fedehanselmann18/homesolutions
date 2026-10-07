@@ -6,7 +6,7 @@
   align-items: center;
   gap: var(--space-2-5);
   padding: var(--space-1-5) 0;
-  color: var(--color-oxido);
+  color: var(--color-error);
 }
 
 .estado-error-icono {

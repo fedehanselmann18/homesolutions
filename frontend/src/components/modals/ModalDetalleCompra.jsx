@@ -8,7 +8,7 @@ import {
 } from "../../constants/estadoCompra";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
 import { diasDesde } from "../../utils/seguimiento";
-import { OLIVA, NARANJA } from "../../constants/colores";
+import { OLIVA, ATENCION } from "../../constants/colores";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { SeccionNotas } from "../shared/SeccionNotas";
 import { BadgeEstado } from "../shared/BadgeEstado";
@@ -143,7 +143,7 @@ export function ModalDetalleCompra({
             {
               label: "Comprobante",
               valor: getTipoFacturaLabel(compra.tipo_factura),
-              punto: comprobantes.length > 0 ? OLIVA : NARANJA,
+              punto: comprobantes.length > 0 ? OLIVA : ATENCION,
             },
             compra.categorias?.length > 0 && {
               label: "Categorías",

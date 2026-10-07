@@ -7,7 +7,7 @@
   height: 32px;
   flex-shrink: 0;
   border-radius: var(--radius-md);
-  background: var(--color-base-2);
+  background: var(--color-relleno);
   font-size: var(--text-sm);
   font-weight: 700;
   color: var(--color-tinta-muted);

@@ -21,11 +21,11 @@ import { calcularPanel } from "../utils/panel";
 import { formatMoneda, formatMonedaCorta, pluralizar } from "../utils/formato";
 import {
   OLIVA,
-  ROJO,
-  ROJO_TEXTO,
-  ROJO_TINT,
-  NARANJA_TINT,
-  NARANJA_TEXTO,
+  ERROR,
+  ERROR_TEXTO,
+  ERROR_TINT,
+  ATENCION_TINT,
+  ATENCION_TEXTO,
   TINTA_TENUE,
   LINEA_SUAVE,
   GRIS_CLARO,
@@ -48,8 +48,8 @@ const PENDIENTE = {
 };
 
 const PAR_NIVEL = {
-  problema: { backgroundColor: ROJO_TINT, color: ROJO_TEXTO },
-  atencion: { backgroundColor: NARANJA_TINT, color: NARANJA_TEXTO },
+  problema: { backgroundColor: ERROR_TINT, color: ERROR_TEXTO },
+  atencion: { backgroundColor: ATENCION_TINT, color: ATENCION_TEXTO },
 };
 
 // Reproduce la estructura real del panel (saludo, KPIs, gráfico, dos listas)
@@ -209,7 +209,7 @@ export function Dashboard() {
           titulo="Disponible en obras"
           valor={fm(kpis.disponibleTotal)}
           detalle={pluralizar(kpis.enCurso, "proyecto en curso", "proyectos en curso")}
-          color={ROJO_TEXTO}
+          color={ERROR_TEXTO}
           destacado={kpis.disponibleTotal < 0}
         />
         <TarjetaKpi
@@ -227,7 +227,7 @@ export function Dashboard() {
                 ? `${pluralizar(deuda.vencidas, "compra", "compras")} con más de 90 días`
                 : pluralizar(deuda.compras, "compra sin pagar", "compras sin pagar")
           }
-          detalleColor={deuda.vencidas > 0 ? ROJO_TEXTO : undefined}
+          detalleColor={deuda.vencidas > 0 ? ERROR_TEXTO : undefined}
         />
       </div>
 
@@ -309,13 +309,13 @@ export function Dashboard() {
                     <span className="panel-proyecto__nombre">
                       <span
                         className="panel-proyecto__punto"
-                        style={{ background: p.disponible >= 0 ? OLIVA : ROJO }}
+                        style={{ background: p.disponible >= 0 ? OLIVA : ERROR }}
                       />
                       {p.nombre}
                     </span>
                     <span
                       className="panel-proyecto__monto cifra"
-                      style={p.disponible < 0 ? { color: ROJO_TEXTO } : undefined}
+                      style={p.disponible < 0 ? { color: ERROR_TEXTO } : undefined}
                     >
                       {fm(p.disponible)}
                     </span>

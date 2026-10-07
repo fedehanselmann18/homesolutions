@@ -46,19 +46,19 @@
 }
 
 .control-opcion__tile:hover:not(:disabled) {
-  border-color: var(--color-gris-claro-marca);
+  border-color: var(--color-linea-fuerte);
 }
 
 .control-opcion__tile:focus-visible {
   outline: none;
-  border-color: var(--color-terracota);
+  border-color: var(--color-oliva);
   box-shadow: var(--shadow-foco);
 }
 
 .control-opcion__tile--activa,
 .control-opcion__tile--activa:hover:not(:disabled) {
-  border-color: var(--color-terracota);
-  background: var(--color-terracota-sel);
+  border-color: var(--color-oliva);
+  background: var(--color-oliva-sel);
 }
 
 .control-opcion__tile:disabled {

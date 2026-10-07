@@ -17,14 +17,14 @@ import {
   OLIVA,
   OLIVA_TINT,
   OLIVA_OSCURO,
-  NARANJA,
-  NARANJA_TINT,
-  NARANJA_TEXTO,
-  ROJO,
-  ROJO_TINT,
-  ROJO_TEXTO,
+  ATENCION,
+  ATENCION_TINT,
+  ATENCION_TEXTO,
+  ERROR,
+  ERROR_TINT,
+  ERROR_TEXTO,
   TINTA_MUTED,
-  BASE_2,
+  RELLENO,
 } from "./colores";
 
 // Desde cuántos días una compra impaga pasa de "a pagar" a deuda vencida.
@@ -32,17 +32,17 @@ import {
 export const DIAS_DEUDA_VENCIDA = 90;
 
 const RESUELTO = { color: OLIVA, bg: OLIVA_TINT, fg: OLIVA_OSCURO };
-const ATENCION = { color: NARANJA, bg: NARANJA_TINT, fg: NARANJA_TEXTO };
-const PROBLEMA = { color: ROJO, bg: ROJO_TINT, fg: ROJO_TEXTO };
-const NEUTRO = { color: TINTA_MUTED, bg: BASE_2, fg: TINTA_MUTED };
+const PAR_ATENCION = { color: ATENCION, bg: ATENCION_TINT, fg: ATENCION_TEXTO };
+const PAR_PROBLEMA = { color: ERROR, bg: ERROR_TINT, fg: ERROR_TEXTO };
+const PAR_NEUTRO = { color: TINTA_MUTED, bg: RELLENO, fg: TINTA_MUTED };
 
 const ESTADO_PAGO = {
-  pendiente: { ...ATENCION, label: "A pagar", icono: Wallet },
+  pendiente: { ...PAR_ATENCION, label: "A pagar", icono: Wallet },
   pagado: { ...RESUELTO, label: "Pagado", icono: Wallet },
 };
 
 const ESTADO_ENVIO = {
-  pedido: { ...ATENCION, label: "Sin entregar", icono: Truck },
+  pedido: { ...PAR_ATENCION, label: "Sin entregar", icono: Truck },
   entregado: { ...RESUELTO, label: "Entregado", icono: Truck },
 };
 
@@ -54,11 +54,11 @@ const CONDICION_PAGO = {
 };
 
 export function getEstadoPago(estado) {
-  return ESTADO_PAGO[estado] ?? { ...NEUTRO, label: estado, icono: null };
+  return ESTADO_PAGO[estado] ?? { ...PAR_NEUTRO, label: estado, icono: null };
 }
 
 export function getEstadoEnvio(estado) {
-  return ESTADO_ENVIO[estado] ?? { ...NEUTRO, label: estado, icono: null };
+  return ESTADO_ENVIO[estado] ?? { ...PAR_NEUTRO, label: estado, icono: null };
 }
 
 /**
@@ -69,7 +69,7 @@ export function getEstadoEnvio(estado) {
 export function getEstadoPagoConAntiguedad(estado, dias) {
   const base = getEstadoPago(estado);
   if (estado !== "pendiente" || dias == null) return base;
-  if (dias >= DIAS_DEUDA_VENCIDA) return { ...base, ...PROBLEMA, label: `${dias} días sin pagar` };
+  if (dias >= DIAS_DEUDA_VENCIDA) return { ...base, ...PAR_PROBLEMA, label: `${dias} días sin pagar` };
   return base;
 }
 

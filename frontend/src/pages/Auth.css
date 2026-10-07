@@ -8,7 +8,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--color-base-2);
+  background: var(--color-relleno);
   font-family: var(--font-ui);
   padding: var(--space-4);
 }
@@ -51,7 +51,7 @@
 .auth-panel__barra {
   width: 40px;
   height: 3px;
-  background: var(--color-terracota);
+  background: var(--color-oliva);
   border-radius: var(--radius-pill);
 }
 
@@ -131,7 +131,7 @@
 
 .auth-campo--error input,
 .auth-campo--error select {
-  border-color: var(--color-oxido);
+  border-color: var(--color-error);
   background: var(--color-superficie);
 }
 
@@ -143,8 +143,8 @@
 .auth-panel__error {
   margin: 0;
   font-size: var(--text-sm);
-  color: var(--color-oxido);
-  background: var(--color-oxido-tint);
+  color: var(--color-error);
+  background: var(--color-error-tint);
   border-radius: var(--radius-sm);
   padding: var(--space-2) var(--space-3);
 }
@@ -161,7 +161,7 @@
 .auth-panel__link {
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--color-musgo-dark);
+  color: var(--color-exito-dark);
   text-decoration: none;
 }
 
@@ -245,6 +245,6 @@
 }
 
 .auth-panel__toggle:hover {
-  color: var(--color-musgo-dark);
+  color: var(--color-exito-dark);
   text-decoration: underline;
 }

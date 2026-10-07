@@ -44,7 +44,7 @@
   height: 32px;
   flex-shrink: 0;
   border-radius: var(--radius-md);
-  background: var(--color-base-2);
+  background: var(--color-relleno);
   color: var(--color-tinta);
 }
 
@@ -179,7 +179,7 @@
   align-items: center;
   gap: var(--space-1-5);
   font-size: var(--text-sm);
-  color: var(--color-oxido-texto);
+  color: var(--color-error-texto);
 }
 
 .shell__footer-acciones {
