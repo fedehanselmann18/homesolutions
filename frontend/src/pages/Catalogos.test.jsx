@@ -65,17 +65,23 @@ describe("Catalogos", () => {
       ["Categorías de gasto", "Flete"],
       ["Categorías de producto", "Cables"],
     ]) {
-      await userEvent.click(screen.getByRole("tab", { name: tab }));
+      await userEvent.click(screen.getByRole("tab", { name: new RegExp(`^${tab}`) }));
       expect(screen.getByText(nombre)).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /nuev[oa]|editar|eliminar/i })).toBeNull();
     }
   });
 
-  it("muestra el tipo de la categoría de producto como badge", async () => {
+  it("muestra el tipo de la categoría de producto, como dato y no como estado", async () => {
     renderCatalogos();
-    await userEvent.click(screen.getByRole("tab", { name: "Categorías de producto" }));
+    await userEvent.click(screen.getByRole("tab", { name: /^Categorías de producto/ }));
 
-    expect(screen.getByText("Materiales")).toHaveClass("badge");
+    expect(screen.getByText("Materiales")).toHaveClass("seccion-catalogo__tipo");
+  });
+
+  it("cada pestaña cuenta lo que tiene", () => {
+    renderCatalogos();
+    expect(screen.getByRole("tab", { name: "Impuestos 1" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Cotizaciones 1" })).toBeInTheDocument();
   });
 
   it("un borrado rechazado con 400 muestra el motivo real del backend", async () => {
@@ -98,7 +104,7 @@ describe("Catalogos", () => {
 
     expect(screen.getByRole("alert")).toHaveTextContent("No se pudieron cargar los impuestos.");
 
-    await userEvent.click(screen.getByRole("tab", { name: "Categorías de gasto" }));
+    await userEvent.click(screen.getByRole("tab", { name: /^Categorías de gasto/ }));
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.getByText("Todavía no hay categorías de gasto cargadas.")).toBeInTheDocument();
   });
@@ -106,7 +112,7 @@ describe("Catalogos", () => {
   describe("pestaña Cotizaciones", () => {
     it("lista el dólar de cada día con su tipo y su valor con centavos", async () => {
       renderCatalogos();
-      await userEvent.click(screen.getByRole("tab", { name: "Cotizaciones" }));
+      await userEvent.click(screen.getByRole("tab", { name: /^Cotizaciones/ }));
 
       expect(screen.getByText("01/10/2026")).toBeInTheDocument();
       expect(screen.getByText("Blue")).toBeInTheDocument();
@@ -118,7 +124,7 @@ describe("Catalogos", () => {
     it("el alta manda fecha, tipo y valor numérico", async () => {
       crearCotizacion.mockResolvedValue({});
       renderCatalogos();
-      await userEvent.click(screen.getByRole("tab", { name: "Cotizaciones" }));
+      await userEvent.click(screen.getByRole("tab", { name: /^Cotizaciones/ }));
       await userEvent.click(screen.getByRole("button", { name: /nueva cotización/i }));
 
       const dialogo = screen.getByRole("dialog");
@@ -135,7 +141,7 @@ describe("Catalogos", () => {
     it("el rol lectura ve las cotizaciones sin controles de escritura", async () => {
       rolActual = "lectura";
       renderCatalogos();
-      await userEvent.click(screen.getByRole("tab", { name: "Cotizaciones" }));
+      await userEvent.click(screen.getByRole("tab", { name: /^Cotizaciones/ }));
 
       expect(screen.getByText("01/10/2026")).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /nueva|editar|eliminar/i })).toBeNull();

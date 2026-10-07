@@ -31,8 +31,20 @@ export function Tabs({ tabs, activa, onCambiar, etiqueta }) {
         >
           {Icono && <Icono size={15} strokeWidth={1.75} aria-hidden="true" />}
           {label}
-          {contador != null && <span className="tabs__contador">{contador}</span>}
-          {badge != null && badge !== 0 && <span className="tabs__badge">{badge}</span>}
+          {/* El espacio es para el nombre accesible ("Catálogo 7" y no
+              "Catálogo7"); en el flex del botón no se dibuja. */}
+          {contador != null && (
+            <>
+              {" "}
+              <span className="tabs__contador">{contador}</span>
+            </>
+          )}
+          {badge != null && badge !== 0 && (
+            <>
+              {" "}
+              <span className="tabs__badge">{badge}</span>
+            </>
+          )}
         </button>
       ))}
     </div>

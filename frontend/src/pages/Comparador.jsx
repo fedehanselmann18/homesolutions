@@ -12,10 +12,27 @@ import { EstadoVacio } from "../components/shared/EstadoVacio";
 import { PageHeader } from "../components/shared/PageHeader";
 import { Buscador } from "../components/shared/Buscador";
 import { EstadoError } from "../components/shared/EstadoError";
+import { FiltrosSegmentados } from "../components/shared/FiltrosSegmentados";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 import "./Comparador.css";
-import { TINTE_PASTILLA } from "../constants/tipoMovimiento";
+
+const OPCIONES_TIPO = [
+  { key: "", label: "Todos" },
+  ...Object.entries(TIPOS_PRODUCTO).map(([clave, t]) => ({ key: clave, label: t.label })),
+];
+
+// El tipo de un producto es un dato, no un estado: ícono + texto tenue, como
+// en el catálogo de un proveedor.
+function TipoProducto({ tipo }) {
+  const info = getTipoProducto(tipo);
+  return (
+    <span className="comparador-tipo">
+      {info.icono && <info.icono size={14} strokeWidth={1.75} aria-hidden="true" />}
+      {info.label}
+    </span>
+  );
+}
 
 // Comparador de precios: dos vistas sobre el mismo catálogo de productos.
 // 1) "Mismo producto" -> solo marca+modelo cargados en 2+ proveedores, para
@@ -73,6 +90,20 @@ export function Comparador() {
   if (cargando || cargandoProveedores) return <Cargando texto="Cargando comparador..." />;
   if (error) return <EstadoError mensaje="No se pudo cargar el comparador." grande />;
 
+  // Los contadores de los chips de tipo respetan la búsqueda y la categoría:
+  // cuentan lo que quedaría al elegir cada uno.
+  const sinFiltroTipo = filtrarProductos(productos, proveedores, {
+    categoriaId: categoriaFiltro,
+    tipo: "",
+    texto: busqueda,
+  });
+  const contadoresTipo = Object.fromEntries(
+    OPCIONES_TIPO.map(({ key }) => [
+      key,
+      key ? sinFiltroTipo.filter((p) => p.tipo === key).length : sinFiltroTipo.length,
+    ])
+  );
+
   return (
     <div className="comparador-container">
       <PageHeader
@@ -81,152 +112,123 @@ export function Comparador() {
       />
 
       <section className="comparador-seccion">
-        <h2 className="comparador-seccion-titulo">Mismo producto, distintos proveedores</h2>
+        <h2 className="comparador-seccion-titulo">
+          Mismo producto, distintos proveedores
+          {grupos.length > 0 && <span className="comparador-seccion-cantidad">{grupos.length}</span>}
+        </h2>
 
         {grupos.length === 0 ? (
-          <EstadoVacio
-            mensaje="Todavía no hay ningún producto con la misma marca y modelo cargado en más de un proveedor."
-            grande
-          />
+          <EstadoVacio mensaje="Todavía no hay ningún producto con la misma marca y modelo cargado en más de un proveedor." />
         ) : (
           <div className="comparador-grupos">
-            {grupos.map((grupo) => {
-              const tipo = getTipoProducto(grupo.tipo);
-              return (
-                <article key={grupo.clave} className="comparador-grupo">
-                  <div className="comparador-grupo-header">
-                    <div>
-                      <h3 className="comparador-grupo-nombre">
-                        {grupo.marca} {grupo.modelo}
-                      </h3>
-                      <div className="comparador-grupo-chips">
-                        <span
-                          className="badge"
-                          style={{
-                            color: tipo.color,
-                            backgroundColor: `${tipo.color}${TINTE_PASTILLA}`,
-                          }}
-                        >
-                          {tipo.icono && <tipo.icono size={12} strokeWidth={2.25} />} {tipo.label}
+            {grupos.map((grupo) => (
+              <article key={grupo.clave} className="comparador-grupo">
+                <header className="comparador-grupo__header">
+                  <div className="comparador-grupo__titulo">
+                    <h3 className="comparador-grupo__nombre">
+                      {grupo.marca} {grupo.modelo}
+                    </h3>
+                    <span className="comparador-grupo__meta">
+                      <TipoProducto tipo={grupo.tipo} />
+                      {grupo.categorias.map((c) => (
+                        <span key={c.id} className="badge badge--neutro">
+                          {c.nombre}
                         </span>
-                        {grupo.categorias.map((c) => (
-                          <span key={c.id} className="badge badge--neutro">
-                            {c.nombre}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    {grupo.ahorroPct > 0 && (
-                      <span className="badge badge--exito comparador-ahorro">
-                        <TrendingDown size={14} strokeWidth={2} />
-                        {grupo.ahorroPct.toFixed(0)}% de diferencia
-                      </span>
-                    )}
-                  </div>
-
-                  <table className="comparador-tabla">
-                    <thead>
-                      <tr>
-                        <th>Proveedor</th>
-                        <th>Precio</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {grupo.ofertas.map((oferta, i) => (
-                        <tr key={oferta.id} className={i === 0 ? "comparador-fila-mejor" : ""}>
-                          <td>
-                            {oferta.proveedorNombre}
-                            {i === 0 && (
-                              <span className="badge badge--sm badge--exito comparador-tag-mejor">
-                                Mejor precio
-                              </span>
-                            )}
-                          </td>
-                          <td>{formatMoneda(oferta.precio)}</td>
-                        </tr>
                       ))}
-                    </tbody>
-                  </table>
-                </article>
-              );
-            })}
+                    </span>
+                  </div>
+                  {grupo.ahorroPct > 0 && (
+                    <span className="comparador-grupo__ahorro">
+                      <TrendingDown size={14} strokeWidth={1.75} aria-hidden="true" />
+                      {grupo.ahorroPct.toFixed(0)}% de diferencia
+                    </span>
+                  )}
+                </header>
+
+                <ul className="comparador-ofertas">
+                  {grupo.ofertas.map((oferta, i) => (
+                    <li
+                      key={oferta.id}
+                      className={`comparador-oferta${i === 0 ? " comparador-oferta--mejor" : ""}`}
+                    >
+                      <span className="comparador-oferta__proveedor">
+                        {oferta.proveedorNombre}
+                        {i === 0 && <span className="badge badge--sm badge--marca">Mejor precio</span>}
+                      </span>
+                      <span className="comparador-oferta__precio cifra">
+                        {formatMoneda(oferta.precio)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </article>
+            ))}
           </div>
         )}
       </section>
 
       <section className="comparador-seccion">
-        <h2 className="comparador-seccion-titulo">Explorar por categoría</h2>
-
-        <div className="comparador-filtros">
-          <Buscador
-            valor={busqueda}
-            onCambiar={setBusqueda}
-            placeholder="Buscar por marca o modelo…"
-            etiqueta="Buscar producto"
-          />
-
-          <select
-            className="campo comparador-filtros__select"
-            value={categoriaFiltro}
-            onChange={(e) => setCategoriaFiltro(e.target.value)}
-          >
-            <option value="">Todas las categorías</option>
-            {categorias.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.nombre}
-              </option>
-            ))}
-          </select>
-
-          <select value={tipoFiltro} onChange={(e) => setTipoFiltro(e.target.value)}>
-            <option value="">Todos los tipos</option>
-            {Object.entries(TIPOS_PRODUCTO).map(([clave, t]) => (
-              <option key={clave} value={clave}>
-                {t.label}
-              </option>
-            ))}
-          </select>
+        <div className="comparador-seccion__header">
+          <h2 className="comparador-seccion-titulo">
+            Todo el catálogo
+            <span className="comparador-seccion-cantidad">{filtrados.length}</span>
+          </h2>
+          <div className="comparador-filtros">
+            <select
+              className="campo campo--sm comparador-filtros__select"
+              value={categoriaFiltro}
+              onChange={(e) => setCategoriaFiltro(e.target.value)}
+              aria-label="Filtrar por categoría"
+            >
+              <option value="">Todas las categorías</option>
+              {categorias.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.nombre}
+                </option>
+              ))}
+            </select>
+            <Buscador
+              valor={busqueda}
+              onCambiar={setBusqueda}
+              placeholder="Buscar marca o modelo"
+              etiqueta="Buscar producto"
+              ancho="fijo"
+            />
+          </div>
         </div>
+
+        <FiltrosSegmentados
+          opciones={OPCIONES_TIPO}
+          activa={tipoFiltro}
+          contadores={contadoresTipo}
+          etiqueta="Filtrar por tipo"
+          onCambiar={setTipoFiltro}
+        />
 
         {filtrados.length === 0 ? (
           <EstadoVacio mensaje="Ningún producto coincide con el filtro." />
         ) : (
-          <div className="comparador-tabla-wrap">
-            <table className="comparador-tabla comparador-tabla--ancha">
-              <thead>
-                <tr>
-                  <th>Producto</th>
-                  <th>Tipo</th>
-                  <th>Proveedor</th>
-                  <th>Precio</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtrados.map((producto) => {
-                  const tipo = getTipoProducto(producto.tipo);
-                  return (
-                    <tr key={producto.id}>
-                      <td>
-                        {producto.marca} {producto.modelo}
-                      </td>
-                      <td>
-                        <span
-                          className="badge"
-                          style={{
-                            color: tipo.color,
-                            backgroundColor: `${tipo.color}${TINTE_PASTILLA}`,
-                          }}
-                        >
-                          {tipo.icono && <tipo.icono size={12} strokeWidth={2.25} />} {tipo.label}
-                        </span>
-                      </td>
-                      <td>{producto.proveedorNombre}</td>
-                      <td>{formatMoneda(producto.precio)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+          <div className="planilla comparador-catalogo">
+            <div className="planilla__header">
+              <span>Producto</span>
+              <span>Tipo</span>
+              <span>Proveedor</span>
+              <span className="comparador-catalogo__precio">Precio</span>
+            </div>
+            {filtrados.map((producto) => (
+              <div key={producto.id} className="planilla__fila">
+                <span className="comparador-catalogo__nombre">
+                  {producto.marca} {producto.modelo}
+                </span>
+                <span className="comparador-catalogo__tipo">
+                  <TipoProducto tipo={producto.tipo} />
+                </span>
+                <span className="comparador-catalogo__proveedor">{producto.proveedorNombre}</span>
+                <span className="comparador-catalogo__precio cifra">
+                  {formatMoneda(producto.precio)}
+                </span>
+              </div>
+            ))}
           </div>
         )}
       </section>

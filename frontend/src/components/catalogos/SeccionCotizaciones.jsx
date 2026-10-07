@@ -109,7 +109,7 @@ export function SeccionCotizaciones() {
           <span>Fecha</span>
           <span>Dólar</span>
           <span className="seccion-cotizaciones__col-valor">$ por US$</span>
-          {esAdmin && <span className="seccion-catalogo__col-acciones">Acciones</span>}
+          {esAdmin && <span />}
         </div>
 
         {cotizaciones.map((c) => (
@@ -120,10 +120,10 @@ export function SeccionCotizaciones() {
               {formatCotizacion(c.valor)}
             </span>
             {esAdmin && (
-              <span className="seccion-catalogo__col-acciones">
+              <span className="acciones seccion-catalogo__col-acciones">
                 <button
                   type="button"
-                  className="btn-icono btn-icono--sm btn-icono--contorno"
+                  className="btn-icono btn-icono--sm"
                   onClick={() => {
                     setEditando(c);
                     setModalAbierto(true);
@@ -131,16 +131,16 @@ export function SeccionCotizaciones() {
                   aria-label={`Editar ${describir(c)}`}
                   title="Editar"
                 >
-                  <Pencil size={14} strokeWidth={2} aria-hidden="true" />
+                  <Pencil aria-hidden="true" />
                 </button>
                 <button
                   type="button"
-                  className="btn-icono btn-icono--sm btn-icono--contorno btn-icono--peligro"
+                  className="btn-icono btn-icono--sm btn-icono--peligro"
                   onClick={() => setAEliminar(c)}
                   aria-label={`Eliminar ${describir(c)}`}
                   title="Eliminar"
                 >
-                  <Trash2 size={14} strokeWidth={2} aria-hidden="true" />
+                  <Trash2 aria-hidden="true" />
                 </button>
               </span>
             )}
