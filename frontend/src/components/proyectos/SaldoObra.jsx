@@ -55,8 +55,8 @@ export function SaldoObra({ compras, gastos, cobros, hoy }) {
           </span>
           <span className="saldo-obra__resumen">
             Cobrado {formatMoneda(resumen.cobradoUsd, "usd")} · Gastado{" "}
-            {formatMoneda(resumen.gastadoArs)} (≈ {formatMoneda(resumen.gastadoUsd, "usd")}) en
-            los últimos {meses} meses
+            {formatMoneda(resumen.gastadoArs)} (≈ {formatMoneda(resumen.gastadoUsd, "usd")}) en los
+            últimos {meses} meses
           </span>
         </div>
 

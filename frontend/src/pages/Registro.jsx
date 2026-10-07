@@ -102,20 +102,21 @@ export function Registro() {
 
           <label className="auth-campo">
             <span>Nombre</span>
-            <select className="campo"
-                value={nombreUsuario}
-                onChange={(e) => setNombreUsuario(e.target.value)}
-                disabled={cargandoNombres}
-              >
-                <option value="" disabled>
-                  {cargandoNombres ? "Cargando..." : "Seleccioná tu nombre"}
+            <select
+              className="campo"
+              value={nombreUsuario}
+              onChange={(e) => setNombreUsuario(e.target.value)}
+              disabled={cargandoNombres}
+            >
+              <option value="" disabled>
+                {cargandoNombres ? "Cargando..." : "Seleccioná tu nombre"}
+              </option>
+              {nombresUsuario.map((nombre) => (
+                <option key={nombre} value={nombre}>
+                  {nombre}
                 </option>
-                {nombresUsuario.map((nombre) => (
-                  <option key={nombre} value={nombre}>
-                    {nombre}
-                  </option>
-                ))}
-              </select>
+              ))}
+            </select>
           </label>
 
           {!cargandoNombres && nombresUsuario.length === 0 && (
@@ -152,7 +153,11 @@ export function Registro() {
 
           <ErrorCampo texto={error} />
 
-          <button type="submit" className="btn btn-primary btn--lg auth-panel__submit" disabled={enviando}>
+          <button
+            type="submit"
+            className="btn btn-primary btn--lg auth-panel__submit"
+            disabled={enviando}
+          >
             {enviando ? (
               <>
                 <LogoCargando size={14} variante="blanco" />

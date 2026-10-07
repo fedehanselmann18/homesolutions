@@ -15,7 +15,9 @@ describe("ErrorBoundary", () => {
         <Rompe />
       </ErrorBoundary>
     );
-    expect(screen.getByRole("heading", { name: "Ocurrió un error inesperado" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Ocurrió un error inesperado" })
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Volver al inicio" })).toHaveClass("btn-primary");
     console.error.mockRestore();
   });

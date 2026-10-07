@@ -114,7 +114,9 @@ export function Comparador() {
       <section className="comparador-seccion">
         <h2 className="comparador-seccion-titulo">
           Mismo producto, distintos proveedores
-          {grupos.length > 0 && <span className="comparador-seccion-cantidad">{grupos.length}</span>}
+          {grupos.length > 0 && (
+            <span className="comparador-seccion-cantidad">{grupos.length}</span>
+          )}
         </h2>
 
         {grupos.length === 0 ? (
@@ -153,7 +155,9 @@ export function Comparador() {
                     >
                       <span className="comparador-oferta__proveedor">
                         {oferta.proveedorNombre}
-                        {i === 0 && <span className="badge badge--sm badge--marca">Mejor precio</span>}
+                        {i === 0 && (
+                          <span className="badge badge--sm badge--marca">Mejor precio</span>
+                        )}
                       </span>
                       <span className="comparador-oferta__precio cifra">
                         {formatMoneda(oferta.precio)}

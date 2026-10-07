@@ -23,7 +23,11 @@ export function NoAutorizado() {
         <div className="auth-panel__form auth-panel__aviso">
           <h1>No estás autorizado para ver esta página</h1>
           <p>Iniciá sesión con tu cuenta para continuar.</p>
-          <button type="button" className="btn btn-primary btn--lg" onClick={() => navigate("/login")}>
+          <button
+            type="button"
+            className="btn btn-primary btn--lg"
+            onClick={() => navigate("/login")}
+          >
             Ir al login
           </button>
         </div>

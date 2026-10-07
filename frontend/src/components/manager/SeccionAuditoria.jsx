@@ -88,32 +88,34 @@ export function SeccionAuditoria({ usuarios }) {
       <div className="manager-auditoria__filtros">
         <label className="manager-campo">
           <span>Tipo</span>
-          <select className="campo"
-              value={filtros.tipo_recurso}
-              onChange={(e) => cambiarFiltro("tipo_recurso", e.target.value)}
-            >
-              <option value="">Todos</option>
-              {tipos.map((tipo) => (
-                <option key={tipo} value={tipo}>
-                  {tipo}
-                </option>
-              ))}
-            </select>
+          <select
+            className="campo"
+            value={filtros.tipo_recurso}
+            onChange={(e) => cambiarFiltro("tipo_recurso", e.target.value)}
+          >
+            <option value="">Todos</option>
+            {tipos.map((tipo) => (
+              <option key={tipo} value={tipo}>
+                {tipo}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="manager-campo">
           <span>Quién</span>
-          <select className="campo"
-              value={filtros.usuario_id}
-              onChange={(e) => cambiarFiltro("usuario_id", e.target.value)}
-            >
-              <option value="">Todos</option>
-              {usuarios.map((usuario) => (
-                <option key={usuario.id} value={usuario.id}>
-                  {usuario.nombre_usuario}
-                </option>
-              ))}
-            </select>
+          <select
+            className="campo"
+            value={filtros.usuario_id}
+            onChange={(e) => cambiarFiltro("usuario_id", e.target.value)}
+          >
+            <option value="">Todos</option>
+            {usuarios.map((usuario) => (
+              <option key={usuario.id} value={usuario.id}>
+                {usuario.nombre_usuario}
+              </option>
+            ))}
+          </select>
         </label>
 
         <label className="manager-campo">

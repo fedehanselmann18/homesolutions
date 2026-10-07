@@ -60,9 +60,9 @@ export function SeccionAutorizados({ autorizados, guardando, onAutorizar, onRevo
         <label className="manager-campo">
           <span>Rol</span>
           <select className="campo" value={rol} onChange={(e) => setRol(e.target.value)}>
-              <option value="lectura">Lectura</option>
-              <option value="admin">Admin</option>
-            </select>
+            <option value="lectura">Lectura</option>
+            <option value="admin">Admin</option>
+          </select>
         </label>
 
         {/* Un label vacío del mismo alto que los otros: así el botón queda a la

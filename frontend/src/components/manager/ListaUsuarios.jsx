@@ -73,57 +73,57 @@ export function ListaUsuarios({
                 </td>
                 <td className="manager-tabla__acciones-col">
                   <div className="manager-tabla__acciones">
-                  <button
-                    type="button"
-                    className="btn btn--sm btn-secondary"
-                    onClick={() => onResetear(usuario)}
-                    title="Asignarle una contraseña nueva"
-                  >
-                    <KeyRound size={14} strokeWidth={2} />
-                    Contraseña
-                  </button>
+                    <button
+                      type="button"
+                      className="btn btn--sm btn-secondary"
+                      onClick={() => onResetear(usuario)}
+                      title="Asignarle una contraseña nueva"
+                    >
+                      <KeyRound size={14} strokeWidth={2} />
+                      Contraseña
+                    </button>
 
-                  <button
-                    type="button"
-                    className="btn btn--sm btn-secondary"
-                    onClick={() => onCambiarRol(usuario)}
-                    title={esAdmin ? "Pasarlo a solo lectura" : "Darle permisos de admin"}
-                  >
-                    {esAdmin ? (
-                      <ShieldOff size={14} strokeWidth={2} />
-                    ) : (
-                      <ShieldCheck size={14} strokeWidth={2} />
-                    )}
-                    {esAdmin ? "Pasar a lectura" : "Hacer admin"}
-                  </button>
+                    <button
+                      type="button"
+                      className="btn btn--sm btn-secondary"
+                      onClick={() => onCambiarRol(usuario)}
+                      title={esAdmin ? "Pasarlo a solo lectura" : "Darle permisos de admin"}
+                    >
+                      {esAdmin ? (
+                        <ShieldOff size={14} strokeWidth={2} />
+                      ) : (
+                        <ShieldCheck size={14} strokeWidth={2} />
+                      )}
+                      {esAdmin ? "Pasar a lectura" : "Hacer admin"}
+                    </button>
 
-                  <button
-                    type="button"
-                    className="btn btn--sm btn-secondary"
-                    onClick={() => onCerrarSesion(usuario)}
-                    title="Cortarle la sesión sin cambiarle la contraseña"
-                  >
-                    <LogOut size={14} strokeWidth={2} />
-                    Cerrar sesión
-                  </button>
+                    <button
+                      type="button"
+                      className="btn btn--sm btn-secondary"
+                      onClick={() => onCerrarSesion(usuario)}
+                      title="Cortarle la sesión sin cambiarle la contraseña"
+                    >
+                      <LogOut size={14} strokeWidth={2} />
+                      Cerrar sesión
+                    </button>
 
-                  <button
-                    type="button"
-                    className={`btn btn--sm ${usuario.activo ? "btn-peligro" : "btn-secondary"}`}
-                    onClick={() => onToggleActivo(usuario)}
-                    title={
-                      usuario.activo
-                        ? "Bloquearle el acceso sin borrar la cuenta"
-                        : "Devolverle el acceso"
-                    }
-                  >
-                    {usuario.activo ? (
-                      <UserX size={14} strokeWidth={2} />
-                    ) : (
-                      <UserCheck size={14} strokeWidth={2} />
-                    )}
-                    {usuario.activo ? "Desactivar" : "Reactivar"}
-                  </button>
+                    <button
+                      type="button"
+                      className={`btn btn--sm ${usuario.activo ? "btn-peligro" : "btn-secondary"}`}
+                      onClick={() => onToggleActivo(usuario)}
+                      title={
+                        usuario.activo
+                          ? "Bloquearle el acceso sin borrar la cuenta"
+                          : "Devolverle el acceso"
+                      }
+                    >
+                      {usuario.activo ? (
+                        <UserX size={14} strokeWidth={2} />
+                      ) : (
+                        <UserCheck size={14} strokeWidth={2} />
+                      )}
+                      {usuario.activo ? "Desactivar" : "Reactivar"}
+                    </button>
                   </div>
                 </td>
               </tr>

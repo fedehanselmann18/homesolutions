@@ -69,7 +69,8 @@ export function getEstadoEnvio(estado) {
 export function getEstadoPagoConAntiguedad(estado, dias) {
   const base = getEstadoPago(estado);
   if (estado !== "pendiente" || dias == null) return base;
-  if (dias >= DIAS_DEUDA_VENCIDA) return { ...base, ...PAR_PROBLEMA, label: `${dias} días sin pagar` };
+  if (dias >= DIAS_DEUDA_VENCIDA)
+    return { ...base, ...PAR_PROBLEMA, label: `${dias} días sin pagar` };
   return base;
 }
 

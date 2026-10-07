@@ -110,11 +110,7 @@ export function ControlOpcion({
           );
         })}
       </div>
-      {error ? (
-        <ErrorCampo texto={error} />
-      ) : (
-        hint && <p className="campo-hint">{hint}</p>
-      )}
+      {error ? <ErrorCampo texto={error} /> : hint && <p className="campo-hint">{hint}</p>}
     </div>
   );
 }

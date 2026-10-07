@@ -1,12 +1,7 @@
 import { useState } from "react";
 import { DollarSign, Percent, Receipt, Tag } from "lucide-react";
 
-import {
-  useCategorias,
-  useCategoriasGasto,
-  useCotizaciones,
-  useImpuestos,
-} from "../hooks/queries";
+import { useCategorias, useCategoriasGasto, useCotizaciones, useImpuestos } from "../hooks/queries";
 import { queryKeys } from "../lib/queryKeys";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { crearImpuesto, actualizarImpuesto, eliminarImpuesto } from "../services/impuestosService";

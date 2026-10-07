@@ -94,20 +94,21 @@ export function Login() {
                 placeholder="Nombre de usuario"
               />
             ) : (
-              <select className="campo"
-                  value={nombreUsuario}
-                  onChange={(e) => setNombreUsuario(e.target.value)}
-                  disabled={cargandoUsuarios}
-                >
-                  <option value="" disabled>
-                    {cargandoUsuarios ? "Cargando..." : "Seleccioná tu usuario"}
+              <select
+                className="campo"
+                value={nombreUsuario}
+                onChange={(e) => setNombreUsuario(e.target.value)}
+                disabled={cargandoUsuarios}
+              >
+                <option value="" disabled>
+                  {cargandoUsuarios ? "Cargando..." : "Seleccioná tu usuario"}
+                </option>
+                {nombresUsuario.map((nombre) => (
+                  <option key={nombre} value={nombre}>
+                    {nombre}
                   </option>
-                  {nombresUsuario.map((nombre) => (
-                    <option key={nombre} value={nombre}>
-                      {nombre}
-                    </option>
-                  ))}
-                </select>
+                ))}
+              </select>
             )}
           </label>
 
@@ -136,7 +137,11 @@ export function Login() {
 
           <ErrorCampo texto={error} />
 
-          <button type="submit" className="btn btn-primary btn--lg auth-panel__submit" disabled={enviando}>
+          <button
+            type="submit"
+            className="btn btn-primary btn--lg auth-panel__submit"
+            disabled={enviando}
+          >
             {enviando ? (
               <>
                 <LogoCargando size={14} variante="blanco" />
