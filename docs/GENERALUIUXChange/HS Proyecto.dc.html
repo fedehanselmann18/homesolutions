@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#efeee9;font-family:'Public Sans',sans-serif;color:#000000;-webkit-font-smoothing:antialiased}a{color:#6f7f45}a:hover{color:#000000}button{font-family:inherit}</style>
+</helmet>
+
+<section style="display:flex;flex-direction:column;gap:20px;padding:40px 40px 20px">
+<div style="display:flex;flex-direction:column;gap:6px;max-width:900px">
+<span style="font-size:22px;font-weight:700">Proyecto · Fases</span>
+<span style="font-size:14px;color:#5a5a58;line-height:1.5;text-wrap:pretty">Las fases cerradas se atenúan en vez de tacharse. Editar, borrar y reordenar aparecen al pasar el mouse por la fila (en 4a se ve la fila 2 con el mouse encima).</span>
+</div>
+<div style="display:flex;gap:40px;align-items:flex-start">
+
+<div id="4a" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">4a</span><span style="font-size:15px;font-weight:600">Tabla con avance</span></div>
+<div style="width:1280px;height:860px;background:#ffffff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:grid;grid-template-columns:232px minmax(0,1fr);overflow:hidden">
+<dc-import name="HSSidebar" active="Proyectos" project="Edificio Olleros" hint-size="232px,860px"></dc-import>
+<main style="display:flex;flex-direction:column;gap:28px;padding:32px 40px;min-width:0">
+<dc-import name="HSProyectoHeader" tab="Fases" hint-size="100%,150px"></dc-import>
+<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:14px;color:#5a5a58">Gastado en el proyecto</span>
+<span style="font-size:24px;font-weight:700;letter-spacing:-0.01em;font-variant-numeric:tabular-nums">US$ 8.684 <span style="font-size:14px;font-weight:500;color:#5a5a58">de US$ 14.634 · 59,3%</span></span>
+</div>
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:none;border-radius:6px;background:#6f7f45;font-size:13px;font-weight:600;color:#ffffff;cursor:pointer">{{ i.plus }}Nueva fase</button>
+</div>
+<div style="display:flex;flex-direction:column">
+<div style="display:grid;grid-template-columns:36px minmax(0,1fr) 132px 104px 240px 104px;gap:20px;align-items:center;height:36px;padding:0 8px;border-bottom:1px solid #e6e4df;font-size:12px;font-weight:600;color:#5a5a58">
+<span>#</span><span>Fase</span><span>Estado</span><span style="text-align:right">Gastado</span><span>% del presupuesto</span><span></span>
+</div>
+<sc-for list="{{ fases }}" as="f" hint-placeholder-count="4">
+<div onMouseEnter="{{ f.enter }}" style="display:grid;grid-template-columns:36px minmax(0,1fr) 132px 104px 240px 104px;gap:20px;align-items:center;min-height:68px;padding:10px 8px;border-bottom:1px solid #efeee9;background:{{ f.rowBg }};cursor:pointer">
+<span style="font-size:14px;color:#8c8b86;font-variant-numeric:tabular-nums">{{ f.n }}</span>
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font-size:15px;font-weight:600;color:{{ f.ink }}">{{ f.name }}</span><span style="font-size:13px;color:{{ f.sub }}">{{ f.desc }}</span></div>
+<span style="justify-self:start;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;line-height:22px;padding:0 8px;border-radius:4px;background:{{ f.pbg }};color:{{ f.pfg }};border:1px solid {{ f.pbd }}">{{ f.picon }}{{ f.st }}</span>
+<span style="text-align:right;font-size:14px;font-weight:600;color:{{ f.ink }};font-variant-numeric:tabular-nums">{{ f.gasto }}</span>
+<div style="display:flex;align-items:center;gap:12px"><div style="flex:1;height:6px;border-radius:99px;background:#efeee9;overflow:hidden"><div style="height:100%;width:{{ f.w }};background:{{ f.bar }};border-radius:99px"></div></div><span style="width:44px;text-align:right;font-size:13px;color:#5a5a58;font-variant-numeric:tabular-nums">{{ f.pct }}</span></div>
+<div style="display:flex;justify-content:flex-end;align-items:center;gap:2px">
+<div style="display:flex;gap:2px;opacity:{{ f.op }}">
+<span title="Reordenar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:#5a5a58" style-hover="background:#f3f2ee">{{ i.grip }}</span>
+<span title="Editar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:#5a5a58" style-hover="background:#f3f2ee">{{ i.pencil }}</span>
+<span title="Borrar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:#5a5a58" style-hover="background:#fdecea;color:#b42318">{{ i.trash }}</span>
+</div>
+<span style="color:#8c8b86;display:flex">{{ i.chev }}</span>
+</div>
+</div>
+</sc-for>
+<div style="display:grid;grid-template-columns:36px minmax(0,1fr) 132px 104px 240px 104px;gap:20px;align-items:center;height:52px;padding:0 8px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">
+<span></span><span>Total · 4 fases</span><span></span><span style="text-align:right">US$ 8.684</span><span style="color:#5a5a58;font-weight:500">59,3% del presupuesto</span><span></span>
+</div>
+</div>
+</main>
+</div>
+</div>
+
+<div id="4b" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">4b</span><span style="font-size:15px;font-weight:600">Línea de tiempo</span></div>
+<div style="width:1280px;height:860px;background:#ffffff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:grid;grid-template-columns:232px minmax(0,1fr);overflow:hidden">
+<dc-import name="HSSidebar" active="Proyectos" project="Edificio Olleros" hint-size="232px,860px"></dc-import>
+<main style="display:flex;flex-direction:column;gap:28px;padding:32px 40px;min-width:0">
+<dc-import name="HSProyectoHeader" tab="Fases" hint-size="100%,150px"></dc-import>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+<div style="display:flex;align-items:center;gap:16px;flex:1;max-width:560px">
+<span style="font-size:14px;color:#5a5a58;white-space:nowrap">Presupuesto usado</span>
+<div style="flex:1;height:8px;border-radius:99px;background:#efeee9;display:flex;overflow:hidden"><div style="width:4%;background:#a8b36a"></div><div style="width:36.8%;background:#a8b36a;border-left:2px solid #ffffff"></div><div style="width:18.5%;background:#6f7f45;border-left:2px solid #ffffff"></div></div>
+<span style="font-size:14px;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums">US$ 8.684 / 14.634</span>
+</div>
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:none;border-radius:6px;background:#6f7f45;font-size:13px;font-weight:600;color:#ffffff;cursor:pointer">{{ i.plus }}Nueva fase</button>
+</div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ fases }}" as="f" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:32px minmax(0,1fr);gap:16px">
+<div style="display:flex;flex-direction:column;align-items:center">
+<span style="width:28px;height:28px;box-sizing:border-box;border-radius:99px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:{{ f.cbg }};color:{{ f.cfg }};border:2px solid {{ f.cbd }}">{{ f.cnum }}</span>
+<span style="flex:1;width:2px;background:{{ f.lineC }};min-height:12px"></span>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 120px 200px 24px;gap:20px;align-items:center;padding:14px 18px;margin-bottom:12px;border-radius:10px;border:1px solid {{ f.cardBd }};background:{{ f.cardBg }};cursor:pointer" style-hover="border-color:#d9d7d2">
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+<span style="display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;color:{{ f.ink }}">{{ f.name }}<span style="font-size:12px;font-weight:500;color:{{ f.sub }}">{{ f.stShort }}</span></span>
+<span style="font-size:13px;color:{{ f.sub }}">{{ f.desc }}</span>
+</div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-variant-numeric:tabular-nums"><span style="font-size:14px;font-weight:600;color:{{ f.ink }}">{{ f.gasto }}</span><span style="font-size:12px;color:#8c8b86">gastado</span></div>
+<div style="display:flex;align-items:center;gap:10px"><div style="flex:1;height:6px;border-radius:99px;background:#efeee9;overflow:hidden"><div style="height:100%;width:{{ f.w }};background:{{ f.bar }}"></div></div><span style="width:40px;text-align:right;font-size:13px;color:#5a5a58;font-variant-numeric:tabular-nums">{{ f.pct }}</span></div>
+<span style="color:#8c8b86;display:flex">{{ i.chev }}</span>
+</div>
+</div>
+</sc-for>
+</div>
+</main>
+</div>
+</div>
+
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:20px;padding:40px 40px 20px">
+<div style="display:flex;flex-direction:column;gap:6px;max-width:900px">
+<span style="font-size:22px;font-weight:700">Proyecto · Análisis general</span>
+<span style="font-size:14px;color:#5a5a58;line-height:1.5;text-wrap:pretty">La cascada va de lo cobrado a la ganancia neta. Lo que suma va en oliva, lo que resta en gris claro y los subtotales en negro, con el valor sobre cada barra para no depender del tooltip.</span>
+</div>
+<div style="display:flex;gap:40px;align-items:flex-start">
+
+<div id="4c" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">4c</span><span style="font-size:15px;font-weight:600">Indicadores + cascada vertical</span></div>
+<div style="width:1280px;height:860px;background:#ffffff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:grid;grid-template-columns:232px minmax(0,1fr);overflow:hidden">
+<dc-import name="HSSidebar" active="Proyectos" project="Edificio Olleros" hint-size="232px,860px"></dc-import>
+<main style="display:flex;flex-direction:column;gap:32px;padding:32px 40px;min-width:0">
+<dc-import name="HSProyectoHeader" tab="Análisis" hint-size="100%,150px"></dc-import>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+<div style="display:flex;padding:3px;border-radius:8px;background:#f3f2ee">
+<span style="height:26px;padding:0 12px;display:flex;align-items:center;border-radius:6px;background:#ffffff;box-shadow:0 1px 2px rgba(0,0,0,0.08);font-size:13px;font-weight:600">US$</span>
+<span style="height:26px;padding:0 12px;display:flex;align-items:center;font-size:13px;font-weight:500;color:#5a5a58">Pesos</span>
+</div>
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;font-weight:600;color:#000000;cursor:pointer">{{ i.download }}Reporte PDF</button>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px">
+<div style="display:flex;flex-direction:column;gap:8px">
+<span style="font-size:14px;color:#5a5a58">Cobrado</span>
+<span style="font-size:28px;font-weight:700;letter-spacing:-0.02em">63,9%</span>
+<div style="height:6px;border-radius:99px;background:#efeee9;overflow:hidden"><div style="width:63.9%;height:100%;background:#6f7f45"></div></div>
+<span style="font-size:13px;color:#5a5a58;font-variant-numeric:tabular-nums">US$ 9.350 de US$ 14.634 acordados</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;padding-left:32px;border-left:1px solid #e6e4df">
+<span style="font-size:14px;color:#5a5a58">Gastado</span>
+<span style="font-size:28px;font-weight:700;letter-spacing:-0.02em">59,3%</span>
+<div style="height:6px;border-radius:99px;background:#efeee9;overflow:hidden"><div style="width:59.3%;height:100%;background:#5a5a58"></div></div>
+<span style="font-size:13px;color:#5a5a58;font-variant-numeric:tabular-nums">US$ 8.684 en gastos y compras</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;padding-left:32px;border-left:1px solid #e6e4df">
+<span style="font-size:14px;color:#5a5a58">Disponible</span>
+<span style="font-size:28px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">US$ 666</span>
+<span style="font-size:13px;color:#5a5a58">Cobros − gastos − compras</span>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:18px;font-weight:700">Rentabilidad</span><span style="font-size:14px;color:#5a5a58">De lo cobrado a la ganancia neta</span></div>
+<div style="display:grid;grid-template-columns:44px minmax(0,1fr);gap:0 12px">
+<div style="display:flex;flex-direction:column;justify-content:space-between;height:240px;margin-top:-7px;font-size:12px;color:#8c8b86;text-align:right"><span>10k</span><span>5k</span><span>0</span></div>
+<div style="height:240px;border-bottom:1px solid #d9d7d2;background-image:linear-gradient(#efeee9 1px,transparent 1px);background-size:100% 120px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:20px;padding:0 12px">
+<sc-for list="{{ steps }}" as="s" hint-placeholder-count="7">
+<div style="position:relative;height:100%">
+<div style="position:absolute;left:0;right:0;bottom:{{ s.bottom }};height:{{ s.h }};min-height:2px;background:{{ s.c }};border-radius:3px"></div>
+<span style="position:absolute;left:0;right:0;bottom:{{ s.lbl }};text-align:center;font-size:13px;font-weight:600;color:{{ s.vc }};font-variant-numeric:tabular-nums">{{ s.val }}</span>
+</div>
+</sc-for>
+</div>
+<span></span>
+<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:20px;padding:8px 12px 0;font-size:12px;color:#5a5a58;text-align:center">
+<sc-for list="{{ steps }}" as="s" hint-placeholder-count="7"><span style="font-weight:{{ s.lw }};color:{{ s.lc }}">{{ s.l }}</span></sc-for>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+
+<div id="4d" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">4d</span><span style="font-size:15px;font-weight:600">Resultado primero + cascada horizontal</span></div>
+<div style="width:1280px;height:860px;background:#ffffff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:grid;grid-template-columns:232px minmax(0,1fr);overflow:hidden">
+<dc-import name="HSSidebar" active="Proyectos" project="Edificio Olleros" hint-size="232px,860px"></dc-import>
+<main style="display:flex;flex-direction:column;gap:32px;padding:32px 40px;min-width:0">
+<dc-import name="HSProyectoHeader" tab="Análisis" hint-size="100%,150px"></dc-import>
+<div style="display:grid;grid-template-columns:280px minmax(0,1fr);gap:40px">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:14px;color:#5a5a58">Ganancia neta</span>
+<span style="font-size:36px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">US$ 286</span>
+<span style="font-size:13px;color:#5a5a58">3,1% de lo cobrado</span>
+</div>
+<div style="display:flex;flex-direction:column;border-top:1px solid #e6e4df">
+<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #efeee9;font-size:14px"><span style="color:#5a5a58">Acordado</span><span style="font-weight:600;font-variant-numeric:tabular-nums">US$ 14.634</span></div>
+<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #efeee9;font-size:14px"><span style="color:#5a5a58">Cobrado</span><span style="font-weight:600;font-variant-numeric:tabular-nums">63,9%</span></div>
+<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #efeee9;font-size:14px"><span style="color:#5a5a58">Gastado</span><span style="font-weight:600;font-variant-numeric:tabular-nums">59,3%</span></div>
+<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #efeee9;font-size:14px"><span style="color:#5a5a58">Disponible</span><span style="font-weight:600;font-variant-numeric:tabular-nums">US$ 666</span></div>
+<div style="display:flex;justify-content:space-between;padding:12px 0;font-size:14px"><span style="color:#5a5a58">Falta cobrar</span><span style="font-weight:600;font-variant-numeric:tabular-nums">US$ 5.284</span></div>
+</div>
+<div style="display:flex;gap:8px">
+<div style="display:flex;padding:3px;border-radius:8px;background:#f3f2ee">
+<span style="height:26px;padding:0 12px;display:flex;align-items:center;border-radius:6px;background:#ffffff;box-shadow:0 1px 2px rgba(0,0,0,0.08);font-size:13px;font-weight:600">US$</span>
+<span style="height:26px;padding:0 12px;display:flex;align-items:center;font-size:13px;font-weight:500;color:#5a5a58">Pesos</span>
+</div>
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;font-weight:600;color:#000000;cursor:pointer">{{ i.download }}PDF</button>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:18px;font-weight:700;padding-bottom:12px">Rentabilidad</span>
+<sc-for list="{{ steps }}" as="s" hint-placeholder-count="7">
+<div style="display:grid;grid-template-columns:120px minmax(0,1fr) 80px;gap:16px;align-items:center;height:44px;border-top:{{ s.sep }}">
+<span style="font-size:14px;font-weight:{{ s.lw }};color:{{ s.lc }}">{{ s.l }}</span>
+<div style="position:relative;height:20px;background-image:linear-gradient(90deg,#efeee9 1px,transparent 1px);background-size:20% 100%"><div style="position:absolute;top:0;bottom:0;left:{{ s.bottom }};width:{{ s.h }};min-width:2px;background:{{ s.c }};border-radius:3px"></div></div>
+<span style="text-align:right;font-size:14px;font-weight:600;color:{{ s.vc }};font-variant-numeric:tabular-nums">{{ s.val }}</span>
+</div>
+</sc-for>
+<div style="display:grid;grid-template-columns:120px minmax(0,1fr) 80px;gap:16px;font-size:12px;color:#8c8b86;padding-top:4px"><span></span><div style="display:flex;justify-content:space-between"><span>0</span><span>2k</span><span>4k</span><span>6k</span><span>8k</span><span>10k</span></div><span></span></div>
+</div>
+</div>
+</main>
+</div>
+</div>
+
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:20px;padding:40px 40px 20px">
+<div style="display:flex;flex-direction:column;gap:6px;max-width:900px">
+<span style="font-size:22px;font-weight:700">Proyecto · Seguimiento</span>
+<span style="font-size:14px;color:#5a5a58;line-height:1.5;text-wrap:pretty">Todo lo pendiente del proyecto: cobros, compras sin pagar o sin entregar, comprobantes que faltan y deudas por proveedor. Cada ítem tiene su acción para resolverlo ahí mismo.</span>
+</div>
+<div style="display:flex;gap:40px;align-items:flex-start">
+
+<div id="4e" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">4e</span><span style="font-size:15px;font-weight:600">Cards por tipo de pendiente</span></div>
+<div style="width:1280px;height:860px;background:#ffffff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:grid;grid-template-columns:232px minmax(0,1fr);overflow:hidden">
+<dc-import name="HSSidebar" active="Proyectos" project="Edificio Olleros" hint-size="232px,860px"></dc-import>
+<main style="display:flex;flex-direction:column;gap:28px;padding:32px 40px;min-width:0">
+<dc-import name="HSProyectoHeader" tab="Seguimiento" hint-size="100%,150px"></dc-import>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:start">
+<sc-for list="{{ cards }}" as="c" hint-placeholder-count="5">
+<div style="grid-column:{{ c.col }};display:flex;flex-direction:column;gap:12px;padding:18px 18px 8px;border:1px solid #e6e4df;border-radius:10px">
+<div style="display:flex;align-items:center;gap:10px">
+<span style="width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:{{ c.ibg }};color:{{ c.ifg }}">{{ c.icon }}</span>
+<div style="display:flex;flex-direction:column;flex:1;min-width:0"><span style="font-size:15px;font-weight:600">{{ c.title }}</span><span style="font-size:13px;color:#5a5a58;font-variant-numeric:tabular-nums">{{ c.total }}</span></div>
+<span style="font-size:13px;font-weight:600;color:#5a5a58">{{ c.count }}</span>
+</div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ c.items }}" as="it" hint-placeholder-count="2">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 0;border-top:1px solid #efeee9">
+<span style="font-size:14px;font-weight:500;text-wrap:pretty">{{ it.t }}</span>
+<span style="font-size:14px;font-weight:600;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums">{{ it.v }}</span>
+<span style="font-size:13px;color:#5a5a58">{{ it.s }}</span>
+<span style="justify-self:end;font-size:12px;font-weight:600;line-height:20px;padding:0 6px;border-radius:4px;background:{{ it.pbg }};color:{{ it.pfg }};white-space:nowrap">{{ it.p }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+</main>
+</div>
+</div>
+
+<div id="4f" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">4f</span><span style="font-size:15px;font-weight:600">Lista por urgencia con acción</span></div>
+<div style="width:1280px;height:860px;background:#ffffff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:grid;grid-template-columns:232px minmax(0,1fr);overflow:hidden">
+<dc-import name="HSSidebar" active="Proyectos" project="Edificio Olleros" hint-size="232px,860px"></dc-import>
+<main style="display:flex;flex-direction:column;gap:28px;padding:32px 40px;min-width:0">
+<dc-import name="HSProyectoHeader" tab="Seguimiento" hint-size="100%,150px"></dc-import>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:14px;color:#5a5a58">Por pagar a proveedores</span><span style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums">$ 10.982.100</span></div>
+<div style="display:flex;flex-direction:column;gap:4px;padding-left:32px;border-left:1px solid #e6e4df"><span style="font-size:14px;color:#5a5a58">Por cobrar</span><span style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums">US$ 5.000</span></div>
+<div style="display:flex;flex-direction:column;gap:4px;padding-left:32px;border-left:1px solid #e6e4df"><span style="font-size:14px;color:#5a5a58">Sin comprobante</span><span style="font-size:22px;font-weight:700">2</span></div>
+</div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ inbox }}" as="g" hint-placeholder-count="3">
+<div style="display:flex;align-items:center;gap:8px;height:36px;padding:0 8px;background:#f9f8f6;border-top:1px solid #e6e4df;border-bottom:1px solid #e6e4df;font-size:13px;font-weight:600"><span style="width:7px;height:7px;border-radius:99px;background:{{ g.dot }}"></span>{{ g.label }}<span style="color:#8c8b86;font-weight:500">{{ g.count }}</span></div>
+<sc-for list="{{ g.items }}" as="it" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:32px minmax(0,1fr) 150px 130px 150px;gap:16px;align-items:center;min-height:56px;padding:6px 8px;border-bottom:1px solid #efeee9">
+<span style="width:32px;height:32px;border-radius:8px;background:#f3f2ee;color:#5a5a58;display:flex;align-items:center;justify-content:center">{{ it.icon }}</span>
+<div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:14px;font-weight:600">{{ it.t }}</span><span style="font-size:13px;color:#5a5a58">{{ it.s }}</span></div>
+<span style="justify-self:start;font-size:12px;font-weight:600;line-height:22px;padding:0 8px;border-radius:4px;background:{{ it.pbg }};color:{{ it.pfg }};white-space:nowrap">{{ it.p }}</span>
+<span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">{{ it.v }}</span>
+<button style="justify-self:end;height:30px;padding:0 12px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;font-weight:600;color:#000000;cursor:pointer;white-space:nowrap" style-hover="border-color:#6f7f45;color:#6f7f45">{{ it.a }}</button>
+</div>
+</sc-for>
+</sc-for>
+</div>
+</main>
+</div>
+</div>
+
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:20px;padding:40px">
+<div style="display:flex;flex-direction:column;gap:6px;max-width:900px">
+<span style="font-size:22px;font-weight:700">Fase · Acciones</span>
+<span style="font-size:14px;color:#5a5a58;line-height:1.5;text-wrap:pretty">Los movimientos de una fase usan la misma tabla que la pestaña Acciones del proyecto. Los botones de color negro y verde de hoy pasan a ser uno principal (Nueva compra) y dos secundarios.</span>
+</div>
+<div style="display:flex;gap:40px;align-items:flex-start">
+
+<div id="4g" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">4g</span><span style="font-size:15px;font-weight:600">Encabezado + tabla a todo el ancho</span></div>
+<div style="width:1280px;height:860px;background:#ffffff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:grid;grid-template-columns:232px minmax(0,1fr);overflow:hidden">
+<dc-import name="HSSidebar" active="Proyectos" project="Edificio Olleros" hint-size="232px,860px"></dc-import>
+<main style="display:flex;flex-direction:column;gap:24px;padding:28px 40px;min-width:0">
+<div style="display:flex;flex-direction:column;gap:10px">
+<a style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5a5a58;text-decoration:none;cursor:pointer">{{ i.back }}Edificio Olleros</a>
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;align-items:center;gap:12px"><span style="font-size:13px;font-weight:600;color:#5a5a58">Fase 3</span><h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.02em">Montaje</h1><span style="font-size:12px;font-weight:600;line-height:22px;padding:0 8px;border-radius:4px;background:#6f7f45;color:#ffffff">En curso</span></div>
+<span style="font-size:14px;color:#5a5a58">Instalación de equipos en pisos 1 a 4</span>
+</div>
+<div style="display:flex;gap:8px">
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;font-weight:600;color:#000000;cursor:pointer">{{ i.check }}Terminar fase</button>
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;font-weight:600;color:#000000;cursor:pointer">{{ i.plusD }}Gasto</button>
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:none;border-radius:6px;background:#6f7f45;font-size:13px;font-weight:600;color:#ffffff;cursor:pointer">{{ i.plus }}Nueva compra</button>
+</div>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:14px;color:#5a5a58">Gastado en la fase</span><span style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums">US$ 2.714 <span style="font-size:13px;font-weight:500;color:#5a5a58">18,5% del presupuesto</span></span></div>
+<div style="display:flex;flex-direction:column;gap:4px;padding-left:32px;border-left:1px solid #e6e4df"><span style="font-size:14px;color:#5a5a58">Compras · Gastos</span><span style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums">$ 1.706.400 <span style="font-size:13px;font-weight:500;color:#5a5a58">· $ 127.500</span></span></div>
+<div style="display:flex;flex-direction:column;gap:4px;padding-left:32px;border-left:1px solid #e6e4df"><span style="font-size:14px;color:#5a5a58">Pendientes</span><span style="font-size:22px;font-weight:700">3 <span style="font-size:13px;font-weight:500;color:#9a4a07">1 sin pagar · 1 sin entregar · 1 sin comprobante</span></span></div>
+</div>
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid #e6e4df">
+<div style="display:flex;gap:24px">
+<sc-for list="{{ faseTabs }}" as="t" hint-placeholder-count="4"><span style="display:flex;align-items:center;gap:6px;height:40px;border-bottom:2px solid {{ t.line }};margin-bottom:-1px;font-size:14px;font-weight:{{ t.weight }};color:{{ t.color }};cursor:pointer">{{ t.l }}<span style="font-size:12px;color:#8c8b86">{{ t.c }}</span></span></sc-for>
+</div>
+<span style="display:flex;gap:8px;padding-bottom:6px"><button style="display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;font-weight:500;color:#000000">{{ i.filter }}Filtrar</button></span>
+</div>
+<div style="display:grid;grid-template-columns:28px minmax(0,1fr) 150px 24px 150px;gap:20px;align-items:center;height:34px;padding:0 8px;font-size:12px;font-weight:600;color:#5a5a58"><span></span><span>Movimiento</span><span>Estado</span><span>{{ i.clip }}</span><span style="text-align:right">Importe</span></div>
+<sc-for list="{{ moveGroups }}" as="g" hint-placeholder-count="2">
+<div style="display:flex;justify-content:space-between;align-items:center;height:32px;padding:0 8px;background:#f9f8f6;border-top:1px solid #e6e4df;border-bottom:1px solid #e6e4df;font-size:13px"><span style="font-weight:600">{{ g.label }}</span><span style="color:#5a5a58;font-variant-numeric:tabular-nums">{{ g.sub }}</span></div>
+<sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:28px minmax(0,1fr) 150px 24px 150px;gap:20px;align-items:start;padding:12px 8px;border-bottom:1px solid #efeee9;cursor:pointer" style-hover="background:#f9f8f6">
+<span style="width:28px;height:28px;border-radius:6px;background:#f3f2ee;color:#5a5a58;display:flex;align-items:center;justify-content:center">{{ r.icon }}</span>
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font-size:15px;font-weight:600">{{ r.title }}</span><span style="font-size:13px;color:#5a5a58">{{ r.meta }}</span></div>
+<div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px"><sc-for list="{{ r.pills }}" as="p" hint-placeholder-count="1"><span style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;line-height:22px;padding:0 8px;border-radius:4px;background:{{ p.bg }};color:{{ p.fg }};white-space:nowrap">{{ p.icon }}{{ p.label }}</span></sc-for></div>
+<span style="display:flex;padding-top:4px;color:{{ r.compColor }}">{{ r.compIcon }}</span>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-variant-numeric:tabular-nums"><span style="font-size:15px;font-weight:700;white-space:nowrap">{{ r.amount }}</span><span style="font-size:13px;color:#5a5a58">{{ r.equiv }}</span></div>
+</div>
+</sc-for>
+</sc-for>
+</div>
+</main>
+</div>
+</div>
+
+<div id="4h" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">4h</span><span style="font-size:15px;font-weight:600">Lista + panel de la fase</span></div>
+<div style="width:1280px;height:860px;background:#ffffff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:grid;grid-template-columns:232px minmax(0,1fr);overflow:hidden">
+<dc-import name="HSSidebar" active="Proyectos" project="Edificio Olleros" hint-size="232px,860px"></dc-import>
+<main style="display:flex;flex-direction:column;gap:24px;padding:28px 40px;min-width:0">
+<div style="display:flex;flex-direction:column;gap:10px">
+<a style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5a5a58;text-decoration:none;cursor:pointer">{{ i.back }}Edificio Olleros</a>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+<div style="display:flex;align-items:center;gap:12px"><span style="width:32px;height:32px;border-radius:99px;border:2px solid #6f7f45;color:#6f7f45;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;box-sizing:border-box">3</span><h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.02em">Montaje</h1><span style="font-size:14px;color:#5a5a58">Instalación de equipos en pisos 1 a 4</span></div>
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:none;border-radius:6px;background:#6f7f45;font-size:13px;font-weight:600;color:#ffffff;cursor:pointer">{{ i.plus }}Nuevo movimiento{{ i.downW }}</button>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 288px;gap:32px;align-items:start">
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;gap:24px;border-bottom:1px solid #e6e4df">
+<sc-for list="{{ faseTabs }}" as="t" hint-placeholder-count="4"><span style="display:flex;align-items:center;gap:6px;height:40px;border-bottom:2px solid {{ t.line }};margin-bottom:-1px;font-size:14px;font-weight:{{ t.weight }};color:{{ t.color }};cursor:pointer">{{ t.l }}<span style="font-size:12px;color:#8c8b86">{{ t.c }}</span></span></sc-for>
+</div>
+<sc-for list="{{ moveGroups }}" as="g" hint-placeholder-count="2">
+<div style="padding:16px 0 6px;font-size:12px;font-weight:600;color:#8c8b86">{{ g.label }}</div>
+<sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:6px 14px;padding:12px 0;border-bottom:1px solid #efeee9;cursor:pointer">
+<span style="grid-row:span 2;width:32px;height:32px;border-radius:8px;background:#f3f2ee;color:#5a5a58;display:flex;align-items:center;justify-content:center">{{ r.icon }}</span>
+<span style="font-size:15px;font-weight:600">{{ r.title }}</span>
+<span style="font-size:15px;font-weight:700;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums">{{ r.amount }}</span>
+<span style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;color:#5a5a58">{{ r.meta }}<span style="display:flex;color:{{ r.compColor }}">{{ r.compIcon }}</span></span>
+<span style="display:flex;gap:4px;justify-content:flex-end"><sc-for list="{{ r.pills }}" as="p" hint-placeholder-count="1"><span style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;line-height:20px;padding:0 6px;border-radius:4px;background:{{ p.bg }};color:{{ p.fg }};white-space:nowrap">{{ p.icon }}{{ p.label }}</span></sc-for></span>
+</div>
+</sc-for>
+</sc-for>
+</div>
+<aside style="display:flex;flex-direction:column;gap:20px;padding:20px;border-radius:10px;background:#f9f8f6;border:1px solid #efeee9">
+<div style="display:flex;flex-direction:column;gap:8px">
+<span style="font-size:13px;color:#5a5a58">Gastado en la fase</span>
+<span style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums">US$ 2.714</span>
+<div style="height:6px;border-radius:99px;background:#e6e4df;overflow:hidden"><div style="width:61.7%;height:100%;background:#6f7f45"></div></div>
+<span style="font-size:13px;color:#5a5a58">61,7% de US$ 4.400 asignados</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;padding-top:16px;border-top:1px solid #e6e4df;font-size:14px;font-variant-numeric:tabular-nums">
+<div style="display:flex;justify-content:space-between"><span style="color:#5a5a58">Compras</span><span style="font-weight:600">$ 1.706.400</span></div>
+<div style="display:flex;justify-content:space-between"><span style="color:#5a5a58">Gastos</span><span style="font-weight:600">$ 127.500</span></div>
+<div style="display:flex;justify-content:space-between"><span style="color:#5a5a58">Cobros</span><span style="font-weight:600">US$ 4.000</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;padding-top:16px;border-top:1px solid #e6e4df">
+<span style="font-size:14px;font-weight:700">Pendientes</span>
+<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="width:7px;height:7px;border-radius:99px;background:#d97706;flex:none"></span><span style="flex:1">Montaje y tendido · a pagar</span></div>
+<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="width:7px;height:7px;border-radius:99px;background:#d97706;flex:none"></span><span style="flex:1">Caños de cobre · sin entregar</span></div>
+<div style="display:flex;align-items:center;gap:8px;font-size:13px"><span style="width:7px;height:7px;border-radius:99px;background:#d97706;flex:none"></span><span style="flex:1">Flete · falta Factura B</span></div>
+</div>
+<button style="display:flex;align-items:center;justify-content:center;gap:6px;height:34px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;font-weight:600;color:#000000;cursor:pointer">{{ i.check }}Terminar fase</button>
+</aside>
+</div>
+</main>
+</div>
+</div>
+
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const P={
+plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
+check:'<path d="M20 6 9 17l-5-5"/>',
+shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+chev:'<path d="m9 18 6-6-6-6"/>',
+down:'<path d="m6 9 6 6 6-6"/>',
+back:'<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+pencil:'<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>',
+trash:'<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
+grip:'<circle cx="9" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="15" cy="18" r="1"/>',
+download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+filter:'<path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>',
+clip:'<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+receipt:'<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
+cart:'<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
+banknote:'<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
+truck:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62L18.3 9.38a1 1 0 0 0-.78-.38H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
+wallet:'<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+building:'<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/>'
+};
+const ic=(n,s=16,sw=1.75)=>React.createElement('svg',{width:s,height:s,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:sw,strokeLinecap:'round',strokeLinejoin:'round',style:{flex:'none',display:'block'},dangerouslySetInnerHTML:{__html:P[n]}});
+const fmt=n=>Math.round(n).toLocaleString('es-AR'),M='\u2212',TC=1350;
+const PL={ok:['#eef0e3','#4f5b30'],warn:['#fef3e2','#9a4a07'],bad:['#fdecea','#b42318'],mute:['#f3f2ee','#5a5a58']};
+const pl=(label,k,icn)=>({label,bg:PL[k][0],fg:PL[k][1],icon:icn?ic(icn,12,2):null});
+const FASES=[
+{n:'01',name:'Ingeniería y cómputo',desc:'Cálculo de cargas térmicas y selección de equipos',st:'Auditada',g:590,p:4.0,s:'done'},
+{n:'02',name:'Compra de equipos',desc:'Splits inverter y ventilación',st:'Terminada',g:5380,p:36.8,s:'done'},
+{n:'03',name:'Montaje',desc:'Instalación de equipos en pisos 1 a 4',st:'En curso',g:2714,p:18.5,s:'cur'},
+{n:'04',name:'Puesta en marcha',desc:'Carga de gas, pruebas y capacitación al cliente',st:'Por empezar',g:0,p:0,s:'todo'}];
+const MAX=10000;
+const STEPS=[['Cobrado',0,9350,'pos','9.350'],['Gastos',8166,9350,'neg',M+'1.184'],['Compras',666,8166,'neg',M+'7.500'],['Notas C/D',666,666,'neg','0'],['Margen bruto',0,666,'sub','666'],['Impuestos',286,666,'neg',M+'380'],['Ganancia neta',0,286,'net','286']];
+const SC={pos:'#6f7f45',neg:'#d9d7d2',sub:'#000000',net:'#6f7f45'};
+const it=(t,s,v,p,k)=>({t,s,v,p,pbg:PL[k][0],pfg:PL[k][1]});
+const CARDS=[
+['Compras sin pagar','wallet','bad','$ 10.982.100',[it('Equipos split inverter','ClimaTotal · Factura A','$ 9.450.000','118 días','bad'),it('Tablero seccional','Electro Norte · Factura A','$ 312.000','12 días','warn'),it('Montaje y tendido eléctrico','ClimaTotal · Factura A','$ 1.220.100','1 día','warn')],'span 2'],
+['Cobros pendientes','banknote','ok','US$ 5.000',[it('Cuota 4 de 6','Vence el 15/10','US$ 2.500','En 8 días','warn'),it('Cuota 5 de 6','Vence el 15/11','US$ 2.500','En 39 días','mute')],'auto'],
+['Pedidos sin entregar','truck','warn','$ 486.300',[it('Caños de cobre y aislante','Sanitarios Rivera · pagado','$ 486.300','Hace 5 días','warn')],'auto'],
+['Sin comprobante','clip','warn','2 movimientos',[it('Flete de equipos a obra','Gasto · Factura B','$ 85.000','Adjuntar','warn'),it('Soportes y ménsulas','Hierros del Sur · Factura A','$ 214.000','Adjuntar','warn')],'auto'],
+['Deuda por proveedor','building','mute','2 proveedores',[it('ClimaTotal Instalaciones','2 compras','$ 10.670.100','Más vieja: 118 días','bad'),it('Electro Norte','1 compra','$ 312.000','12 días','warn')],'auto']];
+const IB=(icon,t,s,p,k,v,a)=>({icon:ic(icon,15),t,s,p,pbg:PL[k][0],pfg:PL[k][1],v,a});
+const INBOX=[
+['Vencido','#dc2626',[IB('wallet','Equipos split inverter 6000 fg','ClimaTotal Instalaciones · compra','118 días sin pagar','bad','$ 9.450.000','Registrar pago')]],
+['Esta semana','#d97706',[IB('banknote','Cuota 4 de 6','Cobro · vence el 15/10','Vence en 8 días','warn','US$ 2.500','Registrar cobro'),IB('wallet','Tablero seccional','Electro Norte · compra','12 días sin pagar','warn','$ 312.000','Registrar pago'),IB('truck','Caños de cobre y aislante','Sanitarios Rivera · pagado','Sin entregar','warn','$ 486.300','Marcar entregado'),IB('wallet','Montaje y tendido eléctrico','ClimaTotal Instalaciones · compra','A pagar','warn','$ 1.220.100','Registrar pago')]],
+['Para revisar','#8c8b86',[IB('clip','Flete de equipos a obra','Gasto · Factura B','Sin comprobante','warn','$ 85.000','Adjuntar'),IB('clip','Soportes y ménsulas','Hierros del Sur · Factura A','Sin comprobante','warn','$ 214.000','Adjuntar'),IB('banknote','Cuota 5 de 6','Cobro · vence el 15/11','Vence en 39 días','mute','US$ 2.500','Registrar cobro')]]];
+const MOV=[
+{g:0,t:'compra',title:'Montaje y tendido eléctrico de los 8 equipos',prov:'ClimaTotal',cat:'Instalación eléctrica',n:3,adj:true,pago:'A pagar',pk:'warn',env:true,ars:1220100},
+{g:0,t:'cobro',title:'Anticipo segunda etapa',cat:'Anticipo · Transferencia',adj:true,usd:4000},
+{g:0,t:'gasto',title:'Flete de equipos a obra',cat:'Flete · Efectivo',adj:false,ars:85000},
+{g:1,t:'compra',title:'Caños de cobre y aislante térmico',prov:'Sanitarios Rivera',cat:'Materiales',n:3,adj:true,pago:'Pagado',pk:'ok',env:false,ars:486300},
+{g:1,t:'gasto',title:'Almuerzo con el cliente en obra',cat:'Reunión con cliente · Tarjeta',adj:true,ars:42500}];
+const TI={compra:'cart',gasto:'receipt',cobro:'banknote'};
+class Component extends DCLogic {
+  state={hov:1};
+  renderVals(){
+    const hov=this.state.hov;
+    const fases=FASES.map((f,i)=>{
+      const done=f.s==='done',cur=f.s==='cur';
+      const pk=f.st==='Por empezar'?['#ffffff','#5a5a58','#e6e4df']:cur?['#6f7f45','#ffffff','#6f7f45']:['#eef0e3','#4f5b30','#eef0e3'];
+      return {...f,gasto:f.g?'US$ '+fmt(f.g):'—',pct:f.g?f.p.toFixed(1).replace('.',',')+'%':'—',w:f.p*2+'%',
+        bar:cur?'#6f7f45':'#a8b36a',ink:done?'#5a5a58':(f.s==='todo'?'#5a5a58':'#000000'),sub:'#8c8b86',
+        pbg:pk[0],pfg:pk[1],pbd:pk[2],picon:f.st==='Auditada'?ic('shield',12,2):(f.st==='Terminada'?ic('check',12,2.4):null),
+        rowBg:i===hov?'#f9f8f6':'transparent',op:i===hov?1:0,enter:()=>this.setState({hov:i}),
+        cnum:done?ic('check',14,2.6):String(i+1),cbg:done?'#6f7f45':'#ffffff',cfg:done?'#ffffff':(cur?'#6f7f45':'#8c8b86'),cbd:done||cur?'#6f7f45':'#d9d7d2',
+        lineC:i===FASES.length-1?'transparent':(done?'#6f7f45':'#e6e4df'),
+        cardBd:cur?'#6f7f45':'#e6e4df',cardBg:cur?'#fbfbf7':'#ffffff',stShort:cur?'· En curso':(done?'· '+f.st:'· Por empezar')};
+    });
+    const steps=STEPS.map(([l,a,b,k,val],i)=>({l,val,c:SC[k],bottom:(a/MAX*100)+'%',h:((b-a)/MAX*100)+'%',lbl:'calc('+(b/MAX*100)+'% + 6px)',
+      vc:k==='neg'?'#5a5a58':'#000000',lw:k==='sub'||k==='net'?700:500,lc:k==='sub'||k==='net'?'#000000':'#5a5a58',
+      sep:k==='sub'||k==='net'?'1px solid #d9d7d2':'none'}));
+    const ICB={bad:['#fdecea','#b42318'],ok:['#eef0e3','#4f5b30'],warn:['#fef3e2','#9a4a07'],mute:['#f3f2ee','#5a5a58']};
+    const cards=CARDS.map(([title,icon,k,total,items,col])=>({title,icon:ic(icon,16),ibg:ICB[k][0],ifg:ICB[k][1],total,items,count:items.length,col}));
+    const inbox=INBOX.map(([label,dot,items])=>({label,dot,items,count:items.length}));
+    const rows=MOV.map(m=>{
+      const isP=!!m.ars;
+      const pills=m.t==='compra'?[pl(m.pago,m.pk,'wallet'),m.env?pl('Entregado','ok','truck'):pl('Sin entregar','warn','truck')]:[pl(m.t==='cobro'?'Cobrado':'Pagado','ok','wallet')];
+      return {g:m.g,icon:ic(TI[m.t],15),title:m.title,meta:(m.prov?m.prov+' · ':'')+m.cat+(m.n?' · '+m.n+' productos':''),pills,
+        compIcon:m.adj?ic('clip',15):ic('alert',15),compColor:m.adj?'#8c8b86':'#d97706',
+        amount:isP?M+' $ '+fmt(m.ars):'+ US$ '+fmt(m.usd),equiv:isP?'≈ US$ '+fmt(m.ars/TC):'≈ $ '+fmt(m.usd*TC)};
+    });
+    const moveGroups=[['Lunes 5 de octubre',M+' $ 1.305.100  ·  + US$ 4.000'],['Viernes 2 de octubre',M+' $ 528.800']].map(([label,sub],gi)=>({label,sub,rows:rows.filter(r=>r.g===gi)}));
+    const faseTabs=[['Todos','5',true],['Compras','2'],['Gastos','2'],['Cobros','1'],['Con alertas','3']].map(([l,c,on])=>({l,c,line:on?'#6f7f45':'transparent',color:on?'#000000':'#5a5a58',weight:on?600:500}));
+    return {
+      i:{plus:ic('plus',14,2),plusD:ic('plus',14,2),check:ic('check',14,2),chev:ic('chev',16),back:ic('back',14),pencil:ic('pencil',15),trash:ic('trash',15),grip:ic('grip',15),download:ic('download',14),filter:ic('filter',13),clip:ic('clip',14),downW:ic('down',14,2)},
+      fases,steps,cards,inbox,moveGroups,faseTabs
+    };
+  }
+}
+</script>
+</body>
+</html>

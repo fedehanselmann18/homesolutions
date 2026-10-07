@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#efeee9;font-family:'Public Sans',sans-serif;color:#000000;-webkit-font-smoothing:antialiased}a{color:#6f7f45}a:hover{color:#000000}button{font-family:inherit}</style>
+</helmet>
+
+<section style="display:flex;flex-direction:column;gap:20px;padding:40px 40px 20px">
+<div style="display:flex;flex-direction:column;gap:6px;max-width:900px">
+<span style="font-size:22px;font-weight:700">Panel</span>
+<span style="font-size:14px;color:#5a5a58;line-height:1.5;text-wrap:pretty">Lo primero que se ve al entrar: cuánta plata hay, qué falta cobrar, qué se debe y qué hay que resolver esta semana.</span>
+</div>
+<div style="display:flex;gap:40px;align-items:flex-start">
+
+<div id="4i" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">4i</span><span style="font-size:15px;font-weight:600">Números + gráfico + dos listas</span></div>
+<div style="width:1280px;height:860px;background:#ffffff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:grid;grid-template-columns:232px minmax(0,1fr);overflow:hidden">
+<dc-import name="HSSidebar" active="Panel" hint-size="232px,860px"></dc-import>
+<main style="display:flex;flex-direction:column;gap:32px;padding:32px 40px;min-width:0">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+<div style="display:flex;align-items:center;gap:10px;height:36px;width:340px;padding:0 12px;border-radius:8px;background:#f3f2ee;color:#5a5a58;font-size:14px">{{ i.search }}Buscar proyecto, proveedor o movimiento</div>
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:none;border-radius:6px;background:#6f7f45;font-size:13px;font-weight:600;color:#ffffff;cursor:pointer">{{ i.plus }}Nuevo{{ i.downW }}</button>
+</div>
+<h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.02em">Hola, Agustín</h1>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px">
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:14px;color:#5a5a58">Disponible en obras</span><span style="font-size:28px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">US$ 5.056</span><span style="font-size:13px;color:#5a5a58">3 proyectos en curso</span></div>
+<div style="display:flex;flex-direction:column;gap:6px;padding-left:32px;border-left:1px solid #e6e4df"><span style="font-size:14px;color:#5a5a58">Falta cobrar</span><span style="font-size:28px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">US$ 21.400</span><span style="font-size:13px;color:#5a5a58">Próximo: US$ 2.500 el 15/10</span></div>
+<div style="display:flex;flex-direction:column;gap:6px;padding-left:32px;border-left:1px solid #e6e4df"><span style="font-size:14px;color:#5a5a58">Deuda con proveedores</span><span style="font-size:28px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">$ 10.982.100</span><span style="font-size:13px;color:#b42318">1 compra con más de 90 días</span></div>
+</div>
+<div style="display:grid;grid-template-columns:44px minmax(0,1fr);gap:0 12px">
+<div style="display:flex;flex-direction:column;justify-content:space-between;height:140px;margin-top:-7px;font-size:12px;color:#8c8b86;text-align:right"><span>10k</span><span>5k</span><span>0</span></div>
+<div style="height:140px;border-bottom:1px solid #d9d7d2;background-image:linear-gradient(#efeee9 1px,transparent 1px);background-size:100% 70px;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));align-items:end">
+<sc-for list="{{ chart }}" as="c" hint-placeholder-count="6"><div style="display:flex;justify-content:center;align-items:flex-end;gap:5px;height:100%"><div style="width:22px;height:{{ c.hc }};background:#6f7f45;border-radius:3px 3px 0 0"></div><div style="width:22px;height:{{ c.hg }};background:#d9d7d2;border-radius:3px 3px 0 0"></div></div></sc-for>
+</div>
+<span></span>
+<div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));padding-top:8px;font-size:12px;color:#5a5a58;text-align:center"><sc-for list="{{ chart }}" as="c" hint-placeholder-count="6"><span>{{ c.m }}</span></sc-for></div>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px">
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px solid #e6e4df"><span style="font-size:16px;font-weight:700">Proyectos en curso</span><a style="display:flex;align-items:center;gap:2px;font-size:13px;font-weight:600;cursor:pointer">Ver todos{{ i.chevS }}</a></div>
+<sc-for list="{{ active }}" as="p" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:4px 16px;align-items:center;padding:12px 0;border-bottom:1px solid #efeee9;cursor:pointer">
+<span style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600"><span style="width:7px;height:7px;border-radius:99px;background:{{ p.dot }};flex:none"></span>{{ p.name }}</span>
+<span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">{{ p.disp }}</span>
+<span style="font-size:13px;color:#5a5a58;padding-left:15px">{{ p.fase }}</span>
+<span style="text-align:right;font-size:12px;color:#8c8b86">disponible</span>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px solid #e6e4df"><span style="font-size:16px;font-weight:700">Para resolver</span><a style="display:flex;align-items:center;gap:2px;font-size:13px;font-weight:600;cursor:pointer">Ver todo{{ i.chevS }}</a></div>
+<sc-for list="{{ todo }}" as="t" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:2px 12px;align-items:center;padding:10px 0;border-bottom:1px solid #efeee9">
+<span style="grid-row:span 2;width:28px;height:28px;border-radius:6px;background:#f3f2ee;color:#5a5a58;display:flex;align-items:center;justify-content:center">{{ t.icon }}</span>
+<span style="font-size:14px;font-weight:600">{{ t.t }}</span>
+<span style="justify-self:end;font-size:12px;font-weight:600;line-height:20px;padding:0 6px;border-radius:4px;background:{{ t.pbg }};color:{{ t.pfg }};white-space:nowrap">{{ t.p }}</span>
+<span style="font-size:13px;color:#5a5a58">{{ t.s }}</span>
+<span style="text-align:right;font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">{{ t.v }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+</main>
+</div>
+</div>
+
+<div id="4j" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">4j</span><span style="font-size:15px;font-weight:600">Una card por obra + agenda</span></div>
+<div style="width:1280px;height:860px;background:#ffffff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:grid;grid-template-columns:232px minmax(0,1fr);overflow:hidden">
+<dc-import name="HSSidebar" active="Panel" hint-size="232px,860px"></dc-import>
+<main style="display:flex;flex-direction:column;gap:28px;padding:32px 40px;min-width:0">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+<h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.02em">Hola, Agustín</h1>
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:none;border-radius:6px;background:#6f7f45;font-size:13px;font-weight:600;color:#ffffff;cursor:pointer">{{ i.plus }}Nuevo{{ i.downW }}</button>
+</div>
+<div style="display:flex;gap:32px;font-size:14px;color:#5a5a58;font-variant-numeric:tabular-nums">
+<span>Disponible <b style="color:#000000;font-size:16px">US$ 5.056</b></span>
+<span>Falta cobrar <b style="color:#000000;font-size:16px">US$ 21.400</b></span>
+<span>Deuda proveedores <b style="color:#000000;font-size:16px">$ 10.982.100</b></span>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
+<sc-for list="{{ active }}" as="p" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:16px;padding:18px;border:1px solid #e6e4df;border-radius:10px;cursor:pointer" style-hover="border-color:#d9d7d2;box-shadow:0 4px 16px rgba(0,0,0,0.05)">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+<div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:15px;font-weight:700;text-wrap:pretty">{{ p.name }}</span><span style="font-size:13px;color:#5a5a58">{{ p.addr }}</span></div>
+<sc-if value="{{ p.hasAlert }}" hint-placeholder-val="{{ false }}"><span style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;line-height:20px;padding:0 6px;border-radius:4px;background:#fdecea;color:#b42318;white-space:nowrap">{{ i.alertS }}{{ p.alerts }}</span></sc-if>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px"><sc-for list="{{ p.segs }}" as="s" hint-placeholder-count="4"><span style="height:4px;border-radius:99px;background:{{ s.c }}"></span></sc-for></div>
+<span style="font-size:13px;color:#5a5a58">{{ p.fase }}</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding-top:12px;border-top:1px solid #efeee9;font-variant-numeric:tabular-nums">
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#5a5a58">Cobrado</span><span style="font-size:14px;font-weight:600">{{ p.cob }}</span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#5a5a58">Gastado</span><span style="font-size:14px;font-weight:600">{{ p.gas }}</span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#5a5a58">Disponible</span><span style="font-size:14px;font-weight:600">{{ p.disp }}</span></div>
+</div>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px solid #e6e4df"><span style="font-size:16px;font-weight:700">Esta semana</span><a style="display:flex;align-items:center;gap:2px;font-size:13px;font-weight:600;cursor:pointer">Ver todo{{ i.chevS }}</a></div>
+<sc-for list="{{ todo }}" as="t" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:28px minmax(0,1fr) 200px 140px 130px 140px;gap:16px;align-items:center;min-height:52px;border-bottom:1px solid #efeee9">
+<span style="width:28px;height:28px;border-radius:6px;background:#f3f2ee;color:#5a5a58;display:flex;align-items:center;justify-content:center">{{ t.icon }}</span>
+<span style="font-size:14px;font-weight:600">{{ t.t }}</span>
+<span style="font-size:13px;color:#5a5a58">{{ t.proj }}</span>
+<span style="justify-self:start;font-size:12px;font-weight:600;line-height:22px;padding:0 8px;border-radius:4px;background:{{ t.pbg }};color:{{ t.pfg }};white-space:nowrap">{{ t.p }}</span>
+<span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">{{ t.v }}</span>
+<button style="justify-self:end;height:30px;padding:0 12px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;font-weight:600;color:#000000;cursor:pointer;white-space:nowrap">{{ t.a }}</button>
+</div>
+</sc-for>
+</div>
+</main>
+</div>
+</div>
+
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:20px;padding:40px 40px 20px">
+<div style="display:flex;flex-direction:column;gap:6px;max-width:900px">
+<span style="font-size:22px;font-weight:700">Lista de proyectos</span>
+<span style="font-size:14px;color:#5a5a58;line-height:1.5">Avance, plata y alertas de cada obra, sin tener que entrar.</span>
+</div>
+<div style="display:flex;gap:40px;align-items:flex-start">
+
+<div id="4k" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">4k</span><span style="font-size:15px;font-weight:600">Tabla</span></div>
+<div style="width:1280px;height:860px;background:#ffffff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:grid;grid-template-columns:232px minmax(0,1fr);overflow:hidden">
+<dc-import name="HSSidebar" active="Proyectos" hint-size="232px,860px"></dc-import>
+<main style="display:flex;flex-direction:column;gap:24px;padding:32px 40px;min-width:0">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+<h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.02em">Proyectos</h1>
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:none;border-radius:6px;background:#6f7f45;font-size:13px;font-weight:600;color:#ffffff;cursor:pointer">{{ i.plus }}Nuevo proyecto</button>
+</div>
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;gap:24px;border-bottom:1px solid #e6e4df"><sc-for list="{{ ptabs }}" as="t" hint-placeholder-count="4"><span style="display:flex;align-items:center;gap:6px;height:40px;border-bottom:2px solid {{ t.line }};margin-bottom:-1px;font-size:14px;font-weight:{{ t.weight }};color:{{ t.color }};cursor:pointer">{{ t.l }}<span style="font-size:12px;color:#8c8b86">{{ t.c }}</span></span></sc-for></div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 112px 150px 160px 96px 100px 40px;gap:20px;align-items:center;height:36px;padding:0 8px;border-bottom:1px solid #e6e4df;font-size:12px;font-weight:600;color:#5a5a58"><span>Proyecto</span><span>Estado</span><span>Fase actual</span><span>Cobrado</span><span style="text-align:right">Gastado</span><span style="text-align:right">Disponible</span><span title="Pendientes">{{ i.bell }}</span></div>
+<sc-for list="{{ projects }}" as="p" hint-placeholder-count="5">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 112px 150px 160px 96px 100px 40px;gap:20px;align-items:center;min-height:64px;padding:8px;border-bottom:1px solid #efeee9;cursor:pointer" style-hover="background:#f9f8f6">
+<div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:15px;font-weight:600">{{ p.name }}</span><span style="font-size:13px;color:#5a5a58">{{ p.addr }}</span></div>
+<span style="justify-self:start;font-size:12px;font-weight:600;line-height:22px;padding:0 8px;border-radius:4px;background:{{ p.sbg }};color:{{ p.sfg }};border:1px solid {{ p.sbd }}">{{ p.st }}</span>
+<div style="display:flex;flex-direction:column;gap:5px"><span style="font-size:13px">{{ p.faseName }}</span><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;width:96px"><sc-for list="{{ p.segs }}" as="s" hint-placeholder-count="4"><span style="height:4px;border-radius:99px;background:{{ s.c }}"></span></sc-for></div></div>
+<div style="display:flex;align-items:center;gap:10px"><div style="flex:1;height:6px;border-radius:99px;background:#efeee9;overflow:hidden"><div style="height:100%;width:{{ p.cw }};background:#6f7f45"></div></div><span style="width:36px;text-align:right;font-size:13px;color:#5a5a58;font-variant-numeric:tabular-nums">{{ p.cobP }}</span></div>
+<span style="text-align:right;font-size:14px;color:#5a5a58;font-variant-numeric:tabular-nums">{{ p.gasP }}</span>
+<span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">{{ p.disp }}</span>
+<span style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:{{ p.alC }}">{{ p.alIcon }}{{ p.alerts }}</span>
+</div>
+</sc-for>
+</div>
+</main>
+</div>
+</div>
+
+<div id="4l" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">4l</span><span style="font-size:15px;font-weight:600">Cards</span></div>
+<div style="width:1280px;height:860px;background:#ffffff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:grid;grid-template-columns:232px minmax(0,1fr);overflow:hidden">
+<dc-import name="HSSidebar" active="Proyectos" hint-size="232px,860px"></dc-import>
+<main style="display:flex;flex-direction:column;gap:24px;padding:32px 40px;min-width:0">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+<h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.02em">Proyectos</h1>
+<div style="display:flex;gap:8px;align-items:center">
+<div style="display:flex;align-items:center;gap:8px;height:32px;width:220px;padding:0 10px;border-radius:6px;background:#f3f2ee;color:#5a5a58;font-size:13px">{{ i.search }}Buscar</div>
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:none;border-radius:6px;background:#6f7f45;font-size:13px;font-weight:600;color:#ffffff;cursor:pointer">{{ i.plus }}Nuevo proyecto</button>
+</div>
+</div>
+<div style="display:flex;gap:8px"><sc-for list="{{ ptabs }}" as="t" hint-placeholder-count="4"><span style="display:flex;align-items:center;gap:6px;height:30px;padding:0 12px;border-radius:99px;border:1px solid {{ t.chipBd }};background:{{ t.chipBg }};font-size:13px;font-weight:{{ t.weight }};color:{{ t.color }};cursor:pointer">{{ t.l }}<span style="font-size:12px;color:#8c8b86">{{ t.c }}</span></span></sc-for></div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
+<sc-for list="{{ projects }}" as="p" hint-placeholder-count="5">
+<div style="display:flex;flex-direction:column;gap:16px;padding:18px;border:1px solid #e6e4df;border-radius:10px;cursor:pointer;opacity:{{ p.op }}" style-hover="border-color:#d9d7d2;box-shadow:0 4px 16px rgba(0,0,0,0.05)">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+<span style="font-size:12px;font-weight:600;line-height:22px;padding:0 8px;border-radius:4px;background:{{ p.sbg }};color:{{ p.sfg }};border:1px solid {{ p.sbd }}">{{ p.st }}</span>
+<span style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:{{ p.alC }}">{{ p.alIcon }}{{ p.alerts }}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:16px;font-weight:700;text-wrap:pretty">{{ p.name }}</span><span style="font-size:13px;color:#5a5a58">{{ p.addr }}</span></div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px"><sc-for list="{{ p.segs }}" as="s" hint-placeholder-count="4"><span style="height:4px;border-radius:99px;background:{{ s.c }}"></span></sc-for></div><span style="font-size:13px;color:#5a5a58">{{ p.fase }}</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding-top:12px;border-top:1px solid #efeee9;font-variant-numeric:tabular-nums">
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#5a5a58">Cobrado</span><span style="font-size:14px;font-weight:600">{{ p.cobP }}</span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#5a5a58">Gastado</span><span style="font-size:14px;font-weight:600">{{ p.gasP }}</span></div>
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:12px;color:#5a5a58">Disponible</span><span style="font-size:14px;font-weight:600">{{ p.disp }}</span></div>
+</div>
+</div>
+</sc-for>
+</div>
+</main>
+</div>
+</div>
+
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:20px;padding:40px 40px 20px">
+<div style="display:flex;flex-direction:column;gap:6px;max-width:900px">
+<span style="font-size:22px;font-weight:700">Lista de proveedores</span>
+<span style="font-size:14px;color:#5a5a58;line-height:1.5">En 4m se ve la fila 2 con el mouse encima, mostrando las acciones.</span>
+</div>
+<div style="display:flex;gap:40px;align-items:flex-start">
+
+<div id="4m" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">4m</span><span style="font-size:15px;font-weight:600">Tabla con deuda visible</span></div>
+<div style="width:1280px;height:860px;background:#ffffff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:grid;grid-template-columns:232px minmax(0,1fr);overflow:hidden">
+<dc-import name="HSSidebar" active="Proveedores" hint-size="232px,860px"></dc-import>
+<main style="display:flex;flex-direction:column;gap:24px;padding:32px 40px;min-width:0">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+<h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.02em">Proveedores</h1>
+<div style="display:flex;gap:8px;align-items:center">
+<div style="display:flex;align-items:center;gap:8px;height:32px;width:240px;padding:0 10px;border-radius:6px;background:#f3f2ee;color:#5a5a58;font-size:13px">{{ i.search }}Buscar por nombre o CUIT</div>
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:none;border-radius:6px;background:#6f7f45;font-size:13px;font-weight:600;color:#ffffff;cursor:pointer">{{ i.plus }}Nuevo proveedor</button>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:14px;color:#5a5a58">Deuda total</span><span style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums">$ 10.982.100</span></div>
+<div style="display:flex;flex-direction:column;gap:4px;padding-left:32px;border-left:1px solid #e6e4df"><span style="font-size:14px;color:#5a5a58">Con deuda</span><span style="font-size:22px;font-weight:700">2 de 11</span></div>
+<div style="display:flex;flex-direction:column;gap:4px;padding-left:32px;border-left:1px solid #e6e4df"><span style="font-size:14px;color:#5a5a58">Comprado este año</span><span style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums">$ 29.424.940</span></div>
+</div>
+<div style="display:flex;flex-direction:column">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 220px 80px 130px 150px 92px;gap:20px;align-items:center;height:36px;padding:0 8px;border-bottom:1px solid #e6e4df;font-size:12px;font-weight:600;color:#5a5a58"><span>Proveedor</span><span>Contacto</span><span style="text-align:right">Productos</span><span style="text-align:right">Comprado</span><span style="text-align:right">Deuda</span><span></span></div>
+<sc-for list="{{ provs }}" as="p" hint-placeholder-count="6">
+<div onMouseEnter="{{ p.enter }}" style="display:grid;grid-template-columns:minmax(0,1fr) 220px 80px 130px 150px 92px;gap:20px;align-items:center;min-height:60px;padding:6px 8px;border-bottom:1px solid #efeee9;background:{{ p.rowBg }};cursor:pointer">
+<div style="display:flex;align-items:center;gap:12px;min-width:0"><span style="width:32px;height:32px;border-radius:8px;background:#f3f2ee;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#5a5a58;flex:none">{{ p.ini }}</span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:15px;font-weight:600">{{ p.name }}</span><span style="font-size:12px;color:#8c8b86;font-variant-numeric:tabular-nums">CUIT {{ p.cuit }}</span></div></div>
+<div style="display:flex;flex-direction:column;gap:2px;font-size:13px;color:#5a5a58"><span style="display:flex;align-items:center;gap:6px">{{ i.phone }}{{ p.tel }}</span><span style="display:flex;align-items:center;gap:6px">{{ i.mail }}{{ p.mail }}</span></div>
+<span style="text-align:right;font-size:14px;color:#5a5a58">{{ p.prods }}</span>
+<span style="text-align:right;font-size:14px;font-variant-numeric:tabular-nums">{{ p.comp }}</span>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-variant-numeric:tabular-nums"><span style="font-size:14px;font-weight:600;color:{{ p.dC }}">{{ p.deuda }}</span><span style="font-size:12px;color:{{ p.dsC }}">{{ p.dSub }}</span></div>
+<div style="display:flex;justify-content:flex-end;gap:2px;opacity:{{ p.op }}">
+<span title="Editar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:#5a5a58" style-hover="background:#f3f2ee">{{ i.pencil }}</span>
+<span title="Borrar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:#5a5a58" style-hover="background:#fdecea;color:#b42318">{{ i.trash }}</span>
+<span style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:#8c8b86">{{ i.chev }}</span>
+</div>
+</div>
+</sc-for>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 8px 0"><span style="font-size:13px;color:#5a5a58">6 de 11</span><div style="display:flex;gap:8px"><button style="height:28px;padding:0 10px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;color:#8c8b86">Anterior</button><button style="height:28px;padding:0 10px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;color:#000000">Siguiente</button></div></div>
+</div>
+</main>
+</div>
+</div>
+
+<div id="4n" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">4n</span><span style="font-size:15px;font-weight:600">Primero a quién se le debe</span></div>
+<div style="width:1280px;height:860px;background:#ffffff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:grid;grid-template-columns:232px minmax(0,1fr);overflow:hidden">
+<dc-import name="HSSidebar" active="Proveedores" hint-size="232px,860px"></dc-import>
+<main style="display:flex;flex-direction:column;gap:28px;padding:32px 40px;min-width:0">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+<h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.02em">Proveedores</h1>
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:none;border-radius:6px;background:#6f7f45;font-size:13px;font-weight:600;color:#ffffff;cursor:pointer">{{ i.plus }}Nuevo proveedor</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<span style="font-size:16px;font-weight:700">Con deuda · $ 10.982.100</span>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
+<sc-for list="{{ debtors }}" as="d" hint-placeholder-count="2">
+<div style="display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:4px 14px;align-items:center;padding:18px;border:1px solid #e6e4df;border-radius:10px">
+<span style="grid-row:span 2;width:40px;height:40px;border-radius:10px;background:#f3f2ee;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#5a5a58">{{ d.ini }}</span>
+<span style="font-size:15px;font-weight:600">{{ d.name }}</span>
+<span style="font-size:18px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums">{{ d.deuda }}</span>
+<span style="font-size:13px;color:#5a5a58">{{ d.sub }}</span>
+<span style="justify-self:end;font-size:12px;font-weight:600;line-height:20px;padding:0 6px;border-radius:4px;background:{{ d.pbg }};color:{{ d.pfg }}">{{ d.p }}</span>
+<div style="grid-column:2 / span 2;display:flex;gap:8px;padding-top:10px"><button style="height:30px;padding:0 12px;border:none;border-radius:6px;background:#6f7f45;font-size:13px;font-weight:600;color:#ffffff;cursor:pointer">Registrar pago</button><button style="height:30px;padding:0 12px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;font-weight:600;color:#000000;cursor:pointer">Ver compras</button></div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px solid #e6e4df"><span style="font-size:16px;font-weight:700">Al día · 9</span><div style="display:flex;align-items:center;gap:8px;height:30px;width:220px;padding:0 10px;border-radius:6px;background:#f3f2ee;color:#5a5a58;font-size:13px">{{ i.search }}Buscar</div></div>
+<sc-for list="{{ alDia }}" as="p" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:32px minmax(0,1fr) 200px 140px 24px;gap:16px;align-items:center;min-height:54px;border-bottom:1px solid #efeee9;cursor:pointer" style-hover="background:#f9f8f6">
+<span style="width:32px;height:32px;border-radius:8px;background:#f3f2ee;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#5a5a58">{{ p.ini }}</span>
+<div style="display:flex;flex-direction:column;gap:2px"><span style="font-size:14px;font-weight:600">{{ p.name }}</span><span style="font-size:12px;color:#8c8b86">{{ p.prods }} productos · última compra {{ p.last }}</span></div>
+<span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5a5a58">{{ i.phone }}{{ p.tel }}</span>
+<span style="text-align:right;font-size:14px;font-variant-numeric:tabular-nums">{{ p.comp }}</span>
+<span style="color:#8c8b86;display:flex">{{ i.chev }}</span>
+</div>
+</sc-for>
+</div>
+</main>
+</div>
+</div>
+
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:20px;padding:40px">
+<div style="display:flex;flex-direction:column;gap:6px;max-width:900px">
+<span style="font-size:22px;font-weight:700">Proveedor · detalle</span>
+<span style="font-size:14px;color:#5a5a58;line-height:1.5;text-wrap:pretty">Los botones Editar y Eliminar de cada producto pasan a ser íconos que aparecen al pasar el mouse. Eliminar el proveedor queda dentro del menú ⋯. Los 7 filtros del historial pasan a ser chips en una sola línea.</span>
+</div>
+<div style="display:flex;gap:40px;align-items:flex-start">
+
+<div id="4o" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">4o</span><span style="font-size:15px;font-weight:600">Encabezado + pestañas · Catálogo</span></div>
+<div style="width:1280px;height:860px;background:#ffffff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:grid;grid-template-columns:232px minmax(0,1fr);overflow:hidden">
+<dc-import name="HSSidebar" active="Proveedores" hint-size="232px,860px"></dc-import>
+<main style="display:flex;flex-direction:column;gap:28px;padding:32px 40px;min-width:0">
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5a5a58"><span>Proveedores</span><span style="color:#d9d7d2">/</span><span style="color:#000000;font-weight:500">Surrey</span></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+<div style="display:flex;align-items:center;gap:14px"><span style="width:44px;height:44px;border-radius:10px;background:#f3f2ee;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#5a5a58">SU</span><h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:-0.02em">Surrey</h1></div>
+<div style="display:flex;gap:8px"><button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;font-weight:600;color:#000000;cursor:pointer">{{ i.pencil }}Editar</button><button title="Más" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;color:#000000;cursor:pointer">{{ i.dots }}</button></div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 22px;font-size:14px;color:#5a5a58">
+<span style="display:flex;align-items:center;gap:6px">{{ i.id }}30-50234567-2</span>
+<span style="display:flex;align-items:center;gap:6px">{{ i.phone }}011-4000-2000</span>
+<span style="display:flex;align-items:center;gap:6px">{{ i.mail }}ventas@surrey.com.ar</span>
+<span style="display:flex;align-items:center;gap:6px">{{ i.pin }}Av. San Martín 2200, CABA</span>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:14px;color:#5a5a58">Comprado histórico</span><span style="font-size:24px;font-weight:700;font-variant-numeric:tabular-nums">$ 5.317.200</span></div>
+<div style="display:flex;flex-direction:column;gap:4px;padding-left:32px;border-left:1px solid #e6e4df"><span style="font-size:14px;color:#5a5a58">Deuda pendiente</span><span style="display:flex;align-items:center;gap:10px;font-size:24px;font-weight:700">$ 0<span style="font-size:12px;font-weight:600;line-height:22px;padding:0 8px;border-radius:4px;background:#eef0e3;color:#4f5b30">Al día</span></span></div>
+<div style="display:flex;flex-direction:column;gap:4px;padding-left:32px;border-left:1px solid #e6e4df"><span style="font-size:14px;color:#5a5a58">Última compra</span><span style="font-size:24px;font-weight:700">18/05/2026</span></div>
+</div>
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;justify-content:space-between;align-items:flex-end;border-bottom:1px solid #e6e4df">
+<div style="display:flex;gap:24px"><span style="display:flex;align-items:center;gap:6px;height:40px;border-bottom:2px solid #6f7f45;margin-bottom:-1px;font-size:14px;font-weight:600">{{ i.tag }}Catálogo<span style="font-size:12px;color:#8c8b86">4</span></span><span style="display:flex;align-items:center;gap:6px;height:40px;font-size:14px;font-weight:500;color:#5a5a58">{{ i.cart }}Historial de compras<span style="font-size:12px;color:#8c8b86">3</span></span></div>
+<div style="display:flex;gap:8px;padding-bottom:6px"><button style="display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;font-weight:600;color:#000000">{{ i.upload }}Importar</button><button style="display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:none;border-radius:6px;background:#6f7f45;font-size:13px;font-weight:600;color:#ffffff">{{ i.plus }}Producto</button></div>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 110px 200px 120px 80px;gap:20px;align-items:center;height:36px;padding:0 8px;border-bottom:1px solid #e6e4df;font-size:12px;font-weight:600;color:#5a5a58"><span>Producto</span><span>Tipo</span><span>Categoría</span><span style="text-align:right">Precio</span><span></span></div>
+<sc-for list="{{ catalog }}" as="c" hint-placeholder-count="4">
+<div onMouseEnter="{{ c.enter }}" style="display:grid;grid-template-columns:minmax(0,1fr) 110px 200px 120px 80px;gap:20px;align-items:center;min-height:52px;padding:0 8px;border-bottom:1px solid #efeee9;background:{{ c.rowBg }}">
+<span style="font-size:14px;font-weight:500">{{ c.n }}</span>
+<span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5a5a58">{{ i.box }}Equipo</span>
+<span style="justify-self:start;font-size:12px;font-weight:500;line-height:22px;padding:0 8px;border-radius:99px;border:1px solid #e6e4df;color:#5a5a58">{{ c.cat }}</span>
+<span style="text-align:right;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">{{ c.p }}</span>
+<div style="display:flex;justify-content:flex-end;gap:2px;opacity:{{ c.op }}"><span title="Editar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:#5a5a58" style-hover="background:#f3f2ee">{{ i.pencil }}</span><span title="Borrar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;color:#5a5a58" style-hover="background:#fdecea;color:#b42318">{{ i.trash }}</span></div>
+</div>
+</sc-for>
+</div>
+</main>
+</div>
+</div>
+
+<div id="4p" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">4p</span><span style="font-size:15px;font-weight:600">Ficha lateral · Historial de compras</span></div>
+<div style="width:1280px;height:860px;background:#ffffff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:grid;grid-template-columns:232px minmax(0,1fr);overflow:hidden">
+<dc-import name="HSSidebar" active="Proveedores" hint-size="232px,860px"></dc-import>
+<main style="display:flex;flex-direction:column;gap:24px;padding:32px 40px;min-width:0">
+<div style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5a5a58"><span>Proveedores</span><span style="color:#d9d7d2">/</span><span style="color:#000000;font-weight:500">Surrey</span></div>
+<div style="display:grid;grid-template-columns:272px minmax(0,1fr);gap:36px;align-items:start">
+<aside style="display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;align-items:center;gap:12px"><span style="width:44px;height:44px;border-radius:10px;background:#f3f2ee;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:#5a5a58">SU</span><div style="display:flex;flex-direction:column"><span style="font-size:24px;font-weight:700;letter-spacing:-0.02em">Surrey</span><span style="font-size:13px;color:#5a5a58">Equipos de climatización</span></div></div>
+<div style="display:flex;flex-direction:column;gap:4px;padding:16px;border-radius:10px;background:#f9f8f6">
+<span style="font-size:13px;color:#5a5a58">Comprado histórico</span><span style="font-size:22px;font-weight:700;font-variant-numeric:tabular-nums">$ 5.317.200</span>
+<span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#4f5b30;padding-top:6px"><span style="width:7px;height:7px;border-radius:99px;background:#6f7f45"></span>Sin deuda pendiente</span>
+</div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ contact }}" as="c" hint-placeholder-count="4">
+<div style="display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;align-items:start;padding:10px 0;border-bottom:1px solid #efeee9"><span style="color:#8c8b86;padding-top:1px">{{ c.icon }}</span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:12px;color:#5a5a58">{{ c.k }}</span><span style="font-size:14px;overflow-wrap:anywhere">{{ c.v }}</span></div></div>
+</sc-for>
+</div>
+<div style="display:flex;gap:8px"><button style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;font-weight:600;color:#000000">{{ i.pencil }}Editar</button><button title="Más" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;color:#000000">{{ i.dots }}</button></div>
+</aside>
+<div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+<div style="display:flex;gap:24px;border-bottom:1px solid #e6e4df"><span style="display:flex;align-items:center;gap:6px;height:40px;font-size:14px;font-weight:500;color:#5a5a58">{{ i.tag }}Catálogo<span style="font-size:12px;color:#8c8b86">4</span></span><span style="display:flex;align-items:center;gap:6px;height:40px;border-bottom:2px solid #6f7f45;margin-bottom:-1px;font-size:14px;font-weight:600">{{ i.cart }}Historial de compras<span style="font-size:12px;color:#8c8b86">3</span></span></div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{ chips }}" as="c" hint-placeholder-count="5"><span style="display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:99px;border:1px dashed #d9d7d2;font-size:13px;color:#5a5a58;cursor:pointer" style-hover="border-color:#6f7f45;color:#000000">{{ i.plusS }}{{ c }}</span></sc-for>
+</div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ compras }}" as="r" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:6px 16px;padding:14px 0;border-bottom:1px solid #efeee9;cursor:pointer" style-hover="background:#f9f8f6">
+<div style="grid-row:span 2;display:flex;flex-direction:column;align-items:center;justify-content:center;height:48px;border-radius:8px;background:#f3f2ee"><span style="font-size:16px;font-weight:700;line-height:1">{{ r.d }}</span><span style="font-size:11px;font-weight:600;color:#5a5a58;text-transform:uppercase">{{ r.m }}</span></div>
+<span style="font-size:15px;font-weight:600">{{ r.t }}</span>
+<span style="font-size:15px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums">{{ r.v }}</span>
+<span style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 12px;font-size:13px;color:#5a5a58"><span style="display:flex;align-items:center;gap:5px;color:#000000">{{ i.building }}{{ r.proj }}</span>{{ r.meta }}<span style="display:flex;color:#8c8b86">{{ i.clipS }}</span></span>
+<span style="display:flex;gap:4px;justify-content:flex-end"><span style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;line-height:20px;padding:0 6px;border-radius:4px;background:#eef0e3;color:#4f5b30">{{ i.walletS }}Pagado</span><span style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;line-height:20px;padding:0 6px;border-radius:4px;background:#eef0e3;color:#4f5b30">{{ i.truckS }}Entregado</span></span>
+</div>
+</sc-for>
+<div style="display:flex;justify-content:space-between;padding:14px 0;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums"><span>Total · 3 compras</span><span>$ 5.317.200</span></div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const P={
+plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
+search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+down:'<path d="m6 9 6 6 6-6"/>',
+chev:'<path d="m9 18 6-6-6-6"/>',
+alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+bell:'<path d="M10.27 21a2 2 0 0 0 3.46 0"/><path d="M3.26 15.33A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.67C19.41 13.96 18 12.5 18 8A6 6 0 0 0 6 8c0 4.5-1.41 5.96-2.74 7.33"/>',
+check:'<path d="M20 6 9 17l-5-5"/>',
+pencil:'<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>',
+trash:'<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
+dots:'<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
+phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>',
+mail:'<rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>',
+pin:'<path d="M20 10c0 4.99-5.54 10.19-7.4 11.8a1 1 0 0 1-1.2 0C9.54 20.19 4 14.99 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
+id:'<rect width="20" height="14" x="2" y="5" rx="2"/><path d="M16 10h2M16 14h2"/><circle cx="9" cy="12" r="2"/>',
+tag:'<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r=".5"/>',
+cart:'<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
+upload:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/>',
+box:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+building:'<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/>',
+clip:'<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+wallet:'<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>',
+truck:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62L18.3 9.38a1 1 0 0 0-.78-.38H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
+banknote:'<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>'
+};
+const ic=(n,s=16,sw=1.75)=>React.createElement('svg',{width:s,height:s,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:sw,strokeLinecap:'round',strokeLinejoin:'round',style:{flex:'none',display:'block'},dangerouslySetInnerHTML:{__html:P[n]}});
+const PL={ok:['#eef0e3','#4f5b30'],warn:['#fef3e2','#9a4a07'],bad:['#fdecea','#b42318'],mute:['#f3f2ee','#5a5a58']};
+const segs=(done,cur,n=4)=>Array.from({length:n},(_,k)=>({c:k<done?'#a8b36a':(k===done&&cur?'#6f7f45':'#e6e4df')}));
+const PROJ=[
+{name:'Torre Libertador · Climatización',addr:'Av. del Libertador 6420, CABA',st:'En curso',done:2,cur:true,faseName:'Montaje · 3 de 4',cob:'58%',gas:'41%',cw:58,disp:'US$ 2.410',alerts:3,bad:true,dot:'#dc2626'},
+{name:'Edificio Olleros',addr:'Olleros 1925, CABA',st:'En curso',done:2,cur:true,faseName:'Montaje · 3 de 4',cob:'64%',gas:'59%',cw:64,disp:'US$ 666',alerts:8,bad:false,dot:'#6f7f45'},
+{name:'Casa Terravista L514',addr:'Nordelta, Tigre',st:'En curso',done:1,cur:true,faseName:'Compra de equipos · 2 de 4',cob:'40%',gas:'22%',cw:40,disp:'US$ 1.980',alerts:1,bad:false,dot:'#6f7f45'},
+{name:'Oficinas Catalinas',addr:'Av. Madero 900, CABA',st:'Terminado',done:4,cur:false,faseName:'4 de 4 fases',cob:'100%',gas:'88%',cw:100,disp:'US$ 3.120',alerts:0},
+{name:'Local Palermo Soho',addr:'Honduras 4800, CABA',st:'Presupuestado',done:0,cur:false,faseName:'Sin empezar',cob:'0%',gas:'0%',cw:0,disp:'—',alerts:0}];
+const STP={'En curso':['#6f7f45','#ffffff','#6f7f45'],'Terminado':['#eef0e3','#4f5b30','#eef0e3'],'Presupuestado':['#ffffff','#5a5a58','#e6e4df']};
+const TD=(icon,t,s,proj,p,k,v,a)=>({icon:ic(icon,15),t,s,proj,p,pbg:PL[k][0],pfg:PL[k][1],v,a});
+const TODO=[
+TD('wallet','Equipos split inverter','ClimaTotal · Edificio Olleros','Edificio Olleros','118 días','bad','$ 9.450.000','Registrar pago'),
+TD('banknote','Cuota 4 de 6','Edificio Olleros · vence 15/10','Edificio Olleros','En 8 días','warn','US$ 2.500','Registrar cobro'),
+TD('truck','Caños de cobre y aislante','Sanitarios Rivera · Edificio Olleros','Edificio Olleros','Sin entregar','warn','$ 486.300','Marcar entregado'),
+TD('clip','Factura de compresores','Frío Sur · Torre Libertador','Torre Libertador','Sin comprobante','warn','$ 1.140.000','Adjuntar')];
+const PROVS=[
+['Surrey','SU','30-50234567-2','011-4000-2000','ventas@surrey.com.ar',4,'$ 5.317.200',0,'','18/05'],
+['ClimaTotal Instalaciones','CT','30-71458210-9','011-4782-1100','admin@climatotal.com.ar',12,'$ 18.920.000',10670100,'2 compras · 118 días','05/10'],
+['Electro Norte','EN','30-69871234-5','011-4555-9012','pedidos@electronorte.com',38,'$ 1.450.000',312000,'1 compra · 12 días','25/09'],
+['Sanitarios Rivera','SR','30-61237788-1','011-4301-4455','ventas@sanrivera.com.ar',64,'$ 2.140.000',0,'','02/10'],
+['Hierros del Sur','HS','30-70012345-6','011-4209-7788','info@hierrosdelsur.com',21,'$ 980.000',0,'','10/06'],
+['Prysmian Cables','PC','30-50001122-3','0800-555-7797','ventas.ar@prysmian.com',15,'$ 597.740',0,'','18/06']];
+const fmt=n=>Math.round(n).toLocaleString('es-AR');
+class Component extends DCLogic {
+  state={hovP:1,hovC:1};
+  renderVals(){
+    const {hovP,hovC}=this.state;
+    const projects=PROJ.map(p=>{const s=STP[p.st];return {...p,sbg:s[0],sfg:s[1],sbd:s[2],segs:segs(p.done,p.cur),cobP:p.cob,gasP:p.gas,cw:p.cw+'%',
+      fase:p.faseName,alIcon:p.alerts?ic(p.bad?'alert':'bell',14):ic('check',14,2),alC:p.alerts?(p.bad?'#b42318':'#9a4a07'):'#8c8b86',
+      hasAlert:!!p.bad,op:p.st==='Terminado'?0.75:1};});
+    const active=projects.slice(0,3).map(p=>({...p,fase:p.faseName,cob:'US$ '+(p.name==='Edificio Olleros'?'9.350':p.name.startsWith('Torre')?'11.020':'4.800'),gas:'US$ '+(p.name==='Edificio Olleros'?'8.684':p.name.startsWith('Torre')?'8.610':'2.820'),alerts:p.alerts+' pendientes'}));
+    const ptabs=[['Todos','5',true],['En curso','3'],['Terminados','1'],['Presupuestados','1']].map(([l,c,on])=>({l,c,line:on?'#6f7f45':'transparent',color:on?'#000000':'#5a5a58',weight:on?600:500,chipBg:on?'#f1f2ea':'#ffffff',chipBd:on?'#6f7f45':'#e6e4df'}));
+    const provs=PROVS.map((p,k)=>({name:p[0],ini:p[1],cuit:p[2],tel:p[3],mail:p[4],prods:p[5],comp:p[6],deuda:p[7]?'$ '+fmt(p[7]):'—',dC:p[7]?(p[8].includes('118')?'#b42318':'#9a4a07'):'#8c8b86',dSub:p[7]?p[8]:'Al día',dsC:'#5a5a58',
+      rowBg:k===hovP?'#f9f8f6':'transparent',op:k===hovP?1:0,enter:()=>this.setState({hovP:k}),last:p[9]}));
+    const debtors=[{name:'ClimaTotal Instalaciones',ini:'CT',deuda:'$ 10.670.100',sub:'2 compras sin pagar · Edificio Olleros',p:'Más vieja: 118 días',pbg:PL.bad[0],pfg:PL.bad[1]},{name:'Electro Norte',ini:'EN',deuda:'$ 312.000',sub:'1 compra sin pagar · Edificio Olleros',p:'12 días',pbg:PL.warn[0],pfg:PL.warn[1]}];
+    const alDia=provs.filter(p=>p.deuda==='—');
+    const catalog=[['Surrey Aire Acondicionado Split Inverter 2250W','Aires acondicionados','$ 480.000'],['Surrey Ventilador de Techo Industrial','Ventilación','$ 95.000'],['Surrey Aire Acondicionado de Ventana 3500W','Aires acondicionados','$ 390.000'],['Surrey Purificador de Aire con Filtro HEPA','Electrodomésticos','$ 150.000']].map(([n,cat,p],k)=>({n,cat,p,rowBg:k===hovC?'#f9f8f6':'transparent',op:k===hovC?1:0,enter:()=>this.setState({hovC:k})}));
+    const contact=[[ 'id','CUIT','30-50234567-2'],['phone','Teléfono','011-4000-2000'],['mail','Email','ventas@surrey.com.ar'],['pin','Dirección','Av. San Martín 2200, CABA']].map(([n,k,v])=>({icon:ic(n,15),k,v}));
+    const compras=[{d:'18',m:'may',t:'Equipos split inverter y ventilación',proj:'Edificio Olleros',meta:'Factura A · 6 productos',v:'$ 3.120.000'},{d:'02',m:'abr',t:'Splits para oficinas 3° a 6°',proj:'Torre Libertador',meta:'Factura A · 8 productos',v:'$ 1.737.200'},{d:'15',m:'mar',t:'Purificadores HEPA',proj:'Casa Terravista',meta:'Factura B · 2 productos',v:'$ 460.000'}];
+    const CH=[['May',4200,6100],['Jun',5100,8400],['Jul',6800,3900],['Ago',3900,4400],['Sep',7200,5200],['Oct',6500,2100]];
+    return {
+      i:{plus:ic('plus',14,2),plusS:ic('plus',12,2),search:ic('search',15),downW:ic('down',14,2),chevS:ic('chev',14),chev:ic('chev',16),alertS:ic('alert',12,2),bell:ic('bell',14),pencil:ic('pencil',15),trash:ic('trash',15),dots:ic('dots',16,2),
+        phone:ic('phone',14),mail:ic('mail',14),pin:ic('pin',14),id:ic('id',14),tag:ic('tag',15),cart:ic('cart',15),upload:ic('upload',13),box:ic('box',14),building:ic('building',13),clipS:ic('clip',14),walletS:ic('wallet',12,2),truckS:ic('truck',12,2)},
+      chart:CH.map(([m,c,g])=>({m,hc:c/100+'%',hg:g/100+'%'})),
+      active,todo:TODO,projects,ptabs,provs,debtors,alDia,catalog,contact,compras,
+      chips:['Proyecto','Estado de pago','Envío','Notas','Tipo de factura','Fecha']
+    };
+  }
+}
+</script>
+</body>
+</html>

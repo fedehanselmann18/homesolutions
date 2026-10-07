@@ -7,8 +7,18 @@ claudedesign/
 
 # 128MB, supera el límite de 100MB de GitHub -- queda solo en disco local.
 docs/Manual_uso_HS.pdf
+
 # Material interno que no es código (brief comercial, prototipos, contexto
 # para Claude): queda solo en disco local.
 docs/BRIEF_COMERCIALIZACION.md
 docs/HomeSolutionsMobile.zip
 docs/CLAUDE.md
+
+# Screenshots de los diseños de Claude Design (docs/*UIUXChange/uploads/).
+# Los .dc.html SÍ viajan al repo: son el spec del rediseño v5 y los lee
+# cualquier sesión que trabaje sobre docs/PROMPTS_UIUX.md. Los PNG no: son
+# 59MB, están duplicados en las tres carpetas y no aportan nada que el
+# .dc.html no diga. Quedan sólo en disco local.
+docs/GENERALUIUXChange/uploads/
+docs/MODALSUIUXChange/uploads/
+docs/UIUXChange/uploads/

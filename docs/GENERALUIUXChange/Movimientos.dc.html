@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#fafafa;font-family:'Public Sans',sans-serif;color:#18181b}a{color:#18181b}a:hover{color:#6b7280}button{font-family:inherit}</style>
+</helmet>
+<section style="display:flex;flex-direction:column;gap:24px;padding:24px;font-family:'Public Sans',sans-serif;border-bottom:1px solid #e4e4e7">
+<div style="display:flex;flex-direction:column;gap:6px;max-width:960px">
+<div style="font-size:1.25rem;font-weight:700">Detalle del movimiento · dos direcciones</div>
+<div style="font-size:0.9rem;color:#6b7280;text-wrap:pretty">Mismos datos que hoy: compra, gasto y cobro. Lo que cambia en las dos: el importe deja de tener color por tipo, la barra de neto/impuestos se va porque repetía el desglose, la fase y el proveedor salen del header negro y pasan a campos con etiqueta, los estados se agrupan en un solo lugar y la falta de comprobante se marca como alerta.</div>
+</div>
+
+<!-- ============ 2a ============ -->
+<div id="2a" style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:24px;align-items:flex-start;max-width:1640px">
+<div style="display:flex;flex-direction:column;gap:6px;min-width:260px">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.72rem;font-weight:700;background:#18181b;color:#ffffff;border-radius:999px;padding:2px 8px">2a</span><span style="font-size:1.05rem;font-weight:700">Estado arriba, ficha abajo</span></div>
+<div style="font-size:0.82rem;color:#6b7280">Una columna, de lo urgente a lo descriptivo</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;font-size:0.82rem;line-height:1.45;text-wrap:pretty">
+<div><b>Sube.</b> Una franja de estado justo bajo el importe: Pago, Envío y Comprobante en celdas iguales, cada una con su acción. Es lo primero que se revisa y donde se resuelve.</div>
+<div><b>Baja.</b> Proveedor, fase, comprobante y forma de pago pasan a una grilla de datos con etiqueta. Productos, neto e IVA se juntan en una sola tabla: los productos suman al neto y el total cierra abajo.</div>
+<div><b>Por qué.</b> Se lee de arriba hacia abajo: cuánto, qué falta, de quién y qué fase, y después el detalle. El gasto y el cobro usan las mismas secciones con menos celdas, así que se ven más cortos pero no vacíos.</div>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+
+<div style="width:520px;background:#ffffff;border-radius:6px;box-shadow:0 12px 32px rgba(24,24,27,0.16);display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid #e4e4e7">
+<div style="display:flex;align-items:center;gap:10px"><span style="display:flex;align-items:center;gap:6px;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em">{{ mi.cart }}Compra</span><span style="font-size:0.82rem;color:#6b7280">Jueves 18/06/2026</span></div>
+<button title="Cerrar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;border-radius:6px;background:#ffffff;color:#6b7280;cursor:pointer;padding:0" style-hover="color:#18181b">{{ mi.x }}</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px;padding:16px">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:start">
+<div style="font-size:1.05rem;font-weight:700;text-wrap:pretty">Cables y cintas para el tendido del tablero</div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-variant-numeric:tabular-nums">
+<span style="font-size:1.25rem;font-weight:700">$ 597.740</span>
+<span style="font-size:0.82rem;color:#6b7280">≈ US$ 453</span>
+<span style="font-size:0.72rem;color:#6b7280">Dólar blue $ 1.320,00</span>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border:1px solid #e4e4e7;border-radius:6px">
+<div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-right:1px solid #e4e4e7">
+<span style="font-size:0.72rem;color:#6b7280">Pago</span>
+<span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;background:#16a34a"></span>Pagado</span>
+<button style="align-self:flex-start;border:none;background:none;padding:0;font-size:0.72rem;color:#6b7280;text-decoration:underline;cursor:pointer">Marcar pendiente</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-right:1px solid #e4e4e7">
+<span style="font-size:0.72rem;color:#6b7280">Envío</span>
+<span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;background:#16a34a"></span>Entregado</span>
+<button style="align-self:flex-start;border:none;background:none;padding:0;font-size:0.72rem;color:#6b7280;text-decoration:underline;cursor:pointer">Marcar pedido</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px">
+<span style="font-size:0.72rem;color:#6b7280">Comprobante</span>
+<span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;background:#d97706"></span>Falta adjuntar</span>
+<button style="align-self:flex-start;display:flex;align-items:center;gap:4px;border:none;background:none;padding:0;font-size:0.72rem;font-weight:600;color:#18181b;cursor:pointer">{{ mi.plus }}Adjuntar</button>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 16px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.72rem;color:#6b7280">Proveedor</span><span style="font-size:0.9rem;font-weight:600">Prysmian Cables</span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.72rem;color:#6b7280">Fase</span><span style="font-size:0.9rem;font-weight:600">Cableado y tablero</span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.72rem;color:#6b7280">Comprobante</span><span style="font-size:0.9rem">Factura B</span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.72rem;color:#6b7280">Forma de pago</span><span style="font-size:0.9rem">Contado</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">3 productos</span>
+<div style="border:1px solid #e4e4e7;border-radius:6px;font-size:0.82rem;font-variant-numeric:tabular-nums">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 40px 96px;gap:8px;padding:8px 12px"><span>Prysmian Cable Unipolar 2.5mm x 100m</span><span style="color:#6b7280;text-align:right">×6</span><span style="text-align:right">$ 270.000</span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 40px 96px;gap:8px;padding:8px 12px;border-top:1px solid #e4e4e7"><span>Prysmian Cable Unipolar 4mm x 100m</span><span style="color:#6b7280;text-align:right">×3</span><span style="text-align:right">$ 204.000</span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 40px 96px;gap:8px;padding:8px 12px;border-top:1px solid #e4e4e7"><span>Prysmian Cinta Aislante Eléctrica 3M</span><span style="color:#6b7280;text-align:right">×4</span><span style="text-align:right">$ 20.000</span></div>
+<div style="display:flex;flex-direction:column;gap:4px;padding:8px 12px;border-top:1px solid #e4e4e7;background:#fafafa;color:#6b7280">
+<div style="display:flex;justify-content:space-between"><span>Neto</span><span>$ 494.000 · US$ 374</span></div>
+<div style="display:flex;justify-content:space-between"><span>IVA</span><span>$ 103.740 · US$ 79</span></div>
+</div>
+<div style="display:flex;justify-content:space-between;padding:8px 12px;border-top:1px solid #e4e4e7;background:#fafafa;font-weight:700"><span>Total</span><span>$ 597.740 · US$ 453</span></div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Categorías</span>
+<div style="display:flex;flex-wrap:wrap;gap:6px"><span style="font-size:0.82rem;border:1px solid #e4e4e7;border-radius:999px;padding:2px 10px">Cables y Alambres</span><span style="font-size:0.82rem;border:1px solid #e4e4e7;border-radius:999px;padding:2px 10px">Cinta</span></div>
+</div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid #e4e4e7">
+<button style="display:flex;align-items:center;gap:6px;height:36px;padding:0 10px;border:none;background:none;color:#6b7280;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer" style-hover="color:#dc2626">{{ mi.trash }}Borrar</button>
+<div style="display:flex;gap:8px"><button style="height:36px;padding:0 16px;border:1px solid #e4e4e7;background:#ffffff;color:#18181b;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer">Cerrar</button><button style="display:flex;align-items:center;gap:6px;height:36px;padding:0 16px;border:none;background:#18181b;color:#ffffff;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer">{{ mi.pencil }}Editar</button></div>
+</div>
+</div>
+
+<div style="width:520px;background:#ffffff;border-radius:6px;box-shadow:0 12px 32px rgba(24,24,27,0.16);display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid #e4e4e7">
+<div style="display:flex;align-items:center;gap:10px"><span style="display:flex;align-items:center;gap:6px;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em">{{ mi.receipt }}Gasto</span><span style="font-size:0.82rem;color:#6b7280">Sábado 20/06/2026</span></div>
+<button title="Cerrar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;border-radius:6px;background:#ffffff;color:#6b7280;cursor:pointer;padding:0">{{ mi.x }}</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px;padding:16px">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:start">
+<div style="font-size:1.05rem;font-weight:700;text-wrap:pretty">Reunión de avance con el consorcio</div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-variant-numeric:tabular-nums">
+<span style="font-size:1.25rem;font-weight:700">$ 54.000</span>
+<span style="font-size:0.82rem;color:#6b7280">≈ US$ 41</span>
+<span style="font-size:0.72rem;color:#6b7280">Dólar blue $ 1.320,00</span>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr);border:1px solid #e4e4e7;border-radius:6px">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px">
+<span style="font-size:0.72rem;color:#6b7280">Comprobante</span>
+<span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;background:#16a34a"></span>Adjunto</span>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 16px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.72rem;color:#6b7280">Fase</span><span style="font-size:0.9rem;font-weight:600">Cableado y tablero</span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.72rem;color:#6b7280">Comprobante</span><span style="font-size:0.9rem">Recibo</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Categorías</span>
+<div style="display:flex;flex-wrap:wrap;gap:6px"><span style="font-size:0.82rem;border:1px solid #e4e4e7;border-radius:999px;padding:2px 10px">Reunión con cliente</span><span style="font-size:0.82rem;border:1px solid #e4e4e7;border-radius:999px;padding:2px 10px">Otros</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Archivos</span>
+<div style="display:flex;align-items:center;gap:8px;border:1px solid #e4e4e7;border-radius:6px;padding:8px 12px">
+<span style="color:#6b7280">{{ mi.file }}</span>
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0;flex:1"><span style="font-size:0.82rem;font-weight:600">Recibo · PDF</span><span style="font-size:0.72rem;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">a6cc688d-447a-4fb7-82fd-6bd1e6aa7740.pdf</span></div>
+<button title="Quitar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;background:none;color:#6b7280;padding:0;cursor:pointer">{{ mi.x }}</button>
+</div>
+<button style="align-self:flex-start;display:flex;align-items:center;gap:4px;border:none;background:none;padding:0;font-size:0.82rem;font-weight:600;color:#18181b;cursor:pointer">{{ mi.plus }}Otro archivo</button>
+</div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid #e4e4e7">
+<button style="display:flex;align-items:center;gap:6px;height:36px;padding:0 10px;border:none;background:none;color:#6b7280;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer" style-hover="color:#dc2626">{{ mi.trash }}Borrar</button>
+<div style="display:flex;gap:8px"><button style="height:36px;padding:0 16px;border:1px solid #e4e4e7;background:#ffffff;color:#18181b;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer">Cerrar</button><button style="display:flex;align-items:center;gap:6px;height:36px;padding:0 16px;border:none;background:#18181b;color:#ffffff;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer">{{ mi.pencil }}Editar</button></div>
+</div>
+</div>
+
+<div style="width:520px;background:#ffffff;border-radius:6px;box-shadow:0 12px 32px rgba(24,24,27,0.16);display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid #e4e4e7">
+<div style="display:flex;align-items:center;gap:10px"><span style="display:flex;align-items:center;gap:6px;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em">{{ mi.banknote }}Cobro</span><span style="font-size:0.82rem;color:#6b7280">Jueves 12/03/2026</span></div>
+<button title="Cerrar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;border-radius:6px;background:#ffffff;color:#6b7280;cursor:pointer;padding:0">{{ mi.x }}</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px;padding:16px">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:start">
+<div style="font-size:1.05rem;font-weight:700;text-wrap:pretty">Anticipo de obra 33%</div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-variant-numeric:tabular-nums">
+<span style="font-size:1.25rem;font-weight:700">US$ 4.878</span>
+<span style="font-size:0.82rem;color:#6b7280">≈ $ 6.000.002</span>
+<span style="font-size:0.72rem;color:#6b7280">Dólar blue $ 1.230,00</span>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;border:1px solid #e4e4e7;border-radius:6px">
+<div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-right:1px solid #e4e4e7">
+<span style="font-size:0.72rem;color:#6b7280">Comprobante</span>
+<span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;background:#16a34a"></span>Adjunto</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px">
+<span style="font-size:0.72rem;color:#6b7280">Notas de crédito / débito</span>
+<span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;background:#64748b"></span>Sin notas</span>
+<button style="align-self:flex-start;display:flex;align-items:center;gap:4px;border:none;background:none;padding:0;font-size:0.72rem;font-weight:600;color:#18181b;cursor:pointer">{{ mi.plus }}Agregar nota</button>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px 16px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.72rem;color:#6b7280">Comprobante</span><span style="font-size:0.9rem">Factura A</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Desglose</span>
+<div style="border:1px solid #e4e4e7;border-radius:6px;font-size:0.82rem;font-variant-numeric:tabular-nums">
+<div style="display:flex;flex-direction:column;gap:4px;padding:8px 12px;color:#6b7280">
+<div style="display:flex;justify-content:space-between"><span>Bruto</span><span>US$ 4.878</span></div>
+<div style="display:flex;justify-content:space-between"><span>Notas de crédito</span><span>US$ 0</span></div>
+</div>
+<div style="display:flex;justify-content:space-between;padding:8px 12px;border-top:1px solid #e4e4e7;background:#fafafa;font-weight:700"><span>Neto</span><span>US$ 4.878</span></div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Archivos</span>
+<div style="display:flex;align-items:center;gap:8px;border:1px solid #e4e4e7;border-radius:6px;padding:8px 12px">
+<span style="color:#6b7280">{{ mi.file }}</span>
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0;flex:1"><span style="font-size:0.82rem;font-weight:600">Factura A · PDF</span><span style="font-size:0.72rem;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">f104578b-5c3d-4d5f-80ef-21876254f745.pdf</span></div>
+<button title="Quitar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;background:none;color:#6b7280;padding:0;cursor:pointer">{{ mi.x }}</button>
+</div>
+<button style="align-self:flex-start;display:flex;align-items:center;gap:4px;border:none;background:none;padding:0;font-size:0.82rem;font-weight:600;color:#18181b;cursor:pointer">{{ mi.plus }}Otro archivo</button>
+</div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid #e4e4e7">
+<button style="display:flex;align-items:center;gap:6px;height:36px;padding:0 10px;border:none;background:none;color:#6b7280;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer" style-hover="color:#dc2626">{{ mi.trash }}Borrar</button>
+<div style="display:flex;gap:8px"><button style="height:36px;padding:0 16px;border:1px solid #e4e4e7;background:#ffffff;color:#18181b;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer">Cerrar</button><button style="display:flex;align-items:center;gap:6px;height:36px;padding:0 16px;border:none;background:#18181b;color:#ffffff;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer">{{ mi.pencil }}Editar</button></div>
+</div>
+</div>
+
+</div>
+</div>
+
+<!-- ============ 2b ============ -->
+<div id="2b" style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:24px;align-items:flex-start;max-width:1640px">
+<div style="display:flex;flex-direction:column;gap:6px;min-width:260px">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.72rem;font-weight:700;background:#18181b;color:#ffffff;border-radius:999px;padding:2px 8px">2b</span><span style="font-size:1.05rem;font-weight:700">Contenido y panel lateral</span></div>
+<div style="font-size:0.82rem;color:#6b7280">Qué es, a la izquierda; cuánto y en qué estado, a la derecha</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;font-size:0.82rem;line-height:1.45;text-wrap:pretty">
+<div><b>Sube.</b> Un panel lateral fijo junta todo lo que se consulta seguido: importe en las dos monedas, estados con su acción, proveedor, fase, comprobante y forma de pago. Siempre en el mismo lugar, sin importar el tipo.</div>
+<div><b>Baja.</b> El cuerpo queda para el contenido largo: productos con desglose, categorías y archivos. Puede crecer o achicarse sin mover el panel.</div>
+<div><b>Por qué.</b> Las tres preguntas (cuánto, de quién y de qué fase, si falta algo) se contestan mirando sólo el panel. En celular el panel se apila arriba del contenido.</div>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+
+<div style="width:760px;background:#ffffff;border-radius:6px;box-shadow:0 12px 32px rgba(24,24,27,0.16);display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid #e4e4e7">
+<div style="display:flex;align-items:center;gap:10px"><span style="display:flex;align-items:center;gap:6px;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em">{{ mi.cart }}Compra</span><span style="font-size:0.82rem;color:#6b7280">Jueves 18/06/2026</span></div>
+<button title="Cerrar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;border-radius:6px;background:#ffffff;color:#6b7280;cursor:pointer;padding:0">{{ mi.x }}</button>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 256px">
+<div style="display:flex;flex-direction:column;gap:16px;padding:16px">
+<div style="font-size:1.05rem;font-weight:700;text-wrap:pretty">Cables y cintas para el tendido del tablero</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">3 productos</span>
+<div style="border:1px solid #e4e4e7;border-radius:6px;font-size:0.82rem;font-variant-numeric:tabular-nums">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 36px 88px;gap:8px;padding:8px 12px"><span>Prysmian Cable Unipolar 2.5mm x 100m</span><span style="color:#6b7280;text-align:right">×6</span><span style="text-align:right">$ 270.000</span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 36px 88px;gap:8px;padding:8px 12px;border-top:1px solid #e4e4e7"><span>Prysmian Cable Unipolar 4mm x 100m</span><span style="color:#6b7280;text-align:right">×3</span><span style="text-align:right">$ 204.000</span></div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 36px 88px;gap:8px;padding:8px 12px;border-top:1px solid #e4e4e7"><span>Prysmian Cinta Aislante Eléctrica 3M</span><span style="color:#6b7280;text-align:right">×4</span><span style="text-align:right">$ 20.000</span></div>
+<div style="display:flex;flex-direction:column;gap:4px;padding:8px 12px;border-top:1px solid #e4e4e7;background:#fafafa;color:#6b7280">
+<div style="display:flex;justify-content:space-between"><span>Neto</span><span>$ 494.000 · US$ 374</span></div>
+<div style="display:flex;justify-content:space-between"><span>IVA</span><span>$ 103.740 · US$ 79</span></div>
+</div>
+<div style="display:flex;justify-content:space-between;padding:8px 12px;border-top:1px solid #e4e4e7;background:#fafafa;font-weight:700"><span>Total</span><span>$ 597.740 · US$ 453</span></div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Categorías</span>
+<div style="display:flex;flex-wrap:wrap;gap:6px"><span style="font-size:0.82rem;border:1px solid #e4e4e7;border-radius:999px;padding:2px 10px">Cables y Alambres</span><span style="font-size:0.82rem;border:1px solid #e4e4e7;border-radius:999px;padding:2px 10px">Cinta</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Archivos</span>
+<button style="display:flex;align-items:center;justify-content:center;gap:6px;height:44px;border:1px dashed #d97706;border-radius:6px;background:#ffffff;font-size:0.82rem;font-weight:600;color:#18181b;cursor:pointer">{{ mi.plus }}Adjuntar la Factura B</button>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px;padding:16px;background:#fafafa;border-left:1px solid #e4e4e7">
+<div style="display:flex;flex-direction:column;gap:4px;font-variant-numeric:tabular-nums">
+<span style="font-size:0.72rem;color:#6b7280">Total en pesos</span>
+<span style="font-size:1.25rem;font-weight:700">$ 597.740</span>
+<span style="font-size:0.82rem;color:#6b7280">≈ US$ 453 · blue $ 1.320,00</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid #e4e4e7">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-size:0.82rem;color:#6b7280">Pago</span><span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;background:#16a34a"></span>Pagado</span></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-size:0.82rem;color:#6b7280">Envío</span><span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;background:#16a34a"></span>Entregado</span></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-size:0.82rem;color:#6b7280">Comprobante</span><span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;background:#d97706"></span>Falta adjuntar</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid #e4e4e7">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.72rem;color:#6b7280">Proveedor</span><span style="font-size:0.9rem;font-weight:600">Prysmian Cables</span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.72rem;color:#6b7280">Fase</span><span style="font-size:0.9rem;font-weight:600">Cableado y tablero</span></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.72rem;color:#6b7280">Comprobante</span><span style="font-size:0.82rem">Factura B</span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.72rem;color:#6b7280">Forma de pago</span><span style="font-size:0.82rem">Contado</span></div>
+</div>
+</div>
+</div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid #e4e4e7">
+<button style="display:flex;align-items:center;gap:6px;height:36px;padding:0 10px;border:none;background:none;color:#6b7280;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer" style-hover="color:#dc2626">{{ mi.trash }}Borrar</button>
+<div style="display:flex;gap:8px"><button style="height:36px;padding:0 16px;border:1px solid #e4e4e7;background:#ffffff;color:#18181b;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer">Cerrar</button><button style="display:flex;align-items:center;gap:6px;height:36px;padding:0 16px;border:none;background:#18181b;color:#ffffff;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer">{{ mi.pencil }}Editar</button></div>
+</div>
+</div>
+
+<div style="width:760px;background:#ffffff;border-radius:6px;box-shadow:0 12px 32px rgba(24,24,27,0.16);display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid #e4e4e7">
+<div style="display:flex;align-items:center;gap:10px"><span style="display:flex;align-items:center;gap:6px;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em">{{ mi.receipt }}Gasto</span><span style="font-size:0.82rem;color:#6b7280">Sábado 20/06/2026</span></div>
+<button title="Cerrar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;border-radius:6px;background:#ffffff;color:#6b7280;cursor:pointer;padding:0">{{ mi.x }}</button>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 256px">
+<div style="display:flex;flex-direction:column;gap:16px;padding:16px">
+<div style="font-size:1.05rem;font-weight:700;text-wrap:pretty">Reunión de avance con el consorcio</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Categorías</span>
+<div style="display:flex;flex-wrap:wrap;gap:6px"><span style="font-size:0.82rem;border:1px solid #e4e4e7;border-radius:999px;padding:2px 10px">Reunión con cliente</span><span style="font-size:0.82rem;border:1px solid #e4e4e7;border-radius:999px;padding:2px 10px">Otros</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Archivos</span>
+<div style="display:flex;align-items:center;gap:8px;border:1px solid #e4e4e7;border-radius:6px;padding:8px 12px">
+<span style="color:#6b7280">{{ mi.file }}</span>
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0;flex:1"><span style="font-size:0.82rem;font-weight:600">Recibo · PDF</span><span style="font-size:0.72rem;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">a6cc688d-447a-4fb7-82fd-6bd1e6aa7740.pdf</span></div>
+<button title="Quitar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;background:none;color:#6b7280;padding:0;cursor:pointer">{{ mi.x }}</button>
+</div>
+<button style="align-self:flex-start;display:flex;align-items:center;gap:4px;border:none;background:none;padding:0;font-size:0.82rem;font-weight:600;color:#18181b;cursor:pointer">{{ mi.plus }}Otro archivo</button>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px;padding:16px;background:#fafafa;border-left:1px solid #e4e4e7">
+<div style="display:flex;flex-direction:column;gap:4px;font-variant-numeric:tabular-nums">
+<span style="font-size:0.72rem;color:#6b7280">Total en pesos</span>
+<span style="font-size:1.25rem;font-weight:700">$ 54.000</span>
+<span style="font-size:0.82rem;color:#6b7280">≈ US$ 41 · blue $ 1.320,00</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid #e4e4e7">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-size:0.82rem;color:#6b7280">Comprobante</span><span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;background:#16a34a"></span>Adjunto</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid #e4e4e7">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.72rem;color:#6b7280">Fase</span><span style="font-size:0.9rem;font-weight:600">Cableado y tablero</span></div>
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.72rem;color:#6b7280">Comprobante</span><span style="font-size:0.82rem">Recibo</span></div>
+</div>
+</div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid #e4e4e7">
+<button style="display:flex;align-items:center;gap:6px;height:36px;padding:0 10px;border:none;background:none;color:#6b7280;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer" style-hover="color:#dc2626">{{ mi.trash }}Borrar</button>
+<div style="display:flex;gap:8px"><button style="height:36px;padding:0 16px;border:1px solid #e4e4e7;background:#ffffff;color:#18181b;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer">Cerrar</button><button style="display:flex;align-items:center;gap:6px;height:36px;padding:0 16px;border:none;background:#18181b;color:#ffffff;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer">{{ mi.pencil }}Editar</button></div>
+</div>
+</div>
+
+<div style="width:760px;background:#ffffff;border-radius:6px;box-shadow:0 12px 32px rgba(24,24,27,0.16);display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 16px;border-bottom:1px solid #e4e4e7">
+<div style="display:flex;align-items:center;gap:10px"><span style="display:flex;align-items:center;gap:6px;font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em">{{ mi.banknote }}Cobro</span><span style="font-size:0.82rem;color:#6b7280">Jueves 12/03/2026</span></div>
+<button title="Cerrar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;border-radius:6px;background:#ffffff;color:#6b7280;cursor:pointer;padding:0">{{ mi.x }}</button>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 256px">
+<div style="display:flex;flex-direction:column;gap:16px;padding:16px">
+<div style="font-size:1.05rem;font-weight:700;text-wrap:pretty">Anticipo de obra 33%</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Desglose</span>
+<div style="border:1px solid #e4e4e7;border-radius:6px;font-size:0.82rem;font-variant-numeric:tabular-nums">
+<div style="display:flex;justify-content:space-between;padding:8px 12px;color:#6b7280"><span>Bruto</span><span>US$ 4.878</span></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 12px;border-top:1px solid #e4e4e7"><span style="color:#6b7280">Notas de crédito / débito · sin notas cargadas</span><button style="display:flex;align-items:center;gap:4px;border:none;background:none;padding:0;font-size:0.82rem;font-weight:600;color:#18181b;cursor:pointer">{{ mi.plus }}Agregar</button></div>
+<div style="display:flex;justify-content:space-between;padding:8px 12px;border-top:1px solid #e4e4e7;background:#fafafa;font-weight:700"><span>Neto</span><span>US$ 4.878</span></div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Archivos</span>
+<div style="display:flex;align-items:center;gap:8px;border:1px solid #e4e4e7;border-radius:6px;padding:8px 12px">
+<span style="color:#6b7280">{{ mi.file }}</span>
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0;flex:1"><span style="font-size:0.82rem;font-weight:600">Factura A · PDF</span><span style="font-size:0.72rem;color:#6b7280;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">f104578b-5c3d-4d5f-80ef-21876254f745.pdf</span></div>
+<button title="Quitar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;background:none;color:#6b7280;padding:0;cursor:pointer">{{ mi.x }}</button>
+</div>
+<button style="align-self:flex-start;display:flex;align-items:center;gap:4px;border:none;background:none;padding:0;font-size:0.82rem;font-weight:600;color:#18181b;cursor:pointer">{{ mi.plus }}Otro archivo</button>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px;padding:16px;background:#fafafa;border-left:1px solid #e4e4e7">
+<div style="display:flex;flex-direction:column;gap:4px;font-variant-numeric:tabular-nums">
+<span style="font-size:0.72rem;color:#6b7280">Neto en dólares</span>
+<span style="font-size:1.25rem;font-weight:700">US$ 4.878</span>
+<span style="font-size:0.82rem;color:#6b7280">≈ $ 6.000.002 · blue $ 1.230,00</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid #e4e4e7">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-size:0.82rem;color:#6b7280">Comprobante</span><span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;background:#16a34a"></span>Adjunto</span></div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span style="font-size:0.82rem;color:#6b7280">Notas</span><span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;background:#64748b"></span>Sin notas</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px;padding-top:12px;border-top:1px solid #e4e4e7">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.72rem;color:#6b7280">Comprobante</span><span style="font-size:0.82rem">Factura A</span></div>
+</div>
+</div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;border-top:1px solid #e4e4e7">
+<button style="display:flex;align-items:center;gap:6px;height:36px;padding:0 10px;border:none;background:none;color:#6b7280;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer" style-hover="color:#dc2626">{{ mi.trash }}Borrar</button>
+<div style="display:flex;gap:8px"><button style="height:36px;padding:0 16px;border:1px solid #e4e4e7;background:#ffffff;color:#18181b;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer">Cerrar</button><button style="display:flex;align-items:center;gap:6px;height:36px;padding:0 16px;border:none;background:#18181b;color:#ffffff;font-size:0.82rem;font-weight:600;border-radius:6px;cursor:pointer">{{ mi.pencil }}Editar</button></div>
+</div>
+</div>
+
+</div>
+</div>
+</section>
+<section style="display:flex;flex-direction:column;gap:24px;padding:24px;font-family:'Public Sans',sans-serif">
+<div style="display:flex;flex-direction:column;gap:4px;max-width:900px">
+<div style="font-size:1.25rem;font-weight:700">Movimiento · tres direcciones</div>
+<div style="font-size:0.9rem;color:#6b7280;text-wrap:pretty">Mismos 10 movimientos en las tres. Cada dirección muestra fila desktop, card mobile (compra, gasto y cobro) y card de pendiente.</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:48px;align-items:flex-start">
+
+<!-- ============ 1a ============ -->
+<div id="1a" style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:24px;align-items:flex-start;max-width:1240px">
+<div style="display:flex;flex-direction:column;gap:6px;min-width:260px">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.72rem;font-weight:700;background:#18181b;color:#ffffff;border-radius:999px;padding:2px 8px">1a</span><span style="font-size:1.05rem;font-weight:700">Moneda como columna</span></div>
+<div style="font-size:0.82rem;color:#6b7280">Planilla de tres líneas por movimiento</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;font-size:0.82rem;line-height:1.45;text-wrap:pretty">
+<div><b>Sube.</b> La moneda tiene columna propia (ARS / USD) pegada al importe: el ojo lee primero el código y después la cifra. Fase y proveedor salen del subtítulo a su propia línea, en tinta y con ícono.</div>
+<div><b>Baja.</b> Categoría, tipo de comprobante y cantidad de productos pasan a una tercera línea chica y gris que puede envolver. Ya no se corta con "…", pero tampoco compite.</div>
+<div><b>Por qué.</b> Es el cambio más chico respecto de hoy. Las tres preguntas quedan en tres lugares fijos: importe a la derecha, fase/proveedor en la línea 2, problemas en la columna Estado.</div>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Desktop · ≥900px</div>
+<div style="width:1240px;background:#ffffff;border:1px solid #e4e4e7;border-radius:6px;overflow:hidden">
+<div style="display:grid;grid-template-columns:96px minmax(0,1fr) 176px 48px 132px 100px 100px;gap:12px;padding:8px 16px;background:#fafafa;font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">
+<div>Tipo</div><div>Movimiento</div><div>Estado</div><div>Moneda</div><div style="text-align:right">Importe</div><div style="text-align:right">Saldo US$</div><div></div>
+</div>
+<sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 16px;background:#fafafa;border-top:1px solid #e4e4e7;font-size:0.82rem">
+<span style="font-weight:600">{{ g.label }}</span><span style="color:#6b7280;font-variant-numeric:tabular-nums">{{ g.subLine }}</span>
+</div>
+<sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:96px minmax(0,1fr) 176px 48px 132px 100px 100px;gap:12px;padding:10px 16px;border-top:1px solid #e4e4e7;align-items:start">
+<div style="display:flex;align-items:center;gap:6px;color:#6b7280;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;padding-top:2px">{{ r.icon }}<span>{{ r.tipoLabel }}</span></div>
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+<div style="font-size:0.9rem;font-weight:600;text-wrap:pretty">{{ r.title }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:4px 12px;font-size:0.82rem">
+<span style="display:flex;align-items:center;gap:4px">{{ r.ic.layers }}{{ r.fase }}</span>
+<sc-if value="{{ r.hasProv }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:4px">{{ r.ic.building }}{{ r.proveedor }}</span></sc-if>
+</div>
+<div style="font-size:0.72rem;color:#6b7280">{{ r.metaLine }}</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;padding-top:2px">
+<sc-for list="{{ r.alerts }}" as="a" hint-placeholder-count="1"><div style="display:flex;align-items:center;gap:6px;font-size:0.82rem"><span style="width:8px;height:8px;border-radius:999px;flex:none;background:{{ a.color }}"></span>{{ a.label }}</div></sc-for>
+</div>
+<div style="padding-top:2px"><span style="font-size:0.72rem;font-weight:700;color:#18181b;border:1px solid #e4e4e7;border-radius:999px;padding:0 6px">{{ r.cur }}</span></div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-variant-numeric:tabular-nums">
+<span style="font-size:0.95rem;font-weight:600">{{ r.signNum }}</span>
+<sc-if value="{{ r.isPesos }}" hint-placeholder-val="{{ true }}"><span style="font-size:0.72rem;color:#6b7280">≈ US$ {{ r.eqNum }}</span></sc-if>
+</div>
+<div style="text-align:right;font-size:0.82rem;color:#6b7280;font-variant-numeric:tabular-nums;padding-top:2px">{{ r.saldo }}</div>
+<div style="display:flex;gap:4px;justify-content:flex-end">
+<button title="Ver detalle" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;cursor:pointer;padding:0" style-hover="color:#18181b;border-color:#18181b">{{ r.ic.eye }}</button>
+<button title="Editar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;cursor:pointer;padding:0" style-hover="color:#18181b;border-color:#18181b">{{ r.ic.pencil }}</button>
+<button title="Borrar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;cursor:pointer;padding:0" style-hover="color:#dc2626;border-color:#dc2626">{{ r.ic.trash }}</button>
+</div>
+</div>
+</sc-for>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Celular · ≤640px</div>
+<div style="width:375px;box-sizing:border-box;background:#fafafa;border:1px solid #e4e4e7;border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ mobileRows }}" as="r" hint-placeholder-count="3">
+<div style="background:#ffffff;border:1px solid #e4e4e7;border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+<div style="display:flex;align-items:center;gap:6px;color:#6b7280;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;padding-top:4px">{{ r.icon }}<span>{{ r.tipoLabel }}</span></div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-variant-numeric:tabular-nums">
+<div style="display:flex;align-items:center;gap:6px"><span style="font-size:0.72rem;font-weight:700;border:1px solid #e4e4e7;border-radius:999px;padding:0 6px">{{ r.cur }}</span><span style="font-size:1.05rem;font-weight:600">{{ r.signNum }}</span></div>
+<sc-if value="{{ r.isPesos }}" hint-placeholder-val="{{ true }}"><span style="font-size:0.72rem;color:#6b7280">≈ US$ {{ r.eqNum }}</span></sc-if>
+</div>
+</div>
+<div style="font-size:0.95rem;font-weight:600;text-wrap:pretty">{{ r.title }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:4px 12px;font-size:0.82rem">
+<span style="display:flex;align-items:center;gap:4px">{{ r.ic.layers }}{{ r.fase }}</span>
+<sc-if value="{{ r.hasProv }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:4px">{{ r.ic.building }}{{ r.proveedor }}</span></sc-if>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:4px 12px">
+<sc-for list="{{ r.alerts }}" as="a" hint-placeholder-count="1"><div style="display:flex;align-items:center;gap:6px;font-size:0.82rem"><span style="width:8px;height:8px;border-radius:999px;flex:none;background:{{ a.color }}"></span>{{ a.label }}</div></sc-for>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid #e4e4e7;padding-top:8px">
+<span style="font-size:0.72rem;color:#6b7280;text-wrap:pretty">{{ r.metaLine }}</span>
+<div style="display:flex;gap:4px;flex:none">
+<button title="Ver detalle" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;padding:0">{{ r.ic.eyeL }}</button>
+<button title="Editar" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;padding:0">{{ r.ic.pencilL }}</button>
+<button title="Borrar" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;padding:0">{{ r.ic.trashL }}</button>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Card de pendiente</div>
+<div style="width:360px;box-sizing:border-box;background:#ffffff;border:1px solid #e4e4e7;border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<span style="font-size:1.25rem;font-weight:700;color:#dc2626;font-variant-numeric:tabular-nums">hace {{ pend.dias }} días</span>
+<span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;background:#dc2626"></span>Sin pagar</span>
+</div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-variant-numeric:tabular-nums">
+<div style="display:flex;align-items:center;gap:6px"><span style="font-size:0.72rem;font-weight:700;border:1px solid #e4e4e7;border-radius:999px;padding:0 6px">ARS</span><span style="font-size:1.05rem;font-weight:600">{{ pend.signNum }}</span></div>
+<span style="font-size:0.72rem;color:#6b7280">≈ US$ {{ pend.eqNum }}</span>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px">
+<div style="font-size:0.95rem;font-weight:600;text-wrap:pretty">{{ pend.title }}</div>
+<div style="font-size:0.82rem;color:#6b7280">{{ pend.producto }}</div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<span style="font-size:0.72rem;font-weight:600;border:1px solid #e4e4e7;border-radius:999px;padding:2px 8px">{{ pend.formaPago }}</span>
+<span style="font-size:0.72rem;font-weight:600;border:1px solid #e4e4e7;border-radius:999px;padding:2px 8px;display:flex;align-items:center;gap:4px">{{ pend.ic.clip }}{{ pend.comp }}</span>
+</div>
+<span style="font-size:0.72rem;color:#6b7280">{{ pend.fecha }}</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ============ 1b ============ -->
+<div id="1b" style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:24px;align-items:flex-start;max-width:1240px">
+<div style="display:flex;flex-direction:column;gap:6px;min-width:260px">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.72rem;font-weight:700;background:#18181b;color:#ffffff;border-radius:999px;padding:2px 8px">1b</span><span style="font-size:1.05rem;font-weight:700">Fase y proveedor primero</span></div>
+<div style="font-size:0.82rem;color:#6b7280">Cada dato del subtítulo con columna propia</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;font-size:0.82rem;line-height:1.45;text-wrap:pretty">
+<div><b>Sube.</b> Fase tiene columna. Proveedor (o la categoría, si no es compra) pasa a ser la línea principal de la fila. Comprobante y estado de pago/envío también tienen columna, con un valor por línea.</div>
+<div><b>Baja.</b> El título pasa a segunda línea, en gris. El tipo queda como ícono con label chico. La moneda se integra como prefijo alineado ($ / US$) en lugar de columna.</div>
+<div><b>Por qué.</b> En una obra se busca "lo de ClimaTotal" o "lo de Montaje" más que una descripción. Columnas fijas se leen hacia abajo sin parsear texto. El costo: Q3 se reparte entre Comprobante y Estado.</div>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Desktop · ≥900px</div>
+<div style="width:1240px;background:#ffffff;border:1px solid #e4e4e7;border-radius:6px;overflow:hidden">
+<div style="display:grid;grid-template-columns:64px 112px minmax(0,1fr) 132px 168px 148px 92px 100px;gap:12px;padding:8px 16px;background:#fafafa;font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">
+<div>Tipo</div><div>Fase</div><div>Proveedor / categoría</div><div>Comprobante</div><div>Pago y envío</div><div style="text-align:right">Importe</div><div style="text-align:right">Saldo US$</div><div></div>
+</div>
+<sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 16px;background:#fafafa;border-top:1px solid #e4e4e7;font-size:0.82rem">
+<span style="font-weight:600">{{ g.label }}</span><span style="color:#6b7280;font-variant-numeric:tabular-nums">{{ g.subLine }}</span>
+</div>
+<sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:64px 112px minmax(0,1fr) 132px 168px 148px 92px 100px;gap:12px;padding:10px 16px;border-top:1px solid #e4e4e7;align-items:start">
+<div style="display:flex;flex-direction:column;align-items:flex-start;gap:4px;color:#6b7280;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">{{ r.ic.typeL }}<span>{{ r.tipoLabel }}</span></div>
+<div style="font-size:0.82rem;font-weight:600;padding-top:2px">{{ r.fase }}</div>
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0">
+<div style="font-size:0.9rem;font-weight:600">{{ r.entity }}</div>
+<div style="font-size:0.82rem;color:#6b7280;text-wrap:pretty">{{ r.entitySub }}</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;font-size:0.82rem;padding-top:2px">
+<span>{{ r.compTipo }}</span>
+<span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:999px;flex:none;background:{{ r.adjState.color }}"></span>{{ r.adjState.label }}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;font-size:0.82rem;padding-top:2px">
+<sc-if value="{{ r.isCompra }}" hint-placeholder-val="{{ true }}">
+<span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:999px;flex:none;background:{{ r.pagoState.color }}"></span>{{ r.pagoState.label }}</span>
+<span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:999px;flex:none;background:{{ r.envioState.color }}"></span>{{ r.envioState.label }}</span>
+</sc-if>
+<sc-if value="{{ r.notCompra }}" hint-placeholder-val="{{ false }}"><span style="color:#6b7280">No aplica</span></sc-if>
+</div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-variant-numeric:tabular-nums">
+<div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:0.72rem;font-weight:700;color:#6b7280">{{ r.sym }}</span><span style="font-size:0.95rem;font-weight:600">{{ r.signNum }}</span></div>
+<sc-if value="{{ r.isPesos }}" hint-placeholder-val="{{ true }}"><span style="font-size:0.72rem;color:#6b7280">≈ US$ {{ r.eqNum }}</span></sc-if>
+</div>
+<div style="text-align:right;font-size:0.82rem;color:#6b7280;font-variant-numeric:tabular-nums;padding-top:2px">{{ r.saldo }}</div>
+<div style="display:flex;gap:4px;justify-content:flex-end">
+<button title="Ver detalle" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;cursor:pointer;padding:0" style-hover="color:#18181b;border-color:#18181b">{{ r.ic.eye }}</button>
+<button title="Editar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;cursor:pointer;padding:0" style-hover="color:#18181b;border-color:#18181b">{{ r.ic.pencil }}</button>
+<button title="Borrar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;cursor:pointer;padding:0" style-hover="color:#dc2626;border-color:#dc2626">{{ r.ic.trash }}</button>
+</div>
+</div>
+</sc-for>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Celular · ≤640px</div>
+<div style="width:375px;box-sizing:border-box;background:#fafafa;border:1px solid #e4e4e7;border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ mobileRows }}" as="r" hint-placeholder-count="3">
+<div style="background:#ffffff;border:1px solid #e4e4e7;border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">
+<span style="display:flex;align-items:center;gap:6px">{{ r.ic.layers }}{{ r.fase }}</span>
+<span style="display:flex;align-items:center;gap:6px;color:#6b7280">{{ r.icon }}{{ r.tipoLabel }}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px">
+<div style="font-size:0.95rem;font-weight:600">{{ r.entity }}</div>
+<div style="font-size:0.82rem;color:#6b7280;text-wrap:pretty">{{ r.entitySub }}</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:0.82rem">
+<div style="display:flex;flex-direction:column;gap:4px">
+<span>{{ r.compTipo }}</span>
+<span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:999px;flex:none;background:{{ r.adjState.color }}"></span>{{ r.adjState.label }}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px">
+<sc-if value="{{ r.isCompra }}" hint-placeholder-val="{{ true }}">
+<span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:999px;flex:none;background:{{ r.pagoState.color }}"></span>{{ r.pagoState.label }}</span>
+<span style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:999px;flex:none;background:{{ r.envioState.color }}"></span>{{ r.envioState.label }}</span>
+</sc-if>
+</div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid #e4e4e7;padding-top:8px">
+<div style="display:flex;flex-direction:column;gap:4px;font-variant-numeric:tabular-nums">
+<div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:0.72rem;font-weight:700;color:#6b7280">{{ r.sym }}</span><span style="font-size:1.05rem;font-weight:600">{{ r.signNum }}</span></div>
+<sc-if value="{{ r.isPesos }}" hint-placeholder-val="{{ true }}"><span style="font-size:0.72rem;color:#6b7280">≈ US$ {{ r.eqNum }}</span></sc-if>
+</div>
+<div style="display:flex;gap:4px;flex:none">
+<button title="Ver detalle" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;padding:0">{{ r.ic.eyeL }}</button>
+<button title="Editar" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;padding:0">{{ r.ic.pencilL }}</button>
+<button title="Borrar" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;padding:0">{{ r.ic.trashL }}</button>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Card de pendiente</div>
+<div style="width:360px;box-sizing:border-box;background:#ffffff;border:1px solid #e4e4e7;border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">
+<span style="display:flex;align-items:center;gap:6px">{{ pend.ic.layers }}{{ pend.fase }}</span>
+<span style="color:#6b7280">{{ pend.fecha }}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px">
+<div style="font-size:0.95rem;font-weight:600">{{ pend.proveedor }}</div>
+<div style="font-size:0.82rem;text-wrap:pretty">{{ pend.title }}</div>
+<div style="font-size:0.82rem;color:#6b7280">{{ pend.producto }}</div>
+</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<span style="font-size:0.72rem;font-weight:600;border:1px solid #e4e4e7;border-radius:999px;padding:2px 8px">{{ pend.formaPago }}</span>
+<span style="font-size:0.72rem;font-weight:600;border:1px solid #e4e4e7;border-radius:999px;padding:2px 8px;display:flex;align-items:center;gap:4px">{{ pend.ic.clip }}{{ pend.comp }}</span>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;border-top:1px solid #e4e4e7;padding-top:12px">
+<span style="display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;background:#dc2626"></span>Sin pagar · hace {{ pend.dias }} días</span>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-variant-numeric:tabular-nums">
+<div style="display:flex;align-items:baseline;gap:6px"><span style="font-size:0.72rem;font-weight:700;color:#6b7280">$</span><span style="font-size:1.05rem;font-weight:600">{{ pend.signNum }}</span></div>
+<span style="font-size:0.72rem;color:#6b7280">≈ US$ {{ pend.eqNum }}</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<!-- ============ 1c ============ -->
+<div id="1c" style="display:flex;flex-direction:column;gap:16px">
+<div style="display:flex;gap:24px;align-items:flex-start;max-width:1240px">
+<div style="display:flex;flex-direction:column;gap:6px;min-width:260px">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:0.72rem;font-weight:700;background:#18181b;color:#ffffff;border-radius:999px;padding:2px 8px">1c</span><span style="font-size:1.05rem;font-weight:700">Dos columnas de moneda</span></div>
+<div style="font-size:0.82rem;color:#6b7280">Ficha etiquetada + pesos y dólares separados</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;font-size:0.82rem;line-height:1.45;text-wrap:pretty">
+<div><b>Sube.</b> La moneda pasa a ser posición: columna Pesos y columna Dólares. Los cobros caen sólo en Dólares; gastos y compras en Pesos con su equivalente al lado, en gris. Los subtotales del día se alinean en las mismas columnas.</div>
+<div><b>Baja.</b> Los datos del medio dejan de ser una frase: son campos con etiqueta (Fase, Proveedor, Categoría…) que envuelven. La fila es más alta; a cambio, nada se trunca y cada campo se encuentra por su nombre.</div>
+<div><b>Por qué.</b> Si la confusión es de moneda, la forma más directa de evitarla es que nunca compartan columna. Las alertas tienen columna propia y sólo muestran texto cuando hay problema.</div>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Desktop · ≥900px</div>
+<div style="width:1240px;background:#ffffff;border:1px solid #e4e4e7;border-radius:6px;overflow:hidden">
+<div style="display:grid;grid-template-columns:96px minmax(0,1fr) 160px 132px 112px 100px 100px;gap:12px;padding:8px 16px;background:#fafafa;font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">
+<div>Tipo</div><div>Movimiento</div><div>Alertas</div><div style="text-align:right">Pesos $</div><div style="text-align:right">Dólares US$</div><div style="text-align:right">Saldo US$</div><div></div>
+</div>
+<sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:96px minmax(0,1fr) 160px 132px 112px 100px 100px;gap:12px;padding:6px 16px;background:#fafafa;border-top:1px solid #e4e4e7;font-size:0.82rem;font-variant-numeric:tabular-nums">
+<span style="grid-column:1 / span 3;font-weight:600">{{ g.label }}</span>
+<span style="text-align:right;color:#6b7280">{{ g.subArs }}</span>
+<span style="text-align:right;color:#6b7280">{{ g.subUsd }}</span>
+<span></span><span></span>
+</div>
+<sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:96px minmax(0,1fr) 160px 132px 112px 100px 100px;gap:12px;padding:12px 16px;border-top:1px solid #e4e4e7;align-items:start">
+<div style="display:flex;align-items:center;gap:6px;color:#6b7280;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;padding-top:2px">{{ r.icon }}<span>{{ r.tipoLabel }}</span></div>
+<div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+<div style="font-size:0.9rem;font-weight:600;text-wrap:pretty">{{ r.title }}</div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 24px">
+<sc-for list="{{ r.fields }}" as="f" hint-placeholder-count="4">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:0.72rem;color:#6b7280">{{ f.k }}</span><span style="font-size:0.82rem;font-weight:500">{{ f.v }}</span></div>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;padding-top:2px">
+<sc-for list="{{ r.problems }}" as="a" hint-placeholder-count="1"><div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;flex:none;background:{{ a.color }}"></span>{{ a.label }}</div></sc-for>
+<sc-if value="{{ r.noProblems }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:#6b7280"><span style="width:8px;height:8px;border-radius:999px;flex:none;background:#16a34a"></span>Sin observaciones</div></sc-if>
+</div>
+<div style="text-align:right;font-size:0.95rem;font-weight:600;font-variant-numeric:tabular-nums">{{ r.arsCell }}</div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;font-variant-numeric:tabular-nums">
+<sc-if value="{{ r.isPesos }}" hint-placeholder-val="{{ true }}"><span style="font-size:0.82rem;color:#6b7280;padding-top:2px">≈ {{ r.eqNum }}</span></sc-if>
+<sc-if value="{{ r.isUsd }}" hint-placeholder-val="{{ false }}"><span style="font-size:0.95rem;font-weight:600">{{ r.signNum }}</span></sc-if>
+</div>
+<div style="text-align:right;font-size:0.82rem;color:#6b7280;font-variant-numeric:tabular-nums;padding-top:2px">{{ r.saldo }}</div>
+<div style="display:flex;gap:4px;justify-content:flex-end">
+<button title="Ver detalle" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;cursor:pointer;padding:0" style-hover="color:#18181b;border-color:#18181b">{{ r.ic.eye }}</button>
+<button title="Editar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;cursor:pointer;padding:0" style-hover="color:#18181b;border-color:#18181b">{{ r.ic.pencil }}</button>
+<button title="Borrar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;cursor:pointer;padding:0" style-hover="color:#dc2626;border-color:#dc2626">{{ r.ic.trash }}</button>
+</div>
+</div>
+</sc-for>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Celular · ≤640px</div>
+<div style="width:375px;box-sizing:border-box;background:#fafafa;border:1px solid #e4e4e7;border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px">
+<sc-for list="{{ mobileRows }}" as="r" hint-placeholder-count="3">
+<div style="background:#ffffff;border:1px solid #e4e4e7;border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<div style="display:flex;align-items:center;gap:6px;color:#6b7280;font-size:0.72rem;font-weight:600;text-transform:uppercase;letter-spacing:0.04em">{{ r.icon }}<span>{{ r.tipoLabel }}</span></div>
+<div style="font-size:0.95rem;font-weight:600;text-wrap:pretty">{{ r.title }}</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;border:1px solid #e4e4e7;border-radius:6px;font-variant-numeric:tabular-nums">
+<div style="display:flex;flex-direction:column;gap:4px;padding:8px 10px;border-right:1px solid #e4e4e7">
+<span style="font-size:0.72rem;color:#6b7280">Pesos $</span>
+<span style="font-size:1.05rem;font-weight:600">{{ r.arsCellM }}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;padding:8px 10px">
+<span style="font-size:0.72rem;color:#6b7280">Dólares US$</span>
+<sc-if value="{{ r.isPesos }}" hint-placeholder-val="{{ true }}"><span style="font-size:1.05rem;color:#6b7280">≈ {{ r.eqNum }}</span></sc-if>
+<sc-if value="{{ r.isUsd }}" hint-placeholder-val="{{ false }}"><span style="font-size:1.05rem;font-weight:600">{{ r.signNum }}</span></sc-if>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px 12px">
+<sc-for list="{{ r.fields }}" as="f" hint-placeholder-count="4">
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font-size:0.72rem;color:#6b7280">{{ f.k }}</span><span style="font-size:0.82rem;font-weight:500">{{ f.v }}</span></div>
+</sc-for>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;border-top:1px solid #e4e4e7;padding-top:8px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<sc-for list="{{ r.problems }}" as="a" hint-placeholder-count="1"><div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;font-weight:600"><span style="width:8px;height:8px;border-radius:999px;flex:none;background:{{ a.color }}"></span>{{ a.label }}</div></sc-for>
+<sc-if value="{{ r.noProblems }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:#6b7280"><span style="width:8px;height:8px;border-radius:999px;flex:none;background:#16a34a"></span>Sin observaciones</div></sc-if>
+</div>
+<div style="display:flex;gap:4px;flex:none">
+<button title="Ver detalle" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;padding:0">{{ r.ic.eyeL }}</button>
+<button title="Editar" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;padding:0">{{ r.ic.pencilL }}</button>
+<button title="Borrar" style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border:1px solid #e4e4e7;border-radius:6px;background:#ffffff;color:#6b7280;padding:0">{{ r.ic.trashL }}</button>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px">
+<div style="font-size:0.72rem;font-weight:600;color:#6b7280;text-transform:uppercase;letter-spacing:0.04em">Card de pendiente</div>
+<div style="width:360px;box-sizing:border-box;background:#ffffff;border:1px solid #e4e4e7;border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;padding-bottom:12px;border-bottom:1px solid #e4e4e7">
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:64px;height:64px;border:1px solid #dc2626;border-radius:6px;color:#dc2626">
+<span style="font-size:1.25rem;font-weight:700;font-variant-numeric:tabular-nums">{{ pend.dias }}</span>
+<span style="font-size:0.72rem;font-weight:600">días</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px">
+<span style="font-size:0.82rem;font-weight:600">Sin pagar desde el {{ pend.fecha }}</span>
+<span style="font-size:0.72rem;color:#6b7280">Entregado · comprobante adjunto</span>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px">
+<div style="font-size:0.95rem;font-weight:600;text-wrap:pretty">{{ pend.title }}</div>
+<div style="font-size:0.82rem;color:#6b7280">{{ pend.producto }}</div>
+</div>
+<div style="display:flex;gap:6px;flex-wrap:wrap">
+<span style="font-size:0.72rem;font-weight:600;border:1px solid #e4e4e7;border-radius:999px;padding:2px 8px">{{ pend.formaPago }}</span>
+<span style="font-size:0.72rem;font-weight:600;border:1px solid #e4e4e7;border-radius:999px;padding:2px 8px;display:flex;align-items:center;gap:4px">{{ pend.ic.clip }}{{ pend.comp }}</span>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;border:1px solid #e4e4e7;border-radius:6px;font-variant-numeric:tabular-nums">
+<div style="display:flex;flex-direction:column;gap:4px;padding:8px 10px;border-right:1px solid #e4e4e7"><span style="font-size:0.72rem;color:#6b7280">Pesos $</span><span style="font-size:1.05rem;font-weight:600">{{ pend.signNum }}</span></div>
+<div style="display:flex;flex-direction:column;gap:4px;padding:8px 10px"><span style="font-size:0.72rem;color:#6b7280">Dólares US$</span><span style="font-size:1.05rem;color:#6b7280">≈ {{ pend.eqNum }}</span></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const P={
+receipt:'<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
+cart:'<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
+banknote:'<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
+clip:'<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+eye:'<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>',
+pencil:'<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>',
+trash:'<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+layers:'<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
+x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
+file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+building:'<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/>'
+};
+const ic=(n,s=14)=>React.createElement('svg',{width:s,height:s,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:2,strokeLinecap:'round',strokeLinejoin:'round',style:{flex:'none',display:'block'},dangerouslySetInnerHTML:{__html:P[n]}});
+const RED='#dc2626',OR='#d97706',GR='#16a34a',GY='#64748b',TC=1350,M='\u2212';
+const fmt=n=>Math.round(n).toLocaleString('es-AR');
+const TYPES={compra:['Compra','cart'],gasto:['Gasto','receipt'],cobro:['Cobro','banknote']};
+const GROUPS=['Lunes 5 de octubre','Viernes 2 de octubre','Miércoles 10 de junio'];
+const RAW=[
+{g:0,t:'compra',title:'Montaje y tendido eléctrico de los 8 equipos',prov:'ClimaTotal Instalaciones',fase:'Montaje',cat:'Instalación eléctrica',comp:'Factura A',prod:4,adj:true,pago:'pendiente',dias:1,envio:'entregado',ars:1220100},
+{g:0,t:'cobro',title:'Anticipo segunda etapa',fase:'Montaje',cat:'Anticipo',comp:'Recibo',adj:true,usd:4000},
+{g:0,t:'gasto',title:'Flete de equipos a obra',fase:'Montaje',cat:'Flete',comp:'Factura B',adj:false,ars:85000},
+{g:1,t:'compra',title:'Caños de cobre y aislante térmico',prov:'Sanitarios Rivera',fase:'Montaje',cat:'Materiales',comp:'Factura A',prod:6,adj:true,pago:'pagado',envio:'pedido',ars:486300},
+{g:1,t:'gasto',title:'Almuerzo con el cliente en obra',fase:'Montaje',cat:'Reunión con cliente',comp:'Recibo',adj:true,ars:42500},
+{g:1,t:'gasto',title:'Comisión por transferencia',fase:'Administración',cat:'Gasto bancario',comp:'Recibo',adj:true,ars:3800},
+{g:2,t:'compra',title:'Soportes y ménsulas para condensadoras',prov:'Hierros del Sur',fase:'Preparación',cat:'Materiales',comp:'Factura A',prod:2,adj:false,pago:'pagado',envio:'entregado',ars:214000},
+{g:2,t:'cobro',title:'Cuota 3 de 6',fase:'Preparación',cat:'Cuota',comp:'Recibo',adj:true,usd:2500},
+{g:2,t:'compra',title:'Equipos split inverter 6000 frigorías',prov:'ClimaTotal Instalaciones',fase:'Preparación',cat:'Equipos',comp:'Factura A',prod:8,adj:true,pago:'pendiente',dias:118,envio:'entregado',ars:9450000},
+{g:2,t:'gasto',title:'Alquiler de andamio, 15 días',fase:'Preparación',cat:'Alquiler',comp:'Factura B',adj:true,ars:180000}
+];
+function build(){
+  const icons={layers:ic('layers',12),building:ic('building',12),eye:ic('eye'),pencil:ic('pencil'),trash:ic('trash'),eyeL:ic('eye',18),pencilL:ic('pencil',18),trashL:ic('trash',18),clip:ic('clip',12)};
+  let saldo=20000;const sal=[];
+  for(let i=RAW.length-1;i>=0;i--){const r=RAW[i];saldo+=r.usd?r.usd:-Math.round(r.ars/TC);sal[i]=saldo;}
+  const rows=RAW.map((r,i)=>{
+    const [tipoLabel,iname]=TYPES[r.t];const isPesos=!!r.ars,isCompra=r.t==='compra';
+    const eq=isPesos?Math.round(r.ars/TC):0;
+    const problems=[];
+    if(isCompra&&r.pago==='pendiente')problems.push(r.dias>=90?{label:r.dias+' días sin pagar',color:RED}:{label:'Pago pendiente',color:OR});
+    if(r.envio==='pedido')problems.push({label:'Sin entregar',color:OR});
+    if(!r.adj)problems.push({label:'Sin comprobante',color:OR});
+    const fields=[{k:'Fase',v:r.fase}];
+    if(r.prov)fields.push({k:'Proveedor',v:r.prov});
+    fields.push({k:'Categoría',v:r.cat},{k:'Comprobante',v:r.comp+(r.adj?' · adjunto':'')});
+    if(r.prod)fields.push({k:'Productos',v:r.prod+' productos'});
+    const meta=[r.cat,r.comp];if(r.prod)meta.push(r.prod+' productos');if(r.adj)meta.push('comprobante adjunto');
+    const num=fmt(isPesos?r.ars:r.usd);
+    return {
+      g:r.g,tipoLabel,icon:ic(iname),ic:{...icons,typeL:ic(iname,18)},title:r.title,fase:r.fase,proveedor:r.prov||'',hasProv:!!r.prov,
+      metaLine:meta.join(' · '),isPesos,isUsd:!isPesos,isCompra,notCompra:!isCompra,
+      cur:isPesos?'ARS':'USD',sym:isPesos?'$':'US$',signNum:(isPesos?M:'+')+' '+num,eqNum:fmt(eq),
+      arsCell:isPesos?M+' '+num:'',arsCellM:isPesos?M+' '+num:'—',
+      saldo:fmt(sal[i]),problems,noProblems:!problems.length,
+      alerts:problems.length?problems:[{label:'Al día',color:GR}],
+      entity:r.prov||r.cat,entitySub:r.prov?r.title+' · '+r.prod+' productos':r.title,compTipo:r.comp,
+      adjState:r.adj?{label:'Adjunto',color:GR}:{label:'Falta adjuntar',color:OR},
+      pagoState:r.pago==='pagado'?{label:'Pagado',color:GR}:(r.dias>=90?{label:'Sin pagar · '+r.dias+' días',color:RED}:{label:'Pago pendiente',color:OR}),
+      envioState:r.envio==='entregado'?{label:'Entregado',color:GR}:{label:'Pedido, sin entregar',color:OR},
+      fields
+    };
+  });
+  const groups=GROUPS.map((label,gi)=>{
+    const gr=rows.filter(r=>r.g===gi);const raw=RAW.filter(r=>r.g===gi);
+    const a=raw.reduce((s,r)=>s+(r.ars||0),0),u=raw.reduce((s,r)=>s+(r.usd||0),0);
+    const parts=[];if(a)parts.push(M+' $ '+fmt(a));if(u)parts.push('+ US$ '+fmt(u));
+    return {label,rows:gr,subLine:parts.join('   ·   '),subArs:a?M+' '+fmt(a):'',subUsd:u?'+ '+fmt(u):''};
+  });
+  const p=RAW[8];
+  const pend={title:p.title,producto:'8 × Split inverter 6000 frigorías',fecha:'10 jun 2026',formaPago:'Transferencia',comp:p.comp,dias:118,fase:p.fase,proveedor:p.prov,signNum:M+' '+fmt(p.ars),eqNum:fmt(p.ars/TC),ic:icons};
+  const mi={cart:ic('cart'),receipt:ic('receipt'),banknote:ic('banknote'),x:ic('x',16),plus:ic('plus'),file:ic('file'),trash:ic('trash'),pencil:ic('pencil'),clip:ic('clip',12)};
+  return {groups,mobileRows:[rows[0],rows[2],rows[1]],pend,mi};
+}
+class Component extends DCLogic {
+  renderVals(){ if(!this._v)this._v=build(); return this._v; }
+}
+</script>
+</body>
+</html>

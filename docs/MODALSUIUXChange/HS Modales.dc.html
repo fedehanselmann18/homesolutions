@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#e9e8e3;font-family:'Public Sans',sans-serif;color:#000000;-webkit-font-smoothing:antialiased}a{color:#6f7f45}a:hover{color:#000000}button,input,textarea{font-family:inherit}</style>
+</helmet>
+
+<section style="display:flex;flex-direction:column;gap:20px;padding:40px 40px 20px">
+<div style="display:flex;flex-direction:column;gap:6px;max-width:960px">
+<span style="font-size:22px;font-weight:700">Nueva compra</span>
+<span style="font-size:14px;color:#5a5a58;line-height:1.5;text-wrap:pretty">Cambios en los dos: el header pasa a blanco y el proyecto se muestra como contexto. La factura se sube arriba y "Autocompletar con IA" queda al lado, porque necesita el archivo para funcionar. Todos los campos usan la misma caja. Tipo de factura, condición de pago y los estados pasan a ser botones segmentados con ícono, en vez de desplegables y switches. El banner rojo de "faltan 6 campos" se reemplaza por errores en cada campo, que aparecen recién al intentar guardar.</span>
+</div>
+<div style="display:flex;gap:40px;align-items:flex-start">
+
+<div id="5a" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">5a</span><span style="font-size:15px;font-weight:600">Formulario + resumen fijo a la derecha</span></div>
+<div style="width:960px;height:1040px;background:#ffffff;border-radius:14px;box-shadow:0 24px 64px rgba(0,0,0,0.22);display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;height:64px;padding:0 24px;border-bottom:1px solid #e6e4df;flex:none">
+<div style="display:flex;align-items:center;gap:12px"><span style="width:32px;height:32px;border-radius:8px;background:#f3f2ee;display:flex;align-items:center;justify-content:center">{{ i.cart }}</span><span style="font-size:18px;font-weight:700">Nueva compra</span><span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5a5a58;padding-left:12px;border-left:1px solid #e6e4df">{{ i.building }}Edificio Olleros</span></div>
+<button title="Cerrar" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:none;border-radius:6px;background:none;color:#5a5a58;cursor:pointer">{{ i.x }}</button>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 300px;flex:1;min-height:0">
+<div style="display:flex;flex-direction:column;gap:28px;padding:24px;overflow:auto">
+<div style="display:flex;align-items:center;gap:14px;padding:12px 14px;border:1px solid #e6e4df;border-radius:10px;background:#f9f8f6">
+<span style="width:36px;height:36px;border-radius:8px;background:#ffffff;border:1px solid #e6e4df;display:flex;align-items:center;justify-content:center;color:#5a5a58">{{ i.file }}</span>
+<div style="display:flex;flex-direction:column;gap:2px;flex:1;min-width:0"><span style="font-size:14px;font-weight:600">FA-0001-00004821.pdf</span><span style="font-size:12px;color:#5a5a58">Factura A · 248 KB</span></div>
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid #d6dbbf;border-radius:6px;background:#eef0e3;font-size:13px;font-weight:600;color:#4f5b30;cursor:pointer">{{ i.sparkle }}Autocompletar con IA</button>
+<button title="Quitar" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:none;background:none;color:#8c8b86;cursor:pointer">{{ i.xs }}</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px">
+<span style="font-size:15px;font-weight:700">Datos generales</span>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Proveedor</span><span style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border:1px solid #6f7f45;border-radius:8px;box-shadow:0 0 0 3px #eef0e3;font-size:14px"><span style="width:22px;height:22px;border-radius:6px;background:#f3f2ee;font-size:10px;font-weight:700;color:#5a5a58;display:flex;align-items:center;justify-content:center">CT</span><span style="flex:1">ClimaTotal Instalaciones</span><span style="color:#8c8b86;display:flex">{{ i.down }}</span></span></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Fase</span><span style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border:1px solid #e6e4df;border-radius:8px;font-size:14px"><span style="color:#8c8b86;display:flex">{{ i.layers }}</span><span style="flex:1">03 · Montaje</span><span style="color:#8c8b86;display:flex">{{ i.down }}</span></span></label>
+</div>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Descripción</span><span style="display:flex;align-items:center;height:40px;padding:0 12px;border:1px solid #dc2626;border-radius:8px;font-size:14px;color:#8c8b86">Ej: Equipos para pisos 1 a 4</span><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:#b42318">{{ i.alertS }}Escribí una descripción corta</span></label>
+<div style="display:grid;grid-template-columns:1fr 1.4fr;gap:16px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Fecha</span><span style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border:1px solid #e6e4df;border-radius:8px;font-size:14px"><span style="color:#8c8b86;display:flex">{{ i.cal }}</span>07/10/2026</span></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Cotización del dólar</span>
+<span style="display:flex;height:40px;border:1px solid #e6e4df;border-radius:8px;overflow:hidden;font-size:14px"><span style="display:flex;align-items:center;gap:6px;padding:0 10px;background:#f9f8f6;border-right:1px solid #e6e4df">Blue<span style="color:#8c8b86;display:flex">{{ i.down }}</span></span><span style="display:flex;align-items:center;gap:4px;padding:0 12px;flex:1"><span style="color:#8c8b86">$</span>1.450</span></span>
+<span style="font-size:12px;color:#5a5a58">Blue del 01/10/2026</span></label>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:16px">
+<span style="font-size:15px;font-weight:700">Condiciones</span>
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Tipo de factura</span>
+<div style="display:flex;gap:6px"><sc-for list="{{ facturas }}" as="f" hint-placeholder-count="5"><button onClick="{{ f.on }}" style="height:34px;padding:0 14px;border-radius:8px;border:1px solid {{ f.bd }};background:{{ f.bg }};font-size:13px;font-weight:{{ f.w }};color:{{ f.c }};cursor:pointer">{{ f.l }}</button></sc-for></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Condición de pago</span>
+<div style="display:flex;gap:6px"><sc-for list="{{ condiciones }}" as="f" hint-placeholder-count="4"><button onClick="{{ f.on }}" style="height:34px;padding:0 14px;border-radius:8px;border:1px solid {{ f.bd }};background:{{ f.bg }};font-size:13px;font-weight:{{ f.w }};color:{{ f.c }};cursor:pointer">{{ f.l }}</button></sc-for></div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:15px;font-weight:700">Productos</span><button style="display:flex;align-items:center;gap:6px;height:30px;padding:0 10px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;font-weight:600;color:#000000;cursor:pointer">{{ i.plus }}Agregar del catálogo</button></div>
+<div style="display:flex;flex-direction:column;border:1px solid #e6e4df;border-radius:10px;overflow:hidden">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 64px 112px 112px 28px;gap:12px;align-items:center;height:32px;padding:0 12px;background:#f9f8f6;font-size:12px;font-weight:600;color:#5a5a58"><span>Producto</span><span style="text-align:right">Cant.</span><span style="text-align:right">Unitario</span><span style="text-align:right">Subtotal</span><span></span></div>
+<sc-for list="{{ prods }}" as="p" hint-placeholder-count="2">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 64px 112px 112px 28px;gap:12px;align-items:center;min-height:48px;padding:0 12px;border-top:1px solid #efeee9;font-size:14px;font-variant-numeric:tabular-nums">
+<span>{{ p.n }}</span>
+<span style="justify-self:end;width:52px;height:30px;box-sizing:border-box;border:1px solid #e6e4df;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding:0 8px">{{ p.q }}</span>
+<span style="text-align:right;color:#5a5a58">{{ p.u }}</span>
+<span style="text-align:right;font-weight:600">{{ p.t }}</span>
+<span style="color:#8c8b86;display:flex;justify-content:center;cursor:pointer">{{ i.xs }}</span>
+</div>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<span style="font-size:15px;font-weight:700">Impuestos</span>
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+<span style="display:flex;align-items:center;gap:6px;height:30px;padding:0 6px 0 12px;border-radius:99px;background:#f3f2ee;font-size:13px;font-weight:500">IVA 21%<span style="font-weight:600;font-variant-numeric:tabular-nums">$ 1.666.980</span><span style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:#8c8b86">{{ i.xs }}</span></span>
+<span style="display:flex;align-items:center;gap:6px;height:30px;padding:0 6px 0 12px;border-radius:99px;background:#f3f2ee;font-size:13px;font-weight:500">Percepción IIBB 3%<span style="font-weight:600;font-variant-numeric:tabular-nums">$ 238.140</span><span style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:#8c8b86">{{ i.xs }}</span></span>
+<span style="display:flex;align-items:center;gap:4px;height:30px;padding:0 12px;border-radius:99px;border:1px dashed #d9d7d2;font-size:13px;color:#5a5a58;cursor:pointer">{{ i.plusS }}Otro impuesto</span>
+</div>
+</div>
+</div>
+<aside style="display:flex;flex-direction:column;gap:24px;padding:24px;background:#f9f8f6;border-left:1px solid #e6e4df">
+<div style="display:flex;flex-direction:column;gap:4px">
+<span style="font-size:13px;color:#5a5a58">Total</span>
+<span style="font-size:30px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">$ 9.843.120</span>
+<span style="font-size:13px;color:#5a5a58;font-variant-numeric:tabular-nums">≈ US$ 6.788</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;padding-top:16px;border-top:1px solid #e6e4df;font-size:14px;font-variant-numeric:tabular-nums">
+<div style="display:flex;justify-content:space-between"><span style="color:#5a5a58">Neto · 2 productos</span><span>$ 7.938.000</span></div>
+<div style="display:flex;justify-content:space-between"><span style="color:#5a5a58">IVA 21%</span><span>$ 1.666.980</span></div>
+<div style="display:flex;justify-content:space-between"><span style="color:#5a5a58">Percepción IIBB</span><span>$ 238.140</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:14px;padding-top:16px;border-top:1px solid #e6e4df">
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Pago</span>
+<div style="display:grid;grid-template-columns:1fr 1fr;padding:3px;border-radius:8px;background:#efeee9"><sc-for list="{{ pago }}" as="s" hint-placeholder-count="2"><button onClick="{{ s.on }}" style="display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border:none;border-radius:6px;background:{{ s.bg }};box-shadow:{{ s.sh }};font-size:13px;font-weight:600;color:{{ s.c }};cursor:pointer">{{ s.icon }}{{ s.l }}</button></sc-for></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Envío</span>
+<div style="display:grid;grid-template-columns:1fr 1fr;padding:3px;border-radius:8px;background:#efeee9"><sc-for list="{{ envio }}" as="s" hint-placeholder-count="2"><button onClick="{{ s.on }}" style="display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border:none;border-radius:6px;background:{{ s.bg }};box-shadow:{{ s.sh }};font-size:13px;font-weight:600;color:{{ s.c }};cursor:pointer">{{ s.icon }}{{ s.l }}</button></sc-for></div>
+</div>
+</div>
+</aside>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;height:68px;padding:0 24px;border-top:1px solid #e6e4df;flex:none">
+<span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#b42318">{{ i.alertS }}Falta 1 campo: Descripción</span>
+<div style="display:flex;gap:8px"><button style="height:38px;padding:0 16px;border:1px solid #e6e4df;border-radius:8px;background:#ffffff;font-size:14px;font-weight:600;color:#000000;cursor:pointer">Cancelar</button><button style="height:38px;padding:0 18px;border:none;border-radius:8px;background:#6f7f45;font-size:14px;font-weight:600;color:#ffffff;cursor:pointer">Crear compra</button></div>
+</div>
+</div>
+</div>
+
+<div id="5b" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">5b</span><span style="font-size:15px;font-weight:600">En 3 pasos · paso 3 de 3</span></div>
+<div style="width:760px;height:880px;background:#ffffff;border-radius:14px;box-shadow:0 24px 64px rgba(0,0,0,0.22);display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;flex-direction:column;gap:18px;padding:20px 24px 0;flex:none">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<div style="display:flex;align-items:center;gap:12px"><span style="width:32px;height:32px;border-radius:8px;background:#f3f2ee;display:flex;align-items:center;justify-content:center">{{ i.cart }}</span><div style="display:flex;flex-direction:column"><span style="font-size:18px;font-weight:700">Nueva compra</span><span style="font-size:13px;color:#5a5a58">Edificio Olleros · ClimaTotal Instalaciones</span></div></div>
+<button title="Cerrar" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:none;border-radius:6px;background:none;color:#5a5a58;cursor:pointer">{{ i.x }}</button>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+<sc-for list="{{ steps }}" as="s" hint-placeholder-count="3">
+<div style="display:flex;flex-direction:column;gap:8px;padding-bottom:14px"><span style="height:3px;border-radius:99px;background:{{ s.bar }}"></span><span style="display:flex;align-items:center;gap:6px;font-size:13px;font-weight:{{ s.w }};color:{{ s.c }}">{{ s.icon }}{{ s.l }}</span></div>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:24px;padding:8px 24px 24px;border-top:1px solid #e6e4df;flex:1;overflow:hidden">
+<div style="display:flex;flex-wrap:wrap;gap:6px 18px;padding:14px 0 0;font-size:13px;color:#5a5a58">
+<span style="display:flex;align-items:center;gap:6px">{{ i.layers }}03 · Montaje</span><span style="display:flex;align-items:center;gap:6px">{{ i.cal }}07/10/2026</span><span style="display:flex;align-items:center;gap:6px">{{ i.file }}Factura A · cuenta corriente</span><span style="display:flex;align-items:center;gap:6px">{{ i.dollar }}Blue $ 1.450</span>
+<a style="font-weight:600;cursor:pointer">Editar</a>
+</div>
+<div style="display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;border:1px solid #6f7f45;border-radius:8px;box-shadow:0 0 0 3px #eef0e3;font-size:14px;color:#8c8b86">{{ i.search }}Buscar en el catálogo de ClimaTotal…</div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ prods }}" as="p" hint-placeholder-count="2">
+<div style="display:grid;grid-template-columns:40px minmax(0,1fr) 108px 120px 24px;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid #efeee9;font-variant-numeric:tabular-nums">
+<span style="width:40px;height:40px;border-radius:8px;background:#f3f2ee;color:#5a5a58;display:flex;align-items:center;justify-content:center">{{ i.box }}</span>
+<div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font-size:14px;font-weight:600">{{ p.n }}</span><span style="font-size:13px;color:#5a5a58">{{ p.u }} c/u</span></div>
+<div style="display:flex;align-items:center;justify-content:space-between;height:32px;border:1px solid #e6e4df;border-radius:8px;padding:0 4px"><span style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:#5a5a58">{{ i.minus }}</span><span style="font-size:14px;font-weight:600">{{ p.q }}</span><span style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;color:#5a5a58">{{ i.plus }}</span></div>
+<span style="text-align:right;font-size:14px;font-weight:600">{{ p.t }}</span>
+<span style="color:#8c8b86;display:flex;cursor:pointer">{{ i.xs }}</span>
+</div>
+</sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<span style="font-size:15px;font-weight:700">Impuestos</span>
+<div style="display:flex;flex-wrap:wrap;gap:6px">
+<span style="display:flex;align-items:center;gap:6px;height:30px;padding:0 6px 0 12px;border-radius:99px;background:#f3f2ee;font-size:13px;font-weight:500">{{ i.checkS }}IVA 21%<span style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:#8c8b86">{{ i.xs }}</span></span>
+<span style="display:flex;align-items:center;gap:6px;height:30px;padding:0 6px 0 12px;border-radius:99px;background:#f3f2ee;font-size:13px;font-weight:500">{{ i.checkS }}Percepción IIBB 3%<span style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;color:#8c8b86">{{ i.xs }}</span></span>
+<span style="display:flex;align-items:center;gap:4px;height:30px;padding:0 12px;border-radius:99px;border:1px dashed #d9d7d2;font-size:13px;color:#5a5a58">{{ i.plusS }}Percepción IVA</span>
+<span style="display:flex;align-items:center;gap:4px;height:30px;padding:0 12px;border-radius:99px;border:1px dashed #d9d7d2;font-size:13px;color:#5a5a58">{{ i.plusS }}Otro</span>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Pago</span><div style="display:grid;grid-template-columns:1fr 1fr;padding:3px;border-radius:8px;background:#efeee9"><sc-for list="{{ pago }}" as="s" hint-placeholder-count="2"><button onClick="{{ s.on }}" style="display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border:none;border-radius:6px;background:{{ s.bg }};box-shadow:{{ s.sh }};font-size:13px;font-weight:600;color:{{ s.c }};cursor:pointer">{{ s.icon }}{{ s.l }}</button></sc-for></div></div>
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Envío</span><div style="display:grid;grid-template-columns:1fr 1fr;padding:3px;border-radius:8px;background:#efeee9"><sc-for list="{{ envio }}" as="s" hint-placeholder-count="2"><button onClick="{{ s.on }}" style="display:flex;align-items:center;justify-content:center;gap:6px;height:32px;border:none;border-radius:6px;background:{{ s.bg }};box-shadow:{{ s.sh }};font-size:13px;font-weight:600;color:{{ s.c }};cursor:pointer">{{ s.icon }}{{ s.l }}</button></sc-for></div></div>
+</div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-top:1px solid #e6e4df;background:#f9f8f6;flex:none">
+<div style="display:flex;flex-direction:column;font-variant-numeric:tabular-nums"><span style="font-size:22px;font-weight:700">$ 9.843.120</span><span style="font-size:12px;color:#5a5a58">Neto $ 7.938.000 · impuestos $ 1.905.120 · ≈ US$ 6.788</span></div>
+<div style="display:flex;gap:8px"><button style="display:flex;align-items:center;gap:6px;height:38px;padding:0 14px;border:1px solid #e6e4df;border-radius:8px;background:#ffffff;font-size:14px;font-weight:600;color:#000000;cursor:pointer">{{ i.back }}Atrás</button><button style="height:38px;padding:0 18px;border:none;border-radius:8px;background:#6f7f45;font-size:14px;font-weight:600;color:#ffffff;cursor:pointer">Crear compra</button></div>
+</div>
+</div>
+</div>
+
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:20px;padding:40px">
+<div style="display:flex;flex-direction:column;gap:6px;max-width:960px">
+<span style="font-size:22px;font-weight:700">Gasto, cobro, fase y proyecto</span>
+<span style="font-size:14px;color:#5a5a58;line-height:1.5;text-wrap:pretty">Usan la misma caja de campo, los mismos segmentados y el mismo pie. El monto lleva la moneda adentro y muestra la conversión al lado mientras se escribe. El proyecto actual deja de ser un campo deshabilitado y pasa al encabezado.</span>
+</div>
+<div style="display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;max-width:2400px">
+
+<div id="5c" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">5c</span><span style="font-size:15px;font-weight:600">Nuevo gasto</span></div>
+<div style="width:560px;background:#ffffff;border-radius:14px;box-shadow:0 24px 64px rgba(0,0,0,0.22);display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;justify-content:space-between;align-items:center;height:64px;padding:0 24px;border-bottom:1px solid #e6e4df">
+<div style="display:flex;align-items:center;gap:12px"><span style="width:32px;height:32px;border-radius:8px;background:#f3f2ee;display:flex;align-items:center;justify-content:center">{{ i.receipt }}</span><span style="font-size:18px;font-weight:700">Nuevo gasto</span><span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5a5a58;padding-left:12px;border-left:1px solid #e6e4df">{{ i.building }}Edificio Olleros</span></div>
+<span style="color:#5a5a58;display:flex">{{ i.x }}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px;padding:24px">
+<div style="display:flex;align-items:center;gap:12px;height:52px;padding:0 14px;border:1px dashed #c9cfae;border-radius:10px;background:#fbfbf7;font-size:14px"><span style="color:#6f7f45;display:flex">{{ i.clip }}</span><span style="flex:1">Arrastrá el comprobante o <a style="font-weight:600;cursor:pointer">elegí un archivo</a></span><span style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#8c8b86">{{ i.sparkleS }}IA al subir</span></div>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Descripción</span><span style="display:flex;align-items:center;height:40px;padding:0 12px;border:1px solid #e6e4df;border-radius:8px;font-size:14px">Peajes y estacionamiento del equipo de montaje</span></label>
+<div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Monto</span><span style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border:1px solid #6f7f45;border-radius:8px;box-shadow:0 0 0 3px #eef0e3;font-size:16px;font-weight:600;font-variant-numeric:tabular-nums"><span style="color:#8c8b86;font-weight:500">$</span><span style="flex:1">28.000</span><span style="font-size:12px;font-weight:500;color:#5a5a58">≈ US$ 19</span></span></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Fecha</span><span style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border:1px solid #e6e4df;border-radius:8px;font-size:14px"><span style="color:#8c8b86;display:flex">{{ i.cal }}</span>02/06/2026</span></label>
+</div>
+<span style="display:flex;align-items:center;gap:8px;font-size:13px;color:#5a5a58;margin-top:-8px">{{ i.dollar }}Dólar blue $ 1.450 del 01/10 · <a style="font-weight:600;cursor:pointer">cambiar</a></span>
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Comprobante</span><div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ facturasG }}" as="f" hint-placeholder-count="5"><span style="height:32px;padding:0 12px;display:flex;align-items:center;border-radius:8px;border:1px solid {{ f.bd }};background:{{ f.bg }};font-size:13px;font-weight:{{ f.w }};color:{{ f.c }}">{{ f.l }}</span></sc-for></div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Fase <span style="color:#8c8b86;font-weight:400">(opcional)</span></span><span style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border:1px solid #e6e4df;border-radius:8px;font-size:14px;color:#5a5a58"><span style="display:flex">{{ i.layers }}</span><span style="flex:1">Gasto general</span><span style="display:flex;color:#8c8b86">{{ i.down }}</span></span></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Categoría</span><span style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border:1px solid #e6e4df;border-radius:8px;font-size:14px"><span style="display:flex;color:#8c8b86">{{ i.tag }}</span><span style="flex:1">Viáticos</span><span style="display:flex;color:#8c8b86">{{ i.down }}</span></span></label>
+</div>
+</div>
+<div style="display:flex;justify-content:flex-end;gap:8px;padding:16px 24px;border-top:1px solid #e6e4df"><button style="height:38px;padding:0 16px;border:1px solid #e6e4df;border-radius:8px;background:#ffffff;font-size:14px;font-weight:600;color:#000000">Cancelar</button><button style="height:38px;padding:0 18px;border:none;border-radius:8px;background:#6f7f45;font-size:14px;font-weight:600;color:#ffffff">Crear gasto</button></div>
+</div>
+</div>
+
+<div id="5d" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">5d</span><span style="font-size:15px;font-weight:600">Nuevo cobro</span></div>
+<div style="width:560px;background:#ffffff;border-radius:14px;box-shadow:0 24px 64px rgba(0,0,0,0.22);display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;justify-content:space-between;align-items:center;height:64px;padding:0 24px;border-bottom:1px solid #e6e4df">
+<div style="display:flex;align-items:center;gap:12px"><span style="width:32px;height:32px;border-radius:8px;background:#eef0e3;color:#4f5b30;display:flex;align-items:center;justify-content:center">{{ i.banknote }}</span><span style="font-size:18px;font-weight:700">Nuevo cobro</span><span style="display:flex;align-items:center;gap:6px;font-size:13px;color:#5a5a58;padding-left:12px;border-left:1px solid #e6e4df">{{ i.building }}Torre Libertador</span></div>
+<span style="color:#5a5a58;display:flex">{{ i.x }}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px;padding:24px">
+<div style="display:flex;flex-direction:column;gap:8px;padding:16px;border-radius:10px;background:#f9f8f6">
+<div style="display:flex;justify-content:space-between;font-size:13px"><span style="color:#5a5a58">Cobrado del proyecto</span><span style="font-weight:600;font-variant-numeric:tabular-nums">US$ 11.020 de 19.000</span></div>
+<div style="height:6px;border-radius:99px;background:#e6e4df;display:flex;overflow:hidden"><div style="width:58%;background:#6f7f45"></div><div style="width:13.2%;background:#a8b36a"></div></div>
+<span style="font-size:12px;color:#5a5a58">Con este cobro llegás al 71%</span>
+</div>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Descripción</span><span style="display:flex;align-items:center;height:40px;padding:0 12px;border:1px solid #e6e4df;border-radius:8px;font-size:14px">Cuota 4 de 6</span></label>
+<div style="display:grid;grid-template-columns:1.2fr 1fr;gap:16px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Monto</span><span style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border:1px solid #e6e4df;border-radius:8px;font-size:16px;font-weight:600;font-variant-numeric:tabular-nums"><span style="color:#8c8b86;font-weight:500">US$</span><span style="flex:1">2.500</span><span style="font-size:12px;font-weight:500;color:#5a5a58">≈ $ 3.625.000</span></span></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Fecha</span><span style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border:1px solid #e6e4df;border-radius:8px;font-size:14px"><span style="color:#8c8b86;display:flex">{{ i.cal }}</span>15/10/2026</span></label>
+</div>
+<span style="display:flex;align-items:center;gap:8px;font-size:13px;color:#5a5a58;margin-top:-8px">{{ i.dollar }}Dólar blue $ 1.450 del 01/10 · <a style="font-weight:600;cursor:pointer">cambiar</a></span>
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Comprobante</span><div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ facturasC }}" as="f" hint-placeholder-count="4"><span style="height:32px;padding:0 12px;display:flex;align-items:center;border-radius:8px;border:1px solid {{ f.bd }};background:{{ f.bg }};font-size:13px;font-weight:{{ f.w }};color:{{ f.c }}">{{ f.l }}</span></sc-for></div></div>
+<div style="display:flex;align-items:center;gap:12px;height:52px;padding:0 14px;border:1px dashed #c9cfae;border-radius:10px;background:#fbfbf7;font-size:14px"><span style="color:#6f7f45;display:flex">{{ i.clip }}</span><span style="flex:1">Adjuntá la factura o <a style="font-weight:600;cursor:pointer">elegí un archivo</a></span></div>
+</div>
+<div style="display:flex;justify-content:flex-end;gap:8px;padding:16px 24px;border-top:1px solid #e6e4df"><button style="height:38px;padding:0 16px;border:1px solid #e6e4df;border-radius:8px;background:#ffffff;font-size:14px;font-weight:600;color:#000000">Cancelar</button><button style="height:38px;padding:0 18px;border:none;border-radius:8px;background:#6f7f45;font-size:14px;font-weight:600;color:#ffffff">Crear cobro</button></div>
+</div>
+</div>
+
+<div id="5e" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">5e</span><span style="font-size:15px;font-weight:600">Nueva fase</span></div>
+<div style="width:520px;background:#ffffff;border-radius:14px;box-shadow:0 24px 64px rgba(0,0,0,0.22);display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;justify-content:space-between;align-items:center;height:64px;padding:0 24px;border-bottom:1px solid #e6e4df">
+<div style="display:flex;align-items:center;gap:12px"><span style="width:32px;height:32px;border-radius:8px;background:#f3f2ee;display:flex;align-items:center;justify-content:center">{{ i.layersL }}</span><div style="display:flex;flex-direction:column"><span style="font-size:18px;font-weight:700">Nueva fase</span><span style="font-size:12px;color:#5a5a58">Fase 5 de Edificio Olleros</span></div></div>
+<span style="color:#5a5a58;display:flex">{{ i.x }}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px;padding:24px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Nombre</span><span style="display:flex;align-items:center;height:40px;padding:0 12px;border:1px solid #6f7f45;border-radius:8px;box-shadow:0 0 0 3px #eef0e3;font-size:14px">Entrega y garantía</span></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Descripción <span style="color:#8c8b86;font-weight:400">(opcional)</span></span><span style="display:flex;align-items:flex-start;height:72px;padding:10px 12px;box-sizing:border-box;border:1px solid #e6e4df;border-radius:8px;font-size:14px;color:#8c8b86">Qué incluye esta etapa</span></label>
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Estado</span>
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px"><sc-for list="{{ faseEst }}" as="e" hint-placeholder-count="4"><span style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:64px;border-radius:8px;border:1px solid {{ e.bd }};background:{{ e.bg }};font-size:12px;font-weight:600;color:{{ e.c }}">{{ e.icon }}{{ e.l }}</span></sc-for></div>
+</div>
+</div>
+<div style="display:flex;justify-content:flex-end;gap:8px;padding:16px 24px;border-top:1px solid #e6e4df"><button style="height:38px;padding:0 16px;border:1px solid #e6e4df;border-radius:8px;background:#ffffff;font-size:14px;font-weight:600;color:#000000">Cancelar</button><button style="height:38px;padding:0 18px;border:none;border-radius:8px;background:#6f7f45;font-size:14px;font-weight:600;color:#ffffff">Crear fase</button></div>
+</div>
+</div>
+
+<div id="5f" style="display:flex;flex-direction:column;gap:12px;flex:none">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">5f</span><span style="font-size:15px;font-weight:600">Nuevo proyecto</span></div>
+<div style="width:560px;background:#ffffff;border-radius:14px;box-shadow:0 24px 64px rgba(0,0,0,0.22);display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;justify-content:space-between;align-items:center;height:64px;padding:0 24px;border-bottom:1px solid #e6e4df">
+<div style="display:flex;align-items:center;gap:12px"><span style="width:32px;height:32px;border-radius:8px;background:#f3f2ee;display:flex;align-items:center;justify-content:center">{{ i.buildingL }}</span><span style="font-size:18px;font-weight:700">Nuevo proyecto</span></div>
+<span style="color:#5a5a58;display:flex">{{ i.x }}</span>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px;padding:24px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Nombre</span><span style="display:flex;align-items:center;height:40px;padding:0 12px;border:1px solid #e6e4df;border-radius:8px;font-size:14px">Salón de eventos · Martínez</span></label>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Dirección</span><span style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border:1px solid #e6e4df;border-radius:8px;font-size:14px"><span style="display:flex;color:#8c8b86">{{ i.pin }}</span>Av. Fleming 1840, Martínez</span></label>
+<div style="display:grid;grid-template-columns:1fr 1.3fr;gap:16px">
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Inicio</span><span style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border:1px solid #e6e4df;border-radius:8px;font-size:14px"><span style="color:#8c8b86;display:flex">{{ i.cal }}</span>01/11/2026</span></label>
+<div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Estado</span><div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:3px;border-radius:8px;background:#efeee9"><sc-for list="{{ proyEst }}" as="s" hint-placeholder-count="3"><span style="display:flex;align-items:center;justify-content:center;height:34px;border-radius:6px;background:{{ s.bg }};box-shadow:{{ s.sh }};font-size:13px;font-weight:600;color:{{ s.c }}">{{ s.l }}</span></sc-for></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px;padding:16px;border-radius:10px;background:#f9f8f6">
+<span style="font-size:14px;font-weight:700">Acuerdo con el cliente</span>
+<label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:13px;font-weight:500">Precio acordado</span><span style="display:flex;align-items:center;gap:8px;height:40px;padding:0 12px;border:1px solid #e6e4df;border-radius:8px;background:#ffffff;font-size:16px;font-weight:600;font-variant-numeric:tabular-nums"><span style="color:#8c8b86;font-weight:500">US$</span><span style="flex:1">22.500</span><span style="font-size:12px;font-weight:500;color:#5a5a58">≈ $ 32.625.000</span></span></label>
+<span style="display:flex;align-items:center;gap:8px;font-size:13px;color:#5a5a58">{{ i.dollar }}Dólar de la firma: blue $ 1.450 · <a style="font-weight:600;cursor:pointer">cambiar</a> <span style="color:#8c8b86">(opcional)</span></span>
+</div>
+</div>
+<div style="display:flex;justify-content:flex-end;gap:8px;padding:16px 24px;border-top:1px solid #e6e4df"><button style="height:38px;padding:0 16px;border:1px solid #e6e4df;border-radius:8px;background:#ffffff;font-size:14px;font-weight:600;color:#000000">Cancelar</button><button style="height:38px;padding:0 18px;border:none;border-radius:8px;background:#6f7f45;font-size:14px;font-weight:600;color:#ffffff">Crear proyecto</button></div>
+</div>
+</div>
+
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const P={
+cart:'<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
+receipt:'<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
+banknote:'<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
+building:'<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/>',
+layers:'<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
+x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
+sparkle:'<path d="M9.94 14.06A2 2 0 0 0 8.5 12.6l-6.1-1.6a.5.5 0 0 1 0-.97l6.1-1.6A2 2 0 0 0 9.94 7l1.58-6.13a.5.5 0 0 1 .96 0L14.06 7a2 2 0 0 0 1.44 1.44l6.13 1.58a.5.5 0 0 1 0 .96L15.5 12.6a2 2 0 0 0-1.44 1.44l-1.58 6.13a.5.5 0 0 1-.96 0z"/>',
+down:'<path d="m6 9 6 6 6-6"/>',
+alert:'<circle cx="12" cy="12" r="10"/><path d="M12 8v4"/><path d="M12 16h.01"/>',
+cal:'<rect width="18" height="18" x="3" y="4" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
+minus:'<path d="M5 12h14"/>',
+check:'<path d="M20 6 9 17l-5-5"/>',
+clock:'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+truck:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62L18.3 9.38a1 1 0 0 0-.78-.38H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
+pkg:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m9 12 2 2 4-4"/>',
+box:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+back:'<path d="m12 19-7-7 7-7"/><path d="M19 12H5"/>',
+dollar:'<path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+clip:'<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+tag:'<path d="M12.6 2.6A2 2 0 0 0 11.2 2H4a2 2 0 0 0-2 2v7.2a2 2 0 0 0 .6 1.4l8.7 8.7a2.4 2.4 0 0 0 3.4 0l6.6-6.6a2.4 2.4 0 0 0 0-3.4z"/><circle cx="7.5" cy="7.5" r=".5"/>',
+pin:'<path d="M20 10c0 4.99-5.54 10.19-7.4 11.8a1 1 0 0 1-1.2 0C9.54 20.19 4 14.99 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>',
+circle:'<circle cx="12" cy="12" r="10"/>',
+play:'<circle cx="12" cy="12" r="10"/><path d="m10 8 6 4-6 4z"/>',
+shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+checkC:'<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>'
+};
+const ic=(n,s=16,sw=1.75)=>React.createElement('svg',{width:s,height:s,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:sw,strokeLinecap:'round',strokeLinejoin:'round',style:{flex:'none',display:'block'},dangerouslySetInnerHTML:{__html:P[n]}});
+const chip=(l,on)=>({l,bd:on?'#6f7f45':'#e6e4df',bg:on?'#eef0e3':'#ffffff',c:on?'#4f5b30':'#000000',w:on?600:500});
+const seg=(l,on,icon,col)=>({l,icon,bg:on?'#ffffff':'transparent',sh:on?'0 1px 2px rgba(0,0,0,0.1)':'none',c:on?col:'#5a5a58'});
+class Component extends DCLogic {
+  state={fac:'A',cond:'Cuenta corriente',pago:'pend',envio:'ped'};
+  renderVals(){
+    const s=this.state;
+    return {
+      i:{cart:ic('cart',17),receipt:ic('receipt',17),banknote:ic('banknote',17),building:ic('building',14),buildingL:ic('building',17),layers:ic('layers',15),layersL:ic('layers',17),x:ic('x',18),xs:ic('x',14),file:ic('file',16),sparkle:ic('sparkle',14),sparkleS:ic('sparkle',12),
+        down:ic('down',15),alertS:ic('alert',14),cal:ic('cal',15),plus:ic('plus',14,2),plusS:ic('plus',12,2),minus:ic('minus',14,2),checkS:ic('check',13,2.4),box:ic('box',18),search:ic('search',16),back:ic('back',14),dollar:ic('dollar',14),clip:ic('clip',17),tag:ic('tag',15),pin:ic('pin',15)},
+      facturas:['A','B','C','Recibo','Sin factura'].map(l=>({...chip(l==='A'||l==='B'||l==='C'?'Factura '+l:l,l===s.fac),on:()=>this.setState({fac:l})})),
+      condiciones:['Contado','Cuenta corriente','Cheque','Financiado'].map(l=>({...chip(l,l===s.cond),on:()=>this.setState({cond:l})})),
+      pago:[['pend','Pendiente','clock','#9a4a07'],['pag','Pagado','checkC','#4f5b30']].map(([k,l,n,c])=>({...seg(l,s.pago===k,ic(n,14,2),c),on:()=>this.setState({pago:k})})),
+      envio:[['ped','Pedido','truck','#5a5a58'],['ent','Entregado','pkg','#4f5b30']].map(([k,l,n,c])=>({...seg(l,s.envio===k,ic(n,14,2),c==='#5a5a58'?'#000000':c),on:()=>this.setState({envio:k})})),
+      prods:[{n:'Split inverter 6000 fg frío/calor',q:8,u:'$ 976.250',t:'$ 7.810.000'},{n:'Ménsula reforzada 450 mm',q:8,u:'$ 16.000',t:'$ 128.000'}],
+      steps:[['Comprobante y datos','check',true],['Condiciones','check',true],['Productos e impuestos','box',false]].map(([l,n,done],k)=>({l,icon:ic(n,14,2),bar:'#6f7f45',w:k===2?700:500,c:k===2?'#000000':'#4f5b30'})),
+      facturasG:['Factura A','Factura B','Factura C','Recibo','Sin comprobante'].map(l=>chip(l,l==='Recibo')),
+      facturasC:['Factura A','Factura B','Factura C','Recibo'].map(l=>chip(l,l==='Factura A')),
+      faseEst:[['Por empezar','circle'],['En curso','play'],['Terminada','checkC'],['Auditada','shield']].map(([l,n],k)=>({l,icon:ic(n,18),bd:k===0?'#6f7f45':'#e6e4df',bg:k===0?'#eef0e3':'#ffffff',c:k===0?'#4f5b30':'#5a5a58'})),
+      proyEst:['A iniciar','En curso','Terminado'].map((l,k)=>seg(l,k===0,null,'#000000'))
+    };
+  }
+}
+</script>
+</body>
+</html>

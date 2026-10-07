@@ -15,8 +15,8 @@ import { BarraProgreso } from "../shared/TarjetaKpi";
 import "./Fases.css";
 import useAuth from "../../context/useAuth";
 import { useToast } from "../../context/useToast";
-import { ESTADO_LABELS } from "../../constants/estados";
-import { VERDE, NARANJA, ROJO, LINEA, TINTA_MUTED } from "../../constants/colores";
+import { ESTADO_LABELS, getEstadoLabel } from "../../constants/estados";
+import { NARANJA, ROJO, LINEA } from "../../constants/colores";
 import { EstadoVacio } from "../shared/EstadoVacio";
 import { calcularAnalisis } from "../../utils/analisis";
 import { diasDesde } from "../../utils/seguimiento";
@@ -24,10 +24,14 @@ import { formatMoneda, pluralizar } from "../../utils/formato";
 import { obtenerDetalleBackend } from "../../utils/errorHandling";
 import { TINTE_PASTILLA } from "../../constants/tipoMovimiento";
 
+// La regla de color de la fila es el ESTADO de la fase, así que sale del
+// semáforo de estados.js en vez de volver a mapearlo acá. Antes esta función
+// tenía su propia copia ("terminada/auditada -> VERDE, en_curso -> NARANJA"),
+// igual a la de TablaProyectos, y al mover `en_curso` a azul en la v5 el estado
+// habría quedado azul en el header del proyecto y naranja en esta tabla. Es
+// exactamente lo que la regla principal de docs/DESIGN.md viene a evitar.
 function colorFase(estado) {
-  if (estado === "terminada" || estado === "auditada") return VERDE;
-  if (estado === "en_curso") return NARANJA;
-  return LINEA; // plano y no CSS var porque el borde va por style inline
+  return ESTADO_LABELS[estado]?.color ?? LINEA; // plano y no CSS var porque el borde va por style inline
 }
 
 export function Fases({ proyectoId }) {
@@ -152,10 +156,7 @@ export function Fases({ proyectoId }) {
           </div>
 
           {fases.map((fase, i) => {
-            const estadoInfo = ESTADO_LABELS[fase.estado] ?? {
-              color: TINTA_MUTED,
-              label: fase.estado,
-            };
+            const estadoInfo = getEstadoLabel(fase.estado);
             const gastado = gastadoPorFase?.porFase.get(fase.id) ?? 0;
             const pct = precioAcordado > 0 ? (gastado / precioAcordado) * 100 : 0;
             const enCurso = fase.estado === "en_curso";

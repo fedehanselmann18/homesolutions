@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#efeee9;font-family:'Public Sans',sans-serif;color:#000000;-webkit-font-smoothing:antialiased}a{color:#6f7f45}a:hover{color:#000000}button{font-family:inherit}</style>
+</helmet>
+<section style="display:flex;flex-direction:column;gap:20px;padding:40px;font-family:'Public Sans',sans-serif">
+<div style="display:flex;flex-direction:column;gap:6px;max-width:900px">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:700;background:#000000;color:#ffffff;border-radius:999px;padding:2px 8px">3a</span><span style="font-size:18px;font-weight:700">Movimientos · estilo limpio con la marca Home Solutions</span></div>
+<div style="font-size:14px;color:#5a5a58;line-height:1.5;text-wrap:pretty">Click en una fila para ver su detalle en el modal de la derecha. Las pestañas filtran; tocá la pestaña activa otra vez para volver a ver todo.</div>
+</div>
+<div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap">
+
+<div style="width:1440px;flex:none;background:#ffffff;border-radius:10px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:grid;grid-template-columns:232px minmax(0,1fr);overflow:hidden">
+<aside style="display:flex;flex-direction:column;gap:24px;padding:24px 16px;border-right:1px solid #e6e4df">
+<div style="display:flex;align-items:center;gap:10px;padding:0 8px">
+<svg width="26" height="26" viewBox="0 0 24 24" style="flex:none"><path d="M12 2.6 3.4 9.2v10.3a2 2 0 0 0 2 2h13.2a2 2 0 0 0 2-2V9.2Z" fill="none" stroke="#000000" stroke-width="2.2" stroke-linejoin="round"></path><text x="12" y="18.2" text-anchor="middle" font-size="11" font-weight="700" font-family="Public Sans" fill="#000000">S</text></svg>
+<span style="font-size:14px;font-weight:700;line-height:1.1">Home<br>Solutions</span>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;height:44px;padding:0 10px;border:1px solid #e6e4df;border-radius:8px;cursor:pointer">
+<div style="display:flex;flex-direction:column;min-width:0"><span style="font-size:12px;color:#5a5a58">Obra</span><span style="font-size:14px;font-weight:600">Edificio Olleros</span></div>
+<span style="color:#5a5a58;display:flex">{{ i.down }}</span>
+</div>
+<nav style="display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{ nav }}" as="n" hint-placeholder-count="5">
+<a style="display:flex;align-items:center;gap:12px;height:36px;padding:0 8px;border-radius:6px;font-size:14px;font-weight:{{ n.weight }};color:{{ n.color }};background:{{ n.bg }};text-decoration:none;cursor:pointer" style-hover="background:#f3f2ee">{{ n.icon }}{{ n.label }}</a>
+</sc-for>
+</nav>
+</aside>
+<main style="display:flex;flex-direction:column;gap:36px;padding:32px 48px 40px;min-width:0">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:16px">
+<div style="display:flex;align-items:center;gap:10px;height:36px;width:360px;padding:0 12px;border-radius:8px;background:#f3f2ee;color:#5a5a58;font-size:14px">{{ i.search }}Buscar movimiento, proveedor o fase</div>
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:none;border-radius:6px;background:#6f7f45;font-size:13px;font-weight:600;color:#ffffff;cursor:pointer" style-hover="background:#5e6c3a">{{ i.plusW }}Nuevo movimiento</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:20px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<span style="font-size:14px;color:#5a5a58">Saldo de la obra</span>
+<span style="font-size:32px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">US$ {{ m.saldo }}</span>
+<span style="font-size:14px;color:#5a5a58;font-variant-numeric:tabular-nums">Cobrado US$ {{ m.cobrado }} · Gastado US$ {{ m.gastado }} en los últimos 5 meses</span>
+</div>
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:none;border-radius:6px;background:#f3f2ee;font-size:13px;font-weight:600;color:#000000;cursor:pointer">Últimos 5 meses{{ i.down }}</button>
+</div>
+<div style="display:grid;grid-template-columns:48px minmax(0,1fr);gap:0 12px">
+<div style="display:flex;flex-direction:column;justify-content:space-between;height:180px;margin-top:-7px;font-size:12px;color:#8c8b86;text-align:right;font-variant-numeric:tabular-nums"><span>8.000</span><span>4.000</span><span>0</span></div>
+<div style="height:180px;border-bottom:1px solid #d9d7d2;background-image:linear-gradient(#efeee9 1px,transparent 1px);background-size:100% 90px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));align-items:end">
+<sc-for list="{{ chart }}" as="c" hint-placeholder-count="5">
+<div style="display:flex;justify-content:center;align-items:flex-end;gap:6px;height:100%">
+<div title="Cobrado US$ {{ c.cob }}" style="width:28px;height:{{ c.hc }};background:#6f7f45;border-radius:3px 3px 0 0"></div>
+<div title="Gastado US$ {{ c.gas }}" style="width:28px;height:{{ c.hg }};background:#d9d7d2;border-radius:3px 3px 0 0"></div>
+</div>
+</sc-for>
+</div>
+<span></span>
+<div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding-top:8px;font-size:12px;color:#5a5a58;text-align:center">
+<sc-for list="{{ chart }}" as="c" hint-placeholder-count="5"><span>{{ c.mes }}</span></sc-for>
+</div>
+</div>
+<div style="display:flex;gap:20px;font-size:13px;color:#5a5a58">
+<span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:#6f7f45"></span>Cobros</span>
+<span style="display:flex;align-items:center;gap:6px"><span style="width:10px;height:10px;border-radius:2px;background:#d9d7d2"></span>Compras y gastos</span>
+</div>
+</div>
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;justify-content:space-between;align-items:flex-end;gap:16px;border-bottom:1px solid #e6e4df">
+<div style="display:flex;gap:24px">
+<sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+<button onClick="{{ t.on }}" style="display:flex;align-items:center;gap:6px;height:40px;padding:0;border:none;background:none;border-bottom:2px solid {{ t.line }};margin-bottom:-1px;font-size:14px;font-weight:{{ t.weight }};color:{{ t.color }};cursor:pointer">{{ t.label }}<span style="font-size:12px;color:#8c8b86;font-variant-numeric:tabular-nums">{{ t.count }}</span></button>
+</sc-for>
+</div>
+<div style="display:flex;gap:8px;padding-bottom:6px">
+<button style="display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;font-weight:500;color:#000000;cursor:pointer">{{ i.filter }}Filtrar</button>
+<button style="display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;font-weight:500;color:#000000;cursor:pointer">{{ i.download }}Exportar</button>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:28px minmax(0,1fr) 168px 28px 168px 104px;gap:20px;align-items:center;height:36px;padding:0 8px;font-size:12px;font-weight:600;color:#5a5a58">
+<span></span><span>Movimiento</span><span>Estado</span><span title="Comprobante">{{ i.clipM }}</span><span style="text-align:right">Importe</span><span style="text-align:right">Saldo US$</span>
+</div>
+<sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;height:36px;padding:0 8px;background:#f9f8f6;border-top:1px solid #e6e4df;border-bottom:1px solid #e6e4df;font-size:13px">
+<span style="font-weight:600">{{ g.label }}</span><span style="color:#5a5a58;font-variant-numeric:tabular-nums">{{ g.sub }}</span>
+</div>
+<sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+<div onClick="{{ r.open }}" style="display:grid;grid-template-columns:28px minmax(0,1fr) 168px 28px 168px 104px;gap:20px;align-items:start;padding:14px 8px;border-bottom:1px solid #efeee9;background:{{ r.bg }};cursor:pointer" style-hover="background:#f9f8f6">
+<span title="{{ r.tipo }}" style="width:28px;height:28px;border-radius:6px;background:#f3f2ee;color:#5a5a58;display:flex;align-items:center;justify-content:center">{{ r.icon }}</span>
+<div style="display:flex;flex-direction:column;gap:6px;min-width:0">
+<span style="font-size:15px;font-weight:600;text-wrap:pretty">{{ r.title }}</span>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px 14px;font-size:13px">
+<span style="display:flex;align-items:center;gap:5px">{{ r.ic.layers }}{{ r.fase }}</span>
+<sc-if value="{{ r.hasProv }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:5px">{{ r.ic.building }}{{ r.prov }}</span></sc-if>
+<span style="color:#5a5a58">{{ r.meta }}</span>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding-top:1px"><sc-for list="{{ r.pills }}" as="p" hint-placeholder-count="1"><span style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;line-height:22px;padding:0 8px;border-radius:4px;background:{{ p.bg }};color:{{ p.fg }};white-space:nowrap">{{ p.icon }}{{ p.label }}</span></sc-for></div>
+<span title="{{ r.compTitle }}" style="display:flex;padding-top:4px;color:{{ r.compColor }}">{{ r.compIcon }}</span>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;font-variant-numeric:tabular-nums">
+<span style="font-size:15px;font-weight:700;white-space:nowrap">{{ r.amount }} <span style="font-size:12px;font-weight:500;color:#8c8b86">{{ r.cur }}</span></span>
+<span style="font-size:13px;color:#5a5a58">{{ r.equiv }}</span>
+</div>
+<span style="text-align:right;font-size:14px;color:#5a5a58;font-variant-numeric:tabular-nums;padding-top:1px">{{ r.saldo }}</span>
+</div>
+</sc-for>
+</sc-for>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:16px 8px 0">
+<span style="font-size:13px;color:#5a5a58">{{ count }} resultados</span>
+<div style="display:flex;gap:8px"><button style="height:28px;padding:0 10px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;color:#8c8b86">Anterior</button><button style="height:28px;padding:0 10px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;color:#000000">Siguiente</button></div>
+</div>
+</div>
+</main>
+</div>
+
+<div style="width:760px;flex:none;padding:56px 40px;box-sizing:border-box;background:rgba(0,0,0,0.4);border-radius:10px;display:flex;justify-content:center">
+<div style="width:640px;background:#ffffff;border-radius:12px;box-shadow:0 24px 64px rgba(0,0,0,0.28);display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;justify-content:space-between;align-items:center;height:56px;padding:0 24px;border-bottom:1px solid #e6e4df">
+<span style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:#5a5a58"><span style="display:flex;color:#000000">{{ d.icon }}</span>{{ d.tipo }} · {{ d.fechaLarga }}</span>
+<button title="Cerrar" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:none;border-radius:6px;background:none;color:#5a5a58;cursor:pointer" style-hover="background:#f3f2ee;color:#000000">{{ i.x }}</button>
+</div>
+<div style="display:flex;flex-direction:column;gap:28px;padding:24px">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:20px;align-items:start">
+<div style="display:flex;flex-direction:column;gap:10px">
+<span style="font-size:20px;font-weight:700;line-height:1.3;letter-spacing:-0.01em;text-wrap:pretty">{{ d.title }}</span>
+<div style="display:flex;gap:6px;flex-wrap:wrap"><sc-for list="{{ d.pills }}" as="p" hint-placeholder-count="1"><span style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;line-height:22px;padding:0 8px;border-radius:4px;background:{{ p.bg }};color:{{ p.fg }}">{{ p.icon }}{{ p.label }}</span></sc-for></div>
+</div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;font-variant-numeric:tabular-nums">
+<span style="font-size:28px;font-weight:700;letter-spacing:-0.02em;white-space:nowrap">{{ d.amount }}</span>
+<span style="font-size:13px;color:#5a5a58;white-space:nowrap">{{ d.equiv }}</span>
+<span style="font-size:12px;color:#8c8b86">Dólar blue $ 1.350</span>
+</div>
+</div>
+<sc-if value="{{ d.missing }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 12px 10px 14px;border-radius:8px;background:#fef3e2">
+<span style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:#92400e">{{ i.alert }}Falta adjuntar la {{ d.comp }}</span>
+<button style="display:flex;align-items:center;gap:6px;height:30px;padding:0 12px;border:none;border-radius:6px;background:#000000;font-size:13px;font-weight:600;color:#ffffff;cursor:pointer;white-space:nowrap">{{ i.plusW }}Adjuntar</button>
+</div>
+</sc-if>
+<div style="display:flex;flex-direction:column;gap:14px">
+<span style="font-size:15px;font-weight:700;padding-bottom:10px;border-bottom:1px solid #e6e4df">Detalles</span>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 20px">
+<sc-for list="{{ d.fields }}" as="f" hint-placeholder-count="6">
+<div style="display:flex;flex-direction:column;gap:4px;min-width:0"><span style="font-size:12px;color:#5a5a58">{{ f.k }}</span><span style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:500">{{ f.dot }}{{ f.v }}</span></div>
+</sc-for>
+</div>
+</div>
+<sc-if value="{{ d.hasProds }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column">
+<span style="font-size:15px;font-weight:700;padding-bottom:10px;border-bottom:1px solid #e6e4df">{{ d.prodTitle }}</span>
+<sc-for list="{{ d.prods }}" as="p" hint-placeholder-count="3">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) 48px 112px;gap:12px;padding:10px 0;border-bottom:1px solid #efeee9;font-size:14px;font-variant-numeric:tabular-nums"><span style="text-wrap:pretty">{{ p.n }}</span><span style="color:#5a5a58;text-align:right">×{{ p.q }}</span><span style="text-align:right">{{ p.t }}</span></div>
+</sc-for>
+<div style="display:flex;flex-direction:column;gap:6px;padding-top:12px;margin-left:auto;width:260px;font-size:14px;font-variant-numeric:tabular-nums">
+<div style="display:flex;justify-content:space-between;color:#5a5a58"><span>Neto</span><span>{{ d.neto }}</span></div>
+<div style="display:flex;justify-content:space-between;color:#5a5a58"><span>IVA 21%</span><span>{{ d.iva }}</span></div>
+<div style="display:flex;justify-content:space-between;font-weight:700;padding-top:6px;border-top:1px solid #e6e4df"><span>Total</span><span>{{ d.amount }}</span></div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ d.hasFile }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;gap:12px">
+<span style="font-size:15px;font-weight:700;padding-bottom:10px;border-bottom:1px solid #e6e4df">Archivos</span>
+<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid #e6e4df;border-radius:8px">
+<span style="width:32px;height:32px;border-radius:6px;background:#f3f2ee;color:#5a5a58;display:flex;align-items:center;justify-content:center">{{ i.file }}</span>
+<div style="display:flex;flex-direction:column;gap:2px;min-width:0;flex:1"><span style="font-size:14px;font-weight:600">{{ d.comp }} · PDF</span><span style="font-size:12px;color:#8c8b86;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ d.uuid }}</span></div>
+<button title="Descargar" style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border:none;border-radius:6px;background:none;color:#5a5a58;cursor:pointer">{{ i.download }}</button>
+</div>
+</div>
+</sc-if>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;padding:14px 24px;border-top:1px solid #e6e4df;background:#f9f8f6">
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0;border:none;background:none;font-size:13px;font-weight:600;color:#5a5a58;cursor:pointer" style-hover="color:#dc2626">{{ i.trash }}Borrar</button>
+<div style="display:flex;gap:8px">
+<button style="display:flex;align-items:center;gap:6px;height:32px;padding:0 14px;border:1px solid #e6e4df;border-radius:6px;background:#ffffff;font-size:13px;font-weight:600;color:#000000;cursor:pointer">{{ i.pencil }}Editar</button>
+<sc-if value="{{ d.canPay }}" hint-placeholder-val="{{ false }}"><button style="height:32px;padding:0 14px;border:none;border-radius:6px;background:#6f7f45;font-size:13px;font-weight:600;color:#ffffff;cursor:pointer">Registrar pago</button></sc-if>
+</div>
+</div>
+</div>
+</div>
+
+<div style="width:375px;flex:none;height:812px;background:#ffffff;border-radius:28px;box-shadow:0 1px 2px rgba(0,0,0,0.05),0 12px 40px rgba(0,0,0,0.07);display:flex;flex-direction:column;overflow:hidden">
+<div style="display:flex;justify-content:space-between;align-items:center;padding:20px 20px 0">
+<span style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600"><svg width="22" height="22" viewBox="0 0 24 24" style="flex:none"><path d="M12 2.6 3.4 9.2v10.3a2 2 0 0 0 2 2h13.2a2 2 0 0 0 2-2V9.2Z" fill="none" stroke="#000000" stroke-width="2.2" stroke-linejoin="round"></path><text x="12" y="18.2" text-anchor="middle" font-size="11" font-weight="700" font-family="Public Sans" fill="#000000">S</text></svg>Edificio Olleros{{ i.down }}</span>
+<div style="display:flex;gap:4px"><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;color:#5a5a58">{{ i.searchL }}</span><span style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:999px;background:#6f7f45;color:#ffffff">{{ i.plusL }}</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;padding:16px 20px 20px">
+<span style="font-size:14px;color:#5a5a58">Saldo de la obra</span>
+<span style="font-size:28px;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums">US$ {{ m.saldo }}</span>
+</div>
+<div style="display:flex;gap:20px;padding:0 20px;border-bottom:1px solid #e6e4df">
+<sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+<button onClick="{{ t.on }}" style="height:44px;padding:0;border:none;background:none;border-bottom:2px solid {{ t.line }};margin-bottom:-1px;font-size:14px;font-weight:{{ t.weight }};color:{{ t.color }};white-space:nowrap;cursor:pointer">{{ t.short }}</button>
+</sc-for>
+</div>
+<div style="display:flex;flex-direction:column;overflow:auto;flex:1">
+<sc-for list="{{ groups }}" as="g" hint-placeholder-count="3">
+<div style="padding:10px 20px;background:#f9f8f6;border-bottom:1px solid #e6e4df;font-size:12px;font-weight:600;color:#5a5a58">{{ g.label }}</div>
+<sc-for list="{{ g.rows }}" as="r" hint-placeholder-count="3">
+<div onClick="{{ r.open }}" style="display:flex;flex-direction:column;gap:8px;padding:14px 20px;border-bottom:1px solid #efeee9;cursor:pointer">
+<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:start">
+<span style="font-size:15px;font-weight:600;text-wrap:pretty">{{ r.title }}</span>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;font-variant-numeric:tabular-nums">
+<span style="font-size:15px;font-weight:700;white-space:nowrap">{{ r.amount }} <span style="font-size:11px;font-weight:500;color:#8c8b86">{{ r.cur }}</span></span>
+<span style="font-size:12px;color:#5a5a58;white-space:nowrap">{{ r.equiv }}</span>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:4px 12px;font-size:13px">
+<span style="display:flex;align-items:center;gap:5px">{{ r.ic.layers }}{{ r.fase }}</span>
+<sc-if value="{{ r.hasProv }}" hint-placeholder-val="{{ true }}"><span style="display:flex;align-items:center;gap:5px">{{ r.ic.building }}{{ r.prov }}</span></sc-if>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+<div style="display:flex;gap:4px;flex-wrap:wrap"><sc-for list="{{ r.pills }}" as="p" hint-placeholder-count="1"><span style="display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;line-height:20px;padding:0 6px;border-radius:4px;background:{{ p.bg }};color:{{ p.fg }};white-space:nowrap">{{ p.icon }}{{ p.label }}</span></sc-for></div>
+<span style="display:flex;color:{{ r.compColor }}">{{ r.compIcon }}</span>
+</div>
+</div>
+</sc-for>
+</sc-for>
+</div>
+</div>
+
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const P={
+receipt:'<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 17.5v-11"/>',
+cart:'<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
+banknote:'<rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/>',
+clip:'<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+alert:'<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>',
+pencil:'<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>',
+trash:'<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>',
+x:'<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
+file:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/>',
+search:'<circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>',
+filter:'<path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>',
+download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/>',
+down:'<path d="m6 9 6 6 6-6"/>',
+home:'<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>',
+arrows:'<path d="m16 3 4 4-4 4"/><path d="M20 7H4"/><path d="m8 21-4-4 4-4"/><path d="M4 17h16"/>',
+layers:'<path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65"/><path d="m22 12.65-9.17 4.16a2 2 0 0 1-1.66 0L2 12.65"/>',
+building:'<path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/>',
+chart:'<path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>',
+truck:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62L18.3 9.38a1 1 0 0 0-.78-.38H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>',
+wallet:'<path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/>'
+};
+const ic=(n,s=16,sw=1.75)=>React.createElement('svg',{width:s,height:s,viewBox:'0 0 24 24',fill:'none',stroke:'currentColor',strokeWidth:sw,strokeLinecap:'round',strokeLinejoin:'round',style:{flex:'none',display:'block'},dangerouslySetInnerHTML:{__html:P[n]}});
+const dot=c=>React.createElement('span',{style:{width:8,height:8,borderRadius:99,background:c,flex:'none'}});
+const TC=1350,M='\u2212';
+const fmt=n=>Math.round(n).toLocaleString('es-AR');
+const PILL={ok:['#eef0e3','#4f5b30'],warn:['#fef3e2','#9a4a07'],bad:['#fdecea','#b42318']};
+const DOT={ok:'#6f7f45',warn:'#d97706',bad:'#dc2626'};
+const pill=(label,k,icn)=>({label,bg:PILL[k][0],fg:PILL[k][1],icon:icn?ic(icn,12,2):null});
+const TYPES={compra:['Compra','cart'],gasto:['Gasto','receipt'],cobro:['Cobro','banknote']};
+const DATES=['Lunes 5 de octubre','Viernes 2 de octubre','Miércoles 10 de junio'];
+const RAW=[
+{g:0,t:'compra',title:'Montaje y tendido eléctrico de los 8 equipos',prov:'ClimaTotal Instalaciones',fase:'Montaje',cat:'Instalación eléctrica',comp:'Factura A',fp:'Transferencia',adj:true,pago:'pendiente',dias:1,envio:'entregado',ars:1220100,prods:[['Mano de obra montaje split',8,640000],['Cable tipo taller 3x2.5mm',120,216000],['Llave térmica bipolar 20A',8,152000]]},
+{g:0,t:'cobro',title:'Anticipo segunda etapa',fase:'Montaje',cat:'Anticipo',comp:'Recibo',fp:'Transferencia',adj:true,usd:4000},
+{g:0,t:'gasto',title:'Flete de equipos a obra',fase:'Montaje',cat:'Flete',comp:'Factura B',fp:'Efectivo',adj:false,ars:85000},
+{g:1,t:'compra',title:'Caños de cobre y aislante térmico',prov:'Sanitarios Rivera',fase:'Montaje',cat:'Materiales',comp:'Factura A',fp:'Contado',adj:true,pago:'pagado',envio:'pedido',ars:486300,prods:[['Caño de cobre 1/4" x 15m',8,184000],['Caño de cobre 3/8" x 15m',8,152000],['Aislante elastomérico 9mm',16,48000]]},
+{g:1,t:'gasto',title:'Almuerzo con el cliente en obra',fase:'Montaje',cat:'Reunión con cliente',comp:'Recibo',fp:'Tarjeta',adj:true,ars:42500},
+{g:1,t:'gasto',title:'Comisión por transferencia',fase:'Administración',cat:'Gasto bancario',comp:'Recibo',fp:'Débito automático',adj:true,ars:3800},
+{g:2,t:'compra',title:'Soportes y ménsulas para condensadoras',prov:'Hierros del Sur',fase:'Preparación',cat:'Materiales',comp:'Factura A',fp:'Contado',adj:false,pago:'pagado',envio:'entregado',ars:214000,prods:[['Ménsula reforzada 450mm',8,128000],['Bulón de anclaje 3/8"',32,48800]]},
+{g:2,t:'cobro',title:'Cuota 3 de 6',fase:'Preparación',cat:'Cuota',comp:'Recibo',fp:'Transferencia',adj:true,usd:2500},
+{g:2,t:'compra',title:'Equipos split inverter 6000 frigorías',prov:'ClimaTotal Instalaciones',fase:'Preparación',cat:'Equipos',comp:'Factura A',fp:'Transferencia',adj:true,pago:'pendiente',dias:118,envio:'entregado',ars:9450000,prods:[['Split inverter 6000 fg frío/calor',8,7810000]]},
+{g:2,t:'gasto',title:'Alquiler de andamio, 15 días',fase:'Preparación',cat:'Alquiler',comp:'Factura B',fp:'Transferencia',adj:true,ars:180000}
+];
+const CHART=[['Jun',2500,7300],['Jul',3000,1800],['Ago',2800,2200],['Sep',3500,2600],['Oct',4000,1000]];
+const UUIDS=['f104578b-5c3d-4d5f-80ef-21876254f745','a6cc688d-447a-4fb7-82fd-6bd1e6aa7740','3e91c0d2-7b14-4a8e-9f3c-0d5a62be1190'];
+const pagoK=r=>r.pago==='pagado'?'ok':(r.dias>=90?'bad':'warn');
+const pagoL=r=>r.pago==='pagado'?'Pagado':(r.dias>=90?r.dias+' días sin pagar':'A pagar');
+function pillsOf(r){
+  if(r.t==='compra')return [pill(pagoL(r),pagoK(r),'wallet'),r.envio==='entregado'?pill('Entregado','ok','truck'):pill('Sin entregar','warn','truck')];
+  return [pill(r.t==='cobro'?'Cobrado':'Pagado','ok','wallet')];
+}
+let saldo=20000;const SAL=[];
+for(let i=RAW.length-1;i>=0;i--){const r=RAW[i];saldo+=r.usd?r.usd:-Math.round(r.ars/TC);SAL[i]=saldo;}
+const SM={layers:ic('layers',13),building:ic('building',13)};
+const BASE=RAW.map((r,i)=>{
+  const isP=!!r.ars,[tipo,iname]=TYPES[r.t];
+  const eq=isP?Math.round(r.ars/TC):r.usd;
+  const meta=[];if(r.prov)meta.push(r.cat);else meta.push(r.cat);
+  if(r.prods)meta.push(r.prods.length+' productos');
+  meta.push(r.fp);
+  return {i,raw:r,t:r.t,tipo,icon:ic(iname,15),iconM:ic(iname,16),ic:SM,title:r.title,fase:r.fase,prov:r.prov||'',hasProv:!!r.prov,
+    meta:meta.join(' · '),amount:(isP?M+' $ ':'+ US$ ')+fmt(isP?r.ars:r.usd),cur:isP?'ARS':'USD',
+    equiv:isP?'≈ US$ '+fmt(eq):'≈ $ '+fmt(r.usd*TC),saldo:fmt(SAL[i]),pills:pillsOf(r),
+    compIcon:r.adj?ic('clip',15):ic('alert',15),compColor:r.adj?'#8c8b86':'#d97706',compTitle:r.comp+(r.adj?' adjunta':' · falta adjuntar'),
+    alert:!r.adj||(r.t==='compra'&&(r.pago==='pendiente'||r.envio==='pedido')),isP,eq};
+});
+const NAV=[['Resumen','home'],['Movimientos','arrows'],['Fases','layers'],['Proveedores','building'],['Reportes','chart']];
+const TABS=[['compra','Compras'],['gasto','Gastos'],['cobro','Cobros'],['alertas','Con alertas']];
+const matchT=(k,r)=>!k||(k==='alertas'?r.alert:r.t===k);
+class Component extends DCLogic {
+  state={tab:null,sel:8};
+  renderVals(){
+    const {tab,sel}=this.state;
+    const rows=BASE.filter(r=>matchT(tab,r)).map(r=>({...r,bg:r.i===sel?'#f6f7f0':'transparent',open:()=>this.setState({sel:r.i})}));
+    const groups=DATES.map((label,gi)=>{
+      const gr=rows.filter(r=>r.raw.g===gi);
+      const a=gr.reduce((s,r)=>s+(r.raw.ars||0),0),u=gr.reduce((s,r)=>s+(r.raw.usd||0),0);
+      const parts=[];if(a)parts.push(M+' $ '+fmt(a));if(u)parts.push('+ US$ '+fmt(u));
+      return {label,rows:gr,sub:parts.join('   ·   ')};
+    }).filter(g=>g.rows.length);
+    const tabs=TABS.map(([k,l])=>{const on=k===tab;return {label:l,short:l==='Con alertas'?'Alertas':l,count:BASE.filter(r=>matchT(k,r)).length,
+      line:on?'#6f7f45':'transparent',color:on?'#000000':'#5a5a58',weight:on?600:500,on:()=>this.setState({tab:on?null:k})};});
+    const b=BASE[sel],r=b.raw;
+    const fields=[{k:'Fase',v:r.fase}];
+    if(r.prov)fields.push({k:'Proveedor',v:r.prov});
+    fields.push({k:'Categoría',v:r.cat},{k:'Forma de pago',v:r.fp});
+    if(r.t==='compra'){
+      fields.push({k:'Pago',v:pagoL(r),dot:dot(DOT[pagoK(r)])});
+      fields.push({k:'Envío',v:r.envio==='entregado'?'Entregado':'Pedido, sin entregar',dot:dot(r.envio==='entregado'?DOT.ok:DOT.warn)});
+    }
+    fields.push({k:'Comprobante',v:r.comp,dot:dot(r.adj?DOT.ok:DOT.warn)});
+    fields.push({k:'Saldo después',v:'US$ '+b.saldo});
+    fields.forEach(f=>{if(!f.dot)f.dot=null;});
+    const neto=r.ars?r.ars/1.21:0;
+    const d={tipo:b.tipo,icon:ic(TYPES[r.t][1],16),fechaLarga:DATES[r.g],title:r.title,
+      amount:b.isP?'$ '+fmt(r.ars):'US$ '+fmt(r.usd),equiv:b.equiv,pills:b.pills,missing:!r.adj,comp:r.comp,fields,
+      hasProds:!!r.prods,prodTitle:(r.prods?r.prods.length:0)+' productos',
+      prods:(r.prods||[]).map(p=>({n:p[0],q:p[1],t:'$ '+fmt(p[2])})),neto:'$ '+fmt(neto),iva:'$ '+fmt(r.ars-neto),
+      hasFile:r.adj,uuid:UUIDS[sel%3]+'.pdf',canPay:r.t==='compra'&&r.pago==='pendiente'};
+    const max=8000;
+    return {
+      i:{search:ic('search',16),searchL:ic('search',20),filter:ic('filter',13),download:ic('download',14),plusW:ic('plus',14,2),plusL:ic('plus',20,2),clipM:ic('clip',14),pencil:ic('pencil',14),x:ic('x',18),alert:ic('alert',16),file:ic('file',16),trash:ic('trash',14),down:ic('down',14)},
+      nav:NAV.map(([l,n])=>{const on=l==='Movimientos';return {label:l,icon:ic(n,16),color:on?'#6f7f45':'#5a5a58',bg:on?'#f1f2ea':'transparent',weight:on?600:500};}),
+      m:{saldo:fmt(SAL[0]),cobrado:fmt(CHART.reduce((s,c)=>s+c[1],0)),gastado:fmt(CHART.reduce((s,c)=>s+c[2],0))},
+      chart:CHART.map(c=>({mes:c[0],cob:fmt(c[1]),gas:fmt(c[2]),hc:(c[1]/max*100)+'%',hg:(c[2]/max*100)+'%'})),
+      tabs,groups,count:rows.length,d
+    };
+  }
+}
+</script>
+</body>
+</html>

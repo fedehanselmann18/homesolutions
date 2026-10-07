@@ -27,9 +27,8 @@ function ProyectoDetalleHeader({ proyecto, breadcrumb }) {
         <span
           className="badge proyecto-header__estado"
           style={{
-            color: estado.color,
-            backgroundColor: `color-mix(in srgb, ${estado.color} 15%, white)`,
-            borderColor: `color-mix(in srgb, ${estado.color} 40%, white)`,
+            color: estado.fg,
+            backgroundColor: estado.bg,
           }}
         >
           {estado.label}

@@ -3,59 +3,175 @@
    Única fuente de verdad para color/tipografía/espaciado de toda la app; el
    resto de los .css consume estas variables.
 
-   Paleta v4: hex oficiales del manual de marca — oliva #6F7F45 (antes se
-   usaba #647D3B, sacado a ojo de una tapa impresa) y negro puro #000000 para
-   las superficies oscuras de sidebar/header (antes #231F20, que tampoco es
-   un color de la paleta oficial). Estilo Spotify: navegación oscura,
-   contenido claro. Los nombres de variable quedan de paletas anteriores
-   (terracota/musgo/arcilla/acero) para no tocar cada .css que las consume —
-   lo que cambia es el valor, no el rol semántico de cada token. */
-:root {
-  /* color — acento de marca (oliva, hex oficial del manual) */
-  --color-terracota: #6f7f45;
-  --color-terracota-dark: #535f34;
-  --color-terracota-tint: #eef0e9;
-  --color-musgo: #16a34a;
-  --color-musgo-dark: #128a3e;
-  --color-musgo-tint: #dcf3e3;
-  --color-tinta: #18181b;
-  --color-tinta-muted: #6b7280;
-  --color-base-1: #fafafa;
-  --color-base-2: #f0f0f2;
-  --color-superficie: #ffffff;
-  --color-linea: #e4e4e7;
+   PALETA v5 — "dirección cálida". Reemplaza la v4 ("estilo Spotify":
+   navegación oscura sobre contenido claro, con grises fríos). Cuatro cambios la
+   definen:
 
+     - El sidebar pasa de negro a BLANCO, con borde derecho e item activo en
+       oliva. Los --color-oscuro-* quedan sólo para el login.
+     - El fondo de página pasa a BLANCO: la separación la hacen los bordes, no
+       los fondos ni las sombras.
+     - Los grises pasan de fríos (#e4e4e7, #6b7280, #18181b) a CÁLIDOS,
+       derivados del gris del manual.
+     - "Positivo" pasa de verde semáforo #16a34a a OLIVA: el verde no está en
+       el manual.
+
+   La idea de fondo: jerarquía por BORDE y por PESO, no por fondo ni por sombra.
+   Eso es lo que hace que la app se sienta más liviana sin perder estructura, y
+   también lo que la vuelve menos tolerante al desorden: sin fondos de colores
+   que tapen, un padding inconsistente se ve.
+
+   Los nombres de variable quedan de paletas anteriores
+   (terracota/musgo/arcilla/acero) para no tocar cada .css que las consume — lo
+   que cambia es el valor, no el rol semántico de cada token. Hay un renombre
+   pendiente, con su mapeo, en DESIGN.md §20; va en un commit propio SIN ningún
+   cambio de valor, para que el diff sea legible.
+
+   Esta pieza es la 0 de docs/PLAN_UIUX_ROLLOUT.md: sólo tokens, ningún
+   componente. Lo que todavía NO está migrado y se ve raro a propósito hasta su
+   pieza: el sidebar sigue negro (pieza 3) y el fondo de página queda en #f9f8f6
+   en vez de blanco (pieza 3, ver la nota de --color-base-1). */
+:root {
+  /* ── Color ─────────────────────────────────────────────────────────────────
+     La paleta del manual (HS_IID_Manual §5) tiene exactamente CINCO colores:
+
+       Oliva #6f7f45 · Oliva claro #a8b36a · Gris claro #d9d7d2
+       Gris oscuro #5a5a58 · Negro #000000
+
+     Todo lo demás se deriva de esos cinco: la rampa de superficies son
+     aclarados del gris claro, el tercer nivel de texto es un aclarado del gris
+     oscuro, y el tint/shade del oliva salen del oliva. La v4 usaba grises
+     fríos (#e4e4e7, #6b7280, #18181b) que no derivaban de nada del manual, y
+     ésa es la razón por la que la paleta nueva se siente coherente y la vieja
+     no.
+
+     REGLA: 5 colores de marca + rampa derivada + 2 accents funcionales. Nada
+     más. */
+
+  /* acento de marca — el oliva */
+  --color-terracota: #6f7f45;
+  --color-terracota-dark: #4f5b30;
+  --color-terracota-tint: #eef0e3;
+  /* Fondo de SELECCIÓN de un control (nav activo, chip activo). Es casi el
+     mismo color que -tint y tiene otro rol a propósito: el tint dice "este
+     dato está resuelto", el sel dice "este control está activo". En los
+     diseños nunca aparecen juntos, y separarlos evita que un badge de "Pagado"
+     y una pestaña seleccionada terminen siendo la misma cosa. */
+  --color-terracota-sel: #f1f2ea;
+
+  /* Éxito / positivo: sigue siendo VERDE, y es a propósito. El semáforo de
+     estados es FUNCIONAL, no de marca (ver DESIGN.md §2): un estado tiene que
+     leerse de un vistazo, y si "en curso" y "terminado" comparten el oliva deja
+     de ser un semáforo. Además este par no es sólo "terminado": es la semántica
+     financiera de positivo / entrada / cobrado en media app.
+     El pleno se oscureció de #16a34a a #15803d porque se usa como color de TEXTO
+     (ProveedorCard, Dashboard, ProveedorDetalle) y #16a34a daba 3.30:1 sobre
+     blanco, por debajo del mínimo. */
+  --color-musgo: #15803d;
+  --color-musgo-dark: #11672f;
+  --color-musgo-tint: #dcf3e3;
+
+  /* texto — TRES niveles. La v4 tenía dos y alcanzaba porque el fondo gris
+     cargaba parte de la jerarquía; en una app blanca la carga el texto solo.
+     La división es funcional, no de intensidad:
+       tinta  = el dato
+       muted  = cómo se llama el dato, o qué significa
+       tenue  = está para orientar, no para leer (contador al lado de una
+                pestaña, chevron al final de una fila, ícono dentro de un input)
+     Si dudás entre muted y tenue: ¿si esto desapareciera, el usuario perdería
+     información o sólo orientación? */
+  --color-tinta: #000000;
+  --color-tinta-muted: #5a5a58;
+  --color-tinta-tenue: #8c8b86;
+
+  /* superficies — rampa cálida derivada del gris claro del manual */
+  --color-superficie: #ffffff;
+  --color-superficie-suave: #f9f8f6;
+  --color-base-2: #f3f2ee;
+
+  /* --color-base-1 cargaba DOS roles en la v4: fondo de página y superficie
+     suave (header de planilla, hover de fila, buscador, pies de modal). En la
+     v5 son roles distintos -- la página es blanca y la superficie suave es
+     #f9f8f6 -- así que acá queda apuntando al segundo, que es el de 26 de sus
+     28 usos. El fondo de página pasa a --color-superficie cuando se toque el
+     shell (pieza 3 de docs/PLAN_UIUX_ROLLOUT.md); hasta entonces queda un pelo
+     cálido en vez de blanco puro, que es un desvío mucho más chico que perder
+     el header de la planilla y el hover de las filas. Nombre borrado en §20. */
+  --color-base-1: #f9f8f6;
+
+  /* líneas — DOS niveles, y no es capricho. --color-linea es el CONTORNO de un
+     bloque ("acá empieza y termina esto"); --color-linea-suave separa filas
+     DENTRO de ese bloque. Usar el contorno para separar filas hace que una
+     lista se lea como veinte cajas apiladas en vez de una tabla. Es la
+     diferencia entre `border` y `border-bottom` en los diseños. */
+  --color-linea: #e6e4df;
+  --color-linea-suave: #efeee9;
+
+  /* accents funcionales — ámbar y rojo. NO son colores de marca: no están en el
+     manual y se usan igual porque no se puede señalar una deuda vencida con
+     oliva. Entran sólo en badges y en el error de un campo; el pleno queda para
+     el borde de un input inválido y el punto de alerta del sidebar. Si aparecen
+     en más de dos lugares de una pantalla, la pantalla está mal. */
   --color-arcilla: #d97706;
-  --color-arcilla-tint: #fdf0dc;
+  --color-arcilla-tint: #fef3e2;
   --color-oxido: #dc2626;
-  --color-oxido-tint: #fbe2e2;
-  --color-acero: #64748b;
-  --color-acero-tint: #e7eaee;
+  --color-oxido-tint: #fdecea;
+
+  /* --color-acero (#64748b) era un gris frío que tampoco está en el manual: se
+     retira apuntando al gris cálido. Nombre borrado en el renombre de §20. */
+  --color-acero: #5a5a58;
+  --color-acero-tint: #f3f2ee;
+
+  /* borde del botón de marca (la acción de IA): oliva desaturado. En la v4 ese
+     botón era contorno oliva; en los diseños es relleno en tint con este borde,
+     así no compite con el primario, que es el único oliva sólido de la pantalla. */
+  --color-ia-borde: #d6dbbf;
+
+  /* Los dos estados que no tenían color propio y ahora sí, para completar el
+     semáforo funcional: azul = en curso, violeta = auditada. Son los dos tonos
+     que la app no usa en ningún otro lado, así que no se confunden con nada.
+     El par completo del semáforo, con sus seis posiciones, está en DESIGN.md §2;
+     los valores en JS están en constants/colores.js. */
+  --color-info: #1d4ed8;
+  --color-info-tint: #e7edfb;
+  --color-info-texto: #1d4ed8;
+  --color-verificado: #6b21a8;
+  --color-verificado-tint: #f3e8ff;
+  --color-verificado-texto: #6b21a8;
 
   /* Versiones oscurecidas para TEXTO sobre el tint del mismo color: el color
-     pleno no llega a contraste suficiente sobre su propio tint. Estaban como
-     hex sueltos en TablaProyectos.css (#3f5122/#a35a05/#475569), que era el
-     único lugar de la app que necesitaba este rol y por eso nunca tuvo token. */
-  --color-terracota-texto: #3f5122;
-  --color-arcilla-texto: #a35a05;
-  --color-acero-texto: #475569;
+     pleno no llega a contraste suficiente sobre su propio tint. En la v5 estos
+     tres son la mitad de cada par fondo/texto del semáforo (ver DESIGN.md §2),
+     así que dejaron de ser un caso puntual de TablaProyectos.css y son la forma
+     normal de pintar un badge. --color-oxido-texto no existía y hacía falta. */
+  --color-terracota-texto: #4f5b30;
+  --color-arcilla-texto: #9a4a07;
+  --color-oxido-texto: #b42318;
+  --color-acero-texto: #5a5a58;
 
-  /* color — resto de la paleta oficial del manual, disponible para usos
-     puntuales (chips, ilustraciones, fondos de marca) aunque la escala de
-     grises de UI de arriba (base-1/2/línea) siga siendo la que se usa por
-     defecto en el contenido claro. */
+  /* color — los otros tres de la paleta del manual. Ya no son "para usos
+     puntuales": --color-oliva-claro es el tramo completado de una barra de
+     progreso y la segunda serie de un gráfico, y los dos grises son el origen
+     del que se derivó toda la rampa de superficies de arriba.
+     --color-gris-claro-marca es además el hover de borde de una card, el
+     separador de breadcrumb y el borde punteado de un chip de "agregar". */
   --color-oliva-claro: #a8b36a;
   --color-gris-claro-marca: #d9d7d2;
   --color-gris-oscuro-marca: #5a5a58;
 
-  /* tints suaves para hover de fila en tablas (ver claudedesign/, dirección
-     1a "Planilla" del rediseño del Panel) -- más tenues que --color-terracota-tint
-     y --color-oxido-tint, pensados para pintar la fila entera sin competir
-     con el semáforo de color (borde/texto) que ya lleva cada fila. */
+  /* tints suaves para hover de fila en tablas -- más tenues que
+     --color-terracota-tint y --color-oxido-tint, pensados para pintar la fila
+     entera sin competir con el semáforo de color (borde/texto) que ya lleva
+     cada fila. En la v5 el hover de fila por defecto es
+     --color-superficie-suave; estos dos quedan sólo para la fila que lleva
+     color de estado, y se revisan en la pieza 2a del rollout. */
   --color-terracota-tint-fila: #f7f9f3;
   --color-oxido-tint-fila: #fdf7f7;
 
-  /* color — superficies oscuras de marca (sidebar/header/login, negro puro) */
+  /* color — superficies oscuras de marca. En la v5 el sidebar pasa a blanco
+     (ver DESIGN.md §13), así que esto queda SÓLO para el panel izquierdo del
+     login, que es la única pieza que sigue siendo de marca y no de producto.
+     No se mezclan con los tokens de contenido claro. */
   --color-oscuro: #000000;
   --color-oscuro-hover: #141414;
   --color-oscuro-borde: #242424;
@@ -77,31 +193,41 @@
      a componente: había ~230 declaraciones literales contra 92 usos de token,
      y varias eran el token escrito a mano.
 
-     Roles, de chico a grande:
-     - --text-2xs  headers de tabla dentro de un modal, badges muy chicos
-     - --text-xs   labels de ficha en mayúsculas, chips, meta-texto
-     - --text-sm   texto secundario, botones chicos, filtros
-     - --text-btn  controles: botón, opción de select flotante
-     - --text-base texto de UI por defecto
-     - --text-md   inputs y valores de formulario
-     - --text-lg   títulos de sección
-     - --text-xl   títulos de modal
-     - --text-2xl  título de una página de detalle (proyecto, fase, proveedor)
-     - --text-3xl  título de una página de listado y números grandes de KPI */
-  --text-2xs: 0.66rem;
-  --text-xs: 0.72rem;
-  --text-sm: 0.82rem;
-  /* --text-btn queda fuera de orden a propósito: cae entre --text-sm y
-     --text-base y existe sólo porque .btn ya usaba 0.85rem, replicado a mano
-     en 27 declaraciones. Es el tamaño de los controles (botón, opción de
-     select flotante); para texto va --text-sm o --text-base. */
-  --text-btn: 0.85rem;
-  --text-base: 0.9rem;
-  --text-md: 0.95rem;
-  --text-lg: 1.05rem;
-  --text-xl: 1.25rem;
-  --text-2xl: 1.6rem;
-  --text-3xl: 2rem;
+     v5: los diez pasos están RECALIBRADOS a los px exactos de los diseños. Los
+     nombres no cambian (cero cambios en componentes), los valores sí. Siguen en
+     rem y no en px para que el usuario que subió el tamaño de fuente del
+     navegador siga viendo la app más grande; los valores de abajo SON los px
+     del diseño a 16px de base.
+
+     Roles, de chico a grande (px entre paréntesis):
+     - --text-2xs  (11) abreviatura de mes, badge chico
+     - --text-xs   (12) meta-texto, contador, hint, header de tabla, badge
+     - --text-sm   (13) EL MÁS USADO: texto secundario, label de campo, botón, chip
+     - --text-btn  (13) alias de --text-sm, ver abajo
+     - --text-base (14) texto de UI por defecto, valor de input, nombre en fila
+     - --text-md   (15) nombre destacado en una fila, título de bloque de form
+     - --text-lg   (16) título de sección, nombre en una card
+     - --text-xl   (18) título de modal
+     - --text-2xl  (24) título de una página de detalle, total grande de modal
+     - --text-3xl  (28) título de una página de listado y números grandes de KPI
+
+     Los títulos BAJAN respecto a la v4 (3xl de 32 a 28, 2xl de 25.6 a 24): los
+     diseños apoyan la jerarquía en el peso 700 y en el letter-spacing negativo,
+     no en el tamaño. */
+  --text-2xs: 0.6875rem;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  /* --text-btn ya NO está fuera de orden: en los diseños el texto de botón es
+     13px, o sea exactamente --text-sm. Queda como alias para no tocar sus 28
+     usos, pero dejó de ser un paso propio de la escala -- hoy es documentación
+     de que ese texto es de un control. Candidato a colapsar (DESIGN.md §20). */
+  --text-btn: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1rem;
+  --text-xl: 1.125rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.75rem;
 
   /* espaciado — escala de 4px, con dos medios pasos.
 
@@ -109,22 +235,79 @@
      app (41 y 19 usos literales, más que --space-2): la densidad de las filas
      y las pastillas se apoya en ellos. Forzarlos a 4/8/12 cambiaría el aspecto
      de media app para ganar pureza de escala, así que se reconocen como paso
-     en vez de pelearlos. Fuera de estos dos, nada nuevo entre medio. */
+     en vez de pelearlos. Los diseños los confirman: 6px es el gap canónico
+     entre un ícono y su texto, en los tres archivos.
+
+     v5 agrega CUATRO pasos (20, 28, 36, 40) que los diseños usan con roles que
+     no se resuelven con los vecinos: 20 entre secciones del sidebar y entre
+     bloques del cuerpo de un modal; 28 el gap vertical del <main> y el
+     horizontal entre pestañas; 36 separa la ficha lateral del contenido en el
+     detalle de proveedor; 40 es el padding horizontal del <main>. Redondearlos
+     a 24/32/48 cambiaría la densidad de todas las pantallas.
+
+     Fuera de esta lista no se agrega nada: doce pasos ya es mucho, y la
+     disciplina está en los padding canónicos de DESIGN.md §4, no en tener pocos
+     tokens. */
   --space-1: 4px;
   --space-1-5: 6px;
   --space-2: 8px;
   --space-2-5: 10px;
   --space-3: 12px;
   --space-4: 16px;
+  --space-5: 20px;
   --space-6: 24px;
+  --space-7: 28px;
   --space-8: 32px;
+  --space-9: 36px;
+  --space-10: 40px;
   --space-12: 48px;
   --space-16: 64px;
 
-  /* geometría */
+  /* El padding de una card es 18px en todos los diseños y es la ÚNICA excepción
+     a la escala de 4: 16 deja la card apretada contra su borde y 20 la infla.
+     Lleva nombre de rol y no de número justamente para que no se use como paso
+     general. */
+  --space-card: 18px;
+
+  /* ── Geometría ─────────────────────────────────────────────────────────────
+     La v4 tenía un solo radio (6px) y la regla "si algo tiene otro radio y no
+     es una pastilla, está mal". En la v5 hay cinco y el radio CODIFICA ESCALA:
+     cuanto más grande el contenedor, más grande el radio. La regla para no
+     volver al desorden es que el radio sale del ALTO del elemento, no del gusto:
+
+       ≤22px (badge) ....... --radius-xs
+       28–36px ............. --radius-sm
+       38–44px ............. --radius-md
+       contenedor con padding propio ... --radius-lg
+       modal ............... --radius-xl
+       pastilla ............ --radius-pill
+
+     Si no sabés qué radio va, medí el alto. Si no tiene alto fijo, es un
+     contenedor: --radius-lg.
+
+     OJO, el pill INVIERTE su significado respecto a la v4: antes el radio
+     grande era "esto es una etiqueta" y los badges eran pills. Ahora el badge
+     de estado es un rectángulo de 4px y el pill queda para los CONTROLES (chip
+     de filtro) y para lo que es geométricamente redondo (punto, barra de
+     progreso). En los diseños los badges van pegados a cifras en filas densas y
+     la pastilla redonda compite con el texto; el rectángulo de 4px se apoya en
+     la línea de base y desaparece como forma. */
+  --radius-xs: 4px;
   --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
   --radius-pill: 999px;
-  --shadow-overlay: 0 16px 40px rgba(24, 24, 27, 0.16);
+
+  /* Sombras: la app sigue siendo PLANA + BORDE. Una card en reposo no lleva
+     sombra, se separa con --color-linea. La sombra significa "esto está por
+     encima de la página", y si se usa en todos lados deja de significarlo.
+     Tres niveles de elevación bien separados, más el anillo de foco, que no es
+     elevación sino estado. */
+  --shadow-hover: 0 4px 16px rgba(0, 0, 0, 0.05);
+  --shadow-overlay: 0 12px 32px rgba(24, 24, 27, 0.16);
+  --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.22);
+  --shadow-foco: 0 0 0 3px var(--color-terracota-tint);
 
   /* movimiento — 93 de las 99 transiciones de la app ya usaban este valor. */
   --transicion: 0.15s ease;

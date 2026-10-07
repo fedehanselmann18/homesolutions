@@ -1,17 +1,23 @@
 import { ChevronRight } from "lucide-react";
 import { BarraProgreso } from "../shared/TarjetaKpi";
 import { formatMoneda, formatMonedaCorta } from "../../utils/formato";
-import { VERDE, ROJO, NARANJA, LINEA } from "../../constants/colores";
+import { VERDE, ROJO, NARANJA, LINEA, OLIVA, OLIVA_CLARO } from "../../constants/colores";
 import "./TablaProyectos.css";
 import { TINTE_PASTILLA } from "../../constants/tipoMovimiento";
 
-// Color de cada segmento de la barra de fases (dirección 1a "Planilla" del
-// rediseño, ver claudedesign/): mismo criterio de "cerrada" que
-// ESTADOS_FASE_CERRADA en utils/panel.js, más "en_curso" en naranja y el
-// resto (por_empezar) en gris de línea.
+// Color de cada segmento de la barra de fases. Mismo criterio de "cerrada" que
+// ESTADOS_FASE_CERRADA en utils/panel.js.
+//
+// v5: esto NO es el semáforo de estado, es una barra de PROGRESO, y el progreso
+// tiene su propia rampa (ver docs/DESIGN.md §2, "Progreso y datos"): tramo
+// completado en oliva claro, tramo actual en oliva, pendiente en gris de línea.
+// Antes usaba VERDE/NARANJA, o sea los colores del semáforo, y eso hacía que la
+// barra pareciera decir "esta fase tiene un problema" cuando sólo decía "esta
+// fase es la que se está haciendo". La variante 4L del rediseño lo dibuja con la
+// rampa oliva, y es lo correcto: una barra de avance no es un estado.
 function colorSegmentoFase(estado) {
-  if (estado === "terminada" || estado === "auditada") return VERDE;
-  if (estado === "en_curso") return NARANJA;
+  if (estado === "terminada" || estado === "auditada") return OLIVA_CLARO;
+  if (estado === "en_curso") return OLIVA;
   return LINEA; // hex plano: los segmentos van por style inline, no CSS var
 }
 
