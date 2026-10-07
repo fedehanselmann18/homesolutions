@@ -1,0 +1,139 @@
+/* Card de proyecto — variante 4L. La receta es la de card de DESIGN.md §10:
+   borde, radio lg, 18px de padding, gap 16, sin sombra en reposo. */
+
+.proyecto-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+  padding: var(--space-card);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-lg);
+  background: var(--color-superficie);
+  cursor: pointer;
+  transition:
+    border-color var(--transicion),
+    box-shadow var(--transicion);
+}
+
+.proyecto-card:hover {
+  border-color: var(--color-gris-claro-marca);
+  box-shadow: var(--shadow-hover);
+}
+
+/* Lo que ya pasó se atenúa, no se tacha ni se pinta de gris (DESIGN.md §16). */
+.proyecto-card--terminado {
+  opacity: 0.75;
+}
+
+.proyecto-card__arriba {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.proyecto-card__arriba-derecha {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.proyecto-card__acciones {
+  display: flex;
+  gap: 2px;
+}
+
+.proyecto-card__alertas {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-tinta-tenue);
+  font-variant-numeric: tabular-nums;
+}
+
+.proyecto-card__alertas--atencion {
+  color: var(--color-arcilla-texto);
+}
+
+.proyecto-card__alertas--problema {
+  color: var(--color-oxido-texto);
+}
+
+.proyecto-card__titulo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.proyecto-card__nombre {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: normal;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.proyecto-card__direccion {
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+.proyecto-card__fases {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+}
+
+.proyecto-card__segmentos {
+  display: grid;
+  gap: 3px;
+}
+
+.proyecto-card__segmentos > span {
+  height: 4px;
+  border-radius: var(--radius-pill);
+}
+
+.proyecto-card__fase {
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+.proyecto-card__numeros {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-linea-suave);
+}
+
+.proyecto-card__numeros > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.proyecto-card__numeros dt {
+  font-size: var(--text-xs);
+  color: var(--color-tinta-muted);
+}
+
+.proyecto-card__numeros dd {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.proyecto-card__negativo {
+  color: var(--color-oxido-texto);
+}

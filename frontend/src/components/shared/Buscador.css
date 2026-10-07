@@ -1,16 +1,25 @@
-/* Misma geometría que `.campo` (index.css): el buscador es un campo con un
-   ícono adentro, no un control aparte. El padding se reparte entre el
-   contenedor y el input para que el ícono quede dentro del borde. */
+/* DESIGN.md §9, Búsqueda: alto 32–36, radio chico, relleno gris y SIN borde.
+   Es el único control de la app con relleno, y eso es lo que lo hace
+   reconocible de un vistazo; los campos de formulario son blancos con borde.
+   El input va adentro sin borde propio y el foco lo pinta el contenedor. */
 .buscador {
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  padding: 9px 12px;
-  border: 1px solid var(--color-linea);
+  height: 34px;
+  padding: 0 var(--space-2-5);
   border-radius: var(--radius-sm);
-  background-color: var(--color-base-1);
+  background-color: var(--color-base-2);
   color: var(--color-tinta-muted);
-  transition: border-color var(--transicion);
+  transition:
+    background-color var(--transicion),
+    box-shadow var(--transicion);
+}
+
+.buscador > svg {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
 }
 
 .buscador--fluido {
@@ -23,20 +32,24 @@
 }
 
 /* El foco se pinta acá y no en el input: el input no tiene borde propio, así
-   que un outline suyo se dibujaría por dentro de la caja. */
+   que un outline suyo se dibujaría por dentro de la caja. Sin borde, el
+   contorno oliva es una sombra interior, más el anillo de foco de siempre. */
 .buscador:focus-within {
-  border-color: var(--color-terracota);
   background-color: var(--color-superficie);
+  box-shadow:
+    inset 0 0 0 1px var(--color-terracota),
+    var(--shadow-foco);
 }
 
 .buscador input {
   flex: 1;
   min-width: 0;
+  height: 100%;
   border: 0;
   outline: 0;
   background: transparent;
   font-family: var(--font-ui);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   color: var(--color-tinta);
 }
 

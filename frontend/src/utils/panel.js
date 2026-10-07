@@ -353,13 +353,17 @@ export function calcularPanel({
       // Pendientes de compra del proyecto: mismo criterio que la pestaña
       // Seguimiento, que es donde se ve el detalle de cada una.
       comprasImpagas: impagas.length,
+      // Impagas hace DIAS_DEUDA_VENCIDA días o más: lo que pasa el contador
+      // de alertas de la card de proyecto de "atención" a "problema".
+      comprasVencidas: impagas.filter((c) => diasDesde(c.fecha, hoy) >= DIAS_DEUDA_VENCIDA).length,
       montoImpago: sumar(impagas, (c) => precioTotalCompra(c, moneda)),
       comprasSinEntregar: comprasDelProyecto.filter(esCompraSinEntregar).length,
       fasesEstancadas: estancadas,
-      // Estado por fase, en el mismo orden que devuelve la API (igual que
-      // Fases.jsx) -- lo usa la barra de segmentos de la tabla de
-      // "Proyectos en curso" (dirección 1a) para pintar cada fase.
-      fasesResumen: fasesDelProyecto.map((f) => ({ id: f.id, estado: f.estado })),
+      // Estado por fase, en el orden de la obra -- lo usa la barra de
+      // segmentos de la card de proyecto (variante 4L) para pintar cada fase.
+      fasesResumen: [...fasesDelProyecto]
+        .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0))
+        .map((f) => ({ id: f.id, estado: f.estado })),
     };
   }
 

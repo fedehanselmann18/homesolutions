@@ -1,10 +1,18 @@
+/* Lista de proyectos — variante 4L: chips de estado + grilla de cards. */
+
 .proyectos-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
   flex-wrap: wrap;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+
+.proyectos-toolbar__derecha {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
 }
 
 .proyectos-orden {
@@ -17,17 +25,28 @@
    del label flex el 100% de `.campo` lo estiraría. */
 .proyectos-orden__select {
   width: auto;
-  font-weight: 600;
-  background-color: var(--color-superficie);
 }
 
-.proyectos-orden__select:hover {
-  border-color: var(--color-tinta);
+.proyectos-grilla {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (max-width: 1100px) {
+  .proyectos-grilla {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 640px) {
-  .proyectos-toolbar {
+  .proyectos-toolbar,
+  .proyectos-toolbar__derecha {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .proyectos-grilla {
+    grid-template-columns: 1fr;
   }
 }
