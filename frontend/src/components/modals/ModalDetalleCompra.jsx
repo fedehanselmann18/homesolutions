@@ -11,10 +11,10 @@ import { diasDesde } from "../../utils/seguimiento";
 import { OLIVA, NARANJA } from "../../constants/colores";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { SeccionNotas } from "../shared/SeccionNotas";
+import { BadgeEstado } from "../shared/BadgeEstado";
 import {
   DetalleShell,
   CabeceraMovimiento,
-  BadgeEstado,
   BandaFaltante,
   SeccionDetalle,
   GrillaDetalles,

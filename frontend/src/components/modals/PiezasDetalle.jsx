@@ -100,29 +100,6 @@ export function CabeceraMovimiento({ titulo, badges, monto, moneda = "ars", secu
   );
 }
 
-/**
- * El estado de pago o envío de una compra como badge (mismo que en la fila del
- * libro), que además lo cambia si el usuario puede. `estado` es el objeto de
- * constants/estadoCompra.js.
- */
-export function BadgeEstado({ estado, titulo, onToggle }) {
-  const Icono = estado.icono;
-  return (
-    <button
-      type="button"
-      className="badge detalle__estado"
-      style={{ color: estado.fg, backgroundColor: estado.bg }}
-      title={titulo}
-      aria-label={titulo}
-      disabled={!onToggle}
-      onClick={onToggle}
-    >
-      {Icono && <Icono size={12} strokeWidth={2} aria-hidden="true" />}
-      {estado.label}
-    </button>
-  );
-}
-
 // El input de archivo y su manejo de errores, compartido por la banda de
 // "falta el comprobante" y la lista de archivos: los dos suben al mismo lado.
 function useAdjuntar(onAgregar) {

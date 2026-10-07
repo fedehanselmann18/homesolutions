@@ -1,5 +1,5 @@
 import { useId, useState } from "react";
-import { SlidersHorizontal, X } from "lucide-react";
+import { Plus, SlidersHorizontal, X } from "lucide-react";
 
 import { TIPOS_FACTURA } from "../../constants/tipoFactura";
 import {
@@ -35,6 +35,12 @@ const OPCIONES_TIPO_FACTURA = [{ value: "", label: "Todos" }, ...TIPOS_FACTURA];
  * `proyectos` sólo se pasa desde la lista de compras de un proveedor, que es
  * la única que cruza varios proyectos (parado adentro de uno no hay nada que
  * elegir); si no viene, el campo ni se dibuja.
+ *
+ * `modo="chips"` (historial del proveedor, variante 4P): sin botón ni panel,
+ * cada filtro es un chip en una sola línea. Uno sin aplicar es un
+ * `.chip--agregar` ("+ Pago") con el <select> nativo encima, invisible, así
+ * que tocarlo abre las opciones sin un desplegable propio; uno aplicado es
+ * el chip quitable de siempre.
  */
 export function FiltrosLista({
   filtros,
@@ -45,6 +51,7 @@ export function FiltrosLista({
   mostrarComprobante = false,
   mostrarFechas = true,
   proyectos = null,
+  modo = "panel",
   children,
 }) {
   const [abierto, setAbierto] = useState(false);
@@ -83,6 +90,88 @@ export function FiltrosLista({
     mostrarFechas &&
       filtros.hasta && { campo: "hasta", texto: `Hasta ${formatFecha(filtros.hasta)}` },
   ].filter(Boolean);
+
+  const quitar = (campo) => cambiarCampo(campo, FILTROS_VACIOS[campo]);
+  const chipQuitable = ({ campo, texto }) => (
+    <span key={campo} className="chip chip--quitable">
+      {texto}
+      <button
+        type="button"
+        className="chip__quitar"
+        aria-label={`Quitar filtro ${texto}`}
+        onClick={() => quitar(campo)}
+      >
+        <X aria-hidden="true" />
+      </button>
+    </span>
+  );
+
+  if (modo === "chips") {
+    const aplicado = (campo) => aplicados.some((a) => a.campo === campo);
+    const fechas = mostrarFechas
+      ? [
+          { campo: "desde", label: "Desde" },
+          { campo: "hasta", label: "Hasta" },
+        ]
+      : [];
+    return (
+      <div className="filtros-lista filtros-lista--chips" aria-label="Filtros">
+        {aplicados.map(chipQuitable)}
+        {campos
+          .filter(({ campo }) => !aplicado(campo))
+          .map(({ campo, label, opciones }) => (
+            <label key={campo} className="chip chip--agregar filtros-lista__chip">
+              <Plus aria-hidden="true" />
+              {label}
+              <select
+                className="filtros-lista__chip-control"
+                value=""
+                aria-label={`Filtrar por ${label.toLowerCase()}`}
+                onChange={(e) => cambiarCampo(campo, e.target.value)}
+              >
+                <option value="" disabled>
+                  {label}
+                </option>
+                {opciones
+                  .filter((o) => o.value !== FILTROS_VACIOS[campo])
+                  .map((o) => (
+                    <option key={o.value} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+              </select>
+            </label>
+          ))}
+        {fechas
+          .filter(({ campo }) => !aplicado(campo))
+          .map(({ campo, label }) => (
+            <label key={campo} className="chip chip--agregar filtros-lista__chip">
+              <Plus aria-hidden="true" />
+              {label}
+              <input
+                type="date"
+                className="filtros-lista__chip-control"
+                value=""
+                aria-label={`Filtrar ${label.toLowerCase()} una fecha`}
+                // Tocar el chip abre el calendario: sin esto, en Chrome sólo
+                // lo abre el ícono del input, que acá es invisible.
+                onClick={(e) => e.currentTarget.showPicker?.()}
+                onChange={(e) => cambiarCampo(campo, e.target.value)}
+              />
+            </label>
+          ))}
+        {aplicados.length > 1 && (
+          <button
+            type="button"
+            className="filtros-lista__limpiar"
+            onClick={() => onCambiar(FILTROS_VACIOS)}
+          >
+            Limpiar filtros
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="filtros-lista">
@@ -149,19 +238,7 @@ export function FiltrosLista({
 
       {aplicados.length > 0 && (
         <div className="filtros-lista__aplicados" aria-label="Filtros aplicados">
-          {aplicados.map(({ campo, texto }) => (
-            <span key={campo} className="chip chip--quitable">
-              {texto}
-              <button
-                type="button"
-                className="chip__quitar"
-                aria-label={`Quitar filtro ${texto}`}
-                onClick={() => cambiarCampo(campo, FILTROS_VACIOS[campo])}
-              >
-                <X aria-hidden="true" />
-              </button>
-            </span>
-          ))}
+          {aplicados.map(chipQuitable)}
           {aplicados.length > 1 && (
             <button
               type="button"

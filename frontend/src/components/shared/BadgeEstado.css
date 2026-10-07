@@ -1,0 +1,16 @@
+/* La forma es `.badge` (index.css); acá sólo se le saca el chrome de botón y
+   se le da un hover que dice "esto se toca" sin cambiarle el color, que es
+   el dato. */
+.badge-estado {
+  border: none;
+  cursor: pointer;
+  transition: box-shadow var(--transicion);
+}
+
+.badge-estado:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 1px currentColor;
+}
+
+.badge-estado:disabled {
+  cursor: inherit;
+}

@@ -1,6 +1,23 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Mail, MapPin, Phone, Pencil, Trash2, Sparkles } from "lucide-react";
+import {
+  AlertTriangle,
+  Building2,
+  FileMinus,
+  FilePlus,
+  IdCard,
+  Mail,
+  MapPin,
+  MoreHorizontal,
+  Paperclip,
+  Pencil,
+  Phone,
+  Plus,
+  ShoppingCart,
+  Sparkles,
+  Tag,
+  Trash2,
+} from "lucide-react";
 
 import {
   getProveedorPorId,
@@ -29,18 +46,15 @@ import { getCategorias } from "../services/categoriaService";
 
 import useAuth from "../context/useAuth";
 import { getTipoProducto } from "../constants/tipoProducto";
-import { VERDE, ROJO } from "../constants/colores";
-import {
-  TIPOS_MOVIMIENTO,
-  getTipoMovimiento,
-  signoTexto,
-  TINTE_PASTILLA,
-} from "../constants/tipoMovimiento";
-import { formatMoneda, formatFecha } from "../utils/formato";
+import { OLIVA, ROJO } from "../constants/colores";
+import { getEstadoPagoConAntiguedad, getEstadoEnvio } from "../constants/estadoCompra";
+import { getTipoFacturaLabel } from "../constants/tipoFactura";
+import { formatMoneda, formatFecha, pluralizar } from "../utils/formato";
+import { precioTotalCompra } from "../utils/moneda";
+import { diasDesde } from "../utils/seguimiento";
 import { calcularResumenProveedor } from "../utils/proveedores";
 import { FILTROS_VACIOS, filtrarCompras } from "../utils/filtros";
 
-import LibroDeObra from "../components/proyectos/LibroDeObra";
 import ModalProveedor from "../components/modals/ModalProveedor";
 import ModalProducto from "../components/modals/ModalProducto";
 import ModalImportarCatalogo from "../components/modals/ModalImportarCatalogo";
@@ -49,15 +63,167 @@ import ModalConfirmar from "../components/modals/ModalConfirmar";
 import { Cargando } from "../components/shared/Cargando";
 import { EstadoVacio } from "../components/shared/EstadoVacio";
 import { EstadoError } from "../components/shared/EstadoError";
-import { TarjetaAlerta } from "../components/shared/TarjetaAlerta";
 import FiltrosLista from "../components/shared/FiltrosLista";
 import { Breadcrumbs } from "../components/shared/Breadcrumbs";
+import { Tabs } from "../components/shared/Tabs";
+import { BadgeEstado } from "../components/shared/BadgeEstado";
+import { Avatar } from "../components/proveedores/ProveedorItems";
 import { useToast } from "../context/useToast";
 import { usePageTitle } from "../hooks/usePageTitle";
 
-import "../components/proyectos/Acciones.css";
-import "../components/proyectos/Seguimiento.css";
 import "./ProveedorDetalle.css";
+
+// Detalle de proveedor — variante 4P de docs/GENERALUIUXChange/HS General.dc.html
+// ("Ficha lateral · Historial de compras"): la ficha del proveedor es una
+// columna fija del layout a la izquierda (no un drawer, DESIGN.md §15) y el
+// contenido son dos tabs, Catálogo e Historial de compras.
+
+/** El "⋯" de la ficha: hoy sólo tiene "Eliminar proveedor", que no merece un
+ * botón rojo a la vista al lado de Editar. Se cierra con click afuera o Esc. */
+function MenuMas({ items }) {
+  const [abierto, setAbierto] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!abierto) return undefined;
+    const cerrarAfuera = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setAbierto(false);
+    };
+    const cerrarConEsc = (e) => e.key === "Escape" && setAbierto(false);
+    document.addEventListener("mousedown", cerrarAfuera);
+    document.addEventListener("keydown", cerrarConEsc);
+    return () => {
+      document.removeEventListener("mousedown", cerrarAfuera);
+      document.removeEventListener("keydown", cerrarConEsc);
+    };
+  }, [abierto]);
+
+  return (
+    <div className="menu-mas" ref={ref}>
+      <button
+        type="button"
+        className="btn-icono btn-icono--contorno"
+        aria-label="Más acciones"
+        aria-haspopup="menu"
+        aria-expanded={abierto}
+        onClick={() => setAbierto((v) => !v)}
+      >
+        <MoreHorizontal aria-hidden="true" />
+      </button>
+      {abierto && (
+        <div className="menu-mas__lista" role="menu">
+          {items.map(({ texto, icono: Icono, peligro, onClick }) => (
+            <button
+              key={texto}
+              type="button"
+              role="menuitem"
+              className={`menu-mas__item${peligro ? " menu-mas__item--peligro" : ""}`}
+              onClick={() => {
+                setAbierto(false);
+                onClick();
+              }}
+            >
+              {Icono && <Icono size={14} strokeWidth={1.75} aria-hidden="true" />}
+              {texto}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Una compra del historial: cuadradito de fecha, título, obra y meta, estados. */
+function FilaCompra({ compra, proyecto, canManage, onAbrir, onTogglePago, onToggleEnvio }) {
+  const fecha = new Date(`${compra.fecha}T00:00:00`);
+  const dias = diasDesde(compra.fecha, new Date());
+  const pagado = compra.estado_pago === "pagado";
+  const entregado = compra.estado_envio === "entregado";
+  const tieneComprobante = (compra.comprobantes ?? []).length > 0;
+  const meta = [
+    getTipoFacturaLabel(compra.tipo_factura),
+    compra.detalle?.length ? pluralizar(compra.detalle.length, "producto") : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const titulo = (texto, accion) => (canManage ? `${texto} — ${accion}` : texto);
+  const detener = (fn) => (e) => {
+    e.stopPropagation();
+    fn();
+  };
+
+  return (
+    <div
+      className="historial-fila"
+      onClick={onAbrir}
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onAbrir();
+        }
+      }}
+      role="link"
+      tabIndex={0}
+      aria-label={compra.descripcion}
+    >
+      <span className="historial-fila__fecha" aria-label={formatFecha(compra.fecha)}>
+        <span className="historial-fila__dia">{String(fecha.getDate()).padStart(2, "0")}</span>
+        <span className="historial-fila__mes">
+          {fecha.toLocaleDateString("es-AR", { month: "short" }).replace(".", "")}
+        </span>
+      </span>
+      <span className="historial-fila__titulo">{compra.descripcion}</span>
+      <span className="historial-fila__monto cifra">
+        {formatMoneda(precioTotalCompra(compra, "ars"))}
+      </span>
+      <span className="historial-fila__meta">
+        {proyecto && (
+          <span className="historial-fila__proyecto">
+            <Building2 size={13} strokeWidth={1.75} aria-hidden="true" />
+            {proyecto}
+          </span>
+        )}
+        {meta}
+        {tieneComprobante ? (
+          <Paperclip
+            className="historial-fila__clip"
+            size={14}
+            strokeWidth={1.75}
+            aria-label="Con comprobante"
+          />
+        ) : (
+          <AlertTriangle
+            className="historial-fila__falta"
+            size={14}
+            strokeWidth={1.75}
+            aria-label="Falta el comprobante"
+          />
+        )}
+      </span>
+      <span className="historial-fila__estados">
+        <BadgeEstado
+          chico
+          estado={getEstadoPagoConAntiguedad(compra.estado_pago, dias)}
+          titulo={titulo(
+            pagado ? "Pagado" : `Impaga hace ${pluralizar(dias, "día")}`,
+            pagado ? "marcar sin pagar" : "marcar pagado"
+          )}
+          onToggle={canManage ? detener(onTogglePago) : undefined}
+        />
+        <BadgeEstado
+          chico
+          estado={getEstadoEnvio(compra.estado_envio)}
+          titulo={titulo(
+            entregado ? "Entregado" : "Sin entregar",
+            entregado ? "marcar sin entregar" : "marcar entregado"
+          )}
+          onToggle={canManage ? detener(onToggleEnvio) : undefined}
+        />
+      </span>
+    </div>
+  );
+}
 
 export function ProveedorDetalle() {
   const { id } = useParams();
@@ -88,6 +254,7 @@ export function ProveedorDetalle() {
 
   const [filtrosCompras, setFiltrosCompras] = useState(FILTROS_VACIOS);
 
+  const [tab, setTab] = useState("catalogo");
   const [confirmarEliminarProveedor, setConfirmarEliminarProveedor] = useState(false);
   const [productoAEliminar, setProductoAEliminar] = useState(null);
 
@@ -162,8 +329,12 @@ export function ProveedorDetalle() {
     return proyectos.filter((p) => ids.has(p.id));
   }, [resumen.comprasDelProveedor, proyectoDeCompra, proyectos]);
 
+  // Las más nuevas arriba.
   const comprasDelProveedorFiltradas = useMemo(
-    () => filtrarCompras(resumen.comprasDelProveedor, filtrosCompras, { proyectoDeCompra }),
+    () =>
+      filtrarCompras(resumen.comprasDelProveedor, filtrosCompras, { proyectoDeCompra }).sort(
+        (a, b) => b.fecha.localeCompare(a.fecha)
+      ),
     [resumen.comprasDelProveedor, filtrosCompras, proyectoDeCompra]
   );
 
@@ -264,308 +435,295 @@ export function ProveedorDetalle() {
     return <EstadoError mensaje="No se pudo cargar el detalle del proveedor." grande />;
   }
 
+  const rubro = productos.length
+    ? getTipoProducto(
+        [...productos].sort(
+          (a, b) =>
+            productos.filter((p) => p.tipo === b.tipo).length -
+            productos.filter((p) => p.tipo === a.tipo).length
+        )[0].tipo
+      ).label
+    : null;
+  const totalFiltrado = comprasDelProveedorFiltradas.reduce(
+    (acc, c) => acc + precioTotalCompra(c, "ars"),
+    0
+  );
+  const contacto = [
+    { icono: IdCard, label: "CUIT", valor: proveedor.cuit },
+    { icono: Phone, label: "Teléfono", valor: proveedor.telefono },
+    { icono: Mail, label: "Email", valor: proveedor.email },
+    { icono: MapPin, label: "Dirección", valor: proveedor.direccion },
+  ].filter((c) => c.valor);
+
   return (
     <div className="proveedor-detalle">
-      <div className="proveedor-detalle-header">
-        <Breadcrumbs
-          items={[{ label: "Proveedores", to: "/proveedores" }, { label: proveedor.nombre }]}
-        />
+      <Breadcrumbs
+        items={[{ label: "Proveedores", to: "/proveedores" }, { label: proveedor.nombre }]}
+      />
 
-        <div className="proveedor-detalle-header-top">
-          <h1 className="proveedor-detalle-nombre">{proveedor.nombre}</h1>
-          {canManage && (
-            <div className="proveedor-detalle-header-acciones">
-              <button
-                type="button"
-                className="btn btn-secondary btn--sm"
-                onClick={() => setModalProveedorAbierto(true)}
-              >
-                <Pencil size={14} strokeWidth={2} />
-                Editar
-              </button>
-              <button
-                type="button"
-                className="btn btn-peligro btn--sm"
-                onClick={() => setConfirmarEliminarProveedor(true)}
-              >
-                <Trash2 size={14} strokeWidth={2} />
-                Eliminar
-              </button>
+      <div className="proveedor-detalle__layout">
+        <aside className="proveedor-ficha">
+          <div className="proveedor-ficha__identidad">
+            <Avatar nombre={proveedor.nombre} grande />
+            <div className="proveedor-ficha__nombres">
+              <h1 className="proveedor-ficha__nombre">{proveedor.nombre}</h1>
+              {rubro && <span className="proveedor-ficha__rubro">{rubro}</span>}
             </div>
-          )}
-        </div>
+          </div>
 
-        <div className="proveedor-detalle-datos">
-          {proveedor.cuit && <span className="proveedor-detalle-dato">CUIT: {proveedor.cuit}</span>}
-          {proveedor.telefono && (
-            <span className="proveedor-detalle-dato">
-              <Phone size={15} strokeWidth={2} /> {proveedor.telefono}
-            </span>
-          )}
-          {proveedor.email && (
-            <span className="proveedor-detalle-dato">
-              <Mail size={15} strokeWidth={2} /> {proveedor.email}
-            </span>
-          )}
-          {proveedor.direccion && (
-            <span className="proveedor-detalle-dato">
-              <MapPin size={15} strokeWidth={2} /> {proveedor.direccion}
-            </span>
-          )}
-        </div>
-
-        <div className="proveedor-detalle-metricas">
-          <div className="proveedor-detalle-metrica">
-            <span className="proveedor-detalle-metrica-label">Comprado histórico</span>
-            <span className="proveedor-detalle-metrica-valor">
+          <div className="proveedor-ficha__panel">
+            <span className="proveedor-ficha__panel-label">Comprado histórico</span>
+            <span className="proveedor-ficha__panel-monto cifra">
               {formatMoneda(resumen.totalComprado)}
             </span>
-          </div>
-          <div className="proveedor-detalle-metrica">
-            <span className="proveedor-detalle-metrica-label">Deuda pendiente</span>
             <span
-              className="proveedor-detalle-metrica-valor"
-              style={{ color: resumen.deuda > 0 ? ROJO : VERDE }}
+              className={`proveedor-ficha__deuda${
+                resumen.deuda > 0 ? " proveedor-ficha__deuda--debe" : ""
+              }`}
             >
-              {formatMoneda(resumen.deuda)}
+              <span
+                className="proveedor-ficha__punto"
+                style={{ background: resumen.deuda > 0 ? ROJO : OLIVA }}
+              />
+              {resumen.deuda > 0
+                ? `Deuda ${formatMoneda(resumen.deuda)} · ${pluralizar(
+                    resumen.comprasImpagas.length,
+                    "compra",
+                    "compras"
+                  )}`
+                : "Sin deuda pendiente"}
             </span>
-          </div>
-          {resumen.totalNotasCredito > 0 && (
-            <div className="proveedor-detalle-metrica">
-              <span className="proveedor-detalle-metrica-label">Notas de crédito</span>
-              <span
-                className="proveedor-detalle-metrica-valor"
-                style={{ color: TIPOS_MOVIMIENTO.nota_credito.color }}
-              >
-                -{formatMoneda(resumen.totalNotasCredito)}
+            {(resumen.totalNotasCredito > 0 || resumen.totalNotasDebito > 0) && (
+              <span className="proveedor-ficha__notas cifra">
+                {[
+                  resumen.totalNotasCredito > 0 &&
+                    `Notas de crédito −${formatMoneda(resumen.totalNotasCredito)}`,
+                  resumen.totalNotasDebito > 0 &&
+                    `Notas de débito +${formatMoneda(resumen.totalNotasDebito)}`,
+                ]
+                  .filter(Boolean)
+                  .join(" · ")}
               </span>
-            </div>
-          )}
-          {resumen.totalNotasDebito > 0 && (
-            <div className="proveedor-detalle-metrica">
-              <span className="proveedor-detalle-metrica-label">Notas de débito</span>
-              <span
-                className="proveedor-detalle-metrica-valor"
-                style={{ color: TIPOS_MOVIMIENTO.nota_debito.color }}
-              >
-                +{formatMoneda(resumen.totalNotasDebito)}
-              </span>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {resumen.notas.length > 0 && (
-        <div className="proveedor-detalle-seccion">
-          <div className="proveedor-detalle-seccion-header">
-            <h2>Notas de crédito / débito</h2>
+            )}
           </div>
-          <div className="seguimiento-lista">
-            {resumen.notas.map((nota) => {
-              const tipoNota = getTipoMovimiento(nota.tipo);
-              return (
-                <TarjetaAlerta
-                  key={nota.id}
-                  icono={tipoNota.icono}
-                  color={tipoNota.color}
-                  titulo={nota.origenDescripcion}
-                  detalle={`Compra del ${formatFecha(nota.origenFecha)}`}
-                  monto={`${signoTexto(tipoNota.signo)}${formatMoneda(nota.monto_ars)}`}
-                  onClick={() => setDetalleCompraId(nota.origenId)}
-                />
-              );
-            })}
-          </div>
-        </div>
-      )}
 
-      <div className="proveedor-detalle-seccion">
-        <div className="proveedor-detalle-seccion-header">
-          <h2>Catálogo de productos</h2>
+          {contacto.length > 0 && (
+            <dl className="proveedor-ficha__contacto">
+              {contacto.map(({ icono: Icono, label, valor }) => (
+                <div key={label} className="proveedor-ficha__dato">
+                  <Icono size={15} strokeWidth={1.75} aria-hidden="true" />
+                  <dt>{label}</dt>
+                  <dd>{valor}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
+
           {canManage && (
-            <div className="proveedor-detalle-seccion-header-acciones">
+            <div className="proveedor-ficha__acciones">
               <button
                 type="button"
-                className="btn btn-marca btn--sm"
-                onClick={() => setModalImportarAbierto(true)}
+                className="btn btn-secondary proveedor-ficha__editar"
+                onClick={() => setModalProveedorAbierto(true)}
               >
-                <Sparkles size={16} strokeWidth={2} />
-                Importar catálogo
+                <Pencil size={14} strokeWidth={1.75} aria-hidden="true" />
+                Editar
               </button>
-              <button className="btn btn-primary btn--sm" onClick={handleNuevoProducto}>
-                Nuevo producto
-              </button>
+              <MenuMas
+                items={[
+                  {
+                    texto: "Eliminar proveedor",
+                    icono: Trash2,
+                    peligro: true,
+                    onClick: () => setConfirmarEliminarProveedor(true),
+                  },
+                ]}
+              />
             </div>
           )}
-        </div>
+        </aside>
 
-        {productos.length === 0 ? (
-          <EstadoVacio mensaje="Este proveedor todavía no tiene productos cargados." />
-        ) : (
-          <>
-            <div className="proveedor-detalle-tabla-wrap">
-              <table className="proveedor-detalle-tabla">
-                <thead>
-                  <tr>
-                    <th>Producto</th>
-                    <th>Tipo</th>
-                    <th>Categorías</th>
-                    <th>Precio</th>
-                    {canManage && <th />}
-                  </tr>
-                </thead>
-                <tbody>
-                  {productos.map((producto) => {
-                    const tipo = getTipoProducto(producto.tipo);
-                    return (
-                      <tr key={producto.id}>
-                        <td>
-                          {producto.marca} {producto.modelo}
-                        </td>
-                        <td>
-                          <span
-                            className="badge"
-                            style={{
-                              color: tipo.color,
-                              backgroundColor: `${tipo.color}${TINTE_PASTILLA}`,
-                            }}
-                          >
-                            {tipo.icono && <tipo.icono size={12} strokeWidth={2.25} />} {tipo.label}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="proveedor-detalle-chips">
-                            {(producto.categorias ?? []).map((c) => (
-                              <span key={c.id} className="badge badge--neutro">
-                                {c.nombre}
-                              </span>
-                            ))}
-                          </div>
-                        </td>
-                        <td>{formatMoneda(producto.precio)}</td>
-                        {canManage && (
-                          <td className="proveedor-detalle-tabla-acciones">
-                            <button
-                              type="button"
-                              className="btn btn-secondary btn--sm"
-                              onClick={() => handleEditarProducto(producto)}
-                            >
-                              Editar
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-peligro btn--sm"
-                              onClick={() => setProductoAEliminar(producto)}
-                            >
-                              Eliminar
-                            </button>
-                          </td>
-                        )}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+        <div className="proveedor-detalle__contenido">
+          <div className="proveedor-detalle__tabs">
+            <Tabs
+              tabs={[
+                { key: "catalogo", label: "Catálogo", icono: Tag, contador: productos.length },
+                {
+                  key: "historial",
+                  label: "Historial de compras",
+                  icono: ShoppingCart,
+                  contador: resumen.comprasDelProveedor.length,
+                },
+              ]}
+              activa={tab}
+              onCambiar={setTab}
+              etiqueta="Secciones del proveedor"
+            />
+            {tab === "catalogo" && canManage && (
+              <div className="proveedor-detalle__tabs-acciones">
+                <button
+                  type="button"
+                  className="btn btn--sm btn-marca"
+                  onClick={() => setModalImportarAbierto(true)}
+                >
+                  <Sparkles size={14} strokeWidth={1.75} aria-hidden="true" />
+                  Importar
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--sm btn-primary"
+                  onClick={handleNuevoProducto}
+                >
+                  <Plus size={14} strokeWidth={1.75} aria-hidden="true" />
+                  Producto
+                </button>
+              </div>
+            )}
+          </div>
 
-            {/* Mismo catálogo, en cards -- sólo visible en mobile (ver
-                ProveedorDetalle.css). Evita el scroll horizontal de la tabla
-                de arriba en vez de aplastar sus columnas. */}
-            <div className="proveedor-detalle-catalogo-cards">
-              {productos.map((producto) => {
-                const tipo = getTipoProducto(producto.tipo);
-                return (
-                  <div key={producto.id} className="proveedor-detalle-producto-card">
-                    <div className="proveedor-detalle-producto-card__top">
-                      <span className="proveedor-detalle-producto-card__nombre">
+          {tab === "catalogo" &&
+            (productos.length === 0 ? (
+              <EstadoVacio mensaje="Este proveedor todavía no tiene productos cargados." />
+            ) : (
+              <div className="planilla catalogo-proveedor">
+                <div className="planilla__header catalogo-proveedor__fila">
+                  <span>Producto</span>
+                  <span>Tipo</span>
+                  <span>Categoría</span>
+                  <span className="catalogo-proveedor__precio">Precio</span>
+                  <span />
+                </div>
+                {productos.map((producto) => {
+                  const tipo = getTipoProducto(producto.tipo);
+                  return (
+                    <div
+                      key={producto.id}
+                      className="planilla__fila catalogo-proveedor__fila catalogo-proveedor__fila--dato"
+                    >
+                      <span className="catalogo-proveedor__nombre">
                         {producto.marca} {producto.modelo}
                       </span>
-                      <span className="proveedor-detalle-producto-card__precio">
+                      <span className="catalogo-proveedor__tipo">
+                        {tipo.icono && (
+                          <tipo.icono size={14} strokeWidth={1.75} aria-hidden="true" />
+                        )}
+                        {tipo.label}
+                      </span>
+                      <span className="catalogo-proveedor__categorias">
+                        {(producto.categorias ?? []).map((c) => (
+                          <span key={c.id} className="badge badge--neutro">
+                            {c.nombre}
+                          </span>
+                        ))}
+                      </span>
+                      <span className="catalogo-proveedor__precio cifra">
                         {formatMoneda(producto.precio)}
                       </span>
-                    </div>
-                    <div className="proveedor-detalle-producto-card__meta">
-                      <span
-                        className="badge badge--neutro"
-                        style={{
-                          color: tipo.color,
-                          backgroundColor: `${tipo.color}${TINTE_PASTILLA}`,
-                        }}
-                      >
-                        {tipo.icono && <tipo.icono size={12} strokeWidth={2.25} />} {tipo.label}
+                      <span className="acciones catalogo-proveedor__acciones">
+                        {canManage && (
+                          <>
+                            <button
+                              type="button"
+                              className="btn-icono btn-icono--sm"
+                              title="Editar"
+                              aria-label={`Editar ${producto.marca} ${producto.modelo}`}
+                              onClick={() => handleEditarProducto(producto)}
+                            >
+                              <Pencil aria-hidden="true" />
+                            </button>
+                            <button
+                              type="button"
+                              className="btn-icono btn-icono--sm btn-icono--peligro"
+                              title="Eliminar"
+                              aria-label={`Eliminar ${producto.marca} ${producto.modelo}`}
+                              onClick={() => setProductoAEliminar(producto)}
+                            >
+                              <Trash2 aria-hidden="true" />
+                            </button>
+                          </>
+                        )}
                       </span>
-                      {(producto.categorias ?? []).map((c) => (
-                        <span key={c.id} className="badge badge--neutro">
-                          {c.nombre}
-                        </span>
-                      ))}
-                      {canManage && (
-                        <span className="proveedor-detalle-producto-card__acciones">
-                          <button
-                            type="button"
-                            className="btn-icono btn-icono--contorno"
-                            aria-label="Editar producto"
-                            onClick={() => handleEditarProducto(producto)}
-                          >
-                            <Pencil size={14} strokeWidth={2} />
-                          </button>
-                          <button
-                            type="button"
-                            className="btn-icono btn-icono--contorno btn-icono--peligro"
-                            aria-label="Eliminar producto"
-                            onClick={() => setProductoAEliminar(producto)}
-                          >
-                            <Trash2 size={14} strokeWidth={2} />
-                          </button>
-                        </span>
-                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+
+          {tab === "historial" &&
+            (resumen.comprasDelProveedor.length === 0 ? (
+              <EstadoVacio mensaje="Todavía no hay compras registradas a este proveedor." />
+            ) : (
+              <>
+                <FiltrosLista
+                  modo="chips"
+                  filtros={filtrosCompras}
+                  onCambiar={setFiltrosCompras}
+                  proyectos={proyectosConCompras}
+                  mostrarNotas
+                  mostrarEstadoPago
+                  mostrarEstadoEnvio
+                />
+
+                {comprasDelProveedorFiltradas.length === 0 ? (
+                  <EstadoVacio mensaje="Ninguna compra coincide con esos filtros." />
+                ) : (
+                  <div className="historial">
+                    {comprasDelProveedorFiltradas.map((compra) => (
+                      <FilaCompra
+                        key={compra.id}
+                        compra={compra}
+                        proyecto={nombreProyectoDeCompra(compra)}
+                        canManage={canManage}
+                        onAbrir={() => setDetalleCompraId(compra.id)}
+                        onTogglePago={() => handleToggleEstadoPagoCompra(compra)}
+                        onToggleEnvio={() => handleToggleEstadoEnvioCompra(compra)}
+                      />
+                    ))}
+                    <div className="historial__total cifra">
+                      <span>
+                        Total · {pluralizar(comprasDelProveedorFiltradas.length, "compra")}
+                      </span>
+                      <span>{formatMoneda(totalFiltrado)}</span>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-      </div>
+                )}
 
-      <div className="acciones-seccion">
-        <div className="acciones-header">
-          <h2>Historial de compras</h2>
+                {resumen.notas.length > 0 && (
+                  <section className="historial-notas">
+                    <h2 className="historial-notas__titulo">Notas de crédito y débito</h2>
+                    <ul className="historial-notas__lista">
+                      {resumen.notas.map((nota) => {
+                        const credito = nota.tipo === "nota_credito";
+                        const Icono = credito ? FileMinus : FilePlus;
+                        return (
+                          <li key={nota.id}>
+                            <button
+                              type="button"
+                              className="historial-notas__fila"
+                              onClick={() => setDetalleCompraId(nota.origenId)}
+                            >
+                              <Icono size={15} strokeWidth={1.75} aria-hidden="true" />
+                              <span className="historial-notas__texto">
+                                <span>{nota.origenDescripcion}</span>
+                                <span className="historial-notas__meta">
+                                  {credito ? "Nota de crédito" : "Nota de débito"} · compra del{" "}
+                                  {formatFecha(nota.origenFecha)}
+                                </span>
+                              </span>
+                              <span className="historial-notas__monto cifra">
+                                {credito ? "−" : "+"}
+                                {formatMoneda(nota.monto_ars)}
+                              </span>
+                            </button>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </section>
+                )}
+              </>
+            ))}
         </div>
-
-        {resumen.comprasDelProveedor.length > 0 && (
-          <FiltrosLista
-            filtros={filtrosCompras}
-            onCambiar={setFiltrosCompras}
-            proyectos={proyectosConCompras}
-            mostrarNotas
-            mostrarEstadoPago
-            mostrarEstadoEnvio
-          />
-        )}
-
-        {resumen.comprasDelProveedor.length === 0 ? (
-          <EstadoVacio mensaje="Todavía no hay compras registradas a este proveedor." />
-        ) : (
-          <LibroDeObra
-            movimientoActivo={detalleCompraId ? { tipo: "compra", id: detalleCompraId } : null}
-            compras={comprasDelProveedorFiltradas}
-            nombreFase={nombreFase}
-            nombreProyecto={nombreProyectoDeCompra}
-            saldoLabel="Total comprado"
-            canManage={canManage}
-            // Se consulta, no se edita: la compra se carga y se corrige desde
-            // su proyecto. Lo único que queda a mano son los toggles de
-            // pago/envío, que es lo que se mira parado en un proveedor.
-            permitirEdicion={false}
-            onAbrirDetalle={(_tipo, compra) => setDetalleCompraId(compra.id)}
-            onTogglePagoCompra={handleToggleEstadoPagoCompra}
-            onToggleEnvioCompra={handleToggleEstadoEnvioCompra}
-            onVerComprobante={(_tipo, compraId, comprobanteId) =>
-              getComprobanteCompra(compraId, comprobanteId)
-            }
-          />
-        )}
       </div>
 
       {modalProveedorAbierto && (

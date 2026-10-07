@@ -169,23 +169,6 @@
   padding-top: 1px;
 }
 
-/* El badge de estado de una compra es además el botón que lo cambia. La
-   forma es la de `.badge`; acá sólo se le saca el chrome de botón y se le da
-   un hover que diga "esto se toca" sin cambiarle el color, que es el dato. */
-.libro__estado {
-  border: none;
-  cursor: pointer;
-  transition: box-shadow var(--transicion);
-}
-
-.libro__estado:hover:not(:disabled) {
-  box-shadow: inset 0 0 0 1px currentColor;
-}
-
-.libro__estado:disabled {
-  cursor: inherit;
-}
-
 /* --- comprobante: clip si está, alerta si falta --- */
 
 .libro__comprobante-col {

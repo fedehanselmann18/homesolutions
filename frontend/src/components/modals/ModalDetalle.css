@@ -42,21 +42,6 @@
   gap: var(--space-1-5);
 }
 
-/* El badge de estado de una compra es también el control que lo cambia. */
-.detalle__estado {
-  border: none;
-  cursor: pointer;
-  transition: box-shadow var(--transicion);
-}
-
-.detalle__estado:hover:not(:disabled) {
-  box-shadow: inset 0 0 0 1px currentColor;
-}
-
-.detalle__estado:disabled {
-  cursor: default;
-}
-
 .detalle__total {
   display: flex;
   flex-direction: column;

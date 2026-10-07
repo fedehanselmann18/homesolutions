@@ -22,10 +22,15 @@ import { TIPOS_MOVIMIENTO as TIPOS, signoTexto } from "../../constants/tipoMovim
 
 import "./LibroDeObra.css";
 import { EstadoVacio } from "../shared/EstadoVacio";
+import { BadgeEstado } from "../shared/BadgeEstado";
 
 // Cuántos movimientos por página. Una obra larga junta cientos, y el libro
 // pinta todos sus días: sin cortar, la página se vuelve un scroll infinito.
 export const MOVIMIENTOS_POR_PAGINA = 50;
+
+// El nombre accesible de un badge de estado: qué es y, si se puede tocar,
+// qué hace tocarlo.
+const tituloEstado = (texto, accion, puede) => (puede ? `${texto} — ${accion}` : texto);
 
 const conSigno = (monto, signo, moneda) =>
   `${signoTexto(signo)}${formatMoneda(Math.abs(monto), moneda)}`;
@@ -57,7 +62,7 @@ export function LibroDeObra({
   // Un admin puede tener permiso para editar y aun así no corresponder que
   // edite desde acá: en la ficha del proveedor la compra se consulta, pero
   // se carga y se corrige desde su proyecto, que es donde tiene contexto de
-  // fase. Los estados de pago/envío SÍ se togglean igual (ver EstadoBadge),
+  // fase. Los estados de pago/envío SÍ se togglean igual (ver BadgeEstado),
   // que es la acción que uno quiere a mano mirando lo que le debe a alguien.
   permitirEdicion = true,
   // En una fase no entra plata, así que el acumulado no es un "saldo": el
@@ -349,31 +354,29 @@ function FilaMovimiento({
       <span className="libro__estados">
         {esCompra ? (
           <>
-            <EstadoBadge
+            <BadgeEstado
               estado={getEstadoPagoConAntiguedad(entidad.estado_pago, movimiento.diasImpaga)}
-              titulo={
+              titulo={tituloEstado(
                 entidad.estado_pago === "pagado"
                   ? "Pagado"
-                  : `Impaga hace ${pluralizar(movimiento.diasImpaga, "día")}`
-              }
-              accion={
+                  : `Impaga hace ${pluralizar(movimiento.diasImpaga, "día")}`,
                 entidad.estado_pago === "pagado"
                   ? "click para marcar sin pagar"
-                  : "click para marcar pagado"
-              }
-              canManage={canManage}
-              onClick={detener(() => onTogglePagoCompra?.(entidad))}
+                  : "click para marcar pagado",
+                canManage
+              )}
+              onToggle={canManage ? detener(() => onTogglePagoCompra?.(entidad)) : undefined}
             />
-            <EstadoBadge
+            <BadgeEstado
               estado={getEstadoEnvio(entidad.estado_envio)}
-              titulo={entidad.estado_envio === "entregado" ? "Entregado" : "Sin entregar"}
-              accion={
+              titulo={tituloEstado(
+                entidad.estado_envio === "entregado" ? "Entregado" : "Sin entregar",
                 entidad.estado_envio === "entregado"
                   ? "click para marcar sin entregar"
-                  : "click para marcar entregado"
-              }
-              canManage={canManage}
-              onClick={detener(() => onToggleEnvioCompra?.(entidad))}
+                  : "click para marcar entregado",
+                canManage
+              )}
+              onToggle={canManage ? detener(() => onToggleEnvioCompra?.(entidad)) : undefined}
             />
           </>
         ) : (
@@ -457,29 +460,6 @@ function FilaMovimiento({
         </span>
       )}
     </div>
-  );
-}
-
-// El estado de una compra es un badge con su texto e ícono (DESIGN.md §12),
-// y además el control para cambiarlo: un admin lo togglea desde la fila. Para
-// un usuario de lectura es el mismo badge, deshabilitado. Con aria-label
-// además del title, que no se muestra en touch.
-function EstadoBadge({ estado, titulo, accion, canManage, onClick }) {
-  const Icono = estado.icono;
-  const etiqueta = canManage ? `${titulo} — ${accion}` : titulo;
-  return (
-    <button
-      type="button"
-      className="badge libro__estado"
-      title={etiqueta}
-      aria-label={etiqueta}
-      disabled={!canManage}
-      style={{ color: estado.fg, backgroundColor: estado.bg }}
-      onClick={onClick}
-    >
-      {Icono && <Icono size={12} strokeWidth={2} aria-hidden="true" />}
-      {estado.label}
-    </button>
   );
 }
 
