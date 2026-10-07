@@ -1,7 +1,17 @@
+/*
+ * La línea de 1px del contenedor es un `box-shadow: inset` y no un
+ * `border-bottom`. El diseño (y DESIGN.md §13) la dibuja como borde y le pone
+ * a la tab `margin-bottom: -1px` para que la línea de 2px de la activa la tape.
+ * Eso no sobrevive al `overflow-x: auto` que hace scrolleables las tabs en
+ * mobile: el overflow recorta en el borde del padding, así que el pixel de
+ * abajo de la línea activa se corta (queda 1px oliva sobre 1px gris) y además
+ * aparece 1px de scroll vertical. El inset se pinta debajo de los hijos, así
+ * que el borde de 2px de la tab lo tapa sin salirse de la caja.
+ */
 .tabs {
   display: flex;
-  gap: var(--space-6);
-  border-bottom: 1px solid var(--color-linea);
+  gap: var(--space-7);
+  box-shadow: inset 0 -1px 0 var(--color-linea);
   margin: var(--space-6) 0 0;
   overflow-x: auto;
   scrollbar-width: none;
@@ -14,20 +24,23 @@
 }
 
 .tabs__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 40px;
+  padding: 0;
   font-family: var(--font-ui);
   font-size: var(--text-base);
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-tinta-muted);
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  padding: var(--space-3) 0;
-  margin-bottom: -1px;
   white-space: nowrap;
   cursor: pointer;
   transition:
-    color 0.15s ease,
-    border-color 0.15s ease;
+    color var(--transicion),
+    border-color var(--transicion);
 }
 
 .tabs__tab:hover {
@@ -35,6 +48,20 @@
 }
 
 .tabs__tab--activa {
-  color: var(--color-terracota);
+  font-weight: 600;
+  color: var(--color-tinta);
   border-bottom-color: var(--color-terracota);
+}
+
+.tabs__badge {
+  display: inline-flex;
+  justify-content: center;
+  min-width: 18px;
+  padding: 0 var(--space-1);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  line-height: 18px;
+  border-radius: var(--radius-pill);
+  background: var(--color-arcilla-tint);
+  color: var(--color-arcilla-texto);
 }
