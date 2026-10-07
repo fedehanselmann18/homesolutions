@@ -107,7 +107,7 @@ export function FiltrosLista({
       {mostrarFechas && (
         <>
           <div className="filtros-lista-campo">
-            <label className="label-ficha">Desde</label>
+            <label className="label-campo">Desde</label>
             <input
               type="date"
               value={filtros.desde}
@@ -116,7 +116,7 @@ export function FiltrosLista({
           </div>
 
           <div className="filtros-lista-campo">
-            <label className="label-ficha">Hasta</label>
+            <label className="label-campo">Hasta</label>
             <input
               type="date"
               value={filtros.hasta}

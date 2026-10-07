@@ -78,7 +78,7 @@ export function FilaProyecto({ proyecto, onClick, renderAcciones }) {
       </div>
 
       <div className="panel-tabla-col panel-tabla-col--disponible">
-        <span className="panel-tabla-label-movil label-ficha">Disponible</span>
+        <span className="panel-tabla-label-movil label-campo">Disponible</span>
         <span style={{ color: positivo ? VERDE : ROJO }}>
           {formatMoneda(proyecto.disponible, proyecto.moneda)}
         </span>
@@ -86,7 +86,7 @@ export function FilaProyecto({ proyecto, onClick, renderAcciones }) {
 
       <div className="panel-tabla-col panel-tabla-col--presupuesto">
         <div className="panel-tabla-presupuesto-header">
-          <span className="panel-tabla-label-movil label-ficha">Presupuesto ejecutado</span>
+          <span className="panel-tabla-label-movil label-campo">Presupuesto ejecutado</span>
           <span className={excedido ? "panel-proyecto-excedido" : ""}>
             {proyecto.pctPresupuesto.toFixed(0)}%
           </span>
@@ -159,11 +159,11 @@ export function TablaProyectos({ proyectos, onFilaClick, renderAcciones }) {
   return (
     <div className={`planilla panel-tabla${renderAcciones ? " panel-tabla--acciones" : ""}`}>
       <div className="planilla__header panel-tabla-header">
-        <span className="label-ficha">Proyecto</span>
-        <span className="label-ficha">Disponible</span>
-        <span className="label-ficha">Presupuesto ejecutado</span>
-        <span className="label-ficha">Fases</span>
-        <span className="label-ficha">Pendientes</span>
+        <span>Proyecto</span>
+        <span>Disponible</span>
+        <span>Presupuesto ejecutado</span>
+        <span>Fases</span>
+        <span>Pendientes</span>
         <span />
       </div>
       {proyectos.map((proyecto) => (

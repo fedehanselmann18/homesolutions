@@ -123,9 +123,9 @@ export function SeccionCatalogo({
     contenido = (
       <div className={claseTabla}>
         <div className="planilla__header">
-          <span className="label-ficha">Nombre</span>
-          {conTipo && <span className="label-ficha">Tipo</span>}
-          {esAdmin && <span className="label-ficha seccion-catalogo__col-acciones">Acciones</span>}
+          <span>Nombre</span>
+          {conTipo && <span>Tipo</span>}
+          {esAdmin && <span className="seccion-catalogo__col-acciones">Acciones</span>}
         </div>
 
         {registros.map((registro) => {

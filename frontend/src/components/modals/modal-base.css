@@ -92,15 +92,12 @@
   min-width: 0;
 }
 
+/* La tipografía del label es la de `.label-campo` (index.css), que engancha
+   `.modal-form label` por alias igual que `.campo` engancha los inputs. */
 .modal-form label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--color-tinta-muted);
+  gap: var(--space-1-5);
   min-width: 0;
 }
 

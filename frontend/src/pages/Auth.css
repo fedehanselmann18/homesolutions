@@ -101,16 +101,11 @@
   color: var(--color-tinta-muted);
 }
 
+/* Tipografía del label: la de `.label-campo` en index.css (alias). */
 .auth-campo {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-family: var(--font-ui);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--color-tinta-muted);
+  gap: var(--space-1-5);
 }
 
 /* El chevron propio reemplaza la flecha nativa del <select>, que cambia de

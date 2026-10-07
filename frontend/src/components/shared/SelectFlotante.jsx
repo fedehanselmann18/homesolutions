@@ -36,7 +36,7 @@ export function SelectFlotante({ label, value, onChange, opciones }) {
 
   return (
     <div className="select-flotante" ref={contenedorRef}>
-      <label className="label-ficha select-flotante-label">{label}</label>
+      <label className="label-campo select-flotante-label">{label}</label>
       <button
         type="button"
         className={`select-flotante-trigger ${abierto ? "abierto" : ""}`}

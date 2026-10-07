@@ -221,12 +221,12 @@ export function LibroDeObra({
       {compras.length > 0 && (
         <div className="libro__referencias">
           <span className="libro__referencias-grupo">
-            <span className="label-ficha">Pago</span>
+            <span className="label-campo">Pago</span>
             <Referencia estado={getEstadoPago("pendiente")} />
             <Referencia estado={getEstadoPago("pagado")} />
           </span>
           <span className="libro__referencias-grupo">
-            <span className="label-ficha">Envío</span>
+            <span className="label-campo">Envío</span>
             <Referencia estado={getEstadoEnvio("pedido")} />
             <Referencia estado={getEstadoEnvio("entregado")} />
           </span>
@@ -234,12 +234,12 @@ export function LibroDeObra({
       )}
 
       <div className="libro__columnas">
-        <span className="label-ficha">Tipo</span>
-        <span className="label-ficha">Movimiento</span>
-        <span className="label-ficha">Comprobantes</span>
-        <span className="label-ficha">Estado</span>
-        <span className="label-ficha libro__num">Importe</span>
-        <span className="label-ficha libro__num">Saldo</span>
+        <span>Tipo</span>
+        <span>Movimiento</span>
+        <span>Comprobantes</span>
+        <span>Estado</span>
+        <span className="libro__num">Importe</span>
+        <span className="libro__num">Saldo</span>
         {mostrarAcciones && <span />}
       </div>
 

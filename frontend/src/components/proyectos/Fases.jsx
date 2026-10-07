@@ -147,11 +147,11 @@ export function Fases({ proyectoId }) {
       ) : (
         <div className="planilla fases-tabla">
           <div className="planilla__header fases-tabla-header">
-            <span className="label-ficha">#</span>
-            <span className="label-ficha">Fase</span>
-            <span className="label-ficha">Estado</span>
-            <span className="label-ficha fases-tabla-col--num">Gastado</span>
-            <span className="label-ficha">% del presupuesto</span>
+            <span>#</span>
+            <span>Fase</span>
+            <span>Estado</span>
+            <span className="fases-tabla-col--num">Gastado</span>
+            <span>% del presupuesto</span>
             <span />
           </div>
 

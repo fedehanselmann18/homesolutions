@@ -106,10 +106,10 @@ export function SeccionCotizaciones() {
         }`}
       >
         <div className="planilla__header">
-          <span className="label-ficha">Fecha</span>
-          <span className="label-ficha">Dólar</span>
-          <span className="label-ficha seccion-cotizaciones__col-valor">$ por US$</span>
-          {esAdmin && <span className="label-ficha seccion-catalogo__col-acciones">Acciones</span>}
+          <span>Fecha</span>
+          <span>Dólar</span>
+          <span className="seccion-cotizaciones__col-valor">$ por US$</span>
+          {esAdmin && <span className="seccion-catalogo__col-acciones">Acciones</span>}
         </div>
 
         {cotizaciones.map((c) => (

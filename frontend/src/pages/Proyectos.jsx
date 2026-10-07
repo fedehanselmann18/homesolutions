@@ -237,7 +237,7 @@ export function Proyectos() {
             <SelectorMoneda />
 
             <label className="proyectos-orden">
-              <span className="label-ficha">Ordenar por</span>
+              <span className="label-campo">Ordenar por</span>
               <select
                 className="campo campo--sm proyectos-orden__select"
                 value={ordenarPor}
@@ -255,11 +255,11 @@ export function Proyectos() {
           ) : filtroEstado === "todos" ? (
             <div className="planilla panel-tabla panel-tabla--acciones">
               <div className="planilla__header panel-tabla-header">
-                <span className="label-ficha">Proyecto</span>
-                <span className="label-ficha">Disponible</span>
-                <span className="label-ficha">Presupuesto ejecutado</span>
-                <span className="label-ficha">Fases</span>
-                <span className="label-ficha">Pendientes</span>
+                <span>Proyecto</span>
+                <span>Disponible</span>
+                <span>Presupuesto ejecutado</span>
+                <span>Fases</span>
+                <span>Pendientes</span>
                 <span />
               </div>
               {ORDEN_SECCIONES.map((estadoKey) => {

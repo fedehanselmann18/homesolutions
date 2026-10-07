@@ -99,15 +99,11 @@
   margin-bottom: var(--space-4);
 }
 
+/* Tipografía del label: la de `.label-campo` en index.css (alias). */
 .manager-campo {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--color-tinta-muted);
+  gap: var(--space-1-5);
 }
 
 .manager-campo--error input {
