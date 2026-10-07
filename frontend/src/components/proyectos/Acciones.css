@@ -1,3 +1,9 @@
+/* El mismo aire debajo de las pestañas que Fases, Análisis y Seguimiento:
+   sin esto "Movimientos del proyecto" quedaba pegado a la línea de tabs. */
+.acciones-proyecto {
+  padding-top: var(--space-6);
+}
+
 .acciones-header {
   display: flex;
   align-items: center;
@@ -13,18 +19,20 @@
   margin: 0;
 }
 
-.acciones-header-botones {
+/* A la izquierda y separados del saldo por una línea: pegados a la derecha
+   debajo de las barras quedaban apretados contra las cifras. La compra (la
+   primaria) va primero, donde empieza la lectura. */
+.acciones-nuevo {
   display: flex;
-  gap: var(--space-2);
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-linea-suave);
+  margin-bottom: var(--space-5);
 }
 
 @media (max-width: 640px) {
-  .acciones-header-botones {
-    flex-basis: 100%;
-    flex-wrap: wrap;
-  }
-
-  .acciones-header-botones > * {
+  .acciones-nuevo > * {
     flex: 1 1 auto;
   }
 }

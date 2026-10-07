@@ -1,7 +1,7 @@
 // El libro de obra (Movimientos v2, variante 3a) calcula cosas que no se ven
 // leyendo el JSX: el saldo acumulado va del movimiento más viejo al más nuevo
-// aunque la planilla se muestre al revés, y cada día lleva su propio subtotal
-// con signo.
+// aunque la planilla se muestre al revés, y los movimientos se agrupan por día
+// (sin subtotal: se sacó a pedido).
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -77,19 +77,11 @@ describe("LibroDeObra", () => {
     expect(screen.getByText("Saldo $")).toBeInTheDocument();
   });
 
-  it("agrupa por día con el subtotal firmado de cada uno", () => {
+  it("agrupa por día, sin subtotal", () => {
     render_();
 
     expect(screen.getByText(/jueves 5 de marzo/i)).toBeInTheDocument();
-    expect(
-      screen.getByText((_, e) => texto(e) === "Subtotal del día +$ 3.050.000")
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText((_, e) => texto(e) === "Subtotal del día −$ 84.500")
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText((_, e) => texto(e) === "Subtotal del día −$ 2.109.183")
-    ).toBeInTheDocument();
+    expect(screen.queryByText(/subtotal del día/i)).not.toBeInTheDocument();
   });
 
   it("nombra el tipo de cada fila en su ícono", () => {

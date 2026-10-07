@@ -44,9 +44,7 @@ describe("Registro", () => {
     await screen.findByRole("option", { name: "Agustin" });
     expect(screen.queryByRole("option", { name: "Manager" })).not.toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /ingresalo manualmente/i })
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /ingresar manualmente/i })).not.toBeInTheDocument();
   });
 
   it("avisa cuando no queda nadie pendiente de registrarse", async () => {
@@ -54,6 +52,9 @@ describe("Registro", () => {
     renderRegistro();
 
     expect(await screen.findByText(/no hay nombres pendientes de registro/i)).toBeInTheDocument();
+    // Sin nadie para elegir el formulario no lleva a ningún lado: el botón
+    // queda deshabilitado en vez de dejar enviar y fallar.
+    expect(screen.getByRole("button", { name: /crear cuenta/i })).toBeDisabled();
   });
 
   it("crea la cuenta sin mandar el rol: lo decide el servidor con la whitelist", async () => {

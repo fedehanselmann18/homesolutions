@@ -95,12 +95,43 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-10);
+  align-items: stretch;
+}
+
+/* Columna izquierda: proyectos arriba, últimos movimientos abajo. Es la que
+   define el alto de la fila. */
+.panel-columna {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  min-width: 0;
 }
 
 .panel-lista {
   display: flex;
   flex-direction: column;
   min-width: 0;
+}
+
+/* "Para resolver" tiene más ítems que la columna de al lado y antes estiraba
+   sólo su mitad de la página. Con `height: 0` deja de empujar el alto de la
+   fila (lo fija la columna izquierda) y `min-height: 100%` lo hace llegar
+   justo hasta ahí; lo que no entra se scrollea adentro de la lista. Así las
+   dos columnas terminan en la misma línea. */
+@media (min-width: 901px) {
+  .panel-lista--scroll {
+    height: 0;
+    min-height: 100%;
+    overflow: hidden;
+  }
+
+  .panel-lista--scroll .panel-lista__items {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    /* Aire para que la última fila no quede pegada al borde del scroll. */
+    scrollbar-gutter: stable;
+  }
 }
 
 .panel-lista__header {
@@ -151,7 +182,8 @@
 /* Las filas son botones para que se puedan recorrer con teclado; se les saca
    el chrome de botón y el hover es el de toda fila (superficie suave). */
 .panel-proyecto,
-.panel-pendiente {
+.panel-pendiente,
+.panel-movimiento {
   display: grid;
   width: 100%;
   padding: var(--space-3) 0;
@@ -165,7 +197,8 @@
 }
 
 .panel-proyecto:hover,
-.panel-pendiente:hover {
+.panel-pendiente:hover,
+.panel-movimiento:hover {
   background: var(--color-superficie-suave);
 }
 
@@ -259,6 +292,57 @@
   white-space: nowrap;
 }
 
+/* Últimos movimientos: misma grilla de dos renglones que los pendientes, con
+   el ícono del tipo de movimiento a la izquierda. */
+.panel-movimiento {
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  gap: 2px var(--space-3);
+  align-items: center;
+  padding: var(--space-2-5) 0;
+}
+
+.panel-movimiento__icono {
+  grid-row: span 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+}
+
+.panel-movimiento__titulo {
+  min-width: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panel-movimiento__monto {
+  text-align: right;
+  font-size: var(--text-base);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.panel-movimiento__contexto {
+  min-width: 0;
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.panel-movimiento__fecha {
+  text-align: right;
+  font-size: var(--text-xs);
+  color: var(--color-tinta-tenue);
+  white-space: nowrap;
+}
+
 @media (max-width: 900px) {
   .panel-listas {
     grid-template-columns: 1fr;
@@ -323,11 +407,6 @@
 .skeleton--kpi-valor {
   width: 80%;
   height: var(--space-7);
-}
-
-.skeleton--kpi-detalle {
-  width: 50%;
-  height: var(--space-3);
 }
 
 .skeleton--grafico {

@@ -1,4 +1,4 @@
-import { Plus } from "lucide-react";
+import { Building2 } from "lucide-react";
 
 import { PageHeader } from "../shared/PageHeader";
 import { Buscador } from "../shared/Buscador";
@@ -25,7 +25,7 @@ export function ProyectosHeader({
           />
           {canManage && (
             <button type="button" className="btn btn-primary" onClick={onCrearProyecto}>
-              <Plus size={16} strokeWidth={1.75} aria-hidden="true" />
+              <Building2 aria-hidden="true" />
               Nuevo proyecto
             </button>
           )}

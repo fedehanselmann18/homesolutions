@@ -18,7 +18,8 @@ import { usePageTitle } from "../hooks/usePageTitle";
 
 import { TarjetaKpi } from "../components/shared/TarjetaKpi";
 import { calcularPanel } from "../utils/panel";
-import { formatMoneda, formatMonedaCorta, pluralizar } from "../utils/formato";
+import { formatFecha, formatMoneda, formatMonedaCorta } from "../utils/formato";
+import { getTipoMovimiento, signoTexto, TINTE_PASTILLA } from "../constants/tipoMovimiento";
 import {
   OLIVA,
   ERROR,
@@ -68,7 +69,6 @@ function DashboardSkeleton() {
           <div key={i} className="panel-kpi-skeleton">
             <div className="skeleton skeleton--kpi-label" />
             <div className="skeleton skeleton--kpi-valor" />
-            <div className="skeleton skeleton--kpi-detalle" />
           </div>
         ))}
       </div>
@@ -76,22 +76,30 @@ function DashboardSkeleton() {
       <div className="skeleton skeleton--grafico" />
 
       <div className="panel-listas">
-        {[0, 1].map((i) => (
-          <section key={i} className="panel-lista">
-            <div className="skeleton skeleton--seccion-titulo" />
-            {[0, 1, 2].map((j) => (
-              <div key={j} className="skeleton skeleton--fila" />
-            ))}
-          </section>
-        ))}
+        <div className="panel-columna">
+          {[0, 1].map((i) => (
+            <section key={i} className="panel-lista">
+              <div className="skeleton skeleton--seccion-titulo" />
+              {[0, 1, 2].map((j) => (
+                <div key={j} className="skeleton skeleton--fila" />
+              ))}
+            </section>
+          ))}
+        </div>
+        <section className="panel-lista">
+          <div className="skeleton skeleton--seccion-titulo" />
+          {[0, 1, 2, 3, 4, 5].map((j) => (
+            <div key={j} className="skeleton skeleton--fila" />
+          ))}
+        </section>
       </div>
     </div>
   );
 }
 
-function ListaPanel({ titulo, link, children }) {
+function ListaPanel({ titulo, link, className = "", children }) {
   return (
-    <section className="panel-lista">
+    <section className={`panel-lista ${className}`.trim()}>
       <div className="panel-lista__header">
         <h2 className="panel-lista__titulo">{titulo}</h2>
         {link}
@@ -112,6 +120,9 @@ function TooltipEvolucion({ active, payload, moneda }) {
     </div>
   );
 }
+
+// Cuántos movimientos recientes entran en el Panel.
+const MOVIMIENTOS_EN_PANEL = 5;
 
 const capitalizar = (texto = "") => texto.charAt(0).toUpperCase() + texto.slice(1);
 
@@ -184,6 +195,9 @@ export function Dashboard() {
     return <EstadoError mensaje="No se pudieron cargar los datos del panel." grande />;
 
   const { kpis, proyectosActivos, paraResolver, totalParaResolver, evolucion } = panel;
+  // calcularPanel trae 8; en el Panel entran 5 (los últimos movimientos son
+  // un vistazo, el listado completo está en cada proyecto).
+  const ultimosMovimientos = panel.actividad.slice(0, MOVIMIENTOS_EN_PANEL);
   const totalProyectos = kpis.enCurso + kpis.terminados + kpis.aIniciar;
   const saludo = usuario?.nombre_usuario ? `Hola, ${capitalizar(usuario.nombre_usuario)}` : "Panel";
   const { deudaProveedores: deuda } = kpis;
@@ -208,27 +222,11 @@ export function Dashboard() {
         <TarjetaKpi
           titulo="Disponible en obras"
           valor={fm(kpis.disponibleTotal)}
-          detalle={pluralizar(kpis.enCurso, "proyecto en curso", "proyectos en curso")}
           color={ERROR_TEXTO}
           destacado={kpis.disponibleTotal < 0}
         />
-        <TarjetaKpi
-          titulo="Falta cobrar"
-          valor={fm(kpis.pendienteDeCobrar)}
-          detalle={`${fm(kpis.cobradoMes)} cobrado este mes`}
-        />
-        <TarjetaKpi
-          titulo="Deuda con proveedores"
-          valor={formatMoneda(deuda.monto)}
-          detalle={
-            deuda.compras === 0
-              ? "Todo al día"
-              : deuda.vencidas > 0
-                ? `${pluralizar(deuda.vencidas, "compra", "compras")} con más de 90 días`
-                : pluralizar(deuda.compras, "compra sin pagar", "compras sin pagar")
-          }
-          detalleColor={deuda.vencidas > 0 ? ERROR_TEXTO : undefined}
-        />
+        <TarjetaKpi titulo="Falta cobrar" valor={fm(kpis.pendienteDeCobrar)} />
+        <TarjetaKpi titulo="Deuda con proveedores" valor={formatMoneda(deuda.monto)} />
       </div>
 
       <section className="panel-grafico" aria-label="Cobrado y gastado, últimos 6 meses">
@@ -285,53 +283,103 @@ export function Dashboard() {
         </ResponsiveContainer>
       </section>
 
+      {/* Dos columnas que terminan juntas: a la izquierda los proyectos y
+          abajo los últimos movimientos; a la derecha "Para resolver", que
+          scrollea adentro de su caja en vez de estirar la página de un solo
+          lado (antes la columna más larga dejaba el hueco blanco al lado). */}
       <div className="panel-listas">
-        <ListaPanel
-          titulo="Proyectos en curso"
-          link={
-            <Link to="/proyectos" className="panel-lista__link">
-              Ver todos
-              <ChevronRight size={14} strokeWidth={1.75} aria-hidden="true" />
-            </Link>
-          }
-        >
-          {proyectosActivos.length === 0 ? (
-            <EstadoVacio mensaje="No hay proyectos en curso." />
-          ) : (
-            <ul className="panel-lista__items">
-              {proyectosActivos.map((p) => (
-                <li key={p.id}>
-                  <button
-                    type="button"
-                    className="panel-proyecto"
-                    onClick={() => navigate(`/proyectos/${p.id}`)}
-                  >
-                    <span className="panel-proyecto__nombre">
-                      <span
-                        className="panel-proyecto__punto"
-                        style={{ background: p.disponible >= 0 ? OLIVA : ERROR }}
-                      />
-                      {p.nombre}
-                    </span>
-                    <span
-                      className="panel-proyecto__monto cifra"
-                      style={p.disponible < 0 ? { color: ERROR_TEXTO } : undefined}
+        <div className="panel-columna">
+          <ListaPanel
+            titulo="Proyectos en curso"
+            link={
+              <Link to="/proyectos" className="panel-lista__link">
+                Ver todos
+                <ChevronRight size={14} strokeWidth={1.75} aria-hidden="true" />
+              </Link>
+            }
+          >
+            {proyectosActivos.length === 0 ? (
+              <EstadoVacio mensaje="No hay proyectos en curso." />
+            ) : (
+              <ul className="panel-lista__items">
+                {proyectosActivos.map((p) => (
+                  <li key={p.id}>
+                    <button
+                      type="button"
+                      className="panel-proyecto"
+                      onClick={() => navigate(`/proyectos/${p.id}`)}
                     >
-                      {fm(p.disponible)}
-                    </span>
-                    <span className="panel-proyecto__fase">
-                      {p.faseActual?.texto ?? "Sin fases cargadas"}
-                    </span>
-                    <span className="panel-proyecto__rotulo">disponible</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </ListaPanel>
+                      <span className="panel-proyecto__nombre">
+                        <span
+                          className="panel-proyecto__punto"
+                          style={{ background: p.disponible >= 0 ? OLIVA : ERROR }}
+                        />
+                        {p.nombre}
+                      </span>
+                      <span
+                        className="panel-proyecto__monto cifra"
+                        style={p.disponible < 0 ? { color: ERROR_TEXTO } : undefined}
+                      >
+                        {fm(p.disponible)}
+                      </span>
+                      <span className="panel-proyecto__fase">
+                        {p.faseActual?.texto ?? "Sin fases cargadas"}
+                      </span>
+                      <span className="panel-proyecto__rotulo">disponible</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </ListaPanel>
+
+          <ListaPanel titulo="Últimos movimientos">
+            {ultimosMovimientos.length === 0 ? (
+              <EstadoVacio mensaje="Todavía no hay movimientos cargados." />
+            ) : (
+              <ul className="panel-lista__items">
+                {ultimosMovimientos.map((m) => {
+                  const tipo = getTipoMovimiento(m.tipo);
+                  const Icono = tipo.icono;
+                  return (
+                    <li key={`${m.tipo}-${m.id}`}>
+                      <button
+                        type="button"
+                        className="panel-movimiento"
+                        onClick={() =>
+                          navigate(`/proyectos/${m.proyectoId}?tab=acciones&foco=${m.tipo}-${m.id}`)
+                        }
+                      >
+                        <span
+                          className="panel-movimiento__icono"
+                          style={{
+                            color: tipo.color,
+                            background: `${tipo.color}${TINTE_PASTILLA}`,
+                          }}
+                        >
+                          {Icono && <Icono size={15} strokeWidth={1.75} aria-hidden="true" />}
+                        </span>
+                        <span className="panel-movimiento__titulo">
+                          {m.descripcion || tipo.singular}
+                        </span>
+                        <span className="panel-movimiento__monto cifra">
+                          {signoTexto(tipo.signo)}
+                          {formatMoneda(Math.abs(m.monto), moneda)}
+                        </span>
+                        <span className="panel-movimiento__contexto">{m.proyectoNombre}</span>
+                        <span className="panel-movimiento__fecha">{formatFecha(m.fecha)}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </ListaPanel>
+        </div>
 
         <ListaPanel
           titulo="Para resolver"
+          className="panel-lista--scroll"
           link={
             totalParaResolver > paraResolver.length && (
               <span className="panel-lista__resto">
@@ -351,7 +399,9 @@ export function Dashboard() {
                     <button
                       type="button"
                       className="panel-pendiente"
-                      onClick={() => navigate(`/proyectos/${item.proyectoId}?tab=seguimiento`)}
+                      onClick={() =>
+                        navigate(`/proyectos/${item.proyectoId}?tab=seguimiento&foco=${item.foco}`)
+                      }
                     >
                       <span className="panel-pendiente__icono">
                         <Icono size={15} strokeWidth={1.75} aria-hidden="true" />

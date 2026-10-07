@@ -76,6 +76,7 @@ export function Catalogos() {
           crear={crearImpuesto}
           actualizar={actualizarImpuesto}
           eliminar={eliminarImpuesto}
+          icono={Percent}
           textos={{
             singular: "impuesto",
             descripcion: "Se aplican a las compras (IVA, percepciones, etc.).",
@@ -99,6 +100,7 @@ export function Catalogos() {
           crear={crearCategoriaGasto}
           actualizar={actualizarCategoriaGasto}
           eliminar={eliminarCategoriaGasto}
+          icono={Receipt}
           textos={{
             singular: "categoría de gasto",
             descripcion: "Clasifican los gastos de cada obra (flete, viáticos, etc.).",
@@ -123,6 +125,7 @@ export function Catalogos() {
           crear={crearCategoria}
           actualizar={actualizarCategoria}
           eliminar={eliminarCategoria}
+          icono={Tag}
           textos={{
             singular: "categoría de producto",
             descripcion: "Clasifican los productos de los proveedores.",

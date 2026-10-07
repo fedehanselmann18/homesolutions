@@ -18,8 +18,8 @@ import "./ModalDetalle.css";
 
 /**
  * El shell del detalle es el mismo `ModalShell` de los modales de carga: header
- * claro con el ícono del tipo y la fecha como contexto. `accionPrimaria` es
- * `{ texto, onClick }` (ej. "Marcar pagado" en una compra impaga).
+ * claro con el ícono del tipo y la fecha como contexto. `accionRapida` va en
+ * el pie antes de Editar (ej. el interruptor de "Pagado" de una compra).
  */
 export function DetalleShell({
   tipo,
@@ -29,7 +29,7 @@ export function DetalleShell({
   onCerrar,
   onEditar,
   onEliminar,
-  accionPrimaria,
+  accionRapida,
   children,
 }) {
   return (
@@ -51,25 +51,15 @@ export function DetalleShell({
       }
       acciones={
         <>
+          {accionRapida}
           {onEditar ? (
             <button type="button" className="btn btn--lg btn-secondary" onClick={onEditar}>
               <Pencil size={14} strokeWidth={1.75} aria-hidden="true" />
               Editar
             </button>
           ) : (
-            !accionPrimaria && (
-              <button type="button" className="btn btn--lg btn-secondary" onClick={onCerrar}>
-                Cerrar
-              </button>
-            )
-          )}
-          {accionPrimaria && (
-            <button
-              type="button"
-              className="btn btn--lg btn-primary"
-              onClick={accionPrimaria.onClick}
-            >
-              {accionPrimaria.texto}
+            <button type="button" className="btn btn--lg btn-secondary" onClick={onCerrar}>
+              Cerrar
             </button>
           )}
         </>

@@ -24,6 +24,36 @@ export const getTipoCambioLabel = (tipo) =>
 
 const num = (valor) => Number(valor) || 0;
 
+/**
+ * Redondea un importe a centavos.
+ *
+ * Restar dos importes de dos decimales en JS deja cola binaria
+ * (9302.33 - 9302 = 0.33000000000000007). No cambia lo que se ve, pero sí lo
+ * que se compara y lo que se acumula al sumar muchos. La plata se guarda al
+ * centavo, así que una cuenta de plata también.
+ *
+ * Ojo: esto NO decide si un saldo chico cuenta como pendiente. Eso lo decide
+ * `saldoPorCobrar` acá abajo, con su tolerancia, y por otro motivo.
+ */
+export const redondearCentavos = (monto) => Math.round(num(monto) * 100) / 100;
+
+// Menos de un dólar sin cobrar no es deuda del cliente: es el redondeo entre el
+// precio acordado (que suele salir de pasar pesos a dólares, 9302,33) y los
+// cobros que se cargan en números redondos (2000 + 4000 + 3302). Esos 33
+// centavos dejaban "Saldo del contrato · Por cobrar" en un proyecto ya
+// cobrado entero, y encima se mostraban como "US$ 0".
+export const TOLERANCIA_COBRO_USD = 1;
+
+/**
+ * Cuánto falta cobrar del contrato: nunca negativo (si se cobró de más queda en
+ * 0) y en 0 cuando lo que falta es menos que la tolerancia. `tolerancia` va en
+ * la misma moneda que los montos: el Análisis en pesos pasa la suya.
+ */
+export function saldoPorCobrar(acordado, cobrado, tolerancia = TOLERANCIA_COBRO_USD) {
+  const saldo = redondearCentavos(num(acordado) - num(cobrado));
+  return saldo < tolerancia ? 0 : saldo;
+}
+
 export const montoGasto = (gasto, moneda) => num(gasto[`monto_${moneda}`]);
 
 /** Cobrado NETO de notas (Cobro.monto_neto_* del backend). */

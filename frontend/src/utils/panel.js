@@ -10,14 +10,18 @@ import {
   montoNota,
   precioAcordado as precioAcordadoEn,
   precioTotalCompra,
+  redondearCentavos,
 } from "./moneda";
 
 // Cuántos movimientos y cuántos meses se muestran en los bloques de abajo.
 const MOVIMIENTOS_RECIENTES = 8;
 const MESES_EVOLUCION = 6;
 
-// Cuántos pendientes muestra "Para resolver" antes del "ver todo".
-const PENDIENTES_VISIBLES = 6;
+// Cuántos pendientes muestra "Para resolver" antes del "ver todo". La lista
+// scrollea adentro de su caja (ver .panel-lista--scroll), así que entran más
+// de los que se ven de una: con 6 la columna quedaba a medio llenar al lado
+// de la de proyectos + movimientos.
+const PENDIENTES_VISIBLES = 12;
 
 function sumar(items, obtenerMonto) {
   return items.reduce((acc, item) => acc + (obtenerMonto(item) || 0), 0);
@@ -115,10 +119,16 @@ const sinComprobante = (movimiento) => (movimiento.comprobantes ?? []).length ==
  * atención, y dentro de cada nivel lo más viejo arriba. Mismos criterios que
  * la pestaña Seguimiento de cada proyecto, que es adonde lleva cada ítem.
  *
- * Cada ítem: { key, tipo, titulo, proyectoId, proyectoNombre, proveedor,
- * dias, nivel, monto, moneda } con tipo "pago" | "envio" | "comprobante" |
- * "fase" y nivel "problema" | "atencion". Los montos van en la moneda en que
- * se cargó el movimiento: pesos las compras y gastos, dólares los cobros.
+ * Cada ítem: { key, foco, tipo, titulo, proyectoId, proyectoNombre,
+ * proveedor, dias, nivel, monto, moneda } con tipo "pago" | "envio" |
+ * "comprobante" | "fase" y nivel "problema" | "atencion". Los montos van en
+ * la moneda en que se cargó el movimiento: pesos las compras y gastos,
+ * dólares los cobros.
+ *
+ * `foco` es la key que el MISMO ítem tiene en `armarBandeja` (la lista de
+ * Seguimiento). Viaja en la URL (?foco=) para que, al entrar desde el Panel,
+ * Seguimiento pueda marcar y traer a la vista la fila que se tocó, en vez de
+ * dejar al usuario buscándola.
  */
 function armarParaResolver(enCurso, nombreProveedor, hoy) {
   const items = [];
@@ -138,21 +148,35 @@ function armarParaResolver(enCurso, nombreProveedor, hoy) {
           items.push({
             ...base,
             key: `pago-${c.id}`,
+            foco: `pagar-${c.id}`,
             tipo: "pago",
             nivel: base.dias >= DIAS_DEUDA_VENCIDA ? "problema" : "atencion",
           });
         }
         if (esCompraSinEntregar(c)) {
-          items.push({ ...base, key: `envio-${c.id}`, tipo: "envio", nivel: "atencion" });
+          items.push({
+            ...base,
+            key: `envio-${c.id}`,
+            foco: `entregar-${c.id}`,
+            tipo: "envio",
+            nivel: "atencion",
+          });
         }
         if (sinComprobante(c)) {
-          items.push({ ...base, key: `comp-c-${c.id}`, tipo: "comprobante", nivel: "atencion" });
+          items.push({
+            ...base,
+            key: `comp-c-${c.id}`,
+            foco: `adjuntar-compra-${c.id}`,
+            tipo: "comprobante",
+            nivel: "atencion",
+          });
         }
       });
       gastosDelProyecto.filter(sinComprobante).forEach((g) =>
         items.push({
           ...comun,
           key: `comp-g-${g.id}`,
+          foco: `adjuntar-gasto-${g.id}`,
           tipo: "comprobante",
           nivel: "atencion",
           titulo: g.descripcion,
@@ -165,6 +189,7 @@ function armarParaResolver(enCurso, nombreProveedor, hoy) {
         items.push({
           ...comun,
           key: `comp-k-${c.id}`,
+          foco: `adjuntar-cobro-${c.id}`,
           tipo: "comprobante",
           nivel: "atencion",
           titulo: c.descripcion,
@@ -181,6 +206,7 @@ function armarParaResolver(enCurso, nombreProveedor, hoy) {
           items.push({
             ...comun,
             key: `fase-${fase.id}`,
+            foco: `fase-${fase.id}`,
             tipo: "fase",
             nivel: "atencion",
             titulo: fase.nombre,
@@ -308,8 +334,10 @@ export function calcularPanel({
       acc +
       Math.max(
         0,
-        precioAcordadoEn(r.proyecto, "usd") -
-          sumar(r.cobrosDelProyecto, (c) => montoCobroNeto(c, "usd"))
+        redondearCentavos(
+          precioAcordadoEn(r.proyecto, "usd") -
+            sumar(r.cobrosDelProyecto, (c) => montoCobroNeto(c, "usd"))
+        )
       ),
     0
   );

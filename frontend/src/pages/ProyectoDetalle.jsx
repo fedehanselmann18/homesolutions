@@ -19,7 +19,6 @@ import { EstadoError } from "../components/shared/EstadoError";
 import { Tabs } from "../components/shared/Tabs";
 import { obtenerMensajeError } from "../utils/errorHandling";
 import { calcularSeguimiento } from "../utils/seguimiento";
-import { describirFaseActual } from "../utils/fases";
 import "./ProyectoDetalle.css";
 
 const TABS = [
@@ -39,15 +38,18 @@ function ProyectoDetalle() {
     const pedida = searchParams.get("tab");
     return TABS.some((t) => t.key === pedida) ? pedida : "fases";
   });
+  // `?foco=` dice CUÁL fila/movimiento se tocó en el Panel, para marcarlo acá
+  // en vez de largar al usuario en una lista larga a buscarlo. Se lee una sola
+  // vez: si después se cambia de tab a mano, la marca ya no corresponde.
+  const [foco] = useState(() => searchParams.get("foco"));
+  const focoDeTab = (tab) => (tabActiva === tab ? foco : null);
 
-  // Las mismas queries que usan las tabs (React Query las dedupea): el header
-  // necesita las fases para "Fase N de M" y la tab de Seguimiento su contador.
+  // Las mismas queries que usan las tabs (React Query las dedupea): la tab de
+  // Seguimiento necesita todo esto para su contador.
   const { data: fases } = useFasesPorProyecto(id);
   const { data: gastos } = useGastosPorProyecto(id);
   const { data: cobros } = useCobrosPorProyecto(id);
   const { data: compras } = useComprasPorProyecto(id);
-
-  const faseActual = useMemo(() => describirFaseActual(fases), [fases]);
 
   // El contador sale de calcularSeguimiento, el mismo que pinta la tab: así
   // el número de afuera y la lista de adentro no pueden no coincidir. Hasta
@@ -84,7 +86,6 @@ function ProyectoDetalle() {
       <ProyectoDetalleHeader
         proyecto={proyecto}
         breadcrumb={[{ label: "Proyectos", to: "/proyectos" }, { label: proyecto.nombre }]}
-        faseActual={faseActual}
       />
 
       <Tabs
@@ -96,10 +97,16 @@ function ProyectoDetalle() {
 
       {tabActiva === "fases" && <Fases proyectoId={proyecto.id} />}
       {tabActiva === "acciones" && (
-        <Acciones proyectoId={proyecto.id} proyectoNombre={proyecto.nombre} />
+        <Acciones
+          proyectoId={proyecto.id}
+          proyectoNombre={proyecto.nombre}
+          foco={focoDeTab("acciones")}
+        />
       )}
       {tabActiva === "analisis" && <AnalisisGeneral proyectoId={proyecto.id} />}
-      {tabActiva === "seguimiento" && <Seguimiento proyectoId={proyecto.id} />}
+      {tabActiva === "seguimiento" && (
+        <Seguimiento proyectoId={proyecto.id} foco={focoDeTab("seguimiento")} />
+      )}
     </div>
   );
 }

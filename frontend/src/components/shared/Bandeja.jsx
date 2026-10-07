@@ -1,4 +1,5 @@
-import { Clock, HandCoins, Layers, Paperclip } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { Banknote, Clock, HandCoins, Layers, PackageCheck, Paperclip } from "lucide-react";
 
 import { BadgeEstado } from "./BadgeEstado";
 import { EstadoVacio } from "./EstadoVacio";
@@ -67,6 +68,15 @@ const TEXTO_ACCION = {
   verFase: "Ver fase",
 };
 
+// El ícono de cada acción: lo que hace, no un genérico (botones v2).
+const ICONO_ACCION = {
+  pagar: Banknote,
+  entregar: PackageCheck,
+  adjuntar: Paperclip,
+  cobrar: HandCoins,
+  verFase: Layers,
+};
+
 /**
  * La lista por urgencia de la variante 4f (Vencido / Pendiente / Para
  * revisar), cada item con la acción que lo resuelve ahí mismo. Los grupos
@@ -76,8 +86,23 @@ const TEXTO_ACCION = {
  * `onAbrir(item)` abre el detalle del movimiento; un item sin detalle (el
  * saldo del contrato) no lo recibe. `onEjecutar(item)` corre su acción;
  * `ocupado` es la key del item que la está corriendo.
+ *
+ * `foco` es la key de un item al que se entró desde afuera (el "Para
+ * resolver" del Panel manda acá con ?foco=): esa fila queda marcada y se
+ * trae a la vista, así no hay que buscar a mano cuál de todas era.
  */
-export function Bandeja({ grupos, canManage, ocupado, onAbrir, onEjecutar, mensajeVacio }) {
+export function Bandeja({ grupos, canManage, ocupado, onAbrir, onEjecutar, mensajeVacio, foco }) {
+  const filaFoco = useRef(null);
+
+  // Al entrar con ?foco= la fila puede estar más abajo de lo que se ve. El
+  // scroll va una sola vez por cambio de foco, no en cada render.
+  useEffect(() => {
+    if (!foco || !filaFoco.current) return;
+    // Opcional a propósito: jsdom (y algún navegador viejo) no lo implementa,
+    // y la marca de la fila ya se ve sin el scroll.
+    filaFoco.current.scrollIntoView?.({ block: "center", behavior: "smooth" });
+  }, [foco]);
+
   if (grupos.length === 0) return <EstadoVacio mensaje={mensajeVacio} />;
 
   return (
@@ -92,11 +117,16 @@ export function Bandeja({ grupos, canManage, ocupado, onAbrir, onEjecutar, mensa
           <ul className="bandeja__lista">
             {grupo.items.map((item) => {
               const Icono = ICONO_TIPO[item.tipo];
+              const IconoAccion = ICONO_ACCION[item.accion];
               const abre = item.tipo !== "cobranza";
+              const enFoco = Boolean(foco) && item.key === foco;
               return (
                 <li
                   key={item.key}
-                  className={`bandeja__item${abre ? " bandeja__item--abre" : ""}`}
+                  ref={enFoco ? filaFoco : undefined}
+                  className={`bandeja__item${abre ? " bandeja__item--abre" : ""}${
+                    enFoco ? " bandeja__item--foco" : ""
+                  }`}
                   onClick={abre ? () => onAbrir(item) : undefined}
                 >
                   <span className="bandeja__icono" aria-hidden="true">
@@ -136,6 +166,7 @@ export function Bandeja({ grupos, canManage, ocupado, onAbrir, onEjecutar, mensa
                           onEjecutar(item);
                         }}
                       >
+                        {IconoAccion && <IconoAccion aria-hidden="true" />}
                         {TEXTO_ACCION[item.accion]}
                       </button>
                     )}

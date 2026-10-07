@@ -1,46 +1,44 @@
-import { useMemo, useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { useMemo } from "react";
 
-import { formatMoneda, formatNumero } from "../../utils/formato";
-import {
-  PERIODOS_SALDO,
-  PERIODO_SALDO_DEFAULT,
-  resumirSaldoObra,
-  topeDeEje,
-} from "../../utils/saldoObra";
+import { formatMoneda } from "../../utils/formato";
+import { TOLERANCIA_COBRO_USD } from "../../utils/moneda";
+import { barrasDeContrato, saldoDeObra } from "../../utils/saldoObra";
 
 import "./SaldoObra.css";
 
-const textoPeriodo = (meses) => `Últimos ${meses} meses`;
+const ancho = (monto, escala) => `${escala > 0 ? Math.min(100, (monto / escala) * 100) : 0}%`;
+const conPct = (monto, pct) =>
+  pct == null ? formatMoneda(monto, "usd") : `${formatMoneda(monto, "usd")} · ${Math.round(pct)}%`;
 
 /**
- * El bloque de arriba del libro (Movimientos v2): el saldo de la obra, lo
- * cobrado y lo gastado en el período, y un gráfico de barras por mes.
+ * El bloque de arriba del libro: el saldo de la obra y dos barras, lo cobrado
+ * y lo gastado contra el precio acordado (ver barrasDeContrato). La línea
+ * vertical de cada barra es el contrato; si una barra la pasa, se ve pasada.
  *
  * Se calcula sobre los movimientos que Acciones ya tiene cargados (TODOS, sin
- * los filtros de la planilla: el saldo es de la obra, no de lo que se ve). El
- * backend no expone una agregación mensual y no hace falta: la planilla ya
- * trae cada movimiento con sus dos cifras congeladas.
+ * los filtros de la planilla: el saldo es de la obra, no de lo que se ve).
  */
-export function SaldoObra({ compras, gastos, cobros, hoy }) {
-  const [meses, setMeses] = useState(PERIODO_SALDO_DEFAULT);
-  const resumen = useMemo(
-    () => resumirSaldoObra({ compras, gastos, cobros }, { meses, hoy: hoy ?? new Date() }),
-    [compras, gastos, cobros, meses, hoy]
+export function SaldoObra({ compras, gastos, cobros, precioAcordadoUsd }) {
+  const saldo = useMemo(
+    () => ({
+      ars: saldoDeObra({ compras, gastos, cobros }, "ars"),
+      usd: saldoDeObra({ compras, gastos, cobros }, "usd"),
+    }),
+    [compras, gastos, cobros]
+  );
+  const b = useMemo(
+    () => barrasDeContrato({ compras, gastos, cobros }, precioAcordadoUsd),
+    [compras, gastos, cobros, precioAcordadoUsd]
   );
 
-  const maximo = Math.max(...resumen.meses.flatMap((m) => [m.cobrado, m.gastado]));
-  const tope = topeDeEje(maximo);
-  const alto = (monto) => `${Math.max(0, (monto / tope) * 100)}%`;
-  const descripcionGrafico = resumen.meses
-    .map(
-      (m) =>
-        `${m.etiquetaCompleta}: cobrado ${formatMoneda(m.cobrado, "usd")}, gastado ${formatMoneda(
-          m.gastado,
-          "usd"
-        )}`
-    )
-    .join("; ");
+  const hayContrato = b.acordado > 0;
+  // La línea del contrato solo cuando una barra lo pasa de verdad: un dólar
+  // de más por redondeo la dibujaba pegada al final de la barra.
+  const marcaContrato =
+    hayContrato && b.escala - b.acordado >= TOLERANCIA_COBRO_USD
+      ? ancho(b.acordado, b.escala)
+      : null;
+  const pagado = b.gastado - b.sinPagar;
 
   return (
     <section className="saldo-obra" aria-labelledby="saldo-obra-titulo">
@@ -50,88 +48,74 @@ export function SaldoObra({ compras, gastos, cobros, hoy }) {
             Saldo de la obra
           </span>
           <span className="saldo-obra__saldo">
-            {formatMoneda(resumen.saldo.ars)}
-            <span className="saldo-obra__saldo-usd">{formatMoneda(resumen.saldo.usd, "usd")}</span>
-          </span>
-          <span className="saldo-obra__resumen">
-            Cobrado {formatMoneda(resumen.cobradoUsd, "usd")} · Gastado{" "}
-            {formatMoneda(resumen.gastadoArs)} (≈ {formatMoneda(resumen.gastadoUsd, "usd")}) en los
-            últimos {meses} meses
+            {formatMoneda(saldo.ars)}
+            <span className="saldo-obra__saldo-usd">{formatMoneda(saldo.usd, "usd")}</span>
           </span>
         </div>
-
-        <label className="btn saldo-obra__periodo">
-          {textoPeriodo(meses)}
-          <ChevronDown size={14} aria-hidden="true" />
-          <select
-            value={meses}
-            onChange={(e) => setMeses(Number(e.target.value))}
-            aria-label="Período del gráfico"
-          >
-            {PERIODOS_SALDO.map((p) => (
-              <option key={p} value={p}>
-                {textoPeriodo(p)}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
-
-      <div className="saldo-obra__grafico">
-        <div className="saldo-obra__eje" aria-hidden="true">
-          <span>{formatNumero(tope)}</span>
-          <span>{formatNumero(tope / 2)}</span>
-          <span>0</span>
-        </div>
-        <div
-          className="saldo-obra__barras"
-          role="img"
-          aria-label={`Cobrado y gastado por mes, en dólares. ${descripcionGrafico}`}
-          style={{ gridTemplateColumns: `repeat(${resumen.meses.length}, minmax(0, 1fr))` }}
-        >
-          {resumen.meses.map((m) => (
-            <div key={m.mes} className="saldo-obra__mes">
-              <div
-                className="saldo-obra__barra saldo-obra__barra--cobro"
-                style={{ height: alto(m.cobrado) }}
-                title={`${m.etiquetaCompleta} · cobrado ${formatMoneda(m.cobrado, "usd")}`}
-              />
-              <div
-                className="saldo-obra__barra saldo-obra__barra--egreso"
-                style={{ height: alto(m.gastado) }}
-                title={`${m.etiquetaCompleta} · compras y gastos ${formatMoneda(
-                  m.gastadoArs
-                )} (≈ ${formatMoneda(m.gastado, "usd")})`}
-              />
-            </div>
-          ))}
-          {!(maximo > 0) && (
-            <span className="saldo-obra__vacio">Sin movimientos en los últimos {meses} meses</span>
+        <span className="saldo-obra__contrato">
+          {hayContrato ? (
+            <>
+              Contrato <strong>{formatMoneda(b.acordado, "usd")}</strong>
+            </>
+          ) : (
+            "Sin precio acordado"
           )}
-        </div>
-        <span />
-        <div
-          className="saldo-obra__meses"
-          aria-hidden="true"
-          style={{ gridTemplateColumns: `repeat(${resumen.meses.length}, minmax(0, 1fr))` }}
-        >
-          {resumen.meses.map((m) => (
-            <span key={m.mes}>{m.label}</span>
-          ))}
-        </div>
+        </span>
       </div>
 
-      <div className="saldo-obra__leyenda" aria-hidden="true">
-        <span>
-          <span className="saldo-obra__muestra saldo-obra__muestra--cobro" />
-          Cobros
-        </span>
-        <span>
-          <span className="saldo-obra__muestra saldo-obra__muestra--egreso" />
-          Compras y gastos
-        </span>
-        <span className="saldo-obra__unidad">en US$</span>
-      </div>
+      <dl className="saldo-obra__barras">
+        <div className="saldo-obra__fila">
+          <dt>Cobrado</dt>
+          <dd className="saldo-obra__pista">
+            <span
+              className="saldo-obra__tramo saldo-obra__tramo--cobro"
+              style={{ width: ancho(b.cobrado, b.escala) }}
+            />
+            {marcaContrato && (
+              <span className="saldo-obra__marca" style={{ left: marcaContrato }} />
+            )}
+          </dd>
+          <dd className="saldo-obra__valor">
+            <strong>{conPct(b.cobrado, b.pctCobrado)}</strong>
+            {hayContrato && (
+              <span>
+                {b.faltaCobrar > 0
+                  ? `Falta cobrar ${formatMoneda(b.faltaCobrar, "usd")}`
+                  : "Contrato cobrado"}
+              </span>
+            )}
+          </dd>
+        </div>
+
+        <div className="saldo-obra__fila">
+          <dt>Gastado</dt>
+          <dd className="saldo-obra__pista">
+            <span
+              className={`saldo-obra__tramo saldo-obra__tramo--egreso${
+                b.gastoPasado ? " saldo-obra__tramo--pasado" : ""
+              }`}
+              style={{ width: ancho(pagado, b.escala) }}
+            />
+            {b.sinPagar > 0 && (
+              <span
+                className={`saldo-obra__tramo saldo-obra__tramo--sin-pagar${
+                  b.gastoPasado ? " saldo-obra__tramo--pasado" : ""
+                }`}
+                style={{ width: ancho(b.sinPagar, b.escala) }}
+              />
+            )}
+            {marcaContrato && (
+              <span className="saldo-obra__marca" style={{ left: marcaContrato }} />
+            )}
+          </dd>
+          <dd className="saldo-obra__valor">
+            <strong className={b.gastoPasado ? "saldo-obra__pasado" : undefined}>
+              {conPct(b.gastado, b.pctGastado)}
+            </strong>
+            {b.sinPagar > 0 && <span>{formatMoneda(b.sinPagar, "usd")} sin pagar</span>}
+          </dd>
+        </div>
+      </dl>
     </section>
   );
 }

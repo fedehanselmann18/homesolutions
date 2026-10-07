@@ -273,23 +273,32 @@ describe("smoke de modales", () => {
       />
     );
 
-    // DESIGN.md §9: nada de switches. El estado es el badge, y el badge es el
-    // control que lo cambia (como en la fila del libro).
-    expect(screen.queryAllByRole("switch")).toHaveLength(0);
+    // El badge también es el control que cambia el estado (como en la fila
+    // del libro).
     await userEvent.click(screen.getByRole("button", { name: /impaga hace .* — marcar pagado/i }));
     expect(onTogglePago).toHaveBeenCalledTimes(1);
     await userEvent.click(screen.getByRole("button", { name: /entregado — marcar sin entregar/i }));
     expect(onToggleEnvio).toHaveBeenCalled();
 
-    // Impaga: "Marcar pagado" es la acción principal del pie.
-    await userEvent.click(screen.getByRole("button", { name: "Marcar pagado" }));
+    // En el pie, un interruptor "Pagado" en vez del botón grande "Marcar
+    // pagado": apagado mientras la compra está impaga.
+    const interruptor = screen.getByRole("switch", { name: "Pagado" });
+    expect(interruptor).toHaveAttribute("aria-checked", "false");
+    await userEvent.click(interruptor);
     expect(onTogglePago).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole("button", { name: "Marcar pagado" })).not.toBeInTheDocument();
+
+    // Y otro para el envío: prendido porque la compra de prueba está entregada.
+    const entregado = screen.getByRole("switch", { name: "Entregado" });
+    expect(entregado).toHaveAttribute("aria-checked", "true");
+    await userEvent.click(entregado);
+    expect(onToggleEnvio).toHaveBeenCalledTimes(2);
   });
 
   it("a un usuario de lectura los estados no le cambian nada", () => {
     render(<ModalDetalleCompra compra={compra} productos={productos} onCerrar={noop} />);
     expect(screen.getByRole("button", { name: /impaga hace/i })).toBeDisabled();
-    expect(screen.queryByRole("button", { name: "Marcar pagado" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /borrar/i })).not.toBeInTheDocument();
   });
 

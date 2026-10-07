@@ -36,6 +36,8 @@ export function SeccionCatalogo({
   queryKey,
   keysAlEditar = [],
   textos,
+  // El ícono de la pestaña: el botón de alta lleva el de lo que crea.
+  icono: Icono = Plus,
   conTipo = false,
   crear,
   actualizar,
@@ -175,7 +177,7 @@ export function SeccionCatalogo({
         <p className="seccion-catalogo__descripcion">{textos.descripcion}</p>
         {esAdmin && (
           <button type="button" className="btn btn-primary" onClick={abrirAlta}>
-            <Plus size={16} strokeWidth={2} aria-hidden="true" />
+            <Icono aria-hidden="true" />
             {textos.nuevo}
           </button>
         )}

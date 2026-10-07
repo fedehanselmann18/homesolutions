@@ -12,6 +12,7 @@ import { OLIVA, ATENCION } from "../../constants/colores";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { SeccionNotas } from "../shared/SeccionNotas";
 import { BadgeEstado } from "../shared/BadgeEstado";
+import { Interruptor } from "../shared/Interruptor";
 import {
   DetalleShell,
   CabeceraMovimiento,
@@ -91,10 +92,17 @@ export function ModalDetalleCompra({
       onCerrar={onCerrar}
       onEditar={canManage ? onEditar : undefined}
       onEliminar={canManage ? onEliminar : undefined}
-      accionPrimaria={
-        canManage && !pagado && onTogglePago
-          ? { texto: "Marcar pagado", onClick: onTogglePago }
-          : undefined
+      accionRapida={
+        canManage && (
+          <>
+            {onTogglePago && (
+              <Interruptor etiqueta="Pagado" activo={pagado} onCambiar={onTogglePago} />
+            )}
+            {onToggleEnvio && (
+              <Interruptor etiqueta="Entregado" activo={entregado} onCambiar={onToggleEnvio} />
+            )}
+          </>
+        )
       }
     >
       <CabeceraMovimiento

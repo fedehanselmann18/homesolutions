@@ -12,7 +12,7 @@ import {
   Paperclip,
   Pencil,
   Phone,
-  Plus,
+  Package,
   ShoppingCart,
   Sparkles,
   Tag,
@@ -574,7 +574,7 @@ export function ProveedorDetalle() {
                   className="btn btn--sm btn-primary"
                   onClick={handleNuevoProducto}
                 >
-                  <Plus size={14} strokeWidth={1.75} aria-hidden="true" />
+                  <Package aria-hidden="true" />
                   Producto
                 </button>
               </div>

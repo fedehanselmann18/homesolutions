@@ -4,10 +4,11 @@ import { crearUsuario, getOpcionesRegistro } from "../services/usuarioService";
 import { validarPassword } from "../utils/formValidation";
 import { obtenerMensajeError } from "../utils/errorHandling";
 import { usePageTitle } from "../hooks/usePageTitle";
-import logoHS from "../assets/HS_logo_blanco.png";
-import "./Auth.css"; // reusa el mismo panel partido que el login
+import { Check, ChevronDown, CircleAlert, Lock, User } from "lucide-react";
+import "./Auth.css"; // reusa el mismo formulario que el login
 import { LogoCargando } from "../components/shared/LogoCargando";
 import { ErrorCampo } from "../components/shared/ErrorCampo";
+import { AuthLayout } from "../components/shared/AuthLayout";
 
 export function Registro() {
   usePageTitle("Registro");
@@ -42,6 +43,13 @@ export function Registro() {
   // "no coinciden": el mínimo es el mismo que valida el backend.
   const errorPassword = password !== "" ? validarPassword(password) : null;
   const passwordsNoCoinciden = confirmarPassword !== "" && password !== confirmarPassword;
+  // El tilde dentro del campo de confirmación (diseño 1b): sólo cuando ya no
+  // hay nada que corregir en ninguno de los dos.
+  const passwordsCoinciden = confirmarPassword !== "" && !passwordsNoCoinciden && !errorPassword;
+  // Nadie pendiente de registrarse: el combo y el botón quedan deshabilitados
+  // y el aviso explica por qué, en vez de dejar un formulario que no lleva a
+  // ningún lado.
+  const sinNombres = !cargandoNombres && nombresUsuario.length === 0;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -84,95 +92,104 @@ export function Registro() {
   };
 
   return (
-    <div className="auth-page">
-      <div className="auth-panel">
-        <div className="auth-panel__marca">
-          <img src={logoHS} alt="HomeSolutions" className="auth-panel__logo" />
-          <div className="auth-panel__mensaje">
-            <span className="auth-panel__barra" />
-            <p>Creá tu cuenta con el nombre que ya está dado de alta en la obra.</p>
+    <AuthLayout>
+      <form className="auth-form" onSubmit={handleSubmit}>
+        <h1 className="auth-form__titulo">Crear cuenta</h1>
+
+        <div className="auth-form__campos">
+          <div className="auth-form__campo">
+            <label htmlFor="registro-nombre" className="label-campo">
+              Nombre
+            </label>
+            <div className="campo">
+              <User aria-hidden="true" />
+              <select
+                id="registro-nombre"
+                value={nombreUsuario}
+                onChange={(e) => setNombreUsuario(e.target.value)}
+                disabled={cargandoNombres || sinNombres}
+              >
+                <option value="" disabled>
+                  {cargandoNombres ? "Cargando..." : "Seleccioná tu nombre"}
+                </option>
+                {nombresUsuario.map((nombre) => (
+                  <option key={nombre} value={nombre}>
+                    {nombre}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="auth-form__chevron" aria-hidden="true" />
+            </div>
+            {sinNombres && (
+              <p className="campo-hint campo-hint--atencion">
+                <CircleAlert aria-hidden="true" />
+                No hay nombres pendientes de registro. Pedile al administrador que te autorice.
+              </p>
+            )}
           </div>
-          <span className="auth-panel__pie">Uso interno</span>
+
+          <div className="auth-form__campo">
+            <label htmlFor="registro-password" className="label-campo">
+              Contraseña
+            </label>
+            <div className={errorPassword ? "campo campo--error" : "campo"}>
+              <Lock aria-hidden="true" />
+              <input
+                id="registro-password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                aria-invalid={errorPassword ? true : undefined}
+              />
+            </div>
+            <ErrorCampo texto={errorPassword} />
+          </div>
+
+          <div className="auth-form__campo">
+            <label htmlFor="registro-confirmar" className="label-campo">
+              Confirmar contraseña
+            </label>
+            <div className={passwordsNoCoinciden ? "campo campo--error" : "campo"}>
+              <Lock aria-hidden="true" />
+              <input
+                id="registro-confirmar"
+                type="password"
+                value={confirmarPassword}
+                onChange={(e) => setConfirmarPassword(e.target.value)}
+                placeholder="••••••••"
+                autoComplete="new-password"
+                aria-invalid={passwordsNoCoinciden ? true : undefined}
+              />
+              {passwordsCoinciden && <Check className="auth-form__ok" aria-hidden="true" />}
+            </div>
+            <ErrorCampo texto={passwordsNoCoinciden ? "Las contraseñas no coinciden." : null} />
+          </div>
         </div>
 
-        <form className="auth-panel__form" onSubmit={handleSubmit}>
-          <div className="auth-panel__titulo">
-            <h1>Crear cuenta</h1>
-          </div>
+        <ErrorCampo texto={error} />
 
-          <label className="auth-campo">
-            <span>Nombre</span>
-            <select
-              className="campo"
-              value={nombreUsuario}
-              onChange={(e) => setNombreUsuario(e.target.value)}
-              disabled={cargandoNombres}
-            >
-              <option value="" disabled>
-                {cargandoNombres ? "Cargando..." : "Seleccioná tu nombre"}
-              </option>
-              {nombresUsuario.map((nombre) => (
-                <option key={nombre} value={nombre}>
-                  {nombre}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          {!cargandoNombres && nombresUsuario.length === 0 && (
-            <p className="campo-hint">
-              No hay nombres pendientes de registro. Pedile al administrador que te autorice.
-            </p>
+        <button
+          type="submit"
+          className="btn btn-primary btn--lg auth-form__submit"
+          disabled={enviando || sinNombres}
+        >
+          {enviando ? (
+            <>
+              <LogoCargando size={14} variante="blanco" />
+              Creando cuenta...
+            </>
+          ) : (
+            "Crear cuenta"
           )}
+        </button>
 
-          <label className="auth-campo">
-            <span>Contraseña</span>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              className={errorPassword ? "campo--error" : undefined}
-              aria-invalid={errorPassword ? true : undefined}
-            />
-            <ErrorCampo texto={errorPassword} />
-          </label>
-
-          <label className="auth-campo">
-            <span>Confirmar contraseña</span>
-            <input
-              type="password"
-              value={confirmarPassword}
-              onChange={(e) => setConfirmarPassword(e.target.value)}
-              placeholder="••••••••"
-              className={passwordsNoCoinciden ? "campo--error" : undefined}
-              aria-invalid={passwordsNoCoinciden ? true : undefined}
-            />
-            <ErrorCampo texto={passwordsNoCoinciden ? "Las contraseñas no coinciden." : null} />
-          </label>
-
-          <ErrorCampo texto={error} />
-
-          <button
-            type="submit"
-            className="btn btn-primary btn--lg auth-panel__submit"
-            disabled={enviando}
-          >
-            {enviando ? (
-              <>
-                <LogoCargando size={14} variante="blanco" />
-                Creando cuenta...
-              </>
-            ) : (
-              "Crear cuenta"
-            )}
-          </button>
-
-          <Link to="/login" className="auth-panel__link">
-            ¿Ya tenés cuenta? Iniciá sesión
-          </Link>
-        </form>
-      </div>
-    </div>
+        <p className="auth-form__pie">
+          ¿Ya tenés cuenta?
+          <Link to="/login">Iniciá sesión</Link>
+        </p>
+      </form>
+    </AuthLayout>
   );
 }

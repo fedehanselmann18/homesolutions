@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import { Plus } from "lucide-react";
 import { getComprobanteCompra, getNotaCompra } from "../../services/compraService";
 import { getComprobanteGasto } from "../../services/gastoService";
 import { getComprobanteCobro, getNotaCobro } from "../../services/cobroService";
@@ -21,6 +20,7 @@ import ModalDetalleCobro from "../modals/ModalDetalleCobro";
 import ModalDetalleCompra from "../modals/ModalDetalleCompra";
 import FiltrosLista from "../shared/FiltrosLista";
 import { FiltrosSegmentados } from "../shared/FiltrosSegmentados";
+import { BotonMovimiento } from "../shared/BotonMovimiento";
 import {
   FILTROS_VACIOS,
   CAMPOS_FILTRO_POR_TIPO,
@@ -41,7 +41,22 @@ const FILTROS_TIPO = [
   { key: "alertas", label: "Con alertas" },
 ];
 
-export function Acciones({ proyectoId, proyectoNombre }) {
+// "compra-<id>" -> { tipo, id }. Es lo que manda "Últimos movimientos" del
+// Panel: en vez de dejar al usuario buscando el movimiento que tocó en una
+// planilla de 200 filas, se le abre su ficha. Las notas de crédito/débito no
+// tienen ficha propia, así que ahí no hay nada que abrir.
+const TIPOS_CON_DETALLE = ["compra", "gasto", "cobro"];
+
+function parsearFoco(foco) {
+  if (!foco) return null;
+  const separador = foco.indexOf("-");
+  if (separador < 1) return null;
+  const tipo = foco.slice(0, separador);
+  const id = foco.slice(separador + 1);
+  return TIPOS_CON_DETALLE.includes(tipo) && id ? { tipo, id } : null;
+}
+
+export function Acciones({ proyectoId, proyectoNombre, foco }) {
   const { usuario } = useAuth();
   const canManage = usuario?.rol === "admin";
 
@@ -129,7 +144,8 @@ export function Acciones({ proyectoId, proyectoNombre }) {
   // Se guarda el id y no la entidad: agregar o borrar un comprobante desde el
   // modal de detalle recarga la colección del hook, y una copia congelada del
   // objeto seguiría mostrando la lista vieja.
-  const [detalle, setDetalle] = useState(null); // { tipo: "gasto" | "cobro" | "compra", id }
+  // Arranca abierto en el movimiento de ?foco=, si vino uno (ver parsearFoco).
+  const [detalle, setDetalle] = useState(() => parsearFoco(foco)); // { tipo, id }
   const cerrarDetalle = () => setDetalle(null);
 
   const coleccionPorTipo = { compra: compras, gasto: gastos, cobro: cobros };
@@ -310,28 +326,30 @@ export function Acciones({ proyectoId, proyectoNombre }) {
   };
 
   return (
-    <div>
+    <div className="acciones-proyecto">
       <div className="acciones-header">
         <h2>Movimientos del proyecto</h2>
-        {canManage && (
-          <div className="acciones-header-botones">
-            <button type="button" className="btn btn-secondary" onClick={handleNuevoGasto}>
-              <Plus size={14} aria-hidden="true" />
-              Gasto
-            </button>
-            <button type="button" className="btn btn-secondary" onClick={handleNuevoCobro}>
-              <Plus size={14} aria-hidden="true" />
-              Cobro
-            </button>
-            <button type="button" className="btn btn-primary" onClick={handleNuevaCompra}>
-              <Plus size={14} strokeWidth={2} aria-hidden="true" />
-              Nueva compra
-            </button>
-          </div>
-        )}
       </div>
 
-      <SaldoObra compras={compras} gastos={gastos} cobros={cobros} />
+      <SaldoObra
+        compras={compras}
+        gastos={gastos}
+        cobros={cobros}
+        precioAcordadoUsd={proyectoQuery.data?.precio_acordado_usd}
+      />
+
+      {/* Justo arriba de la lista, no en el título: entre uno y otra está el
+          bloque del saldo y los botones quedaban lejos de lo que modifican.
+          A la izquierda, con la compra (la primaria) primero. */}
+      {canManage && (
+        <div className="acciones-nuevo">
+          <BotonMovimiento tipo="compra" principal onClick={handleNuevaCompra}>
+            Nueva compra
+          </BotonMovimiento>
+          <BotonMovimiento tipo="gasto" onClick={handleNuevoGasto} />
+          <BotonMovimiento tipo="cobro" onClick={handleNuevoCobro} />
+        </div>
+      )}
 
       <FiltrosLista
         filtros={filtros}

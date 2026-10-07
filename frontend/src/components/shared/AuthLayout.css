@@ -1,0 +1,114 @@
+/* Pantallas de entrada — diseño 1a/1b de `HS Acceso`
+   (docs/LOGINREGISTERUIUXChange). Reemplaza al panel 4c (tarjeta centrada con
+   la mitad negra): ahora la pantalla entera se parte en dos, y el panel de
+   marca pasa a ser CLARO (superficie suave + borde), como el resto de la v5:
+   jerarquía por borde y peso, no por fondo (DESIGN.md §0). En angosto el panel
+   colapsa a una banda arriba con el logo solo. */
+
+.auth-layout {
+  min-height: 100vh;
+  display: flex;
+  background: var(--color-superficie);
+  font-family: var(--font-ui);
+  color: var(--color-tinta);
+}
+
+/* --- panel de marca --- */
+
+.auth-layout__marca {
+  flex: none;
+  width: 520px;
+  box-sizing: border-box;
+  /* 56px del diseño: el panel es una pieza de marca y respira más que
+     cualquier contenedor de la app; no hay paso de la escala que lo haga. */
+  padding: 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-8);
+  background: var(--color-superficie-suave);
+  border-right: 1px solid var(--color-linea-suave);
+}
+
+.auth-layout__logo {
+  display: block;
+  /* El PNG trae el texto más chico respecto del ícono que el logo del
+     diseño; a 56 el ícono queda en los ~40px del 1a. */
+  height: 56px;
+  width: auto;
+  align-self: flex-start;
+}
+
+.auth-layout__mensaje {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.auth-layout__barra {
+  width: 40px;
+  height: 3px;
+  background: var(--color-oliva);
+}
+
+.auth-layout__titulo {
+  margin: 0;
+  font-size: var(--text-4xl);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  text-wrap: pretty;
+}
+
+.auth-layout__firma {
+  font-size: var(--text-md);
+  font-weight: 500;
+  color: var(--color-oliva);
+}
+
+.auth-layout__pie {
+  font-size: var(--text-sm);
+  color: var(--color-tinta-tenue);
+}
+
+/* --- contenido --- */
+
+.auth-layout__contenido {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-10) var(--space-6);
+}
+
+/* --- angosto: el panel pasa a ser una banda arriba con el logo --- */
+
+@media (max-width: 900px) {
+  .auth-layout {
+    flex-direction: column;
+  }
+
+  .auth-layout__marca {
+    width: auto;
+    padding: var(--space-5) var(--space-6);
+    border-right: none;
+    border-bottom: 1px solid var(--color-linea-suave);
+  }
+
+  /* El mensaje y el pie sostienen la columna alta; en la banda sólo empujan
+     el formulario hacia abajo. */
+  .auth-layout__mensaje,
+  .auth-layout__pie {
+    display: none;
+  }
+
+  .auth-layout__logo {
+    height: 40px;
+  }
+
+  .auth-layout__contenido {
+    align-items: flex-start;
+    padding: var(--space-8) var(--space-4);
+  }
+}

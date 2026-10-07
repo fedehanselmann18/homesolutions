@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { calcularPanel } from "./panel";
+import { armarBandeja, calcularSeguimiento } from "./seguimiento";
+import { DIAS_DEUDA_VENCIDA } from "../constants/estadoCompra";
 
 // calcularPanel resume TODOS los proyectos para el Panel, reusando
 // calcularAnalisis por proyecto -- estos tests cubren el agrupado por
@@ -383,6 +385,79 @@ describe("calcularPanel — Para resolver y deuda con proveedores", () => {
     expect(panel.paraResolver.map((i) => i.key)).toEqual(["pago-b", "pago-c", "pago-a"]);
     expect(panel.paraResolver[0]).toMatchObject({ nivel: "problema", proveedor: "Aluar" });
     expect(panel.proyectosActivos[0].faseActual.texto).toBe("Fase 1 de 1 · Montaje");
+  });
+
+  it("cada pendiente lleva el `foco` con la misma key que ese item tiene en la bandeja", () => {
+    // El Panel manda a Seguimiento con ?foco=<key> para marcar la fila que se
+    // tocó. Las dos listas se arman en archivos distintos (armarParaResolver
+    // acá, armarBandeja en seguimiento.js), así que si una renombra sus keys
+    // el resaltado deja de encontrar la fila -- en silencio. Este test cruza
+    // las dos sobre los MISMOS datos.
+    const datos = {
+      proyectos,
+      fases: [
+        { id: "f1", proyecto_id: "p1", estado: "en_curso", orden: 1, nombre: "Montaje" },
+        {
+          id: "f2",
+          proyecto_id: "p1",
+          estado: "en_curso",
+          orden: 2,
+          nombre: "Estancada",
+          fecha_en_curso_desde: hace(50),
+        },
+      ],
+      compras: [
+        compra("impaga", 120),
+        compra("sin-entregar", 5, { estado_pago: "pagado", estado_envio: "pedido" }),
+        compra("sin-comp", 5, { estado_pago: "pagado", comprobantes: [] }),
+      ],
+      gastos: [
+        {
+          id: "g1",
+          proyecto_id: "p1",
+          descripcion: "Gasto sin comprobante",
+          fecha: hace(3),
+          monto_ars: 500,
+          monto_usd: 1,
+          comprobantes: [],
+        },
+      ],
+      cobros: [
+        {
+          id: "k1",
+          proyecto_id: "p1",
+          descripcion: "Cobro sin comprobante",
+          fecha: hace(2),
+          monto_usd: 100,
+          monto_neto_usd: 100,
+          monto_ars: 140000,
+          monto_neto_ars: 140000,
+          notas: [],
+          comprobantes: [],
+        },
+      ],
+      hoy,
+    };
+
+    const panel = calcularPanel(datos);
+    const bandeja = armarBandeja(calcularSeguimiento({ ...datos, proyecto: proyectos[0] }), {
+      diasVencida: DIAS_DEUDA_VENCIDA,
+    });
+    const keysBandeja = bandeja.flatMap((g) => g.items.map((i) => i.key));
+
+    // Los cinco tipos de pendiente están representados, así que el cruce no
+    // pasa por casualidad sobre una lista corta.
+    expect(panel.paraResolver.map((i) => i.tipo).sort()).toEqual([
+      "comprobante",
+      "comprobante",
+      "comprobante",
+      "envio",
+      "fase",
+      "pago",
+    ]);
+    panel.paraResolver.forEach((item) => {
+      expect(keysBandeja).toContain(item.foco);
+    });
   });
 
   it("la deuda con proveedores suma todas las compras impagas en pesos", () => {

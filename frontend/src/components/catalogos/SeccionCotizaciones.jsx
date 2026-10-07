@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { DollarSign, Pencil, Trash2 } from "lucide-react";
 
 import useAuth from "../../context/useAuth";
 import { useToast } from "../../context/useToast";
@@ -166,7 +166,7 @@ export function SeccionCotizaciones() {
               setModalAbierto(true);
             }}
           >
-            <Plus size={16} strokeWidth={2} aria-hidden="true" />
+            <DollarSign aria-hidden="true" />
             Nueva cotización
           </button>
         )}

@@ -82,4 +82,39 @@ describe("Dashboard", () => {
     expect(screen.getByText("Disponible en obras")).toBeInTheDocument();
     expect(container.querySelectorAll(".skeleton")).toHaveLength(0);
   });
+
+  it("muestra los últimos 5 movimientos, el más reciente primero", () => {
+    // 6 cobros: el Panel corta en 5 y el más nuevo va arriba.
+    const cobros = [1, 2, 3, 4, 5, 6].map((n) => ({
+      id: `k${n}`,
+      proyecto_id: 1,
+      descripcion: `Cobro ${n}`,
+      fecha: `2026-08-0${n}`,
+      monto_usd: 100 * n,
+      monto_neto_usd: 100 * n,
+      monto_ars: 0,
+      monto_neto_ars: 0,
+      notas: [],
+      comprobantes: [{ id: 1 }],
+    }));
+    mockQueries({
+      isLoading: false,
+      data: {
+        proyectos: [
+          { id: 1, estado: "en_curso", precio_acordado_usd: 10000, nombre: "Depto Centro" },
+        ],
+        fases: [],
+        gastos: [],
+        cobros,
+        compras: [],
+      },
+    });
+    const { container } = renderDashboard();
+
+    expect(screen.getByRole("heading", { name: "Últimos movimientos" })).toBeInTheDocument();
+    const filas = container.querySelectorAll(".panel-movimiento");
+    expect(filas).toHaveLength(5);
+    expect(filas[0].textContent).toContain("Cobro 6");
+    expect(filas[4].textContent).toContain("Cobro 2");
+  });
 });

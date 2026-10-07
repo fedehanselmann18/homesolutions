@@ -36,10 +36,8 @@ describe("Login", () => {
     renderLogin();
     const user = userEvent.setup();
 
-    await user.click(screen.getByRole("button", { name: /ingresar/i }));
+    await user.click(screen.getByRole("button", { name: /^ingresar$/i }));
 
-    // El regex apunta a la frase completa del error: el subtítulo de la
-    // pantalla ("Elegí tu usuario para continuar") también empieza igual.
     expect(await screen.findByText(/eleg[ií] tu usuario y escrib/i)).toBeInTheDocument();
   });
 
@@ -52,7 +50,7 @@ describe("Login", () => {
     await screen.findByRole("option", { name: "Agustin" });
     await user.selectOptions(screen.getByRole("combobox"), "Agustin");
     await user.type(screen.getByPlaceholderText("••••••••"), "clave-super-segura");
-    await user.click(screen.getByRole("button", { name: /ingresar/i }));
+    await user.click(screen.getByRole("button", { name: /^ingresar$/i }));
 
     await waitFor(() => expect(loginMock).toHaveBeenCalledWith("Agustin", "clave-super-segura"));
   });
@@ -64,7 +62,7 @@ describe("Login", () => {
     const user = userEvent.setup();
 
     await screen.findByRole("option", { name: "Agustin" });
-    await user.click(screen.getByRole("button", { name: /ingresalo manualmente/i }));
+    await user.click(screen.getByRole("button", { name: /ingresar manualmente/i }));
 
     // El combo desaparece y queda un input de texto en su lugar.
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
@@ -92,7 +90,7 @@ describe("Login", () => {
     await screen.findByRole("option", { name: "Agustin" });
     await user.selectOptions(screen.getByRole("combobox"), "Agustin");
     await user.type(screen.getByPlaceholderText("••••••••"), "mala-clave");
-    await user.click(screen.getByRole("button", { name: /ingresar/i }));
+    await user.click(screen.getByRole("button", { name: /^ingresar$/i }));
 
     const mensaje = await screen.findByText(/usuario o contraseña incorrectos/i);
     expect(mensaje).toBeInTheDocument();
@@ -109,8 +107,23 @@ describe("Login", () => {
     await screen.findByRole("option", { name: "Agustin" });
     await user.selectOptions(screen.getByRole("combobox"), "Agustin");
     await user.type(screen.getByPlaceholderText("••••••••"), "clave-cualquiera");
-    await user.click(screen.getByRole("button", { name: /ingresar/i }));
+    await user.click(screen.getByRole("button", { name: /^ingresar$/i }));
 
     expect(await screen.findByText(/no se pudo conectar con el servidor/i)).toBeInTheDocument();
+  });
+
+  it("muestra y oculta la contraseña con el ícono del ojo", async () => {
+    useAuth.mockReturnValue({ login: vi.fn() });
+    renderLogin();
+    const user = userEvent.setup();
+
+    const campo = screen.getByPlaceholderText("••••••••");
+    expect(campo).toHaveAttribute("type", "password");
+
+    await user.click(screen.getByRole("button", { name: /mostrar contraseña/i }));
+    expect(campo).toHaveAttribute("type", "text");
+
+    await user.click(screen.getByRole("button", { name: /ocultar contraseña/i }));
+    expect(campo).toHaveAttribute("type", "password");
   });
 });

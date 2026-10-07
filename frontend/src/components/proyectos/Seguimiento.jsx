@@ -33,7 +33,7 @@ import { obtenerDetalleBackend } from "../../utils/errorHandling";
 import { DIAS_DEUDA_VENCIDA } from "../../constants/estadoCompra";
 import "./Seguimiento.css";
 
-export function Seguimiento({ proyectoId }) {
+export function Seguimiento({ proyectoId, foco }) {
   // Se guarda el id y no la entidad: desde acá se puede togglear pago/envío y
   // subir comprobantes, y eso recarga las queries -- una copia congelada del
   // objeto seguiría mostrando el estado viejo dentro del modal abierto.
@@ -241,6 +241,7 @@ export function Seguimiento({ proyectoId }) {
 
       <Bandeja
         grupos={grupos}
+        foco={foco}
         canManage={canManage}
         ocupado={ocupado}
         onAbrir={abrirItem}

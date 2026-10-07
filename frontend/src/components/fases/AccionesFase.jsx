@@ -3,6 +3,7 @@ import { Check } from "lucide-react";
 
 import FiltrosLista from "../shared/FiltrosLista";
 import { FiltrosSegmentados } from "../shared/FiltrosSegmentados";
+import { BotonMovimiento } from "../shared/BotonMovimiento";
 import { EstadoVacio } from "../shared/EstadoVacio";
 import LibroDeObra from "../proyectos/LibroDeObra";
 import {
@@ -149,6 +150,8 @@ const FILTROS_TIPO = [
  */
 export function AccionesFase({
   canManage,
+  onNuevoGasto,
+  onNuevaCompra,
   nombreProveedor,
   compras,
   gastos,
@@ -195,6 +198,17 @@ export function AccionesFase({
     alertas: comprasConAlerta.length + gastosConAlerta.length,
   };
 
+  // Pegados a la lista (no en el header de la página): es donde se mira lo que
+  // se acaba de cargar.
+  const botonesNuevo = canManage && (
+    <div className="acciones-nuevo">
+      <BotonMovimiento tipo="gasto" onClick={onNuevoGasto} />
+      <BotonMovimiento tipo="compra" principal onClick={onNuevaCompra}>
+        Nueva compra
+      </BotonMovimiento>
+    </div>
+  );
+
   const abrirPendiente = (tipo, id) => {
     if (tipo === "compra") onAbrirDetalleCompra(compras.find((c) => c.id === id));
     else onAbrirDetalleGasto(gastos.find((g) => g.id === id));
@@ -216,7 +230,10 @@ export function AccionesFase({
   if (compras.length === 0 && gastos.length === 0) {
     return (
       <div className="acciones-fase">
-        <EstadoVacio mensaje="No hay compras ni gastos registrados para esta fase." />
+        <div className="acciones-fase__lista">
+          {botonesNuevo}
+          <EstadoVacio mensaje="No hay compras ni gastos registrados para esta fase." />
+        </div>
         {panel}
       </div>
     );
@@ -225,6 +242,7 @@ export function AccionesFase({
   return (
     <div className="acciones-fase">
       <div className="acciones-fase__lista">
+        {botonesNuevo}
         <FiltrosLista
           filtros={filtros}
           onCambiar={setFiltros}
@@ -254,7 +272,6 @@ export function AccionesFase({
           // Sin cobros el acumulado nunca sube: lo que muestra es cuánto lleva
           // consumido la fase, no un saldo.
           saldoLabel="Acumulado"
-          compacto
           onAbrirDetalle={(tipo, entidad) =>
             tipo === "compra" ? onAbrirDetalleCompra(entidad) : onAbrirDetalleGasto(entidad)
           }

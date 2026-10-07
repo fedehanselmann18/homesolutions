@@ -37,6 +37,7 @@ import {
   formatMonedaCorta,
   formatNumero,
 } from "../../utils/formato";
+import { saldoPorCobrar, TOLERANCIA_COBRO_USD } from "../../utils/moneda";
 import { useToast } from "../../context/useToast";
 import useAuth from "../../context/useAuth";
 import { Seccion, TooltipMoneda, ContenidoTreemap, Torta, COLORES_TORTA } from "./AnalisisGraficos";
@@ -244,8 +245,16 @@ export function AnalisisGeneral({ proyectoId }) {
         : "No hay cotizaciones cargadas: el precio acordado no se puede pasar a pesos."
       : null;
   const pctGanancia = totales.cobrado > 0 ? (totales.disponible / totales.cobrado) * 100 : null;
+  // Misma tolerancia de redondeo que el Seguimiento (un dólar), pasada a pesos
+  // con la cotización con que se pasó el precio acordado.
+  const toleranciaCobro =
+    moneda === "ars"
+      ? TOLERANCIA_COBRO_USD * (Number(cotizacionActual?.valor) || 0)
+      : TOLERANCIA_COBRO_USD;
   const faltaCobrar =
-    totales.precioAcordado == null ? null : Math.max(totales.precioAcordado - totales.cobrado, 0);
+    totales.precioAcordado == null
+      ? null
+      : saldoPorCobrar(totales.precioAcordado, totales.cobrado, toleranciaCobro);
   const sinMovimientos = totales.cobrado === 0 && totales.egresos === 0;
 
   // "Disponible" siempre va primero y en oliva (lo que queda a favor) -- el

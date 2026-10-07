@@ -1,6 +1,7 @@
-/* Saldo de la obra + gráfico por mes — Movimientos v2, el bloque de arriba
-   de la tabla. Cobros en oliva y egresos en gris claro: el gráfico es de
-   datos (rampa oliva, DESIGN.md §2), no de estado. */
+/* Saldo de la obra + cobrado y gastado contra el contrato — el bloque de
+   arriba de la tabla de movimientos. Cobrado en oliva y gastado en gris: son
+   datos (rampa oliva, DESIGN.md §2). El rojo solo aparece cuando lo gastado
+   pasa el contrato, que sí es un estado. */
 .saldo-obra {
   display: flex;
   flex-direction: column;
@@ -11,8 +12,9 @@
 .saldo-obra__cabecera {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: var(--space-4);
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
 }
 
 .saldo-obra__cifras {
@@ -23,10 +25,15 @@
 }
 
 .saldo-obra__titulo,
-.saldo-obra__resumen {
+.saldo-obra__contrato {
   font-size: var(--text-base);
   color: var(--color-tinta-muted);
   font-variant-numeric: tabular-nums;
+}
+
+.saldo-obra__contrato strong {
+  color: var(--color-tinta);
+  font-weight: 600;
 }
 
 .saldo-obra__saldo {
@@ -49,146 +56,137 @@
   color: var(--color-tinta-tenue);
 }
 
-/* Un .btn con relleno suave por fuera; adentro, el <select> nativo invisible
-   ocupando todo el botón: se abre la lista del sistema (teclado y lector de
-   pantalla incluidos) sin dibujar un menú propio. */
-.saldo-obra__periodo {
-  position: relative;
-  flex-shrink: 0;
-  background: var(--color-relleno);
+/* Cada fila: etiqueta, barra y cifra. Las barras de las dos filas comparten
+   la columna del medio, así el 100% cae en el mismo lugar. */
+.saldo-obra__barras {
+  display: grid;
+  grid-template-columns: var(--space-16) minmax(0, 1fr) minmax(170px, auto);
+  gap: var(--space-4) var(--space-4);
+  align-items: center;
+  margin: 0;
+}
+
+.saldo-obra__fila {
+  display: contents;
+}
+
+.saldo-obra__fila dt {
+  font-size: var(--text-base);
+  font-weight: 500;
   color: var(--color-tinta);
 }
 
-.saldo-obra__periodo:hover {
-  background: var(--color-linea);
+.saldo-obra__fila dd {
+  margin: 0;
 }
 
-.saldo-obra__periodo > select {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  opacity: 0;
-  cursor: pointer;
-}
-
-.saldo-obra__periodo:has(select:focus-visible) {
-  outline: 2px solid var(--color-oliva);
-  outline-offset: 2px;
-}
-
-/* Grilla: eje Y de 48px y las barras; abajo, los meses alineados a sus
-   columnas. Las marcas del eje caen sobre las líneas de la grilla de fondo
-   (cada 90px): el eje mide 180 + una línea de texto y se corre media línea
-   para arriba y para abajo, así cada número queda centrado en su línea. */
-.saldo-obra__grafico {
-  display: grid;
-  grid-template-columns: var(--space-12) minmax(0, 1fr);
-  gap: 0 var(--space-3);
-}
-
-.saldo-obra__eje {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 194px;
-  margin: -7px 0;
-  font-size: var(--text-xs);
-  line-height: 14px;
-  color: var(--color-tinta-tenue);
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.saldo-obra__barras {
+.saldo-obra__pista {
   position: relative;
-  display: grid;
-  align-items: end;
-  height: 180px;
-  border-bottom: 1px solid var(--color-linea-fuerte);
-  background-image: linear-gradient(var(--color-linea-suave) 1px, transparent 1px);
-  background-size: 100% 90px;
+  display: flex;
+  height: 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-relleno);
 }
 
-/* Sin movimientos en el período: el eje queda (para leer el cero) y el
-   mensaje va encima de las barras vacías. */
-.saldo-obra__vacio {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--text-sm);
-  color: var(--color-tinta-tenue);
-}
-
-.saldo-obra__mes {
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  gap: var(--space-1-5);
+.saldo-obra__tramo {
   height: 100%;
 }
 
-.saldo-obra__barra {
-  width: 28px;
-  max-width: 40%;
-  border-radius: 3px 3px 0 0;
+.saldo-obra__tramo:first-child {
+  border-radius: var(--radius-pill) 0 0 var(--radius-pill);
 }
 
-.saldo-obra__barra--cobro,
-.saldo-obra__muestra--cobro {
+.saldo-obra__tramo:last-of-type {
+  border-top-right-radius: var(--radius-pill);
+  border-bottom-right-radius: var(--radius-pill);
+}
+
+.saldo-obra__tramo--cobro {
   background: var(--color-oliva);
 }
 
-.saldo-obra__barra--egreso,
-.saldo-obra__muestra--egreso {
-  background: var(--color-linea-fuerte);
+.saldo-obra__tramo--egreso {
+  background: var(--color-tinta-muted);
 }
 
-.saldo-obra__meses {
-  display: grid;
-  padding-top: var(--space-2);
-  font-size: var(--text-xs);
-  color: var(--color-tinta-muted);
-  text-align: center;
+/* Lo comprometido que todavía no salió: el mismo gris, rayado. */
+.saldo-obra__tramo--sin-pagar {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--color-tinta-muted) 0 3px,
+    var(--color-linea-fuerte) 3px 6px
+  );
 }
 
-.saldo-obra__leyenda {
+.saldo-obra__tramo--egreso.saldo-obra__tramo--pasado {
+  background: var(--color-error);
+}
+
+.saldo-obra__tramo--sin-pagar.saldo-obra__tramo--pasado {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--color-error) 0 3px,
+    var(--color-error-tint) 3px 6px
+  );
+}
+
+/* El precio acordado, cuando alguna barra lo pasa. */
+.saldo-obra__marca {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--color-tinta);
+}
+
+.saldo-obra__valor {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-5);
+  flex-direction: column;
+  gap: 2px;
   font-size: var(--text-sm);
   color: var(--color-tinta-muted);
+  font-variant-numeric: tabular-nums;
 }
 
-.saldo-obra__leyenda > span {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1-5);
+.saldo-obra__valor strong {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-tinta);
 }
 
-.saldo-obra__muestra {
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
+.saldo-obra__valor .saldo-obra__pasado {
+  color: var(--color-error-texto);
 }
 
-.saldo-obra__unidad {
-  color: var(--color-tinta-tenue);
-}
-
-/* En el teléfono el diseño deja sólo el saldo: el gráfico de barras no entra
-   con lectura a 375px, y la planilla ya está justo abajo. */
+/* En el teléfono la cifra baja debajo de la etiqueta y la barra ocupa todo
+   el ancho: dos filas por barra en vez de tres columnas. */
 @media (max-width: 640px) {
   .saldo-obra {
-    gap: 0;
+    gap: var(--space-4);
     margin-bottom: var(--space-5);
   }
 
-  .saldo-obra__resumen,
-  .saldo-obra__periodo,
-  .saldo-obra__grafico,
-  .saldo-obra__leyenda {
-    display: none;
+  .saldo-obra__barras {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-2) var(--space-3);
+  }
+
+  .saldo-obra__pista {
+    grid-column: 1 / -1;
+    order: 1;
+  }
+
+  .saldo-obra__fila {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
+    row-gap: var(--space-2);
+    margin-bottom: var(--space-2);
+  }
+
+  .saldo-obra__valor {
+    align-items: flex-end;
+    text-align: right;
   }
 }

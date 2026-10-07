@@ -458,16 +458,24 @@ textarea:focus-visible,
    salía del contenido y un botón al lado de un input o dentro de una fila
    nunca medía lo mismo que su vecino; con el alto declarado alinean solos.
    El borde de 1px va en todas las variantes (transparente en las rellenas)
-   para que todas midan igual. */
+   para que todas midan igual.
+
+   Botones v2 (docs/BUTTONSUIUXChange, variante 1a "Iconos por tipo"): la base
+   sube a 36px / 14px con el ícono a 16 y 8 de aire, y TODO botón de acción
+   lleva ícono, el de lo que crea o hace (el de la entidad del sidebar o el del
+   tipo de movimiento), nunca un "+" genérico. El tamaño del ícono lo fija
+   esta clase y no el `size` del JSX, igual que en `.btn-icono`. */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-1-5);
-  height: 32px;
-  padding: 0 var(--space-3);
+  gap: var(--space-2);
+  height: 36px;
+  /* 14px del diseño: con 12 el texto de 14 queda apretado contra el borde y
+     con 16 el botón de una palabra ("Gasto") se ve inflado. */
+  padding: 0 14px;
   font-family: var(--font-ui);
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   font-weight: 600;
   line-height: 1;
   white-space: nowrap;
@@ -482,6 +490,8 @@ textarea:focus-visible,
 
 .btn > svg {
   flex-shrink: 0;
+  width: 16px;
+  height: 16px;
 }
 
 .btn:disabled {
@@ -489,9 +499,18 @@ textarea:focus-visible,
   cursor: not-allowed;
 }
 
-/* Acción de fila, encabezado denso. */
+/* Acción de fila, encabezado denso. Conserva la medida vieja de la base
+   (13px, ícono 14) para no inflar las filas. */
 .btn--sm {
+  gap: var(--space-1-5);
   height: 30px;
+  padding: 0 var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.btn--sm > svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* Pie de modal. */
@@ -522,10 +541,13 @@ textarea:focus-visible,
   border-color: var(--color-oliva-dark);
 }
 
+/* Peso 500 y no 600: al lado del primario relleno, el secundario en 600 se
+   leía con la misma jerarquía (diseño 1a). */
 .btn-secondary {
   background: var(--color-superficie);
   border-color: var(--color-linea);
   color: var(--color-tinta);
+  font-weight: 500;
 }
 
 .btn-secondary:hover:not(:disabled) {
@@ -677,7 +699,7 @@ textarea:focus-visible,
    formulario de Auth y usaba otro padding.
 
    Los selectores por descendencia que la acompañan son un ALIAS, no una
-   segunda receta: los campos de los 14 modales y de los formularios de auth y
+   segunda receta: los campos de los 14 modales y de los formularios de
    manager no llevan la clase en el markup (son decenas de inputs), así que se
    enganchan acá en vez de redeclarar las mismas propiedades en cada .css.
    Regla para no volver atrás: si un campo necesita otra geometría, va un
@@ -691,8 +713,6 @@ textarea:focus-visible,
 .modal-form input,
 .modal-form select,
 .modal-form textarea,
-.auth-campo input,
-.auth-campo select,
 .manager-campo input,
 .manager-campo select {
   width: 100%;
@@ -715,7 +735,6 @@ textarea:focus-visible,
 .campo::placeholder,
 .modal-form input::placeholder,
 .modal-form textarea::placeholder,
-.auth-campo input::placeholder,
 .manager-campo input::placeholder {
   color: var(--color-tinta-tenue);
 }
@@ -725,8 +744,6 @@ textarea:focus-visible,
 .modal-form input:focus,
 .modal-form select:focus,
 .modal-form textarea:focus,
-.auth-campo input:focus,
-.auth-campo select:focus,
 .manager-campo input:focus,
 .manager-campo select:focus {
   outline: none;
@@ -738,8 +755,6 @@ textarea:focus-visible,
 .modal-form input:disabled,
 .modal-form select:disabled,
 .modal-form textarea:disabled,
-.auth-campo input:disabled,
-.auth-campo select:disabled,
 .manager-campo input:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -891,8 +906,8 @@ div.campo:has(> input:user-invalid) {
 /* La flecha del select es un SVG inline porque `appearance: none` se lleva
    puesta la nativa. El color va escrito (no acepta var() adentro de una data
    URI): es --color-tinta-tenue, el de todo ícono dentro de un campo. */
-/* Auth y Manager también lo usan: ponen `class="campo"` en sus selects (antes
-   dibujaban el chevron con un <svg> propio encima). */
+/* Manager también lo usa: pone `class="campo"` en sus selects (antes
+   dibujaba el chevron con un <svg> propio encima). */
 select.campo,
 .modal-form select {
   appearance: none;
@@ -909,13 +924,12 @@ select.campo,
    nombre que describía una ficha que ya no existe.
 
    Los selectores que la acompañan son el mismo ALIAS que el de `.campo`: los
-   formularios de los modales, de auth y de manager envuelven texto + input en
+   formularios de los modales y de manager envuelven texto + input en
    un <label> que no lleva la clase. La distancia al campo la pone el gap del
    label (--space-1-5); el tamaño del input lo pone `.campo`, así que no
    hereda los 13px. El "(opcional)" va adentro, con `.label-campo__opcional`. */
 .label-campo,
 .modal-form label,
-.auth-campo,
 .manager-campo {
   font-family: var(--font-ui);
   font-size: var(--text-sm);
@@ -966,6 +980,13 @@ select.campo,
   height: 14px;
   margin-top: 2px;
   color: var(--color-tinta-tenue);
+}
+
+/* Hint que avisa algo que frena el formulario ("No hay nombres pendientes de
+   registro"): el par ámbar de atención, ícono incluido (DESIGN.md §2). */
+.campo-hint--atencion,
+.campo-hint--atencion > svg {
+  color: var(--color-atencion-texto);
 }
 
 /* Un link dentro de un hint ("cambiar"): botón sin caja, en oliva. */

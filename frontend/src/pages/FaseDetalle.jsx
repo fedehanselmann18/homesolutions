@@ -8,7 +8,6 @@ import {
   ChartNoAxesColumn,
   Check,
   Clock,
-  Plus,
 } from "lucide-react";
 
 import { getComprobanteCompra, getNotaCompra } from "../services/compraService";
@@ -56,6 +55,7 @@ export function FaseDetalle() {
 
   const {
     fase,
+    numeroFase,
     proyecto,
     gastosFase,
     comprasFase,
@@ -271,12 +271,12 @@ export function FaseDetalle() {
           <div className="fase-detalle__titulo">
             <span
               className={`fase-detalle__numero fase-detalle__numero--${etapaDeFase(fase.estado)}`}
-              aria-label={`Fase ${fase.orden}`}
+              aria-label={`Fase ${numeroFase}`}
             >
               {etapaDeFase(fase.estado) === "cerrada" ? (
                 <Check size={14} strokeWidth={2.6} aria-hidden="true" />
               ) : (
-                fase.orden
+                numeroFase
               )}
             </span>
             <h1 className="fase-detalle__nombre">{fase.nombre}</h1>
@@ -288,19 +288,6 @@ export function FaseDetalle() {
               {estadoInfo.label}
             </span>
           </div>
-
-          {canManage && (
-            <div className="fase-detalle__acciones">
-              <button type="button" className="btn btn-secondary" onClick={handleNuevoGasto}>
-                <Plus size={15} strokeWidth={2} aria-hidden="true" />
-                Gasto
-              </button>
-              <button type="button" className="btn btn-primary" onClick={handleNuevaCompra}>
-                <Plus size={15} strokeWidth={2} aria-hidden="true" />
-                Nueva compra
-              </button>
-            </div>
-          )}
         </div>
 
         {(fase.descripcion || fase.fecha_inicio || diasEnCurso !== null) && (
@@ -332,6 +319,8 @@ export function FaseDetalle() {
       {tabActiva === "acciones" && (
         <AccionesFase
           canManage={canManage}
+          onNuevoGasto={handleNuevoGasto}
+          onNuevaCompra={handleNuevaCompra}
           nombreProveedor={nombreProveedor}
           compras={comprasFase}
           onEditarCompra={handleEditarCompra}

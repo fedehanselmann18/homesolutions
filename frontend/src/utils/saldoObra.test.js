@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resumirSaldoObra, saldoDeObra, topeDeEje } from "./saldoObra";
+import { barrasDeContrato, saldoDeObra } from "./saldoObra";
 
 const compras = [
   { fecha: "2026-06-10", precio_total_ars: 1460000, precio_total_usd: 1000 },
@@ -11,7 +11,6 @@ const cobros = [
   { fecha: "2026-10-01", monto_neto_ars: 1460000, monto_neto_usd: 1000 },
 ];
 const movimientos = { compras, gastos, cobros };
-const hoy = new Date(2026, 9, 7);
 
 describe("saldoDeObra", () => {
   it("resta compras y gastos a lo cobrado, de toda la obra", () => {
@@ -20,39 +19,35 @@ describe("saldoDeObra", () => {
   });
 });
 
-describe("resumirSaldoObra", () => {
-  it("arma un mes por barra hasta el actual, con los meses vacíos en cero", () => {
-    const { meses } = resumirSaldoObra(movimientos, { meses: 5, hoy });
-    expect(meses.map((m) => m.mes)).toEqual([
-      "2026-06",
-      "2026-07",
-      "2026-08",
-      "2026-09",
-      "2026-10",
-    ]);
-    expect(meses[0]).toMatchObject({ cobrado: 0, gastado: 1000, gastadoArs: 1460000 });
-    expect(meses[1]).toMatchObject({ cobrado: 0, gastado: 0 });
-    expect(meses[4]).toMatchObject({ cobrado: 1000, gastado: 100, gastadoArs: 146000 });
+describe("barrasDeContrato", () => {
+  it("cobrado y gastado de toda la obra contra el precio acordado, en dólares", () => {
+    const b = barrasDeContrato(movimientos, 8000);
+    expect(b).toMatchObject({ acordado: 8000, cobrado: 4000, gastado: 1200, escala: 8000 });
+    expect(b.pctCobrado).toBe(50);
+    expect(b.pctGastado).toBe(15);
+    expect(b.faltaCobrar).toBe(4000);
+    expect(b.gastoPasado).toBe(false);
   });
 
-  it("los totales del período dejan afuera lo anterior, el saldo no", () => {
-    const resumen = resumirSaldoObra(movimientos, { meses: 3, hoy });
-    expect(resumen.cobradoUsd).toBe(4000);
-    expect(resumen.gastadoUsd).toBe(100);
-    expect(resumen.gastadoArs).toBe(146000);
-    expect(resumen.saldo.usd).toBe(2800);
-  });
-});
-
-describe("topeDeEje", () => {
-  it("redondea para dos divisiones parejas", () => {
-    expect(topeDeEje(7300)).toBe(8000);
-    expect(topeDeEje(4000)).toBe(4000);
-    expect(topeDeEje(950)).toBe(1000);
-    expect(topeDeEje(23000)).toBe(30000);
+  it("separa lo que está sin pagar a proveedores, dentro de lo gastado", () => {
+    const conDeuda = {
+      ...movimientos,
+      compras: [...compras, { estado_pago: "pendiente", precio_total_usd: 300 }],
+    };
+    expect(barrasDeContrato(conDeuda, 8000)).toMatchObject({ gastado: 1500, sinPagar: 300 });
   });
 
-  it("sin datos devuelve un tope mínimo", () => {
-    expect(topeDeEje(0)).toBe(1000);
+  it("si lo gastado pasa el contrato, la escala es lo gastado", () => {
+    const b = barrasDeContrato(movimientos, 1000);
+    expect(b).toMatchObject({ escala: 4000, gastoPasado: true });
+  });
+
+  it("centavos de redondeo no quedan como falta cobrar", () => {
+    expect(barrasDeContrato(movimientos, 4000.33).faltaCobrar).toBe(0);
+  });
+
+  it("sin precio acordado no hay porcentajes ni falta cobrar", () => {
+    const b = barrasDeContrato(movimientos, null);
+    expect(b).toMatchObject({ pctCobrado: null, pctGastado: null, faltaCobrar: 0, escala: 4000 });
   });
 });

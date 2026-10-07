@@ -1,212 +1,168 @@
-/* Pantallas de entrada (login, registro, no autorizado) — dirección 4c del
-   rediseño: panel partido, mitad negra de marca con el logo y una línea de
-   contexto, mitad clara con el formulario. En pantallas angostas colapsa a
-   una banda negra arriba de la tarjeta (dirección 4a).
+/* Formularios de entrada (login, registro) y el aviso de "no autorizado" /
+   error — diseño 1a/1b de `HS Acceso`. El panel de marca y el centrado los
+   pone <AuthLayout>; acá sólo lo de adentro.
 
-   v5: página blanca y tarjeta con borde y el radio de un modal (DESIGN.md
-   §0 y §14), campos y botones de la app (`select.campo`, `.btn--lg`), el
-   error como el de cualquier campo y los links en oliva. */
+   Los campos son `.campo` compuesto (ícono + input en la misma caja, DESIGN.md
+   §9) con `.label-campo` arriba: la misma anatomía que los modales de carga,
+   así login, alta de cuenta y modales se sienten iguales. */
 
-.auth-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--color-superficie);
-  font-family: var(--font-ui);
-  padding: var(--space-4);
-}
-
-.auth-panel {
+.auth-form {
   width: 100%;
-  max-width: 780px;
-  min-height: 520px;
-  display: grid;
-  grid-template-columns: 0.9fr 1.1fr;
-  background: var(--color-superficie);
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-}
-
-/* --- mitad negra de marca --- */
-
-.auth-panel__marca {
-  background: var(--color-oscuro);
-  padding: 36px var(--space-8);
+  max-width: 380px;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   gap: var(--space-6);
 }
 
-.auth-panel__logo {
-  width: 120px;
-  height: auto;
-  display: block;
-}
-
-.auth-panel__mensaje {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.auth-panel__barra {
-  width: 40px;
-  height: 3px;
-  background: var(--color-oliva);
-  border-radius: var(--radius-pill);
-}
-
-.auth-panel__mensaje p {
+.auth-form__titulo {
   margin: 0;
-  font-size: var(--text-lg);
-  line-height: 1.45;
-  color: var(--color-oscuro-texto);
-  text-wrap: pretty;
-}
-
-.auth-panel__pie {
-  font-size: var(--text-xs);
-  color: var(--color-oscuro-texto-muted);
-}
-.auth-panel__restringido {
-  align-self: flex-start;
-}
-
-/* --- mitad clara con el formulario --- */
-
-.auth-panel__form {
-  padding: 44px 40px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: var(--space-4);
-}
-
-.auth-panel__titulo {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.auth-panel__titulo h1 {
-  margin: 0;
-  font-family: var(--font-ui);
-  font-size: var(--text-2xl);
-  font-weight: 700;
+  font-size: var(--text-3xl);
+  font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--color-tinta);
 }
 
-.auth-panel__titulo p {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--color-tinta-muted);
+.auth-form__campos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
 }
 
-/* Tipografía del label: la de `.label-campo` en index.css (alias). */
-.auth-campo {
+.auth-form__campo {
   display: flex;
   flex-direction: column;
   gap: var(--space-1-5);
 }
 
-.auth-panel__submit {
+/* Label a la izquierda y el link para escribir el usuario a mano a la
+   derecha, en la misma línea (diseño 1a). */
+.auth-form__label-fila {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+
+/* Es un <button> por accesibilidad -- no navega -- pero se ve como link. */
+.auth-form__toggle {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 500;
+  color: var(--color-oliva-dark);
+  cursor: pointer;
+}
+
+.auth-form__toggle:hover {
+  color: var(--color-tinta);
+}
+
+/* El <select> va adentro de la caja compuesta: sin la flecha nativa, porque
+   el chevron lo dibuja un ícono como en el resto de los campos con ícono. */
+.auth-form .campo > select {
+  appearance: none;
+  cursor: pointer;
+}
+
+.auth-form .campo > select:disabled {
+  cursor: not-allowed;
+}
+
+/* El chevron está encima del select pero no tiene que robarle el click. */
+.auth-form__chevron {
+  pointer-events: none;
+}
+
+/* Sin nombres para elegir, el combo no es un campo vacío sino uno que no se
+   puede usar: relleno suave y texto tenue (diseño 1b). */
+.auth-form .campo:has(> select:disabled) {
+  background: var(--color-superficie-suave);
+  color: var(--color-tinta-tenue);
+}
+
+/* Mostrar / ocultar la contraseña: ícono dentro de la caja, tenue como todos,
+   que se oscurece al pasar. */
+.auth-form__ojo {
+  display: flex;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-tinta-tenue);
+  cursor: pointer;
+  transition: color var(--transicion);
+}
+
+.auth-form__ojo:hover {
+  color: var(--color-tinta);
+}
+
+.auth-form__ojo > svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* El tilde de "las contraseñas coinciden" va en oliva, no tenue: es un dato,
+   no decoración. Doble clase para ganarle a `.campo > svg`. */
+.campo > svg.auth-form__ok {
+  color: var(--color-oliva);
+}
+
+.auth-form__submit {
   /* La forma la da `.btn .btn-primary .btn--lg`; acá sólo el ancho completo,
      que es propio del formulario de entrada. */
   width: 100%;
-  margin-top: var(--space-1);
 }
 
-.auth-panel__link {
-  font-size: var(--text-sm);
+.auth-form__pie {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1-5);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-linea-suave);
+  font-size: var(--text-base);
+  color: var(--color-tinta-muted);
+}
+
+.auth-form__pie a {
   font-weight: 600;
   color: var(--color-oliva-dark);
   text-decoration: none;
 }
 
-.auth-panel__link:hover {
-  text-decoration: underline;
+.auth-form__pie a:hover {
+  color: var(--color-tinta);
 }
 
-/* --- no autorizado: mismo panel, contenido alineado a la izquierda --- */
+/* --- no autorizado / error: mismo ancho que el formulario, alineado a la
+   izquierda, con el badge arriba del título --- */
 
-.auth-panel__aviso {
+.auth-aviso {
+  width: 100%;
+  max-width: 380px;
+  display: flex;
+  flex-direction: column;
   align-items: flex-start;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
-.auth-panel__aviso h1 {
+.auth-aviso h1 {
   margin: 0;
-  font-family: var(--font-ui);
-  font-size: var(--text-2xl);
-  font-weight: 700;
+  font-size: var(--text-3xl);
+  font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--color-tinta);
   text-wrap: pretty;
 }
 
-.auth-panel__aviso p {
+.auth-aviso p {
   margin: 0;
   font-size: var(--text-base);
   color: var(--color-tinta-muted);
 }
 
-.auth-panel__aviso button {
-  margin-top: var(--space-2);
-}
-
-/* --- angosto: la mitad negra pasa a ser una banda arriba (dirección 4a) --- */
-
-@media (max-width: 640px) {
-  .auth-panel {
-    grid-template-columns: 1fr;
-    max-width: 420px;
-    min-height: 0;
-  }
-
-  .auth-panel__marca {
-    padding: var(--space-6) var(--space-8);
-    align-items: center;
-    text-align: center;
-  }
-
-  /* La línea de contexto y el pie sostienen la composición de la columna
-     alta; en la banda angosta solo agregan ruido arriba del formulario. */
-  .auth-panel__mensaje,
-  .auth-panel__pie {
-    display: none;
-  }
-
-  .auth-panel__logo {
-    width: 96px;
-  }
-
-  .auth-panel__form {
-    padding: var(--space-8) var(--space-8) var(--space-6);
-  }
-}
-
-/* Link chico debajo del combo de usuario del login: cambia el <select> por
-   un <input> de texto, para las cuentas que no están en el combo público
-   (ver /usuarios/login-options). Es un <button> por accesibilidad -- no
-   navega a ningún lado -- pero se ve como un link. */
-.auth-panel__toggle {
-  align-self: flex-start;
-  margin-top: -6px;
-  padding: 0;
-  background: none;
-  border: none;
-  font-family: var(--font-ui);
-  font-size: var(--text-xs);
-  font-weight: 600;
-  color: var(--color-tinta-muted);
-  cursor: pointer;
-}
-
-.auth-panel__toggle:hover {
-  color: var(--color-oliva-dark);
-  text-decoration: underline;
+.auth-aviso button {
+  margin-top: var(--space-3);
 }

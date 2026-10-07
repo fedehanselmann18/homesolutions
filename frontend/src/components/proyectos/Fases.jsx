@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronDown, ChevronRight, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, ChevronUp, Layers, Pencil, Trash2 } from "lucide-react";
 import { crearFase, actualizarFase, eliminarFase, moverFase } from "../../services/faseService";
 import {
   useProyecto,
@@ -186,7 +186,7 @@ export function Fases({ proyectoId }) {
         )}
         {canManage && (
           <button type="button" className="btn btn-primary" onClick={handleNuevaFase}>
-            <Plus size={15} strokeWidth={2} aria-hidden="true" />
+            <Layers aria-hidden="true" />
             Nueva fase
           </button>
         )}

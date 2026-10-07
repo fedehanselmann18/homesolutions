@@ -65,6 +65,26 @@
   background: var(--color-superficie-suave);
 }
 
+/* La fila a la que se entró desde el Panel ("Para resolver" → ?foco=): un
+   borde al costado que no se va, para poder volver a encontrarla después de
+   mirar otra cosa, más un destello al llegar que la señala sin leer nada.
+   La animación la apaga el prefers-reduced-motion global (index.css). */
+.bandeja__item--foco {
+  position: relative;
+  box-shadow: inset 3px 0 0 0 var(--color-oliva);
+  animation: bandeja-foco 2.4s ease-out;
+}
+
+@keyframes bandeja-foco {
+  0%,
+  45% {
+    background: var(--color-oliva-tint);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
 .bandeja__icono {
   display: flex;
   align-items: center;

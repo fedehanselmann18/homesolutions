@@ -1,4 +1,4 @@
-import { montoCobroNeto, montoGasto, precioTotalCompra } from "./moneda";
+import { montoCobroNeto, montoGasto, precioTotalCompra, saldoPorCobrar } from "./moneda";
 
 // Lo que necesita atención dentro de UN proyecto. La lógica venía de la
 // sección "Necesita atención" del Panel (utils/panel.js), que agrupaba por
@@ -160,7 +160,8 @@ export function calcularSeguimiento({
   // contrato y los cobros son en USD. Mismo criterio que el Análisis General:
   // cobrado es la suma de los cobros NETA de notas de crédito/débito
   // (monto_neto_usd, lo calcula el backend) y el pendiente nunca es negativo
-  // (si se cobró de más, queda en 0).
+  // (si se cobró de más, queda en 0) ni cuenta centavos de redondeo
+  // (saldoPorCobrar).
   const precioAcordado = Number(proyecto?.precio_acordado_usd ?? 0);
   const cobrado = cobros.reduce((acc, c) => acc + montoCobroNeto(c, "usd"), 0);
   const ultimoCobro = cobros.reduce(
@@ -171,7 +172,7 @@ export function calcularSeguimiento({
   const cobranza = {
     precioAcordado,
     cobrado,
-    pendiente: Math.max(0, precioAcordado - cobrado),
+    pendiente: saldoPorCobrar(precioAcordado, cobrado),
     pctCobrado: precioAcordado > 0 ? (cobrado / precioAcordado) * 100 : 0,
     cantidadCobros: cobros.length,
     ultimoCobro: ultimoCobro

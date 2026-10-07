@@ -26,6 +26,7 @@ import { montoGasto, precioTotalCompra } from "../utils/moneda";
 import { useToast } from "../context/useToast";
 import {
   useFase,
+  useFasesPorProyecto,
   useProyecto,
   useGastosPorFase,
   useComprasPorFase,
@@ -49,6 +50,7 @@ export function useFaseDetalle(faseId) {
   const proyectoId = faseQuery.data?.proyecto_id;
 
   const proyectoQuery = useProyecto(proyectoId);
+  const fasesProyectoQuery = useFasesPorProyecto(proyectoId);
   const gastosFaseQuery = useGastosPorFase(faseId);
   const comprasFaseQuery = useComprasPorFase(faseId);
   const gastosProyectoQuery = useGastosPorProyecto(proyectoId);
@@ -66,6 +68,16 @@ export function useFaseDetalle(faseId) {
   const gastosProyecto = gastosProyectoQuery.data ?? [];
   const comprasProyecto = comprasProyectoQuery.data ?? [];
   const cobrosProyecto = cobrosProyectoQuery.data ?? [];
+
+  // El número de la fase es su posición en la obra (la misma cuenta que la
+  // tab Fases), no fase.orden: ese campo puede venir en 1 para todas las fases
+  // (default de la columna) y entonces el header siempre decía "1".
+  const fasesProyecto = fasesProyectoQuery.data;
+  const numeroFase = useMemo(() => {
+    if (!fase) return null;
+    const indice = (fasesProyecto ?? []).findIndex((f) => f.id === fase.id);
+    return indice >= 0 ? indice + 1 : fase.orden;
+  }, [fase, fasesProyecto]);
 
   const kpis = useMemo(() => {
     if (!proyecto) return null;
@@ -253,6 +265,7 @@ export function useFaseDetalle(faseId) {
 
   return {
     fase,
+    numeroFase,
     proyecto,
     gastosFase,
     comprasFase,

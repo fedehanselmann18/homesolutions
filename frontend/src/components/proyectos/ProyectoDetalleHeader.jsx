@@ -1,8 +1,7 @@
 // components/ProyectoDetalleHeader.jsx
-import { MapPin, CalendarDays, Layers } from "lucide-react";
+import { MapPin } from "lucide-react";
 import "./ProyectoDetalleHeader.css";
 import { Breadcrumbs } from "../shared/Breadcrumbs";
-import { formatFecha } from "../../utils/formato";
 import { getEstado } from "../../constants/estados";
 
 /**
@@ -16,11 +15,10 @@ import { getEstado } from "../../constants/estados";
  * ejecutado en Análisis General, Cobrado en Seguimiento, Fases en la propia
  * tabla de Fases, Requiere acción desglosado en Seguimiento.
  *
- * `faseActual` sale de describirFaseActual (utils/fases.js) o es null: mientras
- * las fases no cargaron, o si el proyecto no tiene ninguna, ese ítem de la meta
- * no se pinta.
+ * La meta es solo la dirección: la fecha de inicio y "Fase N de M" también se
+ * sacaron, la fase en curso se ve en la tab Fases.
  */
-function ProyectoDetalleHeader({ proyecto, breadcrumb, faseActual }) {
+function ProyectoDetalleHeader({ proyecto, breadcrumb }) {
   const estado = getEstado(proyecto.estado);
   const IconoEstado = estado.icono;
 
@@ -41,18 +39,6 @@ function ProyectoDetalleHeader({ proyecto, breadcrumb, faseActual }) {
           <li>
             <MapPin size={15} strokeWidth={1.75} aria-hidden="true" />
             {proyecto.direccion}
-          </li>
-        )}
-        {proyecto.fecha_inicio && (
-          <li>
-            <CalendarDays size={15} strokeWidth={1.75} aria-hidden="true" />
-            Desde el {formatFecha(proyecto.fecha_inicio)}
-          </li>
-        )}
-        {faseActual && (
-          <li>
-            <Layers size={15} strokeWidth={1.75} aria-hidden="true" />
-            {faseActual.texto}
           </li>
         )}
       </ul>

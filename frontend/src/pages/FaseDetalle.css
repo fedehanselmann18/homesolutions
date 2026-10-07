@@ -81,12 +81,6 @@
   overflow-wrap: anywhere;
 }
 
-.fase-detalle__acciones {
-  display: flex;
-  flex-shrink: 0;
-  gap: var(--space-2);
-}
-
 .fase-detalle__meta {
   display: flex;
   flex-wrap: wrap;
@@ -115,16 +109,10 @@
   padding-top: var(--space-6);
 }
 
-/* Mobile: la fila del título se abre para que los botones queden al final
-   del header, debajo de la descripción. */
+/* Mobile: la fila del título se abre y el nombre se agranda. */
 @media (max-width: 640px) {
   .fase-detalle__fila {
     display: contents;
-  }
-
-  .fase-detalle__acciones {
-    order: 1;
-    padding-top: var(--space-1);
   }
 
   .fase-detalle__nombre {

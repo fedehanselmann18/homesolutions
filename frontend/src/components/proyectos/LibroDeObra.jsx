@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import {
   AlertTriangle,
   Building2,
+  ChevronLeft,
+  ChevronRight,
   FileMinus,
   FilePlus,
   FileSignature,
@@ -37,13 +39,13 @@ const conSigno = (monto, signo, moneda) =>
 
 /**
  * Libro de obra: compras, gastos y cobros del proyecto en una sola lista,
- * agrupada por día con su subtotal, con un saldo acumulado calculado del
+ * agrupada por día, con un saldo acumulado calculado del
  * movimiento más viejo al más nuevo. Click en la fila abre el detalle; los
  * estados de pago/envío de una compra se togglean desde su badge, sin abrirlo.
  * Diseño: docs/GENERALUIUXChange/Movimientos v2.dc.html, variante 3a.
  *
  * Doble moneda (decisión 6 del rediseño, #5 de docs/PLAN_TIPO_CAMBIO.md): el
- * libro es la caja, así que el SALDO y los subtotales van en pesos nominales,
+ * libro es la caja, así que el SALDO va en pesos nominales,
  * lo que efectivamente entró y salió. Cada fila muestra su importe en la
  * moneda en que se cargó -- compras y gastos en pesos, cobros en dólares -- y
  * la otra moneda debajo, como equivalente.
@@ -68,10 +70,6 @@ export function LibroDeObra({
   // En una fase no entra plata, así que el acumulado no es un "saldo": el
   // rótulo se ajusta desde donde se use.
   saldoLabel = "Saldo",
-  // Dos renglones por movimiento en vez de siete columnas, para cuando el
-  // libro va en una columna angosta (Acciones de la fase, al lado de su
-  // panel). Sin la columna de saldo: ese total lo da quien lo usa.
-  compacto = false,
   // { tipo, id } del movimiento cuyo detalle está abierto: su fila queda
   // marcada, así al cerrar el modal se ve de dónde se venía.
   movimientoActivo,
@@ -168,11 +166,9 @@ export function LibroDeObra({
       if (!porFecha.has(m.fecha)) porFecha.set(m.fecha, []);
       porFecha.get(m.fecha).push(m);
     }
-    return [...porFecha.entries()].map(([fecha, items]) => ({
-      fecha,
-      items,
-      subtotal: items.reduce((acc, m) => acc + TIPOS[m.tipo].signo * m.importe, 0),
-    }));
+    // Sin subtotal por día: se sacó a pedido, el saldo acumulado de cada fila
+    // ya dice cómo quedó la caja después de ese día.
+    return [...porFecha.entries()].map(([fecha, items]) => ({ fecha, items }));
   }, [movimientos, paginaVisible]);
 
   const abrirComprobante = async (movimiento) => {
@@ -199,9 +195,7 @@ export function LibroDeObra({
   }
 
   return (
-    <div
-      className={`libro${mostrarAcciones ? " libro--admin" : ""}${compacto ? " libro--compacto" : ""}`}
-    >
+    <div className={`libro${mostrarAcciones ? " libro--admin" : ""}`}>
       {errorComprobante && (
         <p className="libro__error" role="alert">
           {errorComprobante}
@@ -225,9 +219,6 @@ export function LibroDeObra({
           <div key={dia.fecha} className="libro__grupo">
             <div className="libro__dia">
               <span className="libro__dia-fecha">{formatFechaLarga(dia.fecha)}</span>
-              <span className="libro__dia-subtotal cifra">
-                Subtotal del día {conSigno(dia.subtotal, dia.subtotal >= 0 ? 1 : -1)}
-              </span>
             </div>
 
             {dia.items.map((m) => (
@@ -265,6 +256,7 @@ export function LibroDeObra({
               disabled={paginaVisible === 0}
               onClick={() => setPagina(paginaVisible - 1)}
             >
+              <ChevronLeft aria-hidden="true" />
               Anterior
             </button>
             <button
@@ -274,6 +266,7 @@ export function LibroDeObra({
               onClick={() => setPagina(paginaVisible + 1)}
             >
               Siguiente
+              <ChevronRight aria-hidden="true" />
             </button>
           </div>
         )}

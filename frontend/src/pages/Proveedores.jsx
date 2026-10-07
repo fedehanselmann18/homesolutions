@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Sparkles } from "lucide-react";
+import { Sparkles, Truck } from "lucide-react";
 
 import { useProveedores } from "../hooks/useProveedores";
 import { getProductos } from "../services/productoService";
@@ -199,11 +199,11 @@ export function Proveedores() {
                 className="btn btn-marca"
                 onClick={() => setModalImportarAbierto(true)}
               >
-                <Sparkles size={16} strokeWidth={1.75} aria-hidden="true" />
+                <Sparkles aria-hidden="true" />
                 Importar catálogo
               </button>
               <button type="button" className="btn btn-primary" onClick={abrirModalCrear}>
-                <Plus size={16} strokeWidth={1.75} aria-hidden="true" />
+                <Truck aria-hidden="true" />
                 Nuevo proveedor
               </button>
             </>

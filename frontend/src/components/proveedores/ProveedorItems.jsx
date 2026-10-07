@@ -1,4 +1,4 @@
-import { ChevronRight, Pencil, Phone, Trash2 } from "lucide-react";
+import { Banknote, ChevronRight, Pencil, Phone, ShoppingCart, Trash2 } from "lucide-react";
 
 import { formatFecha, formatMoneda, iniciales, pluralizar } from "../../utils/formato";
 import { DIAS_DEUDA_VENCIDA } from "../../constants/estadoCompra";
@@ -48,10 +48,12 @@ export function ProveedorDeudaCard({ resumen, proyectos = [], onRegistrarPago, o
       <div className="proveedor-deuda__acciones">
         {onRegistrarPago && (
           <button type="button" className="btn btn--sm btn-primary" onClick={onRegistrarPago}>
+            <Banknote aria-hidden="true" />
             Registrar pago
           </button>
         )}
         <button type="button" className="btn btn--sm btn-secondary" onClick={onVerCompras}>
+          <ShoppingCart aria-hidden="true" />
           Ver compras
         </button>
       </div>
