@@ -94,6 +94,49 @@
   min-width: 0;
 }
 
+/* Fecha + algo más ancho al lado (el estado de un proyecto, la cotización):
+   la fecha no necesita la mitad de la fila. */
+.modal-form-fila--fecha {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
+}
+
+/* Panel suave adentro de un formulario (DESIGN.md §10): agrupa lo que es de
+   otra naturaleza que el resto ("Acuerdo con el cliente" en un proyecto, el
+   avance de cobro en un cobro). Sin borde: ya está adentro del modal. */
+.modal-form-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-superficie-suave);
+}
+
+.modal-form-panel__titulo {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-tinta);
+}
+
+/* Título de un bloque del formulario ("Datos generales", "Condiciones"). */
+.modal-form-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.modal-form-bloque__titulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin: 0;
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--color-tinta);
+}
+
 /* La tipografía del label es la de `.label-campo` (index.css), que engancha
    `.modal-form label` por alias igual que `.campo` engancha los inputs. */
 .modal-form label {
@@ -263,7 +306,8 @@
 }
 
 @media (max-width: 640px) {
-  .modal-form-fila {
+  .modal-form-fila,
+  .modal-form-fila--fecha {
     grid-template-columns: 1fr;
   }
 

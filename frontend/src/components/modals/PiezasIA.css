@@ -1,29 +1,9 @@
 /* Flujo "IA primero" — dirección 5c del rediseño (ver claudedesign/). */
 
+/* La forma del botón de IA es `.btn .btn-marca` (index.css); acá sólo que
+   no se encoja al lado de un nombre de archivo largo. */
 .ia-boton {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-family: var(--font-ui);
-  font-size: var(--text-btn);
-  font-weight: 700;
-  padding: 10px 18px;
-  border-radius: var(--radius-pill);
-  border: none;
-  background: var(--color-terracota);
-  color: var(--color-superficie);
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    opacity 0.15s ease;
-}
-
-.ia-boton:hover:not(:disabled) {
-  background: var(--color-terracota-dark);
-}
-
-.ia-boton:disabled {
-  cursor: not-allowed;
+  flex-shrink: 0;
 }
 
 /* El logo pulsante vive en components/shared/LogoCargando.css: lo usa toda

@@ -123,8 +123,9 @@ describe("Catalogos", () => {
 
       const dialogo = screen.getByRole("dialog");
       await userEvent.type(within(dialogo).getByRole("spinbutton"), "1487.5");
-      await userEvent.selectOptions(within(dialogo).getByRole("combobox"), "oficial");
-      await userEvent.click(within(dialogo).getByRole("button", { name: "Crear" }));
+      // El tipo de dólar es un control de opción (DESIGN.md §9), no un select.
+      await userEvent.click(within(dialogo).getByRole("radio", { name: "Oficial" }));
+      await userEvent.click(within(dialogo).getByRole("button", { name: "Crear cotización" }));
 
       expect(crearCotizacion).toHaveBeenCalledWith(
         expect.objectContaining({ tipo: "oficial", valor: 1487.5 })

@@ -20,18 +20,17 @@ export function BotonIA({
   textoLeyendo = "Leyendo comprobante...",
   children,
 }) {
+  // v5: es `.btn-marca` (tint con borde oliva), la acción de marca al lado
+  // del archivo (DESIGN.md §8 y §14). Era una píldora oliva llena que
+  // competía con el botón de guardar del pie.
   return (
     <button
       type="button"
-      className={`ia-boton${atenuado ? " ia-boton--atenuado" : ""}`}
+      className={`btn btn-marca ia-boton${atenuado ? " ia-boton--atenuado" : ""}`}
       onClick={onClick}
       disabled={disabled}
     >
-      {leyendo ? (
-        <LogoCargando size={16} variante="blanco" />
-      ) : (
-        <Sparkles size={16} strokeWidth={2.25} />
-      )}
+      {leyendo ? <LogoCargando size={15} /> : <Sparkles size={15} strokeWidth={2} />}
       {leyendo ? textoLeyendo : children}
     </button>
   );

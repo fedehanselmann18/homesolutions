@@ -1,10 +1,25 @@
 import { useState, useEffect } from "react";
-import ModalShell from "./ModalShell";
-import { LogoCargando } from "../shared/LogoCargando";
+import { CalendarDays, CircleAlert, DollarSign } from "lucide-react";
+
+import ModalShell, { AccionesFormulario } from "./ModalShell";
+import { ControlOpcion } from "../shared/ControlOpcion";
 import { TIPOS_CAMBIO } from "../../utils/moneda";
 import { validarFecha } from "../../utils/formValidation";
 
 const hoy = () => new Date().toISOString().slice(0, 10);
+
+const OPCIONES_TIPO = TIPOS_CAMBIO.map((t) => ({ valor: t.value, label: t.label }));
+
+function ErrorCampo({ texto }) {
+  return (
+    texto && (
+      <p className="campo-error">
+        <CircleAlert aria-hidden="true" />
+        {texto}
+      </p>
+    )
+  );
+}
 
 /**
  * Alta y edición de una fila de la tabla de cotizaciones (ver
@@ -57,66 +72,57 @@ export function ModalCotizacion({ cotizacion, onGuardar, onCerrar }) {
   return (
     <ModalShell
       titulo={esEdicion ? "Editar cotización" : "Nueva cotización"}
+      icono={DollarSign}
       onCerrar={onCerrar}
       onSubmit={handleSubmit}
       cerrarDeshabilitado={guardando}
       acciones={
-        <>
-          <button
-            type="button"
-            onClick={onCerrar}
-            className="btn btn-secondary"
-            disabled={guardando}
-          >
-            Cancelar
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={guardando}>
-            {guardando ? (
-              <>
-                <LogoCargando size={14} variante="blanco" />
-                Guardando...
-              </>
-            ) : esEdicion ? (
-              "Guardar cambios"
-            ) : (
-              "Crear"
-            )}
-          </button>
-        </>
+        <AccionesFormulario
+          guardando={guardando}
+          onCancelar={onCerrar}
+          textoGuardar={esEdicion ? "Guardar cambios" : "Crear cotización"}
+        />
       }
     >
+      <ControlOpcion
+        etiqueta="Dólar"
+        opciones={OPCIONES_TIPO}
+        valor={form.tipo}
+        onCambiar={(tipo) => setForm((prev) => ({ ...prev, tipo }))}
+        variante="segmentado"
+        disabled={guardando}
+      />
+
       <div className="modal-form-fila">
         <label>
           Fecha
-          <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required />
-          {errores.fecha && <p className="campo-error">{errores.fecha}</p>}
+          <div className={`campo${errores.fecha ? " campo--error" : ""}`}>
+            <CalendarDays aria-hidden="true" />
+            <input type="date" name="fecha" value={form.fecha} onChange={handleChange} required />
+          </div>
+          <ErrorCampo texto={errores.fecha} />
         </label>
 
         <label>
-          Dólar
-          <select name="tipo" value={form.tipo} onChange={handleChange}>
-            {TIPOS_CAMBIO.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
+          Cotización
+          <div className={`campo campo--monto${errores.valor ? " campo--error" : ""}`}>
+            <span className="campo__prefijo">$</span>
+            <input
+              type="number"
+              inputMode="decimal"
+              name="valor"
+              value={form.valor}
+              onChange={handleChange}
+              min="0"
+              step="0.0001"
+              aria-label="Cotización ($ por US$)"
+              required
+            />
+            <span className="campo__sufijo">por US$</span>
+          </div>
+          <ErrorCampo texto={errores.valor} />
         </label>
       </div>
-
-      <label>
-        Cotización ($ por US$)
-        <input
-          type="number"
-          name="valor"
-          value={form.valor}
-          onChange={handleChange}
-          min="0"
-          step="0.0001"
-          required
-        />
-        {errores.valor && <p className="campo-error">{errores.valor}</p>}
-      </label>
     </ModalShell>
   );
 }

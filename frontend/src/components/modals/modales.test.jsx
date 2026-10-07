@@ -240,12 +240,18 @@ describe("smoke de modales", () => {
     // Gasto nuevo arranca en el paso del comprobante: se pasa a mano.
     await userEvent.click(screen.getByRole("button", { name: /cargar los datos a mano/i }));
 
+    // DESIGN.md §9: el dólar es un hint debajo del monto, con "cambiar".
+    expect(screen.getByText(/Dólar blue \$\s1\.250,00 del 01\/03\/2026/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "cambiar" }));
     expect(container.querySelector('input[name="cotizacion_dolar"]')).toHaveValue(1250);
-    expect(screen.getByText(/Sugerido: blue \$\s1\.250,00 del 01\/03\/2026/)).toBeInTheDocument();
   });
 
-  it("al editar, la cotización es la congelada del movimiento, no la sugerida", () => {
+  it("al editar, la cotización es la congelada del movimiento, no la sugerida", async () => {
     const { container } = render(<ModalCobro cobro={cobro} onGuardar={noop} onCerrar={noop} />);
+    expect(container.querySelector(".campos-cotizacion")).toHaveTextContent(
+      /Dólar blue \$\s1\.000,00/
+    );
+    await userEvent.click(screen.getByRole("button", { name: "cambiar" }));
     expect(container.querySelector('input[name="cotizacion_dolar"]')).toHaveValue(1000);
   });
 
@@ -358,7 +364,7 @@ describe("smoke de modales", () => {
 
   it("ModalCompra nuevo arranca en el paso del comprobante", () => {
     render(<ModalCompra onGuardar={noop} onCerrar={noop} />);
-    expect(screen.getByText(/arrastrá la factura o el remito/i)).toBeInTheDocument();
+    expect(screen.getByText(/arrastrá el comprobante o/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /cargar los datos a mano/i })).toBeInTheDocument();
   });
 });

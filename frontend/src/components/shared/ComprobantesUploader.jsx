@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Paperclip, X } from "lucide-react";
+import { Paperclip, Plus, X } from "lucide-react";
 import {
+  describirArchivo,
   extensionDeArchivo,
   iconoParaArchivo,
   nombreDeArchivo as nombreDeArchivoExistente,
@@ -14,20 +15,108 @@ const TAMANIO_MAXIMO_BYTES = 10 * 1024 * 1024; // 10MB, espejo de backend/app/fi
 let contadorLocalId = 0;
 const nuevoLocalId = () => `pendiente-${++contadorLocalId}`;
 
-const formatearTamanio = (bytes) => {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
+/**
+ * Zona de carga vacía — DESIGN.md §14, "Comprobante primero": 52px, borde
+ * punteado en oliva claro y el clip en oliva. Se puede soltar un archivo
+ * encima o elegirlo con el link. `extra` va a la derecha (el "IA al subir").
+ * La comparten los comprobantes de un movimiento y la importación de
+ * catálogo.
+ */
+export function ZonaArchivo({
+  texto = "Arrastrá el comprobante o",
+  textoLink = "elegí un archivo",
+  extra,
+  arrastrando = false,
+  disabled = false,
+  onElegir,
+  onSoltar,
+  onArrastrando,
+}) {
+  return (
+    <div
+      className={`zona-archivo${arrastrando ? " zona-archivo--activa" : ""}${disabled ? " zona-archivo--deshabilitada" : ""}`}
+      onDragOver={(e) => {
+        e.preventDefault();
+        if (!disabled) onArrastrando?.(true);
+      }}
+      onDragLeave={() => onArrastrando?.(false)}
+      onDrop={(e) => {
+        e.preventDefault();
+        onArrastrando?.(false);
+        if (!disabled && e.dataTransfer.files?.length) onSoltar(e.dataTransfer.files);
+      }}
+    >
+      <Paperclip className="zona-archivo__clip" size={17} strokeWidth={1.75} aria-hidden="true" />
+      <span className="zona-archivo__texto">
+        {texto}{" "}
+        <button type="button" className="zona-archivo__link" onClick={onElegir} disabled={disabled}>
+          {textoLink}
+        </button>
+      </span>
+      {extra && <span className="zona-archivo__extra">{extra}</span>}
+    </div>
+  );
+}
 
 /**
- * Drag & drop de comprobantes para los modales de Compra/Gasto/Cobro.
+ * Un archivo ya elegido: ícono en un cuadradito blanco, nombre + tipo/peso,
+ * una acción opcional (el "Autocompletar con IA", que va AL LADO del archivo
+ * porque lo necesita para funcionar) y la × para sacarlo.
+ */
+export function FilaArchivo({ nombre, meta, onVer, viendo = false, accion, onQuitar, disabled }) {
+  const Icono = iconoParaArchivo(nombre);
+  return (
+    <li className="fila-archivo">
+      <span className="fila-archivo__icono" aria-hidden="true">
+        <Icono size={16} strokeWidth={1.75} />
+      </span>
+      <span className="fila-archivo__texto">
+        {onVer ? (
+          <button
+            type="button"
+            className="fila-archivo__nombre fila-archivo__nombre--link"
+            onClick={onVer}
+            title={`Ver ${nombre}`}
+            disabled={viendo}
+          >
+            {viendo ? "Abriendo…" : nombre}
+          </button>
+        ) : (
+          <span className="fila-archivo__nombre" title={nombre}>
+            {nombre}
+          </span>
+        )}
+        {meta && <span className="fila-archivo__meta">{meta}</span>}
+      </span>
+      {accion}
+      {onQuitar && (
+        <button
+          type="button"
+          className="btn-icono btn-icono--sm"
+          onClick={onQuitar}
+          disabled={disabled}
+          aria-label={`Quitar ${nombre}`}
+          title="Quitar"
+        >
+          <X aria-hidden="true" />
+        </button>
+      )}
+    </li>
+  );
+}
+
+/**
+ * Comprobantes de un movimiento (Compra/Gasto/Cobro), arriba de todo en el
+ * modal (DESIGN.md §14).
  *
  * No pega directo contra el backend: junta un "borrador" (archivos nuevos +
  * ids de existentes marcados para eliminar) y se lo reporta al padre vía
  * onCambio. El padre recién lo aplica (subir/eliminar) cuando se confirma el
  * submit del formulario -- así "Cancelar" descarta todo, y funciona igual al
  * crear (sin id todavía) que al editar.
+ *
+ * `accionArchivo(file)` dibuja la acción del PRIMER archivo nuevo (el botón
+ * de IA: lee uno solo). `extraVacio` va a la derecha de la zona vacía.
  *
  * Solo maneja comprobantes "normales" (factura, remito...). Las notas de
  * crédito/débito son otra cosa -- tienen su propio modal (ver ModalNota).
@@ -37,7 +126,9 @@ export function ComprobantesUploader({
   onVerExistente,
   onCambio,
   disabled = false,
-  prominente = false,
+  textoVacio,
+  extraVacio,
+  accionArchivo,
 }) {
   const inputRef = useRef(null);
   const [pendientes, setPendientes] = useState([]);
@@ -59,11 +150,10 @@ export function ComprobantesUploader({
   }, [pendientes, marcadosEliminar]);
 
   const agregarArchivos = (fileList) => {
-    const candidatos = Array.from(fileList);
     const validos = [];
     const nuevosErrores = [];
 
-    for (const file of candidatos) {
+    for (const file of Array.from(fileList)) {
       const ext = extensionDeArchivo(file.name);
       if (!EXTENSIONES_PERMITIDAS.includes(ext)) {
         nuevosErrores.push(`${file.name}: extensión no permitida`);
@@ -77,37 +167,12 @@ export function ComprobantesUploader({
     }
 
     setErrores(nuevosErrores);
-    if (validos.length > 0) {
-      setPendientes((prev) => [...prev, ...validos]);
-    }
+    if (validos.length > 0) setPendientes((prev) => [...prev, ...validos]);
   };
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setArrastrando(false);
-    if (disabled) return;
-    if (e.dataTransfer.files?.length) agregarArchivos(e.dataTransfer.files);
-  };
-
-  const handleSeleccionarArchivo = (e) => {
-    if (e.target.files?.length) agregarArchivos(e.target.files);
-    e.target.value = "";
-  };
-
-  const quitarPendiente = (localId) => {
-    setPendientes((prev) => prev.filter((p) => p.localId !== localId));
-  };
-
-  const marcarParaEliminar = (comprobanteId) => {
-    setMarcadosEliminar((prev) => {
-      const actualizado = new Set(prev);
-      actualizado.add(comprobanteId);
-      return actualizado;
-    });
-  };
+  const elegir = () => !disabled && inputRef.current?.click();
 
   const handleVer = async (comprobante) => {
-    if (!onVerExistente) return;
     setViendoId(comprobante.id);
     try {
       const blob = await onVerExistente(comprobante);
@@ -126,103 +191,86 @@ export function ComprobantesUploader({
 
   return (
     <div className="comprobantes-uploader">
-      <div
-        className={`comprobantes-dropzone ${prominente ? "comprobantes-dropzone--prominente" : ""} ${arrastrando ? "comprobantes-dropzone--activo" : ""} ${disabled ? "comprobantes-dropzone--disabled" : ""}`}
-        onDragOver={(e) => {
-          e.preventDefault();
-          if (!disabled) setArrastrando(true);
+      <input
+        ref={inputRef}
+        type="file"
+        accept={EXTENSIONES_PERMITIDAS.join(",")}
+        multiple
+        hidden
+        disabled={disabled}
+        onChange={(e) => {
+          if (e.target.files?.length) agregarArchivos(e.target.files);
+          e.target.value = "";
         }}
-        onDragLeave={() => setArrastrando(false)}
-        onDrop={handleDrop}
-        onClick={() => !disabled && inputRef.current?.click()}
-        role="button"
-        tabIndex={0}
-      >
-        <Paperclip
-          size={prominente ? 26 : 20}
-          strokeWidth={1.75}
-          className="comprobantes-dropzone-icono"
-        />
-        <span className="comprobantes-dropzone-texto">
-          {prominente
-            ? "Arrastrá la factura o el remito acá"
-            : "Arrastrá tus comprobantes acá o hacé click para elegir archivos"}
-        </span>
-        <span className="comprobantes-dropzone-subtexto">
-          {prominente ? "PDF, JPG o PNG · máx. 10MB" : "PDF, JPG o PNG · máx. 10MB por archivo"}
-        </span>
-        <input
-          ref={inputRef}
-          type="file"
-          accept={EXTENSIONES_PERMITIDAS.join(",")}
-          multiple
-          hidden
+      />
+
+      {hayItems ? (
+        <div
+          className={`comprobantes-uploader__lista${arrastrando ? " comprobantes-uploader__lista--activa" : ""}`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            if (!disabled) setArrastrando(true);
+          }}
+          onDragLeave={() => setArrastrando(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setArrastrando(false);
+            if (!disabled && e.dataTransfer.files?.length) agregarArchivos(e.dataTransfer.files);
+          }}
+        >
+          <ul className="filas-archivo">
+            {existentesVisibles.map((c) => (
+              <FilaArchivo
+                key={c.id}
+                nombre={nombreDeArchivoExistente(c.archivo_path)}
+                meta="Ya cargado"
+                onVer={onVerExistente ? () => handleVer(c) : undefined}
+                viendo={viendoId === c.id}
+                onQuitar={() => setMarcadosEliminar((prev) => new Set(prev).add(c.id))}
+                disabled={disabled}
+              />
+            ))}
+            {pendientes.map((p, i) => (
+              <FilaArchivo
+                key={p.localId}
+                nombre={p.file.name}
+                meta={describirArchivo(p.file)}
+                accion={i === 0 ? accionArchivo?.(p.file) : null}
+                onQuitar={() =>
+                  setPendientes((prev) => prev.filter((x) => x.localId !== p.localId))
+                }
+                disabled={disabled}
+              />
+            ))}
+          </ul>
+          <button
+            type="button"
+            className="comprobantes-uploader__agregar"
+            onClick={elegir}
+            disabled={disabled}
+          >
+            <Plus size={14} strokeWidth={2} aria-hidden="true" />
+            Agregar otro archivo
+          </button>
+        </div>
+      ) : (
+        <ZonaArchivo
+          texto={textoVacio}
+          extra={extraVacio}
+          arrastrando={arrastrando}
           disabled={disabled}
-          onChange={handleSeleccionarArchivo}
+          onElegir={elegir}
+          onSoltar={agregarArchivos}
+          onArrastrando={setArrastrando}
         />
-      </div>
+      )}
 
       {errores.length > 0 && (
-        <ul className="comprobantes-errores">
+        <ul className="comprobantes-errores" role="alert">
           {errores.map((err, i) => (
             <li key={i}>{err}</li>
           ))}
         </ul>
-      )}
-
-      {hayItems ? (
-        <ul className="comprobantes-lista">
-          {existentesVisibles.map((c) => {
-            const IconoArchivo = iconoParaArchivo(c.archivo_path);
-            return (
-              <li key={c.id} className="comprobantes-chip">
-                <IconoArchivo size={14} strokeWidth={2} className="comprobantes-chip-icono" />
-                <button
-                  type="button"
-                  className="comprobantes-chip-nombre comprobantes-chip-nombre--link"
-                  onClick={() => handleVer(c)}
-                  title={nombreDeArchivoExistente(c.archivo_path)}
-                  disabled={viendoId === c.id}
-                >
-                  {viendoId === c.id ? "Abriendo..." : nombreDeArchivoExistente(c.archivo_path)}
-                </button>
-                <button
-                  type="button"
-                  className="comprobantes-chip-quitar"
-                  onClick={() => marcarParaEliminar(c.id)}
-                  disabled={disabled}
-                  title="Eliminar"
-                >
-                  <X size={13} strokeWidth={2.25} />
-                </button>
-              </li>
-            );
-          })}
-          {pendientes.map((p) => {
-            const IconoArchivo = iconoParaArchivo(p.file.name);
-            return (
-              <li key={p.localId} className="comprobantes-chip comprobantes-chip--pendiente">
-                <IconoArchivo size={14} strokeWidth={2} className="comprobantes-chip-icono" />
-                <span className="comprobantes-chip-nombre" title={p.file.name}>
-                  {p.file.name}
-                </span>
-                <span className="comprobantes-chip-tamanio">{formatearTamanio(p.file.size)}</span>
-                <span className="badge badge--sm badge--marca comprobantes-chip-badge">nuevo</span>
-                <button
-                  type="button"
-                  className="comprobantes-chip-quitar"
-                  onClick={() => quitarPendiente(p.localId)}
-                  disabled={disabled}
-                  title="Quitar"
-                >
-                  <X size={13} strokeWidth={2.25} />
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <p className="comprobantes-vacio">Sin comprobantes cargados todavía.</p>
       )}
     </div>
   );

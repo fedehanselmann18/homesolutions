@@ -1,8 +1,17 @@
 import { useState, useEffect } from "react";
+import { Package, Truck } from "lucide-react";
+
 import { TIPOS_PRODUCTO } from "../../constants/tipoProducto";
-import ModalShell from "./ModalShell";
+import ModalShell, { AccionesFormulario } from "./ModalShell";
 import ChipsCategorias from "./ChipsCategorias";
-import { LogoCargando } from "../shared/LogoCargando";
+import { CampoMonto } from "./CamposCotizacion";
+import { ControlOpcion } from "../shared/ControlOpcion";
+
+const OPCIONES_TIPO = Object.entries(TIPOS_PRODUCTO).map(([valor, info]) => ({
+  valor,
+  label: info.label,
+  icono: info.icono,
+}));
 
 export function ModalProducto({
   producto,
@@ -22,6 +31,7 @@ export function ModalProducto({
     categoria_ids: [],
   });
   const [guardando, setGuardando] = useState(false);
+  const [errorTipo, setErrorTipo] = useState(null);
 
   useEffect(() => {
     if (producto) {
@@ -37,12 +47,7 @@ export function ModalProducto({
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-      // Si cambia el tipo, las categorías ya elegidas (de otro tipo) dejan de tener sentido.
-      ...(name === "tipo" ? { categoria_ids: [] } : {}),
-    }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const toggleCategoria = (categoriaId) => {
@@ -56,6 +61,10 @@ export function ModalProducto({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.tipo) {
+      setErrorTipo("Elegí el tipo de producto.");
+      return;
+    }
     setGuardando(true);
     try {
       await onGuardar({
@@ -73,34 +82,18 @@ export function ModalProducto({
   return (
     <ModalShell
       titulo={esEdicion ? "Editar producto" : "Nuevo producto"}
+      icono={Package}
       contexto={proveedor?.nombre}
-      contextoDestacado
+      iconoContexto={Truck}
       onCerrar={onCerrar}
       onSubmit={handleSubmit}
       cerrarDeshabilitado={guardando}
       acciones={
-        <>
-          <button
-            type="button"
-            onClick={onCerrar}
-            className="btn btn-secondary"
-            disabled={guardando}
-          >
-            Cancelar
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={guardando}>
-            {guardando ? (
-              <>
-                <LogoCargando size={14} variante="blanco" />
-                Guardando...
-              </>
-            ) : esEdicion ? (
-              "Guardar cambios"
-            ) : (
-              "Crear producto"
-            )}
-          </button>
-        </>
+        <AccionesFormulario
+          guardando={guardando}
+          onCancelar={onCerrar}
+          textoGuardar={esEdicion ? "Guardar cambios" : "Crear producto"}
+        />
       }
     >
       <div className="modal-form-fila">
@@ -115,34 +108,27 @@ export function ModalProducto({
         </label>
       </div>
 
-      <div className="modal-form-fila">
-        <label>
-          Tipo
-          <select name="tipo" value={form.tipo} onChange={handleChange} required>
-            <option value="" disabled>
-              Seleccioná un tipo
-            </option>
-            {Object.entries(TIPOS_PRODUCTO).map(([valor, info]) => (
-              <option key={valor} value={valor}>
-                {info.label}
-              </option>
-            ))}
-          </select>
-        </label>
+      <ControlOpcion
+        etiqueta="Tipo"
+        opciones={OPCIONES_TIPO}
+        valor={form.tipo}
+        onCambiar={(tipo) => {
+          // Si cambia el tipo, las categorías ya elegidas (de otro tipo) dejan de tener sentido.
+          setForm((prev) => ({ ...prev, tipo, categoria_ids: [] }));
+          setErrorTipo(null);
+        }}
+        error={errorTipo}
+        variante="segmentado"
+        disabled={guardando}
+      />
 
-        <label>
-          Precio de catálogo
-          <input
-            type="number"
-            name="precio"
-            value={form.precio}
-            onChange={handleChange}
-            min="0"
-            step="0.01"
-            required
-          />
-        </label>
-      </div>
+      <CampoMonto
+        etiqueta="Precio de catálogo"
+        name="precio"
+        value={form.precio}
+        onChange={handleChange}
+        disabled={guardando}
+      />
 
       {form.tipo && (
         <ChipsCategorias

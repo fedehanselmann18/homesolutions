@@ -317,6 +317,12 @@ export function Fases({ proyectoId }) {
       {modalAbierto && (
         <ModalFase
           fase={faseEditando}
+          contexto={
+            proyectoQuery.data &&
+            `Fase ${
+              faseEditando ? fases.findIndex((f) => f.id === faseEditando.id) + 1 : fases.length + 1
+            } de ${proyectoQuery.data.nombre}`
+          }
           onGuardar={handleGuardarFase}
           onCerrar={() => setModalAbierto(false)}
         />

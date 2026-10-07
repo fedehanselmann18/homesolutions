@@ -24,7 +24,6 @@ export function validarFecha(valor) {
   return null;
 }
 
-
 // Mismo mínimo que valida el backend (UsuarioCreate y UsuarioResetPassword,
 // ver backend/app/schemas.py). Sin este chequeo en el front, una contraseña
 // corta viaja igual y vuelve como 422 -- que el usuario leía como un error

@@ -2,6 +2,7 @@ import { X, CircleAlert } from "lucide-react";
 
 import { formatMoneda } from "../../utils/formato";
 import { useModal } from "../../hooks/useModal";
+import { LogoCargando } from "../shared/LogoCargando";
 
 import "./modal-base.css";
 import "./ModalShell.css";
@@ -160,6 +161,45 @@ export function ModalShell({
         )}
       </Contenedor>
     </div>
+  );
+}
+
+/**
+ * El pie de un formulario de alta o edición: "Cancelar" y el botón de
+ * guardar, los dos en el tamaño de pie de modal (`.btn--lg`, DESIGN.md §8).
+ * Era el mismo bloque de 20 líneas copiado en cada modal.
+ */
+export function AccionesFormulario({
+  guardando = false,
+  textoGuardar,
+  onCancelar,
+  deshabilitado = false,
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        onClick={onCancelar}
+        className="btn btn--lg btn-secondary"
+        disabled={guardando}
+      >
+        Cancelar
+      </button>
+      <button
+        type="submit"
+        className="btn btn--lg btn-primary"
+        disabled={guardando || deshabilitado}
+      >
+        {guardando ? (
+          <>
+            <LogoCargando size={14} variante="blanco" />
+            Guardando...
+          </>
+        ) : (
+          textoGuardar
+        )}
+      </button>
+    </>
   );
 }
 

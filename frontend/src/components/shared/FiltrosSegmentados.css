@@ -5,49 +5,5 @@
   gap: var(--space-2);
 }
 
-/* Segmentado — DESIGN.md §9: track en la línea suave con 3px de aire, botones
-   de 32px (26 + 3 + 3 del track) y la opción activa en blanco, levantada con
-   la sombra de hover. Es el único lugar donde esa sombra no es de una card:
-   acá dice "esta pieza está arriba de la otra", que es lo mismo. */
-.segmentado {
-  display: inline-flex;
-  flex-shrink: 0;
-  gap: 2px;
-  padding: 3px;
-  border-radius: var(--radius-md);
-  background: var(--color-linea-suave);
-}
-
-.segmentado__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-1-5);
-  height: 26px;
-  padding: 0 var(--space-3);
-  border: none;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  font-family: var(--font-ui);
-  font-size: var(--text-sm);
-  font-weight: 500;
-  color: var(--color-tinta-muted);
-  white-space: nowrap;
-  cursor: pointer;
-  transition:
-    background-color var(--transicion),
-    color var(--transicion),
-    box-shadow var(--transicion);
-}
-
-.segmentado__btn:hover {
-  color: var(--color-tinta);
-}
-
-.segmentado__btn--activo,
-.segmentado__btn--activo:hover {
-  background: var(--color-superficie);
-  color: var(--color-tinta);
-  font-weight: 600;
-  box-shadow: var(--shadow-hover);
-}
+/* El segmentado (`.segmentado`) pasó a index.css: lo comparten estos
+   filtros y los controles de opción de los formularios (ControlOpcion). */

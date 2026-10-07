@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import ModalShell from "./ModalShell";
-import { LogoCargando } from "../shared/LogoCargando";
+import { Mail, MapPin, Phone, Truck } from "lucide-react";
+
+import ModalShell, { AccionesFormulario } from "./ModalShell";
 
 export function ModalProveedor({ proveedor, onGuardar, onCerrar }) {
   const esEdicion = Boolean(proveedor);
@@ -50,32 +51,17 @@ export function ModalProveedor({ proveedor, onGuardar, onCerrar }) {
   return (
     <ModalShell
       titulo={esEdicion ? "Editar proveedor" : "Nuevo proveedor"}
+      icono={Truck}
+      contexto={esEdicion ? proveedor.nombre : undefined}
       onCerrar={onCerrar}
       onSubmit={handleSubmit}
       cerrarDeshabilitado={guardando}
       acciones={
-        <>
-          <button
-            type="button"
-            onClick={onCerrar}
-            className="btn btn-secondary"
-            disabled={guardando}
-          >
-            Cancelar
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={guardando}>
-            {guardando ? (
-              <>
-                <LogoCargando size={14} variante="blanco" />
-                Guardando...
-              </>
-            ) : esEdicion ? (
-              "Guardar cambios"
-            ) : (
-              "Crear proveedor"
-            )}
-          </button>
-        </>
+        <AccionesFormulario
+          guardando={guardando}
+          onCancelar={onCerrar}
+          textoGuardar={esEdicion ? "Guardar cambios" : "Crear proveedor"}
+        />
       }
     >
       <label>
@@ -84,7 +70,9 @@ export function ModalProveedor({ proveedor, onGuardar, onCerrar }) {
       </label>
 
       <label>
-        CUIT/CUIL (opcional)
+        <span>
+          CUIT/CUIL <span className="label-campo__opcional">(opcional)</span>
+        </span>
         <input
           type="text"
           name="cuit"
@@ -95,19 +83,34 @@ export function ModalProveedor({ proveedor, onGuardar, onCerrar }) {
       </label>
 
       <label>
-        Dirección
-        <input type="text" name="direccion" value={form.direccion} onChange={handleChange} />
+        <span>
+          Dirección <span className="label-campo__opcional">(opcional)</span>
+        </span>
+        <div className="campo">
+          <MapPin aria-hidden="true" />
+          <input type="text" name="direccion" value={form.direccion} onChange={handleChange} />
+        </div>
       </label>
 
       <div className="modal-form-fila">
         <label>
-          Teléfono
-          <input type="text" name="telefono" value={form.telefono} onChange={handleChange} />
+          <span>
+            Teléfono <span className="label-campo__opcional">(opcional)</span>
+          </span>
+          <div className="campo">
+            <Phone aria-hidden="true" />
+            <input type="tel" name="telefono" value={form.telefono} onChange={handleChange} />
+          </div>
         </label>
 
         <label>
-          Email
-          <input type="email" name="email" value={form.email} onChange={handleChange} />
+          <span>
+            Email <span className="label-campo__opcional">(opcional)</span>
+          </span>
+          <div className="campo">
+            <Mail aria-hidden="true" />
+            <input type="email" name="email" value={form.email} onChange={handleChange} />
+          </div>
         </label>
       </div>
     </ModalShell>

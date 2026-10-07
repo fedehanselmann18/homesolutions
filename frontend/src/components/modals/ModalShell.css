@@ -9,6 +9,10 @@
 .shell {
   padding: 0;
   overflow: hidden;
+  /* El scroll es del cuerpo, no de la caja: sin esto el `scrollbar-gutter`
+     de .modal-contenido dejaba un hueco a la derecha que cortaba las líneas
+     del header y del pie. */
+  scrollbar-gutter: auto;
   display: flex;
   flex-direction: column;
   max-width: 560px;
