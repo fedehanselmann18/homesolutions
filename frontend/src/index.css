@@ -891,9 +891,8 @@ div.campo:has(> input:user-invalid) {
 /* La flecha del select es un SVG inline porque `appearance: none` se lleva
    puesta la nativa. El color va escrito (no acepta var() adentro de una data
    URI): es --color-tinta-tenue, el de todo ícono dentro de un campo. */
-/* Auth y Manager quedan fuera a propósito: dibujan el chevron con un <svg>
-   real posicionado encima (.auth-campo__select svg), así que si además les
-   pusiéramos este background-image quedarían con dos flechas. */
+/* Auth y Manager también lo usan: ponen `class="campo"` en sus selects (antes
+   dibujaban el chevron con un <svg> propio encima). */
 select.campo,
 .modal-form select {
   appearance: none;

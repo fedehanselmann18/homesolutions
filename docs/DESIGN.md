@@ -1174,10 +1174,13 @@ nuevo desde cero:
   la jerarquía la dan el peso y el tracking.
 - **~~`PALETA_GRAFICOS` tiene un violeta y un cian.~~** Rehecha en el prompt 15
   con la rampa monocroma de §2.
-- **Los diseños no cubren**: Catálogos, Comparador, Cuentas, Libro de Obra,
-  Manager, Auth. Heredan los tokens de la fase 1 y quedan consistentes de arriba,
-  pero su layout no está rediseñado. Cuando se toquen, el criterio es §0: borde y
-  peso, no fondo y sombra.
+- **~~Los diseños no cubren Catálogos, Comparador, Manager, Auth.~~** Se
+  pasaron en la pasada final del rollout siguiendo a la pantalla rediseñada más
+  parecida (§0: borde y peso, no fondo y sombra): Catálogos y Comparador a
+  Proveedores y al catálogo de un proveedor (4N/4P), Manager a las listas, Auth
+  y la pantalla de error al panel 4c, y el Seguimiento de la fase a la bandeja
+  4f del proyecto. Siguen sin diseño propio: si alguna vez se diseñan, se parte
+  de lo que hay.
 - **Sin modo oscuro.** La app es sólo clara. Con el sidebar en blanco ya no queda
   ninguna superficie oscura fuera del login, así que si alguna vez se hace, se
   hace de cero y no reciclando los `--color-oscuro-*`.
