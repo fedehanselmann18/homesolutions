@@ -1,34 +1,243 @@
 /* Seguimiento.css -- pestaña Seguimiento del detalle de proyecto.
-   Secciones separadas por línea, no por caja con sombra. Las filas de
-   alerta viven en components/shared/TarjetaAlerta.css */
+
+   v5 (variante 4f): tres cifras y una bandeja por urgencia, más abajo. Las
+   clases `.seguimiento-seccion*`, `-tablero`, `-columna*` y `-tabla` ya no
+   las usa el proyecto: quedan por "Seguimiento de la fase"
+   (components/fases/SeguimientoFase.jsx), que todavía no tiene diseño. */
 
 .seguimiento {
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
+  padding-top: var(--space-6);
   font-family: var(--font-ui);
 }
 
-.seguimiento-resumen {
+/* --- Las tres cifras de arriba --- */
+
+.seguimiento-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-8);
+  margin: 0;
+}
+
+.seguimiento-kpis > div {
   display: flex;
-  align-items: baseline;
-  gap: var(--space-3);
-  padding: var(--space-4) 0;
-  border-top: 1px solid var(--color-linea);
-  border-bottom: 1px solid var(--color-linea);
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
 }
 
-.seguimiento-resumen-valor {
-  font-family: var(--font-display);
-  font-size: var(--text-3xl);
-  font-weight: 600;
-  color: var(--color-tinta);
-  line-height: 1;
+.seguimiento-kpis > div + div {
+  padding-left: var(--space-8);
+  border-left: 1px solid var(--color-linea);
 }
 
-.seguimiento-resumen-texto {
+.seguimiento-kpis dt {
   font-size: var(--text-base);
   color: var(--color-tinta-muted);
+}
+
+.seguimiento-kpis dd {
+  margin: 0;
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+/* --- Bandeja por urgencia --- */
+
+.bandeja {
+  display: flex;
+  flex-direction: column;
+}
+
+.bandeja__titulo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 36px;
+  margin: 0;
+  padding: 0 var(--space-2);
+  border-top: 1px solid var(--color-linea);
+  border-bottom: 1px solid var(--color-linea);
+  background: var(--color-superficie-suave);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.bandeja__punto {
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-tinta-tenue);
+}
+
+.bandeja__titulo--vencido .bandeja__punto {
+  background: var(--color-oxido);
+}
+
+.bandeja__titulo--pendiente .bandeja__punto {
+  background: var(--color-arcilla);
+}
+
+.bandeja__cantidad {
+  font-weight: 500;
+  color: var(--color-tinta-tenue);
+}
+
+.bandeja__lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.bandeja__item {
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 150px 170px 150px;
+  gap: var(--space-4);
+  align-items: center;
+  min-height: 56px;
+  padding: var(--space-1-5) var(--space-2);
+  border-bottom: 1px solid var(--color-linea-suave);
+}
+
+.bandeja__item--abre {
+  cursor: pointer;
+  transition: background-color var(--transicion);
+}
+
+.bandeja__item--abre:hover {
+  background: var(--color-superficie-suave);
+}
+
+.bandeja__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-md);
+  background: var(--color-base-2);
+  color: var(--color-tinta-muted);
+}
+
+.bandeja__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* El título es el botón que abre el detalle: así se llega por teclado, sin
+   hacer de toda la fila (que ya tiene un botón de acción) otro botón. */
+.bandeja__titulo-item {
+  padding: 0;
+  border: none;
+  background: none;
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-tinta);
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: inherit;
+}
+
+button.bandeja__titulo-item:focus-visible {
+  outline: 2px solid var(--color-terracota);
+  outline-offset: 2px;
+  border-radius: var(--radius-xs);
+}
+
+.bandeja__subtitulo {
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+.bandeja__estado {
+  justify-self: start;
+}
+
+.bandeja__monto {
+  font-size: var(--text-base);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.bandeja__accion {
+  justify-self: end;
+}
+
+@media (max-width: 1100px) {
+  .bandeja__item {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "icono texto  monto"
+      "icono estado accion";
+    row-gap: var(--space-1-5);
+    padding-top: var(--space-2-5);
+    padding-bottom: var(--space-2-5);
+  }
+
+  .bandeja__icono {
+    grid-area: icono;
+    align-self: start;
+  }
+
+  .bandeja__texto {
+    grid-area: texto;
+  }
+
+  .bandeja__estado {
+    grid-area: estado;
+  }
+
+  .bandeja__monto {
+    grid-area: monto;
+    align-self: start;
+  }
+
+  .bandeja__accion {
+    grid-area: accion;
+  }
+}
+
+@media (max-width: 640px) {
+  .seguimiento-kpis {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .seguimiento-kpis > div,
+  .seguimiento-kpis > div + div {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: var(--space-2-5) 0;
+    border-left: none;
+    border-bottom: 1px solid var(--color-linea-suave);
+  }
+
+  .seguimiento-kpis dd {
+    font-size: var(--text-lg);
+  }
+
+  .bandeja__item {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "icono texto  texto"
+      "icono monto  monto"
+      "icono estado accion";
+  }
+
+  .bandeja__monto {
+    text-align: left;
+  }
 }
 
 .seguimiento-seccion {
@@ -60,27 +269,6 @@
   font-size: var(--text-sm);
   color: var(--color-tinta-muted);
   margin: 0;
-}
-
-.seguimiento-cobranza {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: var(--space-6);
-}
-
-/* En mobile sólo queda "Cobrado" (2do de los 3 TarjetaKpi): "Precio
-   acordado" y "Queda por cobrar" son el mismo dato mirado desde otro lado,
-   y las tres juntas alargaban la pestaña antes de llegar a las cards de
-   pendientes, que es lo que se usa parado en la obra. */
-@media (max-width: 640px) {
-  .seguimiento-cobranza {
-    display: block;
-  }
-
-  .seguimiento-cobranza > *:first-child,
-  .seguimiento-cobranza > *:last-child {
-    display: none;
-  }
 }
 
 .seguimiento-lista {

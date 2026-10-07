@@ -100,7 +100,7 @@ function ProyectoDetalle() {
       )}
       {tabActiva === "analisis" && <AnalisisGeneral proyectoId={proyecto.id} />}
       {tabActiva === "seguimiento" && (
-        <Seguimiento proyectoId={proyecto.id} onIrATab={setTabActiva} />
+        <Seguimiento proyectoId={proyecto.id} />
       )}
     </div>
   );
