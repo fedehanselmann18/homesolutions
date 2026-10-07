@@ -195,9 +195,14 @@ function armarParaResolver(enCurso, nombreProveedor, hoy) {
   return items.sort((a, b) => peso[b.nivel] - peso[a.nivel] || b.dias - a.dias);
 }
 
-function armarEvolucion(gastos, cobros, compras, hoy, moneda) {
+/**
+ * Cobrado y gastado por mes, de los últimos `cantidad` meses hasta el de
+ * `hoy` inclusive (los meses sin movimientos van en cero). Lo usan el Panel y
+ * el saldo de la obra en Acciones.
+ */
+export function armarEvolucion(gastos, cobros, compras, hoy, moneda, cantidad = MESES_EVOLUCION) {
   const meses = [];
-  for (let i = MESES_EVOLUCION - 1; i >= 0; i--) {
+  for (let i = cantidad - 1; i >= 0; i--) {
     const fecha = new Date(hoy.getFullYear(), hoy.getMonth() - i, 1);
     meses.push({
       mes: claveMesDeDate(fecha),

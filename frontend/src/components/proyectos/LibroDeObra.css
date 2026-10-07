@@ -11,6 +11,9 @@
   --libro-cols: 28px minmax(0, 1fr) 168px 28px 168px 104px;
 
   min-width: 0;
+  /* El scroll horizontal (abajo) depende del ancho de la planilla, no de la
+     ventana: con el sidebar abierto, una ventana de 1000px deja ~690px. */
+  container: libro / inline-size;
 }
 
 .libro--admin {
@@ -269,26 +272,39 @@
   margin-right: var(--space-2);
 }
 
-/* Entre 900 y 641px la planilla no entra: se scrollea en horizontal en vez
-   de aplastar las columnas de importes. Por debajo de 640px pasa a la versión
-   de 375px del diseño: título + importe arriba, contexto, badges abajo. */
-@media (max-width: 900px) and (min-width: 641px) {
-  .libro__scroll {
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    -webkit-overflow-scrolling: touch;
+/* Si la planilla mide menos de 900px (1000 con la columna de acciones) no
+   entra: se scrollea en horizontal en vez de aplastar la columna del título a
+   cero. Es una container query porque lo que importa es el ancho de la
+   planilla y no el de la ventana (con el sidebar, una ventana de 1000px le
+   deja ~690). Por debajo de 640px de ventana pasa a la versión de 375px del
+   diseño: título + importe arriba, contexto, badges abajo. */
+@media (min-width: 641px) {
+  @container libro (max-width: 900px) {
+    .libro__scroll {
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .libro__columnas,
+    .libro__fila,
+    .libro__dia {
+      min-width: 900px;
+    }
   }
 
-  .libro__columnas,
-  .libro__fila,
-  .libro__dia {
-    min-width: 900px;
-  }
+  @container libro (max-width: 1000px) {
+    .libro--admin .libro__scroll {
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      -webkit-overflow-scrolling: touch;
+    }
 
-  .libro--admin .libro__columnas,
-  .libro--admin .libro__fila,
-  .libro--admin .libro__dia {
-    min-width: 1000px;
+    .libro--admin .libro__columnas,
+    .libro--admin .libro__fila,
+    .libro--admin .libro__dia {
+      min-width: 1000px;
+    }
   }
 }
 

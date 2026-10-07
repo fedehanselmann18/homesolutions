@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { Plus } from "lucide-react";
 import { getComprobanteCompra, getNotaCompra } from "../../services/compraService";
 import { getComprobanteGasto } from "../../services/gastoService";
 import { getComprobanteCobro, getNotaCobro } from "../../services/cobroService";
@@ -9,6 +10,7 @@ import { useProyecto } from "../../hooks/queries";
 import { montoCobroNeto } from "../../utils/moneda";
 
 import LibroDeObra from "./LibroDeObra";
+import SaldoObra from "./SaldoObra";
 import ModalGasto from "../modals/ModalGasto";
 import ModalCobro from "../modals/ModalCobro";
 import ModalCompra from "../modals/ModalCompra";
@@ -314,17 +316,22 @@ export function Acciones({ proyectoId, proyectoNombre }) {
         {canManage && (
           <div className="acciones-header-botones">
             <button type="button" className="btn btn-secondary" onClick={handleNuevoGasto}>
-              + Gasto
+              <Plus size={14} aria-hidden="true" />
+              Gasto
             </button>
             <button type="button" className="btn btn-secondary" onClick={handleNuevoCobro}>
-              + Cobro
+              <Plus size={14} aria-hidden="true" />
+              Cobro
             </button>
             <button type="button" className="btn btn-primary" onClick={handleNuevaCompra}>
+              <Plus size={14} strokeWidth={2} aria-hidden="true" />
               Nueva compra
             </button>
           </div>
         )}
       </div>
+
+      <SaldoObra compras={compras} gastos={gastos} cobros={cobros} />
 
       <FiltrosLista
         filtros={filtros}
