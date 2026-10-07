@@ -4,7 +4,6 @@ import {
   Building2,
   CalendarDays,
   Check,
-  CircleAlert,
   CircleCheck,
   Clock,
   PackageCheck,
@@ -27,6 +26,7 @@ import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { useExtraccionIA } from "../../hooks/useExtraccionIA";
 import { useToast } from "../../context/useToast";
 import { avisoFaltantes, validarRequerido, validarFecha } from "../../utils/formValidation";
+import { ErrorCampo } from "../shared/ErrorCampo";
 import ModalShell from "./ModalShell";
 import { BotonIA, MarcaIA } from "./PiezasIA";
 import { LogoCargando } from "../shared/LogoCargando";
@@ -68,16 +68,6 @@ const ETIQUETAS = {
 
 let contadorFilaTemp = 0;
 const nuevaFilaId = () => `tmp-${++contadorFilaTemp}`;
-
-function ErrorCampo({ texto }) {
-  if (!texto) return null;
-  return (
-    <p className="campo-error">
-      <CircleAlert aria-hidden="true" />
-      {texto}
-    </p>
-  );
-}
 
 /**
  * Nueva compra y edición — el híbrido 5ab de DESIGN.md §14.

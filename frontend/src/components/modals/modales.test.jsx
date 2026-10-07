@@ -482,3 +482,33 @@ describe("smoke de modales", () => {
     expect(screen.getByRole("button", { name: "Guardar cambios" })).toBeInTheDocument();
   });
 });
+
+describe("proveedor y producto: errores en cada campo", () => {
+  it("proveedor sin nombre no se guarda y dice qué falta", async () => {
+    const onGuardar = vi.fn();
+    render(<ModalProveedor onGuardar={onGuardar} onCerrar={noop} />);
+    await userEvent.click(screen.getByRole("button", { name: "Crear proveedor" }));
+    expect(onGuardar).not.toHaveBeenCalled();
+    expect(screen.getByText("Escribí el nombre del proveedor.")).toBeInTheDocument();
+    expect(screen.getByText("Falta 1 campo: Nombre")).toBeInTheDocument();
+  });
+
+  it("proveedor con un email mal escrito marca el email", async () => {
+    const onGuardar = vi.fn();
+    render(<ModalProveedor onGuardar={onGuardar} onCerrar={noop} />);
+    await userEvent.type(screen.getByLabelText("Nombre"), "CobreSur");
+    await userEvent.type(screen.getByLabelText(/Email/), "ventas@cobresur");
+    await userEvent.click(screen.getByRole("button", { name: "Crear proveedor" }));
+    expect(onGuardar).not.toHaveBeenCalled();
+    expect(screen.getByText("Revisá el email.")).toBeInTheDocument();
+  });
+
+  it("producto vacío marca marca, modelo, tipo y precio", async () => {
+    const onGuardar = vi.fn();
+    render(<ModalProducto onGuardar={onGuardar} onCerrar={noop} />);
+    expect(screen.getByText("Elegí el tipo para ver sus categorías.")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Crear producto" }));
+    expect(onGuardar).not.toHaveBeenCalled();
+    expect(screen.getByText("Faltan 4 campos: Marca, Modelo, Tipo, Precio")).toBeInTheDocument();
+  });
+});

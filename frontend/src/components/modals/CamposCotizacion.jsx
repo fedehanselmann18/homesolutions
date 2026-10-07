@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { CircleAlert, DollarSign } from "lucide-react";
+import { DollarSign } from "lucide-react";
 
 import { TIPOS_CAMBIO, getTipoCambioLabel } from "../../utils/moneda";
 import { formatCotizacion, formatFecha } from "../../utils/formato";
 import { ControlOpcion } from "../shared/ControlOpcion";
+import { ErrorCampo } from "../shared/ErrorCampo";
 
 import "./CamposCotizacion.css";
 
@@ -46,12 +47,7 @@ export function CampoMonto({
         />
         {equivalente && <span className="campo__sufijo">{equivalente}</span>}
       </div>
-      {error && (
-        <p className="campo-error">
-          <CircleAlert aria-hidden="true" />
-          {error}
-        </p>
-      )}
+      <ErrorCampo texto={error} />
       {!error && children}
     </label>
   );
@@ -148,12 +144,7 @@ export function CamposCotizacion({
                 disabled={disabled}
               />
             </div>
-            {conError && (
-              <p className="campo-error">
-                <CircleAlert aria-hidden="true" />
-                {error}
-              </p>
-            )}
+            <ErrorCampo texto={conError ? error : null} />
           </label>
         </div>
       )}

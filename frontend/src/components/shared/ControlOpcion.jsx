@@ -1,6 +1,6 @@
 import { useId, useRef } from "react";
-import { CircleAlert } from "lucide-react";
 
+import { ErrorCampo } from "./ErrorCampo";
 import "./ControlOpcion.css";
 
 /**
@@ -111,10 +111,7 @@ export function ControlOpcion({
         })}
       </div>
       {error ? (
-        <p className="campo-error">
-          <CircleAlert aria-hidden="true" />
-          {error}
-        </p>
+        <ErrorCampo texto={error} />
       ) : (
         hint && <p className="campo-hint">{hint}</p>
       )}

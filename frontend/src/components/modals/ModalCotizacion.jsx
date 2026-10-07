@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { CalendarDays, CircleAlert, DollarSign } from "lucide-react";
+import { CalendarDays, DollarSign } from "lucide-react";
 
+import { ErrorCampo } from "../shared/ErrorCampo";
 import ModalShell, { AccionesFormulario } from "./ModalShell";
 import { ControlOpcion } from "../shared/ControlOpcion";
 import { TIPOS_CAMBIO } from "../../utils/moneda";
@@ -9,17 +10,6 @@ import { validarFecha } from "../../utils/formValidation";
 const hoy = () => new Date().toISOString().slice(0, 10);
 
 const OPCIONES_TIPO = TIPOS_CAMBIO.map((t) => ({ valor: t.value, label: t.label }));
-
-function ErrorCampo({ texto }) {
-  return (
-    texto && (
-      <p className="campo-error">
-        <CircleAlert aria-hidden="true" />
-        {texto}
-      </p>
-    )
-  );
-}
 
 /**
  * Alta y edición de una fila de la tabla de cotizaciones (ver

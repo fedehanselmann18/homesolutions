@@ -6,12 +6,24 @@ import ModalShell, { AccionesFormulario } from "./ModalShell";
 import ChipsCategorias from "./ChipsCategorias";
 import { CampoMonto } from "./CamposCotizacion";
 import { ControlOpcion } from "../shared/ControlOpcion";
+import { ErrorCampo } from "../shared/ErrorCampo";
+import { avisoFaltantes, validarMonto, validarRequerido } from "../../utils/formValidation";
 
 const OPCIONES_TIPO = Object.entries(TIPOS_PRODUCTO).map(([valor, info]) => ({
   valor,
   label: info.label,
   icono: info.icono,
 }));
+
+const validarCampo = (name, value) => {
+  if (name === "marca") return validarRequerido(value, "Escribí la marca.");
+  if (name === "modelo") return validarRequerido(value, "Escribí el modelo.");
+  if (name === "tipo") return value ? null : "Elegí el tipo de producto.";
+  if (name === "precio") return validarMonto(value);
+  return null;
+};
+
+const ETIQUETAS = { marca: "Marca", modelo: "Modelo", tipo: "Tipo", precio: "Precio" };
 
 export function ModalProducto({
   producto,
@@ -31,7 +43,7 @@ export function ModalProducto({
     categoria_ids: [],
   });
   const [guardando, setGuardando] = useState(false);
-  const [errorTipo, setErrorTipo] = useState(null);
+  const [errores, setErrores] = useState({});
 
   useEffect(() => {
     if (producto) {
@@ -45,10 +57,13 @@ export function ModalProducto({
     }
   }, [producto]);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
+  const cambiar = (name, value) => {
     setForm((prev) => ({ ...prev, [name]: value }));
+    // Un campo que ya marcó error se revalida al escribir, para que el error
+    // se vaya apenas se corrige (como en gasto y compra).
+    if (errores[name]) setErrores((prev) => ({ ...prev, [name]: validarCampo(name, value) }));
   };
+  const handleChange = (e) => cambiar(e.target.name, e.target.value);
 
   const toggleCategoria = (categoriaId) => {
     setForm((prev) => ({
@@ -61,10 +76,12 @@ export function ModalProducto({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.tipo) {
-      setErrorTipo("Elegí el tipo de producto.");
-      return;
-    }
+    const nuevosErrores = Object.fromEntries(
+      Object.keys(ETIQUETAS).map((campo) => [campo, validarCampo(campo, form[campo])])
+    );
+    setErrores(nuevosErrores);
+    if (Object.values(nuevosErrores).some(Boolean)) return;
+
     setGuardando(true);
     try {
       await onGuardar({
@@ -79,6 +96,10 @@ export function ModalProducto({
     }
   };
 
+  const faltantes = Object.keys(ETIQUETAS)
+    .filter((campo) => errores[campo])
+    .map((campo) => ETIQUETAS[campo]);
+
   return (
     <ModalShell
       titulo={esEdicion ? "Editar producto" : "Nuevo producto"}
@@ -87,6 +108,8 @@ export function ModalProducto({
       iconoContexto={Truck}
       onCerrar={onCerrar}
       onSubmit={handleSubmit}
+      validacionPropia
+      aviso={avisoFaltantes(faltantes)}
       cerrarDeshabilitado={guardando}
       acciones={
         <AccionesFormulario
@@ -99,12 +122,32 @@ export function ModalProducto({
       <div className="modal-form-fila">
         <label>
           Marca
-          <input type="text" name="marca" value={form.marca} onChange={handleChange} required />
+          <input
+            type="text"
+            name="marca"
+            value={form.marca}
+            onChange={handleChange}
+            placeholder="Ej: Prysmian"
+            aria-invalid={errores.marca ? true : undefined}
+            className={errores.marca ? "campo--error" : undefined}
+            required
+          />
+          <ErrorCampo texto={errores.marca} />
         </label>
 
         <label>
           Modelo
-          <input type="text" name="modelo" value={form.modelo} onChange={handleChange} required />
+          <input
+            type="text"
+            name="modelo"
+            value={form.modelo}
+            onChange={handleChange}
+            placeholder="Ej: Cable 2x1.5mm x 50m"
+            aria-invalid={errores.modelo ? true : undefined}
+            className={errores.modelo ? "campo--error" : undefined}
+            required
+          />
+          <ErrorCampo texto={errores.modelo} />
         </label>
       </div>
 
@@ -115,9 +158,9 @@ export function ModalProducto({
         onCambiar={(tipo) => {
           // Si cambia el tipo, las categorías ya elegidas (de otro tipo) dejan de tener sentido.
           setForm((prev) => ({ ...prev, tipo, categoria_ids: [] }));
-          setErrorTipo(null);
+          setErrores((prev) => ({ ...prev, tipo: null }));
         }}
-        error={errorTipo}
+        error={errores.tipo}
         variante="segmentado"
         disabled={guardando}
       />
@@ -127,8 +170,18 @@ export function ModalProducto({
         name="precio"
         value={form.precio}
         onChange={handleChange}
+        error={errores.precio}
         disabled={guardando}
       />
+
+      {!form.tipo && (
+        <div className="chips-cat">
+          <div className="chips-cat-header">
+            <span className="chips-cat-label">Categorías</span>
+          </div>
+          <p className="campo-hint">Elegí el tipo para ver sus categorías.</p>
+        </div>
+      )}
 
       {form.tipo && (
         <ChipsCategorias

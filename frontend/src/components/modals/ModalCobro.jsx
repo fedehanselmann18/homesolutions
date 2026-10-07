@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Building2, CalendarDays, CircleAlert, Sparkles } from "lucide-react";
+import { Building2, CalendarDays, Sparkles } from "lucide-react";
 
 import { ComprobantesUploader } from "../shared/ComprobantesUploader";
 import { ControlOpcion } from "../shared/ControlOpcion";
@@ -17,6 +17,7 @@ import {
   validarFecha,
 } from "../../utils/formValidation";
 import { textoEquivalente } from "../../utils/moneda";
+import { ErrorCampo } from "../shared/ErrorCampo";
 import ModalShell, { AccionesFormulario } from "./ModalShell";
 import { BotonIA, MarcaIA } from "./PiezasIA";
 import { CampoMonto, CamposCotizacion } from "./CamposCotizacion";
@@ -38,16 +39,6 @@ const ETIQUETAS = {
   fecha: "Fecha",
   tipo_factura: "Comprobante",
 };
-
-function ErrorCampo({ texto }) {
-  if (!texto) return null;
-  return (
-    <p className="campo-error">
-      <CircleAlert aria-hidden="true" />
-      {texto}
-    </p>
-  );
-}
 
 /**
  * Cuánto se lleva cobrado del proyecto y adónde llega con este cobro
