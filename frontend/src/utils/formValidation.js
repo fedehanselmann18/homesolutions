@@ -37,3 +37,15 @@ export function validarPassword(valor) {
   }
   return null;
 }
+
+/**
+ * El aviso del pie de un modal cuando no se pudo guardar: "Falta 1 campo:
+ * Descripción" / "Faltan 2 campos: Monto, Fecha". null si no falta nada.
+ * Reemplaza al banner rojo de arriba del formulario (variante 5a): el error
+ * ya está en cada campo, el pie sólo cuenta cuántos y cuáles.
+ */
+export function avisoFaltantes(faltantes) {
+  if (!faltantes.length) return null;
+  const cuantos = faltantes.length === 1 ? "Falta 1 campo" : `Faltan ${faltantes.length} campos`;
+  return `${cuantos}: ${faltantes.join(", ")}`;
+}

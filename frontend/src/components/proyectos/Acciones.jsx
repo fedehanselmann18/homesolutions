@@ -5,6 +5,8 @@ import { getComprobanteCobro, getNotaCobro } from "../../services/cobroService";
 import useAuth from "../../context/useAuth";
 import { formatMoneda, formatFecha } from "../../utils/formato";
 import { useAccionesProyecto } from "../../hooks/useAccionesProyecto";
+import { useProyecto } from "../../hooks/queries";
+import { montoCobroNeto } from "../../utils/moneda";
 
 import LibroDeObra from "./LibroDeObra";
 import ModalGasto from "../modals/ModalGasto";
@@ -79,6 +81,10 @@ export function Acciones({ proyectoId, proyectoNombre }) {
 
   const gastosFiltrados = useMemo(() => filtrarGastos(gastos, filtros), [gastos, filtros]);
   const cobrosFiltrados = useMemo(() => filtrarCobros(cobros, filtros), [cobros, filtros]);
+  // Para el avance de cobro del modal de cobro (variante 5d): el precio sale
+  // de la query del proyecto, que ya está en caché por el header.
+  const proyectoQuery = useProyecto(proyectoId);
+  const cobradoUsd = cobros.reduce((acc, c) => acc + montoCobroNeto(c, "usd"), 0);
   const comprasFiltradas = useMemo(() => filtrarCompras(compras, filtros), [compras, filtros]);
 
   // "Con alertas" no es un tipo: recorta los tres por el mismo criterio que
@@ -377,6 +383,7 @@ export function Acciones({ proyectoId, proyectoNombre }) {
       {modalGastoAbierto && (
         <ModalGasto
           gasto={gastoEditando}
+          contexto={proyectoNombre}
           categoriasDisponibles={categoriasGasto}
           fasesDisponibles={fases}
           onGuardar={handleGuardarGasto}
@@ -390,7 +397,12 @@ export function Acciones({ proyectoId, proyectoNombre }) {
       {modalCobroAbierto && (
         <ModalCobro
           cobro={cobroEditando}
-          proyectoActual={{ id: proyectoId, nombre: proyectoNombre }}
+          proyectoActual={{
+            id: proyectoId,
+            nombre: proyectoNombre,
+            precio_acordado_usd: proyectoQuery.data?.precio_acordado_usd,
+            cobrado_usd: cobradoUsd,
+          }}
           onGuardar={handleGuardarCobro}
           onCerrar={() => setModalCobroAbierto(false)}
           onVerComprobante={

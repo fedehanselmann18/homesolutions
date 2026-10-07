@@ -237,8 +237,6 @@ describe("smoke de modales", () => {
 
   it("un gasto nuevo precarga la cotización sugerida del día", async () => {
     const { container } = render(<ModalGasto onGuardar={noop} onCerrar={noop} />);
-    // Gasto nuevo arranca en el paso del comprobante: se pasa a mano.
-    await userEvent.click(screen.getByRole("button", { name: /cargar los datos a mano/i }));
 
     // DESIGN.md §9: el dólar es un hint debajo del monto, con "cambiar".
     expect(screen.getByText(/Dólar blue \$\s1\.250,00 del 01\/03\/2026/)).toBeInTheDocument();
@@ -312,54 +310,92 @@ describe("smoke de modales", () => {
     expect(screen.getByRole("button", { name: /adjuntar/i })).toBeInTheDocument();
   });
 
-  // Los tres modales de edición comparten el lenguaje de la ficha de detalle
-  // (EditarShell): header oscuro con el tipo del movimiento y, en los que
-  // tienen un total derivado, el riel con el resumen.
+  // v5 (variantes 5c/5d): gasto y cobro son un ModalShell de 560px. El
+  // comprobante va primero, el tipo de factura es un control de opción y el
+  // monto lleva la moneda adentro con la conversión al lado.
 
-  it("los modales de edición usan el header con el tipo de movimiento", () => {
+  it("gasto y cobro dicen en el título si se carga o se edita", () => {
     const { unmount: u1 } = render(<ModalGasto gasto={gasto} onGuardar={noop} onCerrar={noop} />);
-    expect(screen.getByText(/Gasto · Editar/)).toBeInTheDocument();
+    expect(screen.getByRole("dialog", { name: "Editar gasto" })).toBeInTheDocument();
     u1();
 
-    const { unmount: u2 } = render(<ModalCobro cobro={cobro} onGuardar={noop} onCerrar={noop} />);
-    expect(screen.getByText(/Cobro · Editar/)).toBeInTheDocument();
+    const { unmount: u2 } = render(
+      <ModalCobro proyectoActual={{ id: 1, nombre: "Olleros" }} onGuardar={noop} onCerrar={noop} />
+    );
+    expect(screen.getByRole("dialog", { name: "Nuevo cobro" })).toBeInTheDocument();
+    // El proyecto va en el header, no como un campo deshabilitado.
+    expect(document.querySelector(".shell__contexto")).toHaveTextContent("Olleros");
+    expect(screen.queryByDisplayValue(/proyecto actual/)).toBeNull();
     u2();
-
-    render(<ModalCompra compra={compra} onGuardar={noop} onCerrar={noop} />);
-    expect(screen.getByText(/Compra · Editar/)).toBeInTheDocument();
   });
 
-  it("ModalGasto no lleva riel: su monto se tipea, va al footer", () => {
+  it("el monto del gasto lleva los pesos adentro y el equivalente en dólares al lado", () => {
     const { container } = render(<ModalGasto gasto={gasto} onGuardar={noop} onCerrar={noop} />);
 
-    expect(container.querySelector(".mov-edit__riel")).toBeNull();
-    expect(container.querySelector(".mov-edit__footer-total-monto")).toHaveTextContent("$ 84.500");
-    // Equivalente en USD con la cotización que quedó congelada (1250).
-    expect(container.querySelector(".mov-edit__footer-total-secundario")).toHaveTextContent(
-      "US$ 68"
+    const caja = container.querySelector(".campo--monto");
+    expect(caja.querySelector(".campo__prefijo")).toHaveTextContent("$");
+    expect(caja.querySelector("input")).toHaveValue(84500);
+    // Equivalente con la cotización que quedó congelada (1250).
+    expect(caja.querySelector(".campo__sufijo")).toHaveTextContent("≈ US$ 68");
+  });
+
+  it("el tipo de factura es un control de opción, sin selects ni switches", () => {
+    render(<ModalGasto gasto={gasto} onGuardar={noop} onCerrar={noop} />);
+    const grupo = screen.getByRole("radiogroup", { name: "Comprobante" });
+    expect(grupo).toBeInTheDocument();
+    expect(screen.getByRole("radio", { name: "Factura B" })).toHaveAttribute(
+      "aria-checked",
+      "true"
+    );
+    expect(screen.queryAllByRole("switch")).toHaveLength(0);
+  });
+
+  it("al guardar sin datos, cada campo dice qué le falta y el pie los cuenta", async () => {
+    const onGuardar = vi.fn();
+    render(<ModalGasto onGuardar={onGuardar} onCerrar={noop} />);
+    await userEvent.click(screen.getByRole("button", { name: "Crear gasto" }));
+
+    expect(onGuardar).not.toHaveBeenCalled();
+    expect(screen.getByText("Escribí una descripción corta.")).toBeInTheDocument();
+    expect(screen.getByText("Elegí el tipo de comprobante.")).toBeInTheDocument();
+    expect(document.querySelector(".shell__footer-aviso")).toHaveTextContent(
+      /Faltan 4 campos: Descripción, Monto, Fecha, Comprobante/
     );
   });
 
-  it("ModalCobro muestra en el riel el neto y las notas que lo explican", () => {
+  it("ModalCobro muestra el neto y las notas que lo explican", () => {
     // El cobro de la fixture es 3200 USD bruto con una nota de crédito de
     // 150 USD -> neto 3050 USD.
     const { container } = render(<ModalCobro cobro={cobro} onGuardar={noop} onCerrar={noop} />);
 
-    const riel = container.querySelector(".mov-edit__riel");
-    expect(riel).toBeTruthy();
-    expect(riel).toHaveTextContent("Neto");
-    expect(riel).toHaveTextContent("US$ 3.050");
+    const neto = container.querySelector(".cobro-neto");
+    expect(neto).toHaveTextContent("Neto con notas");
+    expect(neto).toHaveTextContent("US$ 3.050");
     // La nota va desplegada, sin toggle, igual que en Compra.
-    expect(riel).toHaveTextContent("Ajuste");
+    expect(neto).toHaveTextContent("Ajuste");
     expect(container.querySelector(".seccion-notas-item-toggle")).toBeNull();
   });
 
-  it("un cobro sin notas no muestra la sección de notas en el riel", () => {
+  it("un cobro sin notas no muestra el neto", () => {
     const sinNotas = { ...cobro, notas: [] };
     const { container } = render(<ModalCobro cobro={sinNotas} onGuardar={noop} onCerrar={noop} />);
 
-    expect(container.querySelector(".mov-edit__notas")).toBeNull();
-    expect(container.querySelector(".mov-edit__riel")).toHaveTextContent("US$ 3.200");
+    expect(container.querySelector(".cobro-neto")).toBeNull();
+    expect(container.querySelector(".campo--monto input")).toHaveValue(3200);
+  });
+
+  it("un cobro nuevo muestra adónde llega lo cobrado del proyecto", async () => {
+    const { container } = render(
+      <ModalCobro
+        proyectoActual={{ id: 1, nombre: "Torre", precio_acordado_usd: 19000, cobrado_usd: 11020 }}
+        onGuardar={noop}
+        onCerrar={noop}
+      />
+    );
+    await userEvent.type(container.querySelector(".campo--monto input"), "2500");
+    expect(container.querySelector(".cobro-avance")).toHaveTextContent(
+      "Con este cobro llegás al 71%"
+    );
   });
 
   it("ModalCompra nuevo arranca en el paso del comprobante", () => {

@@ -87,6 +87,10 @@ export function ModalShell({
   capaSuperior = false,
   onCerrar,
   onSubmit,
+  // true en los formularios que validan cada campo por su cuenta (gasto,
+  // cobro, compra): sin esto el `required` nativo frena el submit con su
+  // globito y nunca se ven los errores propios debajo de cada campo.
+  validacionPropia = false,
   cerrarDeshabilitado = false,
   totalLabel = "Total",
   total,
@@ -124,6 +128,7 @@ export function ModalShell({
         aria-label={etiqueta ?? titulo}
         onClick={(e) => e.stopPropagation()}
         onSubmit={onSubmit}
+        noValidate={validacionPropia || undefined}
       >
         <ModalHeader
           icono={icono}

@@ -384,6 +384,7 @@ export function FaseDetalle() {
       {modalGastoAbierto && (
         <ModalGasto
           gasto={gastoEditando}
+          contexto={`${proyecto.nombre} · ${fase.nombre}`}
           categoriasDisponibles={categoriasGasto}
           faseFija={fase}
           onGuardar={handleGuardarGasto}

@@ -448,6 +448,7 @@ export function Seguimiento({ proyectoId }) {
       {editando?.tipo === "gasto" && (
         <ModalGasto
           gasto={editando.entidad}
+          contexto={datos.proyecto.nombre}
           categoriasDisponibles={acciones.categoriasGasto}
           fasesDisponibles={datos.fases}
           onGuardar={guardarEdicion}
@@ -459,7 +460,7 @@ export function Seguimiento({ proyectoId }) {
       {editando?.tipo === "cobro" && (
         <ModalCobro
           cobro={editando.entidad}
-          proyectoActual={datos.proyecto}
+          proyectoActual={{ ...datos.proyecto, cobrado_usd: cobranza.cobrado }}
           onGuardar={guardarEdicion}
           onCerrar={cerrarEdicion}
           onVerComprobante={(c) => getComprobanteCobro(editando.entidad.id, c.id)}
