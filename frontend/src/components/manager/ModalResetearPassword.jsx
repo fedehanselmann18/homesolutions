@@ -1,9 +1,11 @@
 import { useState } from "react";
 
-import ModalShell from "../modals/ModalShell";
+import { KeyRound } from "lucide-react";
+
+import ModalShell, { AccionesFormulario } from "../modals/ModalShell";
 import { validarPassword } from "../../utils/formValidation";
+import { ErrorCampo } from "../shared/ErrorCampo";
 import "./Manager.css";
-import { LogoCargando } from "../shared/LogoCargando";
 
 /**
  * Contraseña nueva para una persona puntual del equipo. La escribe a mano
@@ -37,25 +39,19 @@ export function ModalResetearPassword({ usuario, guardando, onConfirmar, onCerra
   return (
     <ModalShell
       titulo="Resetear contraseña"
+      icono={KeyRound}
       contexto={usuario.nombre_usuario}
       onCerrar={onCerrar}
       onSubmit={handleSubmit}
+      // El error del backend (o "escribila dos veces") va en el pie, como el
+      // aviso de los modales de alta.
+      aviso={error}
       acciones={
-        <>
-          <button type="button" className="btn btn-secondary" onClick={onCerrar}>
-            Cancelar
-          </button>
-          <button type="submit" className="btn btn-primary" disabled={guardando}>
-            {guardando ? (
-              <>
-                <LogoCargando size={14} variante="blanco" />
-                Guardando...
-              </>
-            ) : (
-              "Cambiar contraseña"
-            )}
-          </button>
-        </>
+        <AccionesFormulario
+          guardando={guardando}
+          onCancelar={onCerrar}
+          textoGuardar="Cambiar contraseña"
+        />
       }
     >
       <div className="manager-form">
@@ -64,31 +60,31 @@ export function ModalResetearPassword({ usuario, guardando, onConfirmar, onCerra
           cierra: tiene que entrar de nuevo con la contraseña nueva.
         </p>
 
-        <label className={`manager-campo${errorPassword ? " manager-campo--error" : ""}`}>
-          <span>Contraseña nueva</span>
+        <label>
+          Contraseña nueva
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Mínimo 8 caracteres"
+            className={errorPassword ? "campo--error" : undefined}
+            aria-invalid={errorPassword ? true : undefined}
           />
-          {errorPassword && <span className="campo-error">{errorPassword}</span>}
+          <ErrorCampo texto={errorPassword} />
         </label>
 
-        <label className={`manager-campo${passwordsNoCoinciden ? " manager-campo--error" : ""}`}>
-          <span>Confirmar contraseña</span>
+        <label>
+          Confirmar contraseña
           <input
             type="password"
             value={confirmarPassword}
             onChange={(e) => setConfirmarPassword(e.target.value)}
             placeholder="Repetila"
+            className={passwordsNoCoinciden ? "campo--error" : undefined}
+            aria-invalid={passwordsNoCoinciden ? true : undefined}
           />
-          {passwordsNoCoinciden && (
-            <span className="campo-error">Las contraseñas no coinciden.</span>
-          )}
+          <ErrorCampo texto={passwordsNoCoinciden ? "Las contraseñas no coinciden." : null} />
         </label>
-
-        {error && <p className="manager-error">{error}</p>}
       </div>
     </ModalShell>
   );

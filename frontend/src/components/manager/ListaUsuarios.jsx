@@ -1,4 +1,13 @@
-import { KeyRound, LogOut, ShieldCheck, ShieldOff, UserCheck, UserX } from "lucide-react";
+import {
+  Ban,
+  CircleCheck,
+  KeyRound,
+  LogOut,
+  ShieldCheck,
+  ShieldOff,
+  UserCheck,
+  UserX,
+} from "lucide-react";
 
 import "./Manager.css";
 import { formatUltimaActividad } from "../../utils/formato";
@@ -26,14 +35,14 @@ export function ListaUsuarios({
 
   return (
     <div className="manager-tabla-scroll">
-      <table className="manager-tabla" aria-label="Cuentas del equipo">
+      <table className="manager-tabla manager-tabla--apilada" aria-label="Cuentas del equipo">
         <thead>
           <tr>
             <th>Usuario</th>
             <th>Rol</th>
             <th>Estado</th>
             <th>Última actividad</th>
-            <th className="manager-tabla__acciones-col">Acciones</th>
+            <th className="manager-tabla__acciones-col" aria-label="Acciones" />
           </tr>
         </thead>
         <tbody>
@@ -48,17 +57,25 @@ export function ListaUsuarios({
                   </span>
                 </td>
                 <td>
+                  {/* Un estado lleva su ícono (DESIGN.md §12): verde y rojo solos no
+                      se distinguen con deuteranopia. */}
                   <span className={`badge ${usuario.activo ? "badge--exito" : "badge--peligro"}`}>
+                    {usuario.activo ? (
+                      <CircleCheck size={12} strokeWidth={2} aria-hidden="true" />
+                    ) : (
+                      <Ban size={12} strokeWidth={2} aria-hidden="true" />
+                    )}
                     {usuario.activo ? "Activa" : "Desactivada"}
                   </span>
                 </td>
                 <td className="manager-auditoria__fecha">
                   {formatUltimaActividad(usuario.ultima_actividad)}
                 </td>
-                <td className="manager-tabla__acciones">
+                <td className="manager-tabla__acciones-col">
+                  <div className="manager-tabla__acciones">
                   <button
                     type="button"
-                    className="manager-accion"
+                    className="btn btn--sm btn-secondary"
                     onClick={() => onResetear(usuario)}
                     title="Asignarle una contraseña nueva"
                   >
@@ -68,7 +85,7 @@ export function ListaUsuarios({
 
                   <button
                     type="button"
-                    className="manager-accion"
+                    className="btn btn--sm btn-secondary"
                     onClick={() => onCambiarRol(usuario)}
                     title={esAdmin ? "Pasarlo a solo lectura" : "Darle permisos de admin"}
                   >
@@ -82,7 +99,7 @@ export function ListaUsuarios({
 
                   <button
                     type="button"
-                    className="manager-accion"
+                    className="btn btn--sm btn-secondary"
                     onClick={() => onCerrarSesion(usuario)}
                     title="Cortarle la sesión sin cambiarle la contraseña"
                   >
@@ -92,7 +109,7 @@ export function ListaUsuarios({
 
                   <button
                     type="button"
-                    className={`manager-accion ${usuario.activo ? "manager-accion--peligro" : ""}`}
+                    className={`btn btn--sm ${usuario.activo ? "btn-peligro" : "btn-secondary"}`}
                     onClick={() => onToggleActivo(usuario)}
                     title={
                       usuario.activo
@@ -107,6 +124,7 @@ export function ListaUsuarios({
                     )}
                     {usuario.activo ? "Desactivar" : "Reactivar"}
                   </button>
+                  </div>
                 </td>
               </tr>
             );

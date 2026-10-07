@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { Users } from "lucide-react";
 
 import {
   cambiarRolUsuario,
@@ -14,6 +13,7 @@ import { obtenerMensajeError } from "../../utils/errorHandling";
 import { usePageTitle } from "../../hooks/usePageTitle";
 import { useToast } from "../../context/useToast";
 import { Cargando } from "../../components/shared/Cargando";
+import { EstadoError } from "../../components/shared/EstadoError";
 import { PageHeader } from "../../components/shared/PageHeader";
 import ModalConfirmar from "../../components/modals/ModalConfirmar";
 import ListaUsuarios from "../../components/manager/ListaUsuarios";
@@ -156,7 +156,6 @@ export function GestionEquipo() {
   return (
     <div className="manager-pagina">
       <PageHeader
-        icono={<Users size={20} strokeWidth={2} />}
         titulo="Equipo"
         subtitulo="Contraseñas, roles y sesiones de las cuentas ya creadas. Solo lo ve esta cuenta."
       />
@@ -164,7 +163,7 @@ export function GestionEquipo() {
       {cargando ? (
         <Cargando texto="Cargando cuentas..." />
       ) : errorCarga ? (
-        <p className="manager-pagina__error">{errorCarga}</p>
+        <EstadoError mensaje={errorCarga} />
       ) : (
         <div className="manager-pagina__tarjeta">
           <p className="manager-pagina__ayuda">

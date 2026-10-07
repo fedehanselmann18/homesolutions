@@ -1,36 +1,18 @@
-/* Shell compartido de las tres páginas exclusivas de la cuenta "Manager"
-   (ver constants/manager.js): Equipo, Autorizados y Auditoría. Antes eran
-   tres <section> apiladas en una sola pantalla (ResetearContrasena.jsx);
-   ahora cada una es su propia página, pero visualmente siguen siendo la
-   misma "tarjeta" de siempre -- por eso una sola clase para las tres en vez
-   de tres .css casi idénticos.
-
-   Lo de adentro de la tarjeta (planilla de cuentas, alta de autorizados,
-   historial) sigue en components/manager/Manager.css: esto es solo el
-   marco. */
-
-.manager-pagina {
-  font-family: var(--font-ui);
-}
+/* Shell de las páginas exclusivas de la cuenta "Manager" (ver
+   constants/manager.js): Equipo, Autorizados, Historial, Configuración y
+   Archivos. No tienen diseño propio; siguen a las listas rediseñadas
+   (DESIGN.md §0: borde y peso, no fondo y sombra). v5: el contenido va
+   directo sobre la página, como en Proveedores, sin la tarjeta con borde que
+   lo encerraba. Lo de adentro está en components/manager/Manager.css. */
 
 .manager-pagina__tarjeta {
-  padding: var(--space-6);
-  background: var(--color-superficie);
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
 }
 
 .manager-pagina__ayuda {
-  font-size: var(--text-sm);
-  color: var(--color-tinta-muted);
-  margin: 0 0 var(--space-4);
-}
-
-.manager-pagina__error {
   margin: 0;
-  font-size: var(--text-sm);
-  color: var(--color-error);
-  background: var(--color-error-tint);
-  border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-base);
+  color: var(--color-tinta-muted);
 }

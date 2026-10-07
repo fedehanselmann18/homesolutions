@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { ChevronDown, Trash2, UserPlus } from "lucide-react";
+import { Trash2, UserPlus } from "lucide-react";
 
 import "./Manager.css";
 import { EstadoVacio } from "../shared/EstadoVacio";
+import { ErrorCampo } from "../shared/ErrorCampo";
 
 /**
  * Whitelist de autoregistro: quién puede crearse cuenta en /registro y con
@@ -45,33 +46,42 @@ export function SeccionAutorizados({ autorizados, guardando, onAutorizar, onRevo
           <input
             type="text"
             value={nombreUsuario}
-            onChange={(e) => setNombreUsuario(e.target.value)}
+            onChange={(e) => {
+              setNombreUsuario(e.target.value);
+              setError(null);
+            }}
             placeholder="Ej: Sofia"
+            className={error ? "campo--error" : undefined}
+            aria-invalid={error ? true : undefined}
           />
+          <ErrorCampo texto={error} />
         </label>
 
         <label className="manager-campo">
           <span>Rol</span>
-          <span className="manager-campo__select">
-            <select value={rol} onChange={(e) => setRol(e.target.value)}>
+          <select className="campo" value={rol} onChange={(e) => setRol(e.target.value)}>
               <option value="lectura">Lectura</option>
               <option value="admin">Admin</option>
             </select>
-            <ChevronDown size={16} />
-          </span>
         </label>
 
-        <button type="submit" className="manager-submit" disabled={guardando}>
-          <UserPlus size={15} strokeWidth={2} />
-          {guardando ? "Autorizando..." : "Autorizar"}
-        </button>
+        {/* Un label vacío del mismo alto que los otros: así el botón queda a la
+            altura de los campos aunque abajo de uno aparezca un error. */}
+        <div className="manager-campo">
+          <span aria-hidden="true">&nbsp;</span>
+          <button type="submit" className="btn btn-primary btn--lg" disabled={guardando}>
+            <UserPlus size={15} strokeWidth={2} aria-hidden="true" />
+            {guardando ? "Autorizando..." : "Autorizar"}
+          </button>
+        </div>
       </form>
-
-      {error && <p className="manager-error">{error}</p>}
 
       <div className="manager-autorizados__listas">
         <div>
-          <h3 className="manager-subtitulo">Pendientes de registrarse</h3>
+          <h3 className="manager-subtitulo">
+            Pendientes de registrarse
+            <span className="manager-subtitulo__cantidad">{pendientes.length}</span>
+          </h3>
           {pendientes.length === 0 ? (
             <EstadoVacio mensaje="Nadie pendiente: todos los autorizados ya tienen cuenta." />
           ) : (
@@ -88,7 +98,7 @@ export function SeccionAutorizados({ autorizados, guardando, onAutorizar, onRevo
                   </span>
                   <button
                     type="button"
-                    className="manager-accion manager-accion--peligro"
+                    className="btn btn--sm btn-peligro"
                     onClick={() => onRevocar(autorizado)}
                     title="Sacarlo de la lista de quienes pueden registrarse"
                   >
@@ -103,7 +113,10 @@ export function SeccionAutorizados({ autorizados, guardando, onAutorizar, onRevo
 
         {registrados.length > 0 && (
           <div>
-            <h3 className="manager-subtitulo">Ya registrados</h3>
+            <h3 className="manager-subtitulo">
+              Ya registrados
+              <span className="manager-subtitulo__cantidad">{registrados.length}</span>
+            </h3>
             <ul className="manager-lista">
               {registrados.map((autorizado) => (
                 <li key={autorizado.id} className="manager-lista__item manager-lista__item--tenue">

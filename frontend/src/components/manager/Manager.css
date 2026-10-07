@@ -1,7 +1,10 @@
-/* Componentes de la página de mantenimiento de cuentas (solo la cuenta
-   "Manager" los ve). El shell de la página vive en pages/ResetearContrasena.css;
-   acá está lo propio de la planilla de usuarios, el alta de autorizados y el
-   modal de contraseña. */
+/* Componentes de las páginas de Manager: la planilla de cuentas, el alta de
+   autorizados, el historial, la configuración y la reconciliación de
+   archivos. v5: sin botones ni campos propios (son `.btn` y `.campo`), sin
+   mayúsculas, y las listas son filas separadas por la línea suave en vez de
+   cajitas grises. */
+
+/* --- Tablas: el mismo encabezado que `.planilla` --- */
 
 .manager-tabla-scroll {
   overflow-x: auto;
@@ -13,28 +16,29 @@
   width: 100%;
   border-collapse: collapse;
   font-size: var(--text-base);
+  font-variant-numeric: tabular-nums;
 }
 
 .manager-tabla th {
-  text-align: left;
+  height: 32px;
+  padding: 0 var(--space-3);
+  background: var(--color-superficie-suave);
   font-size: var(--text-xs);
   font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
   color: var(--color-tinta-muted);
-  padding: 0 var(--space-3) var(--space-2);
-  border-bottom: 1px solid var(--color-linea);
+  text-align: left;
   white-space: nowrap;
 }
 
 .manager-tabla td {
-  padding: var(--space-3);
-  border-bottom: 1px solid var(--color-linea);
+  height: 54px;
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--color-linea-suave);
   vertical-align: middle;
 }
 
 .manager-tabla__nombre {
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-tinta);
 }
 
@@ -56,47 +60,23 @@
   justify-content: flex-end;
 }
 
-.manager-accion {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-  background: var(--color-superficie);
-  font-family: var(--font-ui);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  color: var(--color-tinta);
-  cursor: pointer;
-  white-space: nowrap;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease;
-}
+/* --- Autorizados --- */
 
-.manager-accion:hover {
-  background: var(--color-superficie-suave);
-  border-color: var(--color-tinta-muted);
+.manager-autorizados {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
 }
-
-.manager-accion--peligro {
-  color: var(--color-error);
-}
-
-.manager-accion--peligro:hover {
-  background: var(--color-error-tint);
-  border-color: var(--color-error);
-}
-
-/* --- Autorizados --------------------------------------------------------- */
 
 .manager-autorizar-form {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: var(--space-3);
-  margin-bottom: var(--space-4);
+}
+
+.manager-autorizar-form .btn {
+  height: 40px;
 }
 
 /* Tipografía del label: la de `.label-campo` en index.css (alias). */
@@ -106,162 +86,102 @@
   gap: var(--space-1-5);
 }
 
-.manager-campo--error input {
-  border-color: var(--color-error);
-  background: var(--color-superficie);
-}
-
-.manager-campo .campo-error {
-  text-transform: none;
-  letter-spacing: normal;
-}
-
-/* Mismo chevron propio que en Auth.css: la flecha nativa del select cambia
-   de forma según el sistema operativo. */
-.manager-campo__select {
-  position: relative;
-  display: block;
-}
-
-.manager-campo__select select {
-  width: 100%;
-  appearance: none;
-  padding-right: 36px;
-}
-
-.manager-campo__select svg {
-  position: absolute;
-  right: 11px;
-  top: 50%;
-  transform: translateY(-50%);
-  pointer-events: none;
-  color: var(--color-tinta-muted);
-}
-
-.manager-submit {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-family: var(--font-ui);
-  font-weight: 600;
-  font-size: var(--text-base);
-  color: var(--color-superficie);
-  background: var(--color-oliva);
-  border: 1px solid var(--color-oliva);
-  border-radius: var(--radius-sm);
-  padding: 11px 16px;
-  cursor: pointer;
-  transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease;
-}
-
-.manager-submit:hover:not(:disabled) {
-  background: var(--color-oliva-dark);
-  border-color: var(--color-oliva-dark);
-}
-
-.manager-submit:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
 .manager-autorizados__listas {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-6);
-}
-
-.manager-autorizados__listas > div {
-  flex: 1;
-  min-width: 220px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-8);
 }
 
 .manager-subtitulo {
-  font-size: var(--text-xs);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  color: var(--color-tinta-muted);
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
   margin: 0 0 var(--space-2);
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--color-tinta);
+}
+
+.manager-subtitulo__cantidad {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-tinta-tenue);
+  font-variant-numeric: tabular-nums;
 }
 
 .manager-lista {
-  list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  list-style: none;
+  border-top: 1px solid var(--color-linea);
 }
 
 .manager-lista__item {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-  background: var(--color-superficie);
-}
-
-.manager-lista__item--tenue {
-  background: var(--color-superficie-suave);
+  gap: var(--space-3);
+  min-height: 52px;
+  padding: var(--space-1-5) var(--space-1);
+  border-bottom: 1px solid var(--color-linea-suave);
 }
 
 .manager-lista__nombre {
   flex: 1;
-  font-weight: 600;
+  min-width: 0;
+  font-weight: 500;
   color: var(--color-tinta);
 }
 
-.manager-error {
-  margin: 0 0 var(--space-3);
-  font-size: var(--text-sm);
-  color: var(--color-error);
-  background: var(--color-error-tint);
-  border-radius: var(--radius-sm);
-  padding: var(--space-2) var(--space-3);
+.manager-lista__item--tenue .manager-lista__nombre {
+  color: var(--color-tinta-muted);
 }
 
-/* --- Modal de contraseña ------------------------------------------------- */
+/* --- Modal de contraseña --- */
 
 .manager-form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-5);
 }
 
 .manager-form__aviso {
   margin: 0;
-  font-size: var(--text-sm);
+  font-size: var(--text-base);
   color: var(--color-tinta-muted);
 }
 
-/* --- Auditoría ----------------------------------------------------------- */
+/* --- Historial --- */
+
+.manager-auditoria {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
 
 .manager-auditoria__filtros {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
   gap: var(--space-3);
-  margin-bottom: var(--space-4);
 }
 
 /* Los cuatro filtros comparten ancho para que la fila no quede en escalera
    (el combo de tipos tiene textos cortos y el de fechas es fijo). */
 .manager-auditoria__filtros .manager-campo {
-  min-width: 160px;
+  width: 180px;
+}
+
+.manager-auditoria__filtros > .btn {
+  height: 40px;
 }
 
 .manager-auditoria__fecha {
   color: var(--color-tinta-muted);
-  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
 .manager-auditoria__recurso {
-  font-weight: 600;
+  font-weight: 500;
   color: var(--color-tinta);
 }
 
@@ -270,7 +190,7 @@
    "Usuario · Alejandro". */
 .manager-auditoria__detalle::before {
   content: " · ";
-  color: var(--color-linea);
+  color: var(--color-tinta-tenue);
 }
 
 .manager-auditoria__detalle {
@@ -282,8 +202,7 @@
 .manager-auditoria__id {
   margin-left: var(--space-2);
   font-size: var(--text-xs);
-  color: var(--color-tinta-muted);
-  font-variant-numeric: tabular-nums;
+  color: var(--color-tinta-tenue);
 }
 
 .manager-auditoria__paginado {
@@ -292,7 +211,6 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  margin-top: var(--space-4);
 }
 
 .manager-auditoria__conteo {
@@ -305,34 +223,33 @@
   gap: var(--space-2);
 }
 
-.manager-accion:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+/* --- Configuración --- */
 
-.manager-accion:disabled:hover {
-  background: var(--color-superficie);
-  border-color: var(--color-linea);
-}
-
-/* --- Configuración -------------------------------------------------------- */
-
-.manager-configuracion__integraciones {
+.manager-configuracion {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  margin-bottom: var(--space-6);
+  gap: var(--space-8);
 }
 
-.manager-configuracion__integracion {
+/* Sin línea arriba: la primera ya la pone el separador del encabezado. */
+.manager-configuracion__integraciones,
+.manager-configuracion__lista {
   display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.manager-configuracion__integracion,
+.manager-configuracion__fila {
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-4);
-  padding: var(--space-3);
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-  background: var(--color-superficie-suave);
+  padding: var(--space-3) var(--space-1);
+  border-bottom: 1px solid var(--color-linea-suave);
 }
 
 .manager-configuracion__integracion-nombre {
@@ -340,62 +257,36 @@
   color: var(--color-tinta);
 }
 
-.manager-configuracion__integracion-ayuda {
+.manager-configuracion__integracion-ayuda,
+.manager-configuracion__descripcion {
   margin: 2px 0 0;
   font-size: var(--text-sm);
   color: var(--color-tinta-muted);
 }
 
-.manager-configuracion__lista {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.manager-configuracion__fila {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  padding: var(--space-3);
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-sm);
-}
-
 .manager-configuracion__fila-info {
-  min-width: 220px;
   flex: 1;
+  min-width: 220px;
 }
 
 .manager-configuracion__clave {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--text-sm);
   font-weight: 600;
-  font-family: monospace;
-  font-size: var(--text-sm);
   color: var(--color-tinta);
-}
-
-.manager-configuracion__descripcion {
-  margin: 4px 0 0;
-  font-size: var(--text-sm);
-  color: var(--color-tinta-muted);
 }
 
 .manager-configuracion__default {
   display: inline-block;
-  margin-top: var(--space-2);
+  margin-top: var(--space-1);
   font-size: var(--text-xs);
-  color: var(--color-tinta-muted);
-  font-style: italic;
+  color: var(--color-tinta-tenue);
 }
 
 .manager-configuracion__form {
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
+  align-items: center;
   gap: var(--space-2);
 }
 
@@ -403,14 +294,10 @@
   width: 220px;
 }
 
-/* --- Archivos (reconciliación R2) ----------------------------------------- */
+/* --- Archivos (reconciliación R2) --- */
 
-.manager-archivos__seccion {
-  margin-bottom: var(--space-6);
-}
-
-.manager-archivos__seccion:last-child {
-  margin-bottom: 0;
+.manager-archivos__seccion + .manager-archivos__seccion {
+  margin-top: var(--space-8);
 }
 
 .manager-archivos__header {
@@ -426,15 +313,82 @@
 }
 
 .manager-archivos__ayuda-inline {
-  text-transform: none;
-  letter-spacing: normal;
+  font-size: var(--text-sm);
   font-weight: 400;
   color: var(--color-tinta-muted);
 }
 
 .manager-archivos__key {
-  font-family: monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: var(--text-sm);
   color: var(--color-tinta);
   word-break: break-all;
+}
+
+@media (max-width: 640px) {
+  .manager-autorizar-form,
+  .manager-auditoria__filtros {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .manager-autorizar-form > .manager-campo > span[aria-hidden] {
+    display: none;
+  }
+
+  .manager-auditoria__filtros .manager-campo,
+  .manager-configuracion__form .campo {
+    width: 100%;
+  }
+
+  /* La planilla de cuentas en el teléfono: cada cuenta es un bloque (nombre
+     y estado, rol y actividad, y las acciones en su renglón), en vez de una
+     tabla que scrollea con los botones fuera de vista. */
+  .manager-tabla--apilada thead {
+    display: none;
+  }
+
+  .manager-tabla--apilada tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "nombre   estado"
+      "rol      actividad"
+      "acciones acciones";
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-3) var(--space-1);
+    border-bottom: 1px solid var(--color-linea-suave);
+  }
+
+  .manager-tabla--apilada td {
+    height: auto;
+    padding: 0;
+    border-bottom: none;
+  }
+
+  .manager-tabla--apilada td:nth-child(1) {
+    grid-area: nombre;
+  }
+
+  .manager-tabla--apilada td:nth-child(2) {
+    grid-area: rol;
+  }
+
+  .manager-tabla--apilada td:nth-child(3) {
+    grid-area: estado;
+    justify-self: end;
+  }
+
+  .manager-tabla--apilada td:nth-child(4) {
+    grid-area: actividad;
+    justify-self: end;
+  }
+
+  .manager-tabla--apilada td:nth-child(5) {
+    grid-area: acciones;
+  }
+
+  .manager-tabla--apilada .manager-tabla__acciones {
+    justify-content: flex-start;
+  }
 }
