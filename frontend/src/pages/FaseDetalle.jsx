@@ -424,6 +424,14 @@ export function FaseDetalle() {
         <ModalDetalleGasto
           gasto={entidadDetalle}
           faseNombre={fase.nombre}
+          onEliminar={
+            canManage
+              ? () => {
+                  cerrarDetalle();
+                  handleSolicitarEliminarGasto(entidadDetalle.id);
+                }
+              : undefined
+          }
           onCerrar={cerrarDetalle}
           onVerComprobante={(c) => getComprobanteGasto(entidadDetalle.id, c.id)}
         />
@@ -435,6 +443,14 @@ export function FaseDetalle() {
           faseNombre={fase.nombre}
           proveedorNombre={nombreProveedor(entidadDetalle.proveedor_id)}
           productos={productos}
+          onEliminar={
+            canManage
+              ? () => {
+                  cerrarDetalle();
+                  handleSolicitarEliminarCompra(entidadDetalle.id);
+                }
+              : undefined
+          }
           onCerrar={cerrarDetalle}
           onVerComprobante={(c) => getComprobanteCompra(entidadDetalle.id, c.id)}
           onVerNota={(n) => getNotaCompra(entidadDetalle.id, n.id)}

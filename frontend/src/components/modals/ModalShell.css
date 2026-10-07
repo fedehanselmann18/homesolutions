@@ -1,72 +1,88 @@
-/* Shell común de los modales — dirección 5c del rediseño (ver claudedesign/):
-   header fijo con título y contexto, cuerpo scrolleable y footer fijo con el
-   total y las acciones. Antes cada modal era un scroll único con el título
-   suelto arriba, así que al llenar un formulario largo se perdían de vista
-   tanto el total como el botón de guardar. */
+/* Shell común de los modales — DESIGN.md §14: header fijo de 64px, cuerpo que
+   scrollea y pie fijo con el total y las acciones. Antes cada modal era un
+   scroll único con el título suelto arriba, así que al llenar un formulario
+   largo se perdían de vista tanto el total como el botón de guardar.
+
+   Ancho: 560 para todo alta, edición y detalle. `--ancho` es la excepción de
+   los formularios que lo necesitan (ver prompt 18 del rediseño). */
 
 .shell {
   padding: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  max-width: 560px;
   max-height: 88vh;
 }
 
 .shell--ancho {
-  max-width: 660px;
+  max-width: 760px;
 }
 
 /* --- header --- */
 
 .shell__header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--space-3);
-  padding: 18px 22px;
+  height: 64px;
+  padding: 0 var(--space-4) 0 var(--space-6);
   border-bottom: 1px solid var(--color-linea);
   flex-shrink: 0;
-}
-
-.shell__titulo {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
   min-width: 0;
 }
 
-.shell__titulo h2 {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: var(--text-xl);
-  font-weight: 600;
-  letter-spacing: -0.015em;
+.shell__icono {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-base-2);
   color: var(--color-tinta);
 }
 
+/* `.modal-contenido h2` (modal-base.css) le pone margen abajo a todo h2 de un
+   modal; con doble clase este le gana sin depender del orden del bundle. */
+.shell__header .shell__titulo {
+  margin: 0;
+  flex-shrink: 0;
+  max-width: 60%;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--color-tinta);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* El contexto (el proyecto, la fecha) a la derecha del título, separado por
+   una línea: dice dónde se está cargando sin ser un campo. */
 .shell__contexto {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+  min-width: 0;
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--color-linea);
   font-size: var(--text-sm);
   color: var(--color-tinta-muted);
 }
 
-/* Variante etiqueta (arriba del título): punto de marca + nombre corto en
-   mayúsculas. Solo para contextos que son un nombre, no una frase. */
-.shell__contexto--destacado {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: var(--text-2xs);
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--color-terracota-dark);
+.shell__contexto svg {
+  flex-shrink: 0;
+  color: var(--color-tinta-tenue);
 }
 
-.shell__contexto-punto {
-  width: 5px;
-  height: 5px;
-  border-radius: 999px;
-  background: var(--color-terracota);
-  flex-shrink: 0;
+.shell__contexto-texto {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .shell__espaciador {
@@ -75,17 +91,20 @@
 
 /* --- cuerpo --- */
 
+/* `flex: 0 1 auto` y no `flex: 1`: el cuerpo mide lo que su contenido y sólo
+   se achica (y scrollea) cuando no entra en los 88vh. Con `flex: 1` el modal
+   ocupaba siempre el alto máximo y quedaba un hueco muerto antes del pie. */
 .shell__cuerpo {
-  flex: 1;
+  flex: 0 1 auto;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  scrollbar-gutter: stable;
-  padding: 20px 22px;
+  padding: var(--space-6);
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: var(--space-5);
   min-width: 0;
 }
 
@@ -94,43 +113,71 @@
 .shell__footer {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 16px 22px;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
   border-top: 1px solid var(--color-linea);
-  background: var(--color-base-1);
   flex-shrink: 0;
+}
+
+.shell__footer-izquierda {
+  display: flex;
+  gap: var(--space-2);
 }
 
 .shell__footer-total {
   display: flex;
   flex-direction: column;
+  gap: 2px;
   font-variant-numeric: tabular-nums;
 }
 
 .shell__footer-total-label {
-  font-size: var(--text-2xs);
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
+  font-size: var(--text-xs);
   color: var(--color-tinta-muted);
 }
 
 .shell__footer-total-monto {
   font-size: var(--text-xl);
   font-weight: 700;
+  letter-spacing: -0.01em;
   color: var(--color-tinta);
 }
 
 .shell__footer-aviso {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-1-5);
   font-size: var(--text-sm);
-  color: var(--color-oxido);
+  color: var(--color-oxido-texto);
 }
 
 .shell__footer-acciones {
   display: flex;
   gap: var(--space-2);
   margin-left: auto;
+}
+
+@media (max-width: 640px) {
+  .shell__header {
+    padding: 0 var(--space-3) 0 var(--space-4);
+  }
+
+  /* En mobile el contexto no entra al lado del título y se lleva el ancho
+     del título: se esconde, el título dice lo esencial. */
+  .shell__contexto {
+    display: none;
+  }
+
+  .shell__header .shell__titulo {
+    max-width: none;
+  }
+
+  .shell__cuerpo {
+    padding: var(--space-4);
+  }
+
+  .shell__footer {
+    padding: var(--space-3) var(--space-4);
+    flex-wrap: wrap;
+  }
 }

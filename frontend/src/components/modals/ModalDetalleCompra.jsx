@@ -1,24 +1,32 @@
-import { formatMoneda, formatFecha, formatMonedaDual } from "../../utils/formato";
+import { formatMoneda, formatMonedaDual, pluralizar } from "../../utils/formato";
 import { leyendaOtraMoneda } from "../../utils/moneda";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
-import { getEstadoPago, getEstadoEnvio, getCondicionPagoLabel } from "../../constants/estadoCompra";
+import {
+  getEstadoPagoConAntiguedad,
+  getEstadoEnvio,
+  getCondicionPagoLabel,
+} from "../../constants/estadoCompra";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
-import { OLIVA_CLARO } from "../../constants/colores";
+import { diasDesde } from "../../utils/seguimiento";
+import { OLIVA, NARANJA } from "../../constants/colores";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { SeccionNotas } from "../shared/SeccionNotas";
 import {
   DetalleShell,
-  BarraComposicion,
+  CabeceraMovimiento,
+  BadgeEstado,
+  BandaFaltante,
   SeccionDetalle,
-  ChipsComprobantes,
-  TileEstado,
+  GrillaDetalles,
+  TotalesDetalle,
+  ArchivosDetalle,
 } from "./PiezasDetalle";
 
 /**
- * Vista de solo lectura de una Compra, con el lenguaje visual de la dirección
- * 3a del rediseño (ver claudedesign/). El desglose del total (neto,
- * impuestos uno por uno, notas de crédito y de débito) se muestra completo:
- * la barra da la proporción y la lista de abajo los importes exactos.
+ * Vista de lectura de una Compra (Movimientos v2). El desglose del total
+ * (neto, impuestos uno por uno, notas de crédito y de débito) queda completo
+ * en el bloque de totales: los importes exactos tienen que poder leerse sin
+ * abrir la compra para editarla.
  */
 export function ModalDetalleCompra({
   compra,
@@ -36,30 +44,32 @@ export function ModalDetalleCompra({
   onTogglePago,
   onToggleEnvio,
   onEditar,
+  onEliminar,
   canManage = false,
 }) {
-  const estadoPago = getEstadoPago(compra.estado_pago);
-  const estadoEnvio = getEstadoEnvio(compra.estado_envio);
   const pagado = compra.estado_pago === "pagado";
   const entregado = compra.estado_envio === "entregado";
+  const dias = diasDesde(compra.fecha, new Date());
+  const estadoPago = getEstadoPagoConAntiguedad(compra.estado_pago, dias);
+  const estadoEnvio = getEstadoEnvio(compra.estado_envio);
+  const puedeTogglear = canManage;
 
   // Qué producto (y cuánto) devuelve cada nota: sin esto una nota de crédito
   // es sólo un monto suelto y no se sabe sobre qué línea de la compra cae.
+  const nombreProducto = (productoId) => {
+    const producto = productos.find((p) => p.id === productoId);
+    return producto ? `${producto.marca} ${producto.modelo}` : null;
+  };
   const resolverProducto = (detalleCompraId) => {
     const linea = compra.detalle?.find((d) => d.id === detalleCompraId);
-    if (!linea) return null;
-    const producto = productos.find((p) => p.id === linea.producto_id);
-    return producto ? `${producto.marca} ${producto.modelo}` : null;
+    return linea ? nombreProducto(linea.producto_id) : null;
   };
 
   const impuestos = compra.impuestos_aplicados ?? [];
-  // Los impuestos se suman de su propia lista y no de "total - neto", porque
-  // precio_total ya viene con las notas aplicadas y esa resta los pisaría.
-  const totalImpuestos = impuestos.reduce((acc, i) => acc + (Number(i.monto) || 0), 0);
-
   const notas = compra.notas ?? [];
   const notasCredito = totalNotasCredito(notas);
   const notasDebito = totalNotasDebito(notas);
+  const comprobantes = compra.comprobantes ?? [];
   // La compra se paga en pesos: pesos principal y USD congelado entre
   // paréntesis. Los impuestos heredan la cotización de la compra; cada nota
   // trae la suya (por eso el USD del total no es total en pesos / cotización).
@@ -67,145 +77,137 @@ export function ModalDetalleCompra({
   const dual = (ars, usdCongelado) =>
     formatMonedaDual(ars, usdCongelado ?? usd(ars), { principal: "ars" });
 
-  const contexto = [proveedorNombre, faseNombre, getTipoFacturaLabel(compra.tipo_factura)]
-    .filter(Boolean)
-    .join(" · ");
-
-  const subtitulo = [
-    getCondicionPagoLabel(compra.condicion_pago),
-    compra.detalle?.length
-      ? `${compra.detalle.length} ${compra.detalle.length === 1 ? "producto" : "productos"}`
-      : null,
-    usuarioNombre ? `Cargado por ${usuarioNombre}` : null,
-  ]
-    .filter(Boolean)
-    .join(" · ");
+  const titulosEstado = {
+    pago: pagado ? "Pagado" : `Impaga hace ${pluralizar(dias, "día")}`,
+    envio: entregado ? "Entregado" : "Sin entregar",
+  };
 
   return (
     <DetalleShell
       tipo={TIPOS_MOVIMIENTO.compra.singular}
       icono={TIPOS_MOVIMIENTO.compra.icono}
-      contexto={contexto}
-      fecha={formatFecha(compra.fecha)}
+      fecha={compra.fecha}
       titulo={compra.descripcion}
-      subtitulo={subtitulo}
-      total={compra.precio_total_ars}
-      totalSecundario={leyendaOtraMoneda(compra.precio_total_usd, "usd", compra)}
       onCerrar={onCerrar}
       onEditar={canManage ? onEditar : undefined}
+      onEliminar={canManage ? onEliminar : undefined}
+      accionPrimaria={
+        canManage && !pagado && onTogglePago
+          ? { texto: "Marcar pagado", onClick: onTogglePago }
+          : undefined
+      }
     >
-      <BarraComposicion
-        segmentos={[
-          { label: "Neto", monto: compra.precio_neto_ars, color: TIPOS_MOVIMIENTO.compra.color },
-          { label: "Impuestos", monto: totalImpuestos, color: OLIVA_CLARO },
-          {
-            label: "Nota de crédito",
-            monto: notasCredito,
-            color: TIPOS_MOVIMIENTO.nota_credito.color,
-            signo: -1,
-          },
-          {
-            label: "Nota de débito",
-            monto: notasDebito,
-            color: TIPOS_MOVIMIENTO.nota_debito.color,
-            signo: 1,
-          },
-        ]}
+      <CabeceraMovimiento
+        titulo={compra.descripcion}
+        monto={compra.precio_total_ars}
+        secundario={leyendaOtraMoneda(compra.precio_total_usd, "usd", compra)}
+        badges={
+          <>
+            <BadgeEstado
+              estado={estadoPago}
+              titulo={
+                puedeTogglear
+                  ? `${titulosEstado.pago} — ${pagado ? "marcar sin pagar" : "marcar pagado"}`
+                  : titulosEstado.pago
+              }
+              onToggle={puedeTogglear ? onTogglePago : undefined}
+            />
+            <BadgeEstado
+              estado={estadoEnvio}
+              titulo={
+                puedeTogglear
+                  ? `${titulosEstado.envio} — ${entregado ? "marcar sin entregar" : "marcar entregado"}`
+                  : titulosEstado.envio
+              }
+              onToggle={puedeTogglear ? onToggleEnvio : undefined}
+            />
+          </>
+        }
       />
 
-      <SeccionDetalle titulo="Desglose">
-        <div className="detalle__desglose">
-          <div className="detalle__desglose-fila">
-            <span>Neto</span>
-            <span>{dual(compra.precio_neto_ars, compra.precio_neto_usd)}</span>
-          </div>
-          {impuestos.length > 0 ? (
-            impuestos.map((i) => (
-              <div className="detalle__desglose-fila" key={i.id}>
-                <span>{i.impuesto?.nombre ?? "Impuesto"}</span>
-                <span>{dual(i.monto)}</span>
-              </div>
-            ))
-          ) : (
-            <div className="detalle__desglose-fila">
-              <span>Impuestos</span>
-              <span>{formatMoneda(0)}</span>
-            </div>
-          )}
-          {notasCredito > 0 && (
-            <div className="detalle__desglose-fila detalle__desglose-fila--credito">
-              <span>Notas de crédito</span>
-              <span>-{dual(notasCredito, totalNotasCredito(notas, "usd"))}</span>
-            </div>
-          )}
-          {notasDebito > 0 && (
-            <div className="detalle__desglose-fila detalle__desglose-fila--debito">
-              <span>Notas de débito</span>
-              <span>+{dual(notasDebito, totalNotasDebito(notas, "usd"))}</span>
-            </div>
-          )}
-          <div className="detalle__desglose-fila detalle__desglose-fila--total">
-            <span>Total</span>
-            <span>{dual(compra.precio_total_ars, compra.precio_total_usd)}</span>
-          </div>
-        </div>
-      </SeccionDetalle>
-
-      <div className="detalle__estados">
-        <TileEstado
-          label="Pago"
-          estado={estadoPago}
-          activo={pagado}
-          onToggle={canManage && onTogglePago ? onTogglePago : undefined}
-          titulo={pagado ? "Marcar sin pagar" : "Marcar pagado"}
-        />
-        <TileEstado
-          label="Envío"
-          estado={estadoEnvio}
-          activo={entregado}
-          onToggle={canManage && onToggleEnvio ? onToggleEnvio : undefined}
-          titulo={entregado ? "Marcar sin entregar" : "Marcar entregado"}
-        />
-      </div>
-
-      {compra.detalle?.length > 0 && (
-        <SeccionDetalle titulo="Productos">
-          {compra.detalle.map((d) => {
-            const producto = productos.find((p) => p.id === d.producto_id);
-            const subtotal = (Number(d.cantidad) || 0) * (Number(d.precio_unitario) || 0);
-            return (
-              <div key={d.id} className="detalle__producto">
-                <span className="detalle__producto-nombre">
-                  {producto ? `${producto.marca} ${producto.modelo}` : "Producto eliminado"}
-                </span>
-                <span className="detalle__producto-cantidad">x{d.cantidad}</span>
-                <span className="detalle__producto-subtotal">{formatMoneda(subtotal)}</span>
-              </div>
-            );
-          })}
-        </SeccionDetalle>
-      )}
-
-      {compra.categorias?.length > 0 && (
-        <SeccionDetalle titulo="Categorías">
-          <div className="detalle__chips">
-            {compra.categorias.map((cat) => (
-              <span key={cat.id} className="detalle__chip" style={{ cursor: "default" }}>
-                {cat.nombre}
-              </span>
-            ))}
-          </div>
-        </SeccionDetalle>
-      )}
-
-      <SeccionDetalle titulo="Comprobantes">
-        <ChipsComprobantes
-          comprobantes={compra.comprobantes ?? []}
-          onVer={onVerComprobante}
+      {comprobantes.length === 0 && (
+        <BandaFaltante
+          texto="Falta adjuntar la factura o el remito"
           onAgregar={onAgregarComprobante}
-          onEliminar={onEliminarComprobante}
+        />
+      )}
+
+      <SeccionDetalle titulo="Detalles">
+        <GrillaDetalles
+          campos={[
+            faseNombre && { label: "Fase", valor: faseNombre },
+            proveedorNombre && { label: "Proveedor", valor: proveedorNombre },
+            { label: "Condición de pago", valor: getCondicionPagoLabel(compra.condicion_pago) },
+            { label: "Pago", valor: titulosEstado.pago, punto: estadoPago.color },
+            { label: "Envío", valor: titulosEstado.envio, punto: estadoEnvio.color },
+            {
+              label: "Comprobante",
+              valor: getTipoFacturaLabel(compra.tipo_factura),
+              punto: comprobantes.length > 0 ? OLIVA : NARANJA,
+            },
+            compra.categorias?.length > 0 && {
+              label: "Categorías",
+              valor: compra.categorias.map((c) => c.nombre).join(", "),
+            },
+            usuarioNombre && { label: "Cargado por", valor: usuarioNombre },
+          ]}
         />
       </SeccionDetalle>
+
+      <SeccionDetalle
+        titulo={compra.detalle?.length ? pluralizar(compra.detalle.length, "producto") : "Total"}
+      >
+        {compra.detalle?.length > 0 && (
+          <div className="detalle__productos">
+            {compra.detalle.map((d) => {
+              const subtotal = (Number(d.cantidad) || 0) * (Number(d.precio_unitario) || 0);
+              return (
+                <div key={d.id} className="detalle__producto">
+                  <span className="detalle__producto-nombre">
+                    {nombreProducto(d.producto_id) ?? "Producto eliminado"}
+                  </span>
+                  <span className="detalle__producto-cantidad">×{d.cantidad}</span>
+                  <span className="detalle__producto-subtotal">{formatMoneda(subtotal)}</span>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <TotalesDetalle
+          filas={[
+            { label: "Neto", valor: dual(compra.precio_neto_ars, compra.precio_neto_usd) },
+            ...(impuestos.length > 0
+              ? impuestos.map((i) => ({
+                  label: i.impuesto?.nombre ?? "Impuesto",
+                  valor: dual(i.monto),
+                }))
+              : [{ label: "Impuestos", valor: formatMoneda(0) }]),
+            notasCredito > 0 && {
+              label: "Notas de crédito",
+              valor: `-${dual(notasCredito, totalNotasCredito(notas, "usd"))}`,
+              variante: "resta",
+            },
+            notasDebito > 0 && {
+              label: "Notas de débito",
+              valor: `+${dual(notasDebito, totalNotasDebito(notas, "usd"))}`,
+              variante: "suma",
+            },
+            {
+              label: "Total",
+              valor: dual(compra.precio_total_ars, compra.precio_total_usd),
+              variante: "total",
+            },
+          ].filter(Boolean)}
+        />
+      </SeccionDetalle>
+
+      <ArchivosDetalle
+        comprobantes={comprobantes}
+        onVer={onVerComprobante}
+        onAgregar={onAgregarComprobante}
+        onEliminar={onEliminarComprobante}
+      />
 
       <SeccionNotas
         notas={notas}

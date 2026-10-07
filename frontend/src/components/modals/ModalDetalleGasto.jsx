@@ -1,14 +1,20 @@
-import { formatFecha } from "../../utils/formato";
 import { leyendaOtraMoneda } from "../../utils/moneda";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
+import { OLIVA, NARANJA } from "../../constants/colores";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
-import { DetalleShell, BarraComposicion, SeccionDetalle, ChipsComprobantes } from "./PiezasDetalle";
+import {
+  DetalleShell,
+  CabeceraMovimiento,
+  BandaFaltante,
+  SeccionDetalle,
+  GrillaDetalles,
+  ArchivosDetalle,
+} from "./PiezasDetalle";
 
 /**
- * Vista de solo lectura de un Gasto, con el lenguaje visual de la dirección 3a
- * del rediseño (ver claudedesign/). Un gasto no se descompone en neto e
- * impuestos como una compra: es un único importe, así que la barra queda de
- * un solo tramo y no hay bloque de desglose.
+ * Vista de lectura de un Gasto (Movimientos v2). Un gasto no se descompone en
+ * neto e impuestos como una compra: es un único importe, así que no lleva
+ * bloque de totales.
  */
 export function ModalDetalleGasto({
   gasto,
@@ -19,51 +25,53 @@ export function ModalDetalleGasto({
   onAgregarComprobante,
   onEliminarComprobante,
   onEditar,
+  onEliminar,
 }) {
-  const contexto = [getTipoFacturaLabel(gasto.tipo_factura), faseNombre ?? "Gasto general"]
-    .filter(Boolean)
-    .join(" · ");
+  const comprobantes = gasto.comprobantes ?? [];
 
   return (
     <DetalleShell
       tipo={TIPOS_MOVIMIENTO.gasto.singular}
       icono={TIPOS_MOVIMIENTO.gasto.icono}
-      contexto={contexto}
-      fecha={formatFecha(gasto.fecha)}
+      fecha={gasto.fecha}
       titulo={gasto.descripcion}
-      subtitulo={usuarioNombre ? `Cargado por ${usuarioNombre}` : null}
-      total={gasto.monto_ars}
-      totalSecundario={leyendaOtraMoneda(gasto.monto_usd, "usd", gasto)}
-      totalColor={TIPOS_MOVIMIENTO.gasto.color}
       onCerrar={onCerrar}
       onEditar={onEditar}
+      onEliminar={onEliminar}
     >
-      <BarraComposicion
-        segmentos={[
-          { label: "Monto", monto: gasto.monto_ars, color: TIPOS_MOVIMIENTO.gasto.color },
-        ]}
+      <CabeceraMovimiento
+        titulo={gasto.descripcion}
+        monto={gasto.monto_ars}
+        secundario={leyendaOtraMoneda(gasto.monto_usd, "usd", gasto)}
+        badges={<span className="badge badge--marca">Pagado</span>}
       />
 
-      {gasto.categorias?.length > 0 && (
-        <SeccionDetalle titulo="Categorías">
-          <div className="detalle__chips">
-            {gasto.categorias.map((cat) => (
-              <span key={cat.id} className="detalle__chip" style={{ cursor: "default" }}>
-                {cat.nombre}
-              </span>
-            ))}
-          </div>
-        </SeccionDetalle>
-      )}
+      {comprobantes.length === 0 && <BandaFaltante onAgregar={onAgregarComprobante} />}
 
-      <SeccionDetalle titulo="Comprobantes">
-        <ChipsComprobantes
-          comprobantes={gasto.comprobantes ?? []}
-          onVer={onVerComprobante}
-          onAgregar={onAgregarComprobante}
-          onEliminar={onEliminarComprobante}
+      <SeccionDetalle titulo="Detalles">
+        <GrillaDetalles
+          campos={[
+            { label: "Fase", valor: faseNombre ?? "Gasto general" },
+            gasto.categorias?.length > 0 && {
+              label: "Categorías",
+              valor: gasto.categorias.map((c) => c.nombre).join(", "),
+            },
+            {
+              label: "Comprobante",
+              valor: getTipoFacturaLabel(gasto.tipo_factura),
+              punto: comprobantes.length > 0 ? OLIVA : NARANJA,
+            },
+            usuarioNombre && { label: "Cargado por", valor: usuarioNombre },
+          ]}
         />
       </SeccionDetalle>
+
+      <ArchivosDetalle
+        comprobantes={comprobantes}
+        onVer={onVerComprobante}
+        onAgregar={onAgregarComprobante}
+        onEliminar={onEliminarComprobante}
+      />
     </DetalleShell>
   );
 }

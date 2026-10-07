@@ -52,10 +52,10 @@ Cerradas el 07/10/2026. No volver a abrirlas sin decirlo.
 |---|---|---|---|---|
 | **0** | Tokens | `index.css`, `colores.js` | valores | **hecha** 07/10 (sin commitear) |
 | **1** | Header de proyecto + Tabs | `ProyectoDetalleHeader.*`, `Tabs.*`, `estados.js` | **piloto** | **hecha** 07/10 (prompts 1–3) |
-| **2a** | Tabla de movimientos | `LibroDeObra.*` | restyle | pendiente |
-| **2b** | Filtros a chips | `FiltrosSegmentados.*` | restyle | pendiente |
-| **2c** | Panel de filtros | `FiltrosLista.*` | restyle | pendiente |
-| **2d** | Modales de detalle | `ModalDetalle*.jsx`, `PiezasDetalle.jsx`, `ModalDetalle.css` | restyle | pendiente |
+| **2a** | Tabla de movimientos | `LibroDeObra.*` | restyle | **hecha** 07/10 (prompt 6) |
+| **2b** | Filtros a chips | `FiltrosSegmentados.*` | restyle | **hecha** 07/10 (prompt 7) |
+| **2c** | Panel de filtros | `FiltrosLista.*` | restyle | **hecha** 07/10 (prompt 8) |
+| **2d** | Modales de detalle | `ModalDetalle*.jsx`, `PiezasDetalle.jsx`, `ModalDetalle.css` | restyle | **hecha** 07/10 (prompt 9) |
 | **3** | Sidebar blanco | `Sidebar.*`, `MainLayout.*` | estructural | **hecha** 07/10 (prompt 5) |
 | **4+** | Resto | ver cola al final | | |
 
@@ -457,6 +457,13 @@ arreglarlo de paso.**
 | 07/10 | 8 (filtros) | **`FiltrosLista` pasó a ser la barra entera**: recibe los chips de tipo como `children` (izquierda) y pone "Filtrar" a la derecha; el panel con los campos se despliega abajo y los aplicados quedan como `.chip--quitable`. Los campos son `<select class="campo campo--sm">` nativos con `.label-campo` arriba. **`SelectFlotante` se borró**: era el desplegable propio con label flotante, sólo lo usaba esta barra, y su listbox no se podía manejar con teclado. |
 | 07/10 | 8 (filtros) | **Antes la barra de filtros sólo existía en el chip Compras** (y al salir de ahí se borraban todos). Ahora "Filtrar" está en todos los chips y ofrece los campos que aplican a cada uno (`CAMPOS_FILTRO_POR_TIPO` en `utils/filtros.js`): Todo → factura y comprobante; Compras → pago, envío, notas, factura, comprobante; Cobros → notas, factura, comprobante; Gastos → factura, comprobante; Con alertas → factura. Al cambiar de chip se sueltan sólo los que no aplican (`filtrosParaTipo`). `filtrarCompras` ganó el filtro de comprobante, que las compras no tenían. |
 | 07/10 | 8 (filtros) | Los labels de las opciones de filtro de estado pasaron a los del badge de la fila ("A pagar", "Sin entregar") y el "todos" de cada uno a "Todos": con el label del campo arriba, "Cualquier estado de pago" repetía el label. |
+| 07/10 | 9 (detalle) | **Los shells se unificaron de verdad, no sólo el color del header.** `DetalleShell` ahora es un `ModalShell` con props (`icono`, `contexto` = fecha larga, `accionesIzquierda` para Borrar, `etiqueta` para el aria-label) y `ModalShell` pasó a la geometría v5: header de 64 con el cuadradito del ícono y el contexto a la derecha con `border-left`, cuerpo `flex: 0 1 auto` con `max-height: 88vh`, pie `--space-4 --space-6`, caja `--radius-xl` + `--shadow-modal`, sin el borde oliva de 4px. **Eso adelanta la forma del prompt 18**: los modales de alta que usan `ModalShell` (fase, proyecto, producto, proveedor, categoría, confirmar, nota, cotización, importar catálogo) ya tienen el shell nuevo; su contenido sigue siendo v4 hasta ese prompt. `ModalDetalle.css` bajó de 517 a ~330 líneas y ya no define caja, header ni pie. |
+| 07/10 | 9 (detalle) | **`EditarShell` (editar gasto/cobro/compra) usa el mismo `ModalHeader`**, así ver y editar un movimiento tienen el mismo header claro. El resto del modal de edición (inputs de línea abajo, labels en mayúsculas, riel) es v4 y es del prompt 18. Como el detalle v5 ya no usa la barra de composición ni los tiles con switch, `BarraComposicion` y `TileEstado` se mudaron de `PiezasDetalle` a `PiezasEditar` (con sus estilos, ahora `mov-edit__*`): sólo los usan ModalCompra y ModalCobro. |
+| 07/10 | 9 (detalle) | **Los switches de pago/envío del detalle se fueron** (§9: nada de switches). El estado es el badge debajo del título —el mismo de la fila del libro— y el badge es el botón que lo cambia; además, una compra impaga trae **"Marcar pagado" como acción principal del pie** (el "Registrar pago" del diseño: no hay un modelo de pagos, así que la acción es marcarla pagada). |
+| 07/10 | 9 (detalle) | **"Borrar" en el pie se conectó en Acciones y en la fase** (los dos lugares con flujo de borrado): cierra el detalle y abre el `ModalConfirmar` de siempre. En Seguimiento, Seguimiento de la fase y la ficha de proveedor no se pasa `onEliminar` y el botón no aparece: ahí no se borraba antes y no es el lugar. |
+| 07/10 | 9 (detalle) | **Se fue la barra de composición del total** (no está en Movimientos v2); el desglose numérico completo (neto, cada impuesto, notas, total, en las dos monedas) quedó en el bloque de totales alineado a la derecha. En mobile el bloque ocupa todo el ancho y la grilla de detalles pasa a 2 columnas. |
+| 07/10 | 9 (detalle) | **`.shell--ancho` pasó de 660 a 760** (el ancho de "carga en pasos" de §14). Lo usan ModalNota con selector de producto e ImportarCatálogo en el paso de productos; el prompt 18 decide si se quedan ahí. |
+| 07/10 | 9 (detalle) | `formatFechaLarga` ("Jueves 5 de marzo") pasó a `utils/formato.js`: la usan el separador de día del libro y el header del detalle. |
 
 ---
 

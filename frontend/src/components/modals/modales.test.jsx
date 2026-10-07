@@ -213,9 +213,7 @@ describe("smoke de modales", () => {
 
   it("ModalDetalleCompra muestra el desglose completo", () => {
     render(<ModalDetalleCompra compra={compra} productos={productos} onCerrar={noop} />);
-    // "Neto" aparece dos veces a propósito: en la leyenda de la barra de
-    // composición y en la fila del desglose numérico.
-    expect(screen.getAllByText("Neto").length).toBeGreaterThan(0);
+    expect(screen.getByText("Neto")).toBeInTheDocument();
     expect(screen.getByText("IVA 21%")).toBeInTheDocument();
     expect(screen.getByText("Notas de crédito")).toBeInTheDocument();
     expect(screen.getAllByText("Total").length).toBeGreaterThan(0);
@@ -257,7 +255,7 @@ describe("smoke de modales", () => {
     expect(screen.getByText(/Productos devueltos: Rheem Membrana 4mm x2/)).toBeInTheDocument();
   });
 
-  it("ModalDetalleCompra togglea pago y envío desde el modal", async () => {
+  it("ModalDetalleCompra togglea pago y envío desde sus badges", async () => {
     const onTogglePago = vi.fn();
     const onToggleEnvio = vi.fn();
     render(
@@ -271,19 +269,41 @@ describe("smoke de modales", () => {
       />
     );
 
-    const switches = screen.getAllByRole("switch");
-    expect(switches).toHaveLength(2);
-    // pendiente / entregado
-    expect(switches[0]).toHaveAttribute("aria-checked", "false");
-    expect(switches[1]).toHaveAttribute("aria-checked", "true");
+    // DESIGN.md §9: nada de switches. El estado es el badge, y el badge es el
+    // control que lo cambia (como en la fila del libro).
+    expect(screen.queryAllByRole("switch")).toHaveLength(0);
+    await userEvent.click(screen.getByRole("button", { name: /impaga hace .* — marcar pagado/i }));
+    expect(onTogglePago).toHaveBeenCalledTimes(1);
+    await userEvent.click(screen.getByRole("button", { name: /entregado — marcar sin entregar/i }));
+    expect(onToggleEnvio).toHaveBeenCalled();
 
-    await userEvent.click(switches[0]);
-    expect(onTogglePago).toHaveBeenCalled();
+    // Impaga: "Marcar pagado" es la acción principal del pie.
+    await userEvent.click(screen.getByRole("button", { name: "Marcar pagado" }));
+    expect(onTogglePago).toHaveBeenCalledTimes(2);
   });
 
-  it("no muestra switches a un usuario de lectura", () => {
+  it("a un usuario de lectura los estados no le cambian nada", () => {
     render(<ModalDetalleCompra compra={compra} productos={productos} onCerrar={noop} />);
-    expect(screen.queryAllByRole("switch")).toHaveLength(0);
+    expect(screen.getByRole("button", { name: /impaga hace/i })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Marcar pagado" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /borrar/i })).not.toBeInTheDocument();
+  });
+
+  it("el detalle tiene header claro con el tipo y Borrar a la izquierda del pie", async () => {
+    const onEliminar = vi.fn();
+    render(
+      <ModalDetalleGasto gasto={gasto} onCerrar={noop} onEditar={noop} onEliminar={onEliminar} />
+    );
+    expect(screen.getByRole("dialog", { name: "Gasto: Flete y descarga" })).toBeInTheDocument();
+    expect(document.querySelector(".shell__header")).toHaveTextContent("Gasto");
+    await userEvent.click(screen.getByRole("button", { name: /borrar/i }));
+    expect(onEliminar).toHaveBeenCalled();
+  });
+
+  it("avisa con una banda cuando falta el comprobante", () => {
+    render(<ModalDetalleGasto gasto={gasto} onCerrar={noop} onAgregarComprobante={noop} />);
+    expect(screen.getByRole("status")).toHaveTextContent("Falta adjuntar el comprobante");
+    expect(screen.getByRole("button", { name: /adjuntar/i })).toBeInTheDocument();
   });
 
   // Los tres modales de edición comparten el lenguaje de la ficha de detalle

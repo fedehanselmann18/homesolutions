@@ -12,7 +12,7 @@ import {
   Truck,
 } from "lucide-react";
 
-import { formatMoneda, pluralizar } from "../../utils/formato";
+import { formatMoneda, formatFechaLarga, pluralizar } from "../../utils/formato";
 import { nombreDeArchivo } from "../../utils/archivos";
 import { getEstadoPagoConAntiguedad, getEstadoEnvio } from "../../constants/estadoCompra";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
@@ -26,20 +26,6 @@ import { EstadoVacio } from "../shared/EstadoVacio";
 // Cuántos movimientos por página. Una obra larga junta cientos, y el libro
 // pinta todos sus días: sin cortar, la página se vuelve un scroll infinito.
 export const MOVIMIENTOS_POR_PAGINA = 50;
-
-const capitalizar = (texto) => texto.charAt(0).toUpperCase() + texto.slice(1);
-
-// "Jueves 5 de marzo" (y el año sólo si no es el actual), como en el diseño.
-// La fecha viene como "YYYY-MM-DD": con la hora explícita no se corre de día
-// por la zona horaria.
-// Se arma por partes porque es-AR pone una coma después del día de la semana
-// ("jueves, 5 de marzo") que el diseño no tiene.
-function diaConNombre(fecha) {
-  const dia = new Date(`${fecha}T00:00:00`);
-  const parte = (opciones) => dia.toLocaleDateString("es-AR", opciones);
-  const anio = dia.getFullYear() !== new Date().getFullYear() ? ` de ${dia.getFullYear()}` : "";
-  return `${capitalizar(parte({ weekday: "long" }))} ${dia.getDate()} de ${parte({ month: "long" })}${anio}`;
-}
 
 const conSigno = (monto, signo, moneda) =>
   `${signoTexto(signo)}${formatMoneda(Math.abs(monto), moneda)}`;
@@ -227,7 +213,7 @@ export function LibroDeObra({
         {dias.map((dia) => (
           <div key={dia.fecha} className="libro__grupo">
             <div className="libro__dia">
-              <span className="libro__dia-fecha">{diaConNombre(dia.fecha)}</span>
+              <span className="libro__dia-fecha">{formatFechaLarga(dia.fecha)}</span>
               <span className="libro__dia-subtotal cifra">
                 Subtotal del día {conSigno(dia.subtotal, dia.subtotal >= 0 ? 1 : -1)}
               </span>

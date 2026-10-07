@@ -66,6 +66,21 @@ export function formatFecha(fecha) {
   });
 }
 
+// "Jueves 5 de marzo" (y el año sólo si no es el actual): el día de un grupo
+// en el libro de obra y la fecha del header del detalle de un movimiento. Se
+// arma por partes porque es-AR pone una coma después del día de la semana
+// ("jueves, 5 de marzo") que el diseño no tiene.
+export function formatFechaLarga(fecha) {
+  if (!fecha) return "";
+  const dia = new Date(`${fecha}T00:00:00`);
+  const parte = (opciones) => dia.toLocaleDateString("es-AR", opciones);
+  const semana = parte({ weekday: "long" });
+  const anio = dia.getFullYear() !== new Date().getFullYear() ? ` de ${dia.getFullYear()}` : "";
+  return `${semana.charAt(0).toUpperCase()}${semana.slice(1)} ${dia.getDate()} de ${parte({
+    month: "long",
+  })}${anio}`;
+}
+
 // Timestamp completo (fecha + hora), para el rastro de auditoría. A
 // diferencia de formatFecha, acá el valor que manda el backend YA es un
 // instante con zona horaria (creado_en es un timestamptz), así que se parsea

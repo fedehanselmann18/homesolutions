@@ -1,15 +1,25 @@
-import { formatFecha, formatMonedaDual } from "../../utils/formato";
+import { formatMonedaDual } from "../../utils/formato";
 import { leyendaOtraMoneda } from "../../utils/moneda";
 import { getTipoFacturaLabel } from "../../constants/tipoFactura";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
+import { OLIVA, NARANJA } from "../../constants/colores";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { SeccionNotas } from "../shared/SeccionNotas";
-import { DetalleShell, BarraComposicion, SeccionDetalle, ChipsComprobantes } from "./PiezasDetalle";
+import {
+  DetalleShell,
+  CabeceraMovimiento,
+  BandaFaltante,
+  SeccionDetalle,
+  GrillaDetalles,
+  TotalesDetalle,
+  ArchivosDetalle,
+} from "./PiezasDetalle";
 
 /**
- * Vista de solo lectura de un Cobro, con el lenguaje visual de la dirección 3a
- * del rediseño (ver claudedesign/). El bruto y las notas de crédito/débito que
- * lo llevan al neto quedan a la vista, no sólo el número final.
+ * Vista de lectura de un Cobro (Movimientos v2). El cobro se carga en
+ * dólares: USD principal y los pesos congelados como equivalente. Si tiene
+ * notas, el bruto y las notas que lo llevan al neto quedan a la vista, no
+ * sólo el número final.
  */
 export function ModalDetalleCobro({
   cobro,
@@ -22,89 +32,83 @@ export function ModalDetalleCobro({
   onAgregarNota,
   onEliminarNota,
   onEditar,
+  onEliminar,
   canManage = false,
 }) {
   const notas = cobro.notas ?? [];
-  // El cobro se carga en dólares: USD principal, y los pesos congelados (cada
-  // nota con su propia cotización) entre paréntesis. Los netos los calcula
-  // el backend (Cobro.monto_neto_usd/_ars).
+  const comprobantes = cobro.comprobantes ?? [];
+  // Los netos los calcula el backend (Cobro.monto_neto_usd/_ars); cada nota
+  // trae su propia cotización.
   const notasCredito = totalNotasCredito(notas, "usd");
   const notasDebito = totalNotasDebito(notas, "usd");
-  const notasCreditoArs = totalNotasCredito(notas, "ars");
-  const notasDebitoArs = totalNotasDebito(notas, "ars");
-  const montoNeto = cobro.monto_neto_usd;
   const hayNotas = notasCredito > 0 || notasDebito > 0;
 
   return (
     <DetalleShell
       tipo={TIPOS_MOVIMIENTO.cobro.singular}
       icono={TIPOS_MOVIMIENTO.cobro.icono}
-      contexto={getTipoFacturaLabel(cobro.tipo_factura)}
-      fecha={formatFecha(cobro.fecha)}
+      fecha={cobro.fecha}
       titulo={cobro.descripcion}
-      subtitulo={usuarioNombre ? `Cargado por ${usuarioNombre}` : null}
-      totalLabel="Neto"
-      total={montoNeto}
-      totalMoneda="usd"
-      totalSecundario={leyendaOtraMoneda(cobro.monto_neto_ars, "ars", cobro)}
-      totalColor={TIPOS_MOVIMIENTO.cobro.color}
       onCerrar={onCerrar}
       onEditar={canManage ? onEditar : undefined}
+      onEliminar={canManage ? onEliminar : undefined}
     >
-      <BarraComposicion
+      <CabeceraMovimiento
+        titulo={cobro.descripcion}
+        monto={cobro.monto_neto_usd}
         moneda="usd"
-        segmentos={[
-          { label: "Bruto", monto: cobro.monto_usd, color: TIPOS_MOVIMIENTO.cobro.color },
-          {
-            label: "Nota de crédito",
-            monto: notasCredito,
-            color: TIPOS_MOVIMIENTO.nota_credito.color,
-            signo: -1,
-          },
-          {
-            label: "Nota de débito",
-            monto: notasDebito,
-            color: TIPOS_MOVIMIENTO.nota_debito.color,
-            signo: 1,
-          },
-        ]}
+        secundario={leyendaOtraMoneda(cobro.monto_neto_ars, "ars", cobro)}
+        badges={<span className="badge badge--marca">Cobrado</span>}
       />
 
+      {comprobantes.length === 0 && (
+        <BandaFaltante texto="Falta adjuntar el recibo" onAgregar={onAgregarComprobante} />
+      )}
+
+      <SeccionDetalle titulo="Detalles">
+        <GrillaDetalles
+          campos={[
+            {
+              label: "Comprobante",
+              valor: getTipoFacturaLabel(cobro.tipo_factura),
+              punto: comprobantes.length > 0 ? OLIVA : NARANJA,
+            },
+            usuarioNombre && { label: "Cargado por", valor: usuarioNombre },
+          ]}
+        />
+      </SeccionDetalle>
+
       {hayNotas && (
-        <SeccionDetalle titulo="Desglose">
-          <div className="detalle__desglose">
-            <div className="detalle__desglose-fila">
-              <span>Bruto</span>
-              <span>{formatMonedaDual(cobro.monto_ars, cobro.monto_usd)}</span>
-            </div>
-            {notasCredito > 0 && (
-              <div className="detalle__desglose-fila detalle__desglose-fila--credito">
-                <span>Notas de crédito</span>
-                <span>-{formatMonedaDual(notasCreditoArs, notasCredito)}</span>
-              </div>
-            )}
-            {notasDebito > 0 && (
-              <div className="detalle__desglose-fila detalle__desglose-fila--debito">
-                <span>Notas de débito</span>
-                <span>+{formatMonedaDual(notasDebitoArs, notasDebito)}</span>
-              </div>
-            )}
-            <div className="detalle__desglose-fila detalle__desglose-fila--total">
-              <span>Neto</span>
-              <span>{formatMonedaDual(cobro.monto_neto_ars, montoNeto)}</span>
-            </div>
-          </div>
+        <SeccionDetalle titulo="Bruto y notas">
+          <TotalesDetalle
+            filas={[
+              { label: "Bruto", valor: formatMonedaDual(cobro.monto_ars, cobro.monto_usd) },
+              notasCredito > 0 && {
+                label: "Notas de crédito",
+                valor: `-${formatMonedaDual(totalNotasCredito(notas, "ars"), notasCredito)}`,
+                variante: "resta",
+              },
+              notasDebito > 0 && {
+                label: "Notas de débito",
+                valor: `+${formatMonedaDual(totalNotasDebito(notas, "ars"), notasDebito)}`,
+                variante: "suma",
+              },
+              {
+                label: "Neto",
+                valor: formatMonedaDual(cobro.monto_neto_ars, cobro.monto_neto_usd),
+                variante: "total",
+              },
+            ].filter(Boolean)}
+          />
         </SeccionDetalle>
       )}
 
-      <SeccionDetalle titulo="Comprobantes">
-        <ChipsComprobantes
-          comprobantes={cobro.comprobantes ?? []}
-          onVer={onVerComprobante}
-          onAgregar={onAgregarComprobante}
-          onEliminar={onEliminarComprobante}
-        />
-      </SeccionDetalle>
+      <ArchivosDetalle
+        comprobantes={comprobantes}
+        onVer={onVerComprobante}
+        onAgregar={onAgregarComprobante}
+        onEliminar={onEliminarComprobante}
+      />
 
       <SeccionNotas
         notas={notas}

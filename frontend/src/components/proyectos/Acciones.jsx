@@ -430,6 +430,14 @@ export function Acciones({ proyectoId, proyectoNombre }) {
         <ModalDetalleGasto
           gasto={entidadDetalle}
           faseNombre={entidadDetalle.fase_id ? nombreFase(entidadDetalle.fase_id) : null}
+          onEliminar={
+            canManage
+              ? () => {
+                  cerrarDetalle();
+                  handleSolicitarEliminarGasto(entidadDetalle.id);
+                }
+              : undefined
+          }
           onCerrar={cerrarDetalle}
           onVerComprobante={(c) => getComprobanteGasto(entidadDetalle.id, c.id)}
           onAgregarComprobante={
@@ -452,6 +460,14 @@ export function Acciones({ proyectoId, proyectoNombre }) {
       {entidadDetalle && detalle.tipo === "cobro" && (
         <ModalDetalleCobro
           cobro={entidadDetalle}
+          onEliminar={
+            canManage
+              ? () => {
+                  cerrarDetalle();
+                  handleSolicitarEliminarCobro(entidadDetalle.id);
+                }
+              : undefined
+          }
           onCerrar={cerrarDetalle}
           onVerComprobante={(c) => getComprobanteCobro(entidadDetalle.id, c.id)}
           onVerNota={(n) => getNotaCobro(entidadDetalle.id, n.id)}
@@ -477,6 +493,14 @@ export function Acciones({ proyectoId, proyectoNombre }) {
           faseNombre={nombreFase(entidadDetalle.fase_id)}
           proveedorNombre={nombreProveedor(entidadDetalle.proveedor_id)}
           productos={productos}
+          onEliminar={
+            canManage
+              ? () => {
+                  cerrarDetalle();
+                  handleSolicitarEliminarCompra(entidadDetalle.id);
+                }
+              : undefined
+          }
           onCerrar={cerrarDetalle}
           onVerComprobante={(c) => getComprobanteCompra(entidadDetalle.id, c.id)}
           onVerNota={(n) => getNotaCompra(entidadDetalle.id, n.id)}
