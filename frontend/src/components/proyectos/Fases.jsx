@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Pencil, Trash2, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, ChevronUp, Pencil, Plus, Trash2 } from "lucide-react";
 import { crearFase, actualizarFase, eliminarFase, moverFase } from "../../services/faseService";
 import {
   useProyecto,
@@ -11,27 +11,37 @@ import {
 } from "../../hooks/queries";
 import ModalFase from "../modals/ModalFase";
 import ModalConfirmar from "../modals/ModalConfirmar";
-import { BarraProgreso } from "../shared/TarjetaKpi";
 import "./Fases.css";
 import useAuth from "../../context/useAuth";
 import { useToast } from "../../context/useToast";
-import { ESTADO_LABELS, getEstadoLabel } from "../../constants/estados";
-import { NARANJA, ROJO, LINEA } from "../../constants/colores";
+import { getEstadoLabel } from "../../constants/estados";
 import { EstadoVacio } from "../shared/EstadoVacio";
 import { calcularAnalisis } from "../../utils/analisis";
 import { diasDesde } from "../../utils/seguimiento";
-import { formatMoneda, pluralizar } from "../../utils/formato";
+import { ESTADOS_FASE_CERRADA } from "../../utils/fases";
+import { formatMoneda, formatNumero, pluralizar } from "../../utils/formato";
 import { obtenerDetalleBackend } from "../../utils/errorHandling";
-import { TINTE_PASTILLA } from "../../constants/tipoMovimiento";
 
-// La regla de color de la fila es el ESTADO de la fase, así que sale del
-// semáforo de estados.js en vez de volver a mapearlo acá. Antes esta función
-// tenía su propia copia ("terminada/auditada -> VERDE, en_curso -> NARANJA"),
-// igual a la de TablaProyectos, y al mover `en_curso` a azul en la v5 el estado
-// habría quedado azul en el header del proyecto y naranja en esta tabla. Es
-// exactamente lo que la regla principal de docs/DESIGN.md viene a evitar.
-function colorFase(estado) {
-  return ESTADO_LABELS[estado]?.color ?? LINEA; // plano y no CSS var porque el borde va por style inline
+// Variante 4b ("Línea de tiempo"): cada fase es un punto de una línea vertical
+// y una tarjeta. El punto dice dónde está la obra (cerrada / actual / por
+// venir) y es PROGRESO, así que va en el oliva de la marca; el ESTADO de la
+// fase sigue siendo el badge del semáforo (estados.js), el mismo que el header
+// del proyecto. Son dos cosas distintas y no comparten color (DESIGN.md §2).
+function etapaDeFase(estado) {
+  if (ESTADOS_FASE_CERRADA.includes(estado)) return "cerrada";
+  if (estado === "en_curso") return "actual";
+  return "pendiente";
+}
+
+function EstadoFase({ estado }) {
+  const info = getEstadoLabel(estado);
+  const Icono = info.icono;
+  return (
+    <span className="badge badge--sm" style={{ color: info.fg, backgroundColor: info.bg }}>
+      {Icono && <Icono size={12} strokeWidth={2} aria-hidden="true" />}
+      {info.label}
+    </span>
+  );
 }
 
 export function Fases({ proyectoId }) {
@@ -130,13 +140,59 @@ export function Fases({ proyectoId }) {
   }, [proyectoQuery.data, fasesQuery.data, gastosQuery.data, comprasQuery.data]);
 
   const precioAcordado = Number(proyectoQuery.data?.precio_acordado_usd ?? 0);
+  const pctDe = (monto) => (precioAcordado > 0 ? (monto / precioAcordado) * 100 : 0);
+  const irAFase = (fase) => navigate(`/proyectos/${proyectoId}/fases/${fase.id}`);
+
+  const totalGastado = gastadoPorFase?.totales.egresos ?? 0;
+  const gastadoSinFase = gastadoPorFase?.porFase.get(null) ?? 0;
+  const excedido = pctDe(totalGastado) > 100;
 
   return (
-    <div>
-      <div className="fases-header">
-        <h2>Fases del Proyecto</h2>
+    <div className="fases">
+      <div className="fases__barra">
+        {fases.length > 0 && (
+          <div className="fases__presupuesto">
+            <span className="fases__presupuesto-label">Presupuesto usado</span>
+            {/* Un tramo por fase con gasto, en el orden de la obra: la barra
+                total se lee como la suma de las fases de abajo. */}
+            <div
+              className="fases__presupuesto-barra"
+              role="img"
+              aria-label={`${formatNumero(pctDe(totalGastado), 1)}% del presupuesto usado`}
+            >
+              {gastadoPorFase &&
+                fases.map((fase) => {
+                  const gastado = gastadoPorFase.porFase.get(fase.id) ?? 0;
+                  if (gastado <= 0) return null;
+                  return (
+                    <span
+                      key={fase.id}
+                      className={`fases__tramo fases__tramo--${excedido ? "excedido" : etapaDeFase(fase.estado)}`}
+                      style={{ width: `${Math.min(pctDe(gastado), 100)}%` }}
+                      title={`${fase.nombre}: ${formatMoneda(gastado, "usd")}`}
+                    />
+                  );
+                })}
+              {/* Los gastos sin fase también cuentan en el total de al lado:
+                  sin su tramo la barra no sumaría lo que dice el número. */}
+              {gastadoSinFase > 0 && (
+                <span
+                  className={`fases__tramo fases__tramo--${excedido ? "excedido" : "sin-fase"}`}
+                  style={{ width: `${Math.min(pctDe(gastadoSinFase), 100)}%` }}
+                  title={`Sin fase: ${formatMoneda(gastadoSinFase, "usd")}`}
+                />
+              )}
+            </div>
+            <span className="fases__presupuesto-valor">
+              {gastadoPorFase
+                ? `${formatMoneda(totalGastado, "usd")} / ${formatNumero(precioAcordado)}`
+                : "—"}
+            </span>
+          </div>
+        )}
         {canManage && (
           <button type="button" className="btn btn-primary" onClick={handleNuevaFase}>
+            <Plus size={15} strokeWidth={2} aria-hidden="true" />
             Nueva fase
           </button>
         )}
@@ -145,155 +201,123 @@ export function Fases({ proyectoId }) {
       {fases.length === 0 ? (
         <EstadoVacio mensaje="No hay fases disponibles para este proyecto." />
       ) : (
-        <div className="planilla fases-tabla">
-          <div className="planilla__header fases-tabla-header">
-            <span>#</span>
-            <span>Fase</span>
-            <span>Estado</span>
-            <span className="fases-tabla-col--num">Gastado</span>
-            <span>% del presupuesto</span>
-            <span />
-          </div>
-
+        <ol className="fases__linea" aria-label={pluralizar(fases.length, "fase")}>
           {fases.map((fase, i) => {
-            const estadoInfo = getEstadoLabel(fase.estado);
+            const etapa = etapaDeFase(fase.estado);
             const gastado = gastadoPorFase?.porFase.get(fase.id) ?? 0;
-            const pct = precioAcordado > 0 ? (gastado / precioAcordado) * 100 : 0;
-            const enCurso = fase.estado === "en_curso";
-            const terminada = fase.estado === "terminada" || fase.estado === "auditada";
-            const sinDatos = !gastadoPorFase;
+            const pct = pctDe(gastado);
+            const sinGasto = !gastadoPorFase || gastado === 0;
             // fecha_en_curso_desde (no fecha_actualizacion): ese campo se
             // pisa con cualquier edición de la fase, no solo al entrar en
             // curso -- ver comentario en el modelo Fase (backend).
-            const diasEnCurso = fase.fecha_en_curso_desde
-              ? diasDesde(fase.fecha_en_curso_desde, new Date())
-              : null;
+            const diasEnCurso =
+              fase.estado === "en_curso" && fase.fecha_en_curso_desde
+                ? diasDesde(fase.fecha_en_curso_desde, new Date())
+                : null;
+            const subtitulo = [
+              fase.descripcion,
+              diasEnCurso !== null && `En curso hace ${pluralizar(diasEnCurso, "día")}`,
+            ]
+              .filter(Boolean)
+              .join(" · ");
 
             return (
-              <div
-                key={fase.id}
-                className="planilla__fila fases-tabla-fila"
-                style={{ boxShadow: `inset 3px 0 0 ${colorFase(fase.estado)}` }}
-                onClick={() => navigate(`/proyectos/${proyectoId}/fases/${fase.id}`)}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) =>
-                  (e.key === "Enter" || e.key === " ") &&
-                  navigate(`/proyectos/${proyectoId}/fases/${fase.id}`)
-                }
-              >
-                <span className="fases-tabla-num">{String(fase.orden).padStart(2, "0")}</span>
-
-                <span className="fases-tabla-col--fase">
-                  <span
-                    className={[
-                      "fases-tabla-nombre",
-                      fase.estado === "por_empezar" && "fases-tabla-nombre--pendiente",
-                      terminada && "fases-tabla-nombre--terminada",
-                    ]
-                      .filter(Boolean)
-                      .join(" ")}
-                  >
-                    {fase.nombre}
+              <li key={fase.id} className={`fases__item fases__item--${etapa}`}>
+                <div className="fases__riel" aria-hidden="true">
+                  <span className="fases__punto">
+                    {etapa === "cerrada" ? <Check size={14} strokeWidth={2.6} /> : i + 1}
                   </span>
-                  {fase.descripcion && (
-                    <span className="fases-tabla-descripcion" title={fase.descripcion}>
-                      {fase.descripcion}
-                    </span>
-                  )}
-                  {enCurso && diasEnCurso !== null && (
-                    <span className="fases-tabla-subtexto">En curso hace {diasEnCurso} días</span>
-                  )}
-                </span>
+                  <span className="fases__tramo-linea" />
+                </div>
 
-                <span
-                  className="badge fases-tabla-estado"
-                  style={{
-                    backgroundColor: `${estadoInfo.color}${TINTE_PASTILLA}`,
-                    color: estadoInfo.color,
-                  }}
+                <div
+                  className="fases__card fila-con-acciones"
+                  role="link"
+                  tabIndex={0}
+                  onClick={() => irAFase(fase)}
+                  onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && irAFase(fase)}
                 >
-                  {estadoInfo.label}
-                </span>
+                  <div className="fases__texto">
+                    <span className="fases__nombre">
+                      {fase.nombre}
+                      <EstadoFase estado={fase.estado} />
+                    </span>
+                    {subtitulo && (
+                      <span className="fases__descripcion" title={subtitulo}>
+                        {subtitulo}
+                      </span>
+                    )}
+                  </div>
 
-                <span className="fases-tabla-col--num">
-                  {sinDatos || gastado === 0 ? "—" : formatMoneda(gastado, "usd")}
-                </span>
+                  <div className="fases__gastado">
+                    <span className="fases__gastado-monto">
+                      {sinGasto ? "—" : formatMoneda(gastado, "usd")}
+                    </span>
+                    <span className="fases__gastado-label">gastado</span>
+                  </div>
 
-                <span className="fases-tabla-col--pct">
-                  <BarraProgreso porcentaje={pct} color={pct > 100 ? ROJO : NARANJA} />
-                  <span className="fases-tabla-pct-valor">
-                    {sinDatos || gastado === 0 ? "—" : `${pct.toFixed(1)}%`}
-                  </span>
-                </span>
+                  <div className="fases__avance">
+                    <div className="fases__avance-barra">
+                      <span
+                        className={pct > 100 ? "fases__avance-relleno--excedido" : undefined}
+                        style={{ width: `${Math.min(pct, 100)}%` }}
+                      />
+                    </div>
+                    <span className="fases__avance-pct">
+                      {sinGasto ? "—" : `${formatNumero(pct, 1)}%`}
+                    </span>
+                  </div>
 
-                <span className="fases-tabla-col--accion">
-                  {canManage && (
-                    <span className="fases-tabla-acciones">
-                      <span className="fases-tabla-orden-btns">
+                  <div className="fases__fin">
+                    {canManage && (
+                      <span className="acciones">
                         <button
                           type="button"
-                          className="fases-tabla-orden-btn"
+                          className="btn-icono btn-icono--sm"
                           onClick={(e) => handleMoverFase(e, fase, "arriba")}
                           disabled={i === 0}
+                          aria-label={`Subir ${fase.nombre}`}
                           title="Subir fase"
                         >
-                          <ChevronUp size={12} strokeWidth={2.5} />
+                          <ChevronUp />
                         </button>
                         <button
                           type="button"
-                          className="fases-tabla-orden-btn"
+                          className="btn-icono btn-icono--sm"
                           onClick={(e) => handleMoverFase(e, fase, "abajo")}
                           disabled={i === fases.length - 1}
+                          aria-label={`Bajar ${fase.nombre}`}
                           title="Bajar fase"
                         >
-                          <ChevronDown size={12} strokeWidth={2.5} />
+                          <ChevronDown />
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-icono btn-icono--sm"
+                          onClick={(e) => handleEditarFase(e, fase)}
+                          aria-label={`Editar ${fase.nombre}`}
+                          title="Editar fase"
+                        >
+                          <Pencil />
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-icono btn-icono--sm btn-icono--peligro"
+                          onClick={(e) => handleSolicitarEliminarFase(e, fase)}
+                          aria-label={`Eliminar ${fase.nombre}`}
+                          title="Eliminar fase"
+                        >
+                          <Trash2 />
                         </button>
                       </span>
-                      <button
-                        type="button"
-                        className="btn-icono btn-icono--sm btn-icono--contorno"
-                        onClick={(e) => handleEditarFase(e, fase)}
-                        title="Editar fase"
-                      >
-                        <Pencil size={13} strokeWidth={2} />
-                      </button>
-                      <button
-                        type="button"
-                        className="btn-icono btn-icono--sm btn-icono--contorno btn-icono--peligro"
-                        onClick={(e) => handleSolicitarEliminarFase(e, fase)}
-                        title="Eliminar fase"
-                      >
-                        <Trash2 size={13} strokeWidth={2} />
-                      </button>
-                    </span>
-                  )}
-                  <ChevronRight
-                    size={18}
-                    strokeWidth={2}
-                    className="fases-tabla-chevron"
-                    aria-hidden="true"
-                  />
-                </span>
-              </div>
+                    )}
+                    <ChevronRight size={18} className="fases__chevron" aria-hidden="true" />
+                  </div>
+                </div>
+              </li>
             );
           })}
-
-          <div className="planilla__fila fases-tabla-total">
-            <span />
-            <span>TOTAL {pluralizar(fases.length, "FASE")}</span>
-            <span />
-            <span className="fases-tabla-col--num">
-              {gastadoPorFase ? formatMoneda(gastadoPorFase.totales.egresos, "usd") : "—"}
-            </span>
-            <span className="fases-tabla-total-pct">
-              {gastadoPorFase
-                ? `${gastadoPorFase.totales.pctGastado.toFixed(0)}% del presupuesto`
-                : "—"}
-            </span>
-            <span />
-          </div>
-        </div>
+        </ol>
       )}
 
       {modalAbierto && (

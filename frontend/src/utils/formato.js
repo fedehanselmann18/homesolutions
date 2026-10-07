@@ -12,6 +12,15 @@ export function formatMoneda(monto, moneda = "ars") {
   }).format(monto);
 }
 
+// Un número sin moneda, en es-AR y con decimales fijos: "59,3" y no "59.3"
+// (toFixed), que en una pantalla en castellano se lee como miles.
+export function formatNumero(numero, decimales = 0) {
+  return new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: decimales,
+    maximumFractionDigits: decimales,
+  }).format(numero);
+}
+
 // Versión compacta para ejes y etiquetas de gráficos: $3,9 M / US$ 3,9 M
 export function formatMonedaCorta(monto, moneda = "ars") {
   return new Intl.NumberFormat("es-AR", {
