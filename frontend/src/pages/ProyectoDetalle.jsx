@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Layers, ArrowRightLeft, ChartNoAxesColumn, Bell } from "lucide-react";
 import {
   useProyecto,
@@ -19,7 +19,7 @@ import { EstadoError } from "../components/shared/EstadoError";
 import { Tabs } from "../components/shared/Tabs";
 import { obtenerMensajeError } from "../utils/errorHandling";
 import { calcularSeguimiento } from "../utils/seguimiento";
-import { pluralizar } from "../utils/formato";
+import { describirFaseActual } from "../utils/fases";
 import "./ProyectoDetalle.css";
 
 const TABS = [
@@ -29,29 +29,16 @@ const TABS = [
   { key: "seguimiento", label: "Seguimiento", icono: Bell },
 ];
 
-const FASE_CERRADA = ["terminada", "auditada"];
-
-/**
- * El tercer ítem de la meta del header: "Fase 3 de 4 · Montaje". La fase
- * actual es la primera en curso por orden. Sin ninguna en curso no se inventa
- * una "actual": se dice cuántas hay y en qué quedaron.
- */
-function describirFaseActual(fases) {
-  if (!fases?.length) return null;
-  const ordenadas = [...fases].sort((a, b) => a.orden - b.orden);
-  const total = ordenadas.length;
-  const indice = ordenadas.findIndex((f) => f.estado === "en_curso");
-  if (indice >= 0) return { numero: indice + 1, total, nombre: ordenadas[indice].nombre };
-  if (ordenadas.every((f) => FASE_CERRADA.includes(f.estado))) {
-    return { nombre: total === 1 ? "1 fase terminada" : `${total} fases terminadas` };
-  }
-  return { nombre: `${pluralizar(total, "fase")}, ninguna en curso` };
-}
-
 function ProyectoDetalle() {
   const { id } = useParams();
   const { data: proyecto, error } = useProyecto(id);
-  const [tabActiva, setTabActiva] = useState("fases");
+  // `?tab=seguimiento` abre directo en esa tab: el Panel manda ahí desde
+  // "Para resolver", que es donde se resuelve cada pendiente.
+  const [searchParams] = useSearchParams();
+  const [tabActiva, setTabActiva] = useState(() => {
+    const pedida = searchParams.get("tab");
+    return TABS.some((t) => t.key === pedida) ? pedida : "fases";
+  });
 
   // Las mismas queries que usan las tabs (React Query las dedupea): el header
   // necesita las fases para "Fase N de M" y la tab de Seguimiento su contador.

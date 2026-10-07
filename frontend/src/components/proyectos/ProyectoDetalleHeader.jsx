@@ -16,8 +16,9 @@ import { getEstado } from "../../constants/estados";
  * ejecutado en Análisis General, Cobrado en Seguimiento, Fases en la propia
  * tabla de Fases, Requiere acción desglosado en Seguimiento.
  *
- * `faseActual` es `{ numero, total, nombre }` o null. Mientras las fases no
- * cargaron, o si el proyecto no tiene ninguna, ese ítem de la meta no se pinta.
+ * `faseActual` sale de describirFaseActual (utils/fases.js) o es null: mientras
+ * las fases no cargaron, o si el proyecto no tiene ninguna, ese ítem de la meta
+ * no se pinta.
  */
 function ProyectoDetalleHeader({ proyecto, breadcrumb, faseActual }) {
   const estado = getEstado(proyecto.estado);
@@ -51,9 +52,7 @@ function ProyectoDetalleHeader({ proyecto, breadcrumb, faseActual }) {
         {faseActual && (
           <li>
             <Layers size={15} strokeWidth={1.75} aria-hidden="true" />
-            {faseActual.numero
-              ? `Fase ${faseActual.numero} de ${faseActual.total} · ${faseActual.nombre}`
-              : faseActual.nombre}
+            {faseActual.texto}
           </li>
         )}
       </ul>

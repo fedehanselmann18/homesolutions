@@ -19,6 +19,9 @@ import {
 // skeleton reemplaza al spinner viejo mientras cargando=true, y que
 // desaparece por completo una vez que las 5 queries resuelven.
 vi.mock("../hooks/queries");
+vi.mock("../context/useAuth", () => ({
+  default: () => ({ usuario: { nombre_usuario: "agustin", rol: "admin" } }),
+}));
 
 const renderDashboard = () =>
   render(
@@ -56,7 +59,7 @@ describe("Dashboard", () => {
 
     expect(container.querySelectorAll(".skeleton").length).toBeGreaterThan(0);
     expect(screen.queryByText(/cargando panel/i)).not.toBeInTheDocument();
-    expect(screen.queryByText("Panel")).not.toBeInTheDocument();
+    expect(screen.queryByText("Hola, Agustin")).not.toBeInTheDocument();
   });
 
   it("cuando las 5 queries resuelven, renderiza el panel real sin bloques de skeleton", () => {
@@ -74,7 +77,9 @@ describe("Dashboard", () => {
     });
     const { container } = renderDashboard();
 
-    expect(screen.getByText("Panel")).toBeInTheDocument();
+    // El título del Panel es el saludo (variante 4i).
+    expect(screen.getByRole("heading", { name: "Hola, Agustin" })).toBeInTheDocument();
+    expect(screen.getByText("Disponible en obras")).toBeInTheDocument();
     expect(container.querySelectorAll(".skeleton")).toHaveLength(0);
   });
 });

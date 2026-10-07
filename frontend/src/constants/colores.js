@@ -76,6 +76,7 @@ export const ROJO_TEXTO = "#b42318"; // --color-oxido-texto
 export const TINTA_MUTED = "#5a5a58"; // --color-tinta-muted
 export const TINTA_TENUE = "#8c8b86"; // --color-tinta-tenue (meta-texto, íconos decorativos)
 export const LINEA = "#e6e4df"; // --color-linea
+export const GRIS_CLARO = "#d9d7d2"; // --color-gris-claro-marca (egresos en un gráfico, eje)
 export const LINEA_SUAVE = "#efeee9"; // --color-linea-suave (separador entre filas)
 
 // Paleta categórica para los gráficos de torta/treemap, donde hacen falta más

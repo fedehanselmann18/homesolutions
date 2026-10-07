@@ -346,3 +346,52 @@ describe("calcularPanel", () => {
     });
   });
 });
+
+describe("calcularPanel — Para resolver y deuda con proveedores", () => {
+  const hoy = new Date("2026-10-07T12:00:00");
+  const hace = (dias) => {
+    const fecha = new Date(hoy);
+    fecha.setDate(fecha.getDate() - dias);
+    return fecha.toISOString().slice(0, 10);
+  };
+  const proyectos = [
+    { id: "p1", estado: "en_curso", nombre: "Olleros", precio_acordado_usd: 1000 },
+  ];
+  const fases = [{ id: "f1", proyecto_id: "p1", estado: "en_curso", orden: 1, nombre: "Montaje" }];
+  const compra = (id, dias, extra = {}) => ({
+    id,
+    fase_id: "f1",
+    proveedor_id: "pr1",
+    descripcion: `Compra ${id}`,
+    fecha: hace(dias),
+    estado_pago: "pendiente",
+    estado_envio: "entregado",
+    precio_total_ars: 1000,
+    precio_total_usd: 1,
+    comprobantes: [{ id: 1 }],
+    ...extra,
+  });
+
+  it("ordena por urgencia: la deuda vencida primero, después lo más viejo", () => {
+    const panel = calcularPanel({
+      proyectos,
+      fases,
+      compras: [compra("a", 10), compra("b", 120), compra("c", 40)],
+      proveedores: [{ id: "pr1", nombre: "Aluar" }],
+      hoy,
+    });
+    expect(panel.paraResolver.map((i) => i.key)).toEqual(["pago-b", "pago-c", "pago-a"]);
+    expect(panel.paraResolver[0]).toMatchObject({ nivel: "problema", proveedor: "Aluar" });
+    expect(panel.proyectosActivos[0].faseActual.texto).toBe("Fase 1 de 1 · Montaje");
+  });
+
+  it("la deuda con proveedores suma todas las compras impagas en pesos", () => {
+    const panel = calcularPanel({
+      proyectos,
+      fases,
+      compras: [compra("a", 10), compra("b", 120), compra("c", 5, { estado_pago: "pagado" })],
+      hoy,
+    });
+    expect(panel.kpis.deudaProveedores).toEqual({ monto: 2000, compras: 2, vencidas: 1 });
+  });
+});

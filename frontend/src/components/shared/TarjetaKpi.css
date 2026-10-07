@@ -22,30 +22,28 @@
   gap: 4px;
 }
 
+/* v5: el label es texto normal en muted (DESIGN.md §3, sin mayúsculas). */
 .kpi-titulo {
-  font-size: var(--text-xs);
-  font-weight: 600;
+  font-size: var(--text-base);
   color: var(--color-tinta-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
 }
 
 /* El importe es un token largo y sin espacios ("$ 17.487.467"), así que no
    puede partirse en dos líneas: en una celda angosta se salía por el costado y
    se montaba sobre el KPI de al lado. El tamaño se ata al ancho de la celda
    (cqi) con un techo, así conserva la presencia cuando hay lugar y achica
-   sólo cuando de verdad no entra. */
+   sólo cuando de verdad no entra.
+   v5: la cifra es --text-3xl / 700 (la de los KPI de 4i), y el techo del
+   clamp es ese token. */
 .kpi-valor {
   font-family: var(--font-display);
-  font-size: clamp(1rem, 11cqi, 1.7rem);
-  font-weight: 600;
+  font-size: clamp(var(--text-lg), 12cqi, var(--text-3xl));
+  font-weight: 700;
+  letter-spacing: -0.02em;
   color: var(--color-tinta);
   line-height: 1.15;
   font-variant-numeric: tabular-nums;
-}
-
-.kpi-valor--destacado {
-  font-size: clamp(1.05rem, 12.5cqi, 2rem);
+  white-space: nowrap;
 }
 
 .kpi-detalle {
