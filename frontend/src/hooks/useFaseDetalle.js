@@ -87,7 +87,7 @@ export function useFaseDetalle(faseId) {
     //
     // Doble moneda: las cifras van en las dos monedas ({ usd, ars }) y el
     // análisis muestra la que esté elegida. Los % salen siempre de los
-    // dólares (caveat 6.3 de PLAN_TIPO_CAMBIO.md).
+    // dólares.
     const gastado = (gastos, compras, moneda) =>
       sumar(gastos, (g) => montoGasto(g, moneda)) +
       sumar(compras, (c) => precioTotalCompra(c, moneda));

@@ -6,7 +6,7 @@ tiene los valores; acá está **por qué son ésos y cuándo usar cada uno**.
 Los tokens de marca (color y tipografía) salen del Manual de uso de la marca
 (`HS_IID_Manual`, v1_06/26), que vive en `docs/Manual_uso_HS.pdf`. Todo lo demás
 —escala de texto, espaciado, componentes— sale de los diseños de Claude Design
-en `docs/GENERALUIUXChange/`, `docs/UIUXChange/` y `docs/MODALSUIUXChange/`.
+(prototipos `.dc.html` ya retirados del repo; quedan en el historial de git).
 
 > **Estado: v5 — dirección cálida.** Esta versión reemplaza la v4 ("estilo
 > Spotify": navegación oscura, grises fríos). El documento está **acordado pero
@@ -1189,13 +1189,7 @@ nuevo desde cero:
 
 ## Apéndice — el material de diseño
 
-Los diseños de esta versión están en el repo:
-
-| Carpeta | Qué tiene |
-|---|---|
-| `docs/GENERALUIUXChange/` | `HS General` (Panel, Proyectos, Proveedores, Proveedor detalle — variantes `4i`–`4p`), `HSSidebar`, `HSProyectoHeader`, `HS Proyecto`, `Movimientos v2` |
-| `docs/MODALSUIUXChange/` | Lo anterior + `HS Modales` (variantes `5a`–`5f`) |
-| `docs/UIUXChange/` | Primera exploración: `Movimientos` (variantes `1a`–`2b`) |
+Los prototipos `.dc.html` (`HS General`, `HSSidebar`, `HSProyectoHeader`, `HS Proyecto`, `Movimientos v2`, `HS Modales`) se retiraron del repo; siguen en el historial de git. Los códigos de variante (`4i`–`4p`, `5a`–`5f`) que citan el código y este documento se refieren a ellos.
 
 **`Movimientos.dc.html` es material descartado.** Usa la paleta vieja fría
 (`#18181b`, `#6b7280`, `#e4e4e7`, verde `#16a34a`), tamaños en `rem` y

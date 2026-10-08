@@ -2,7 +2,7 @@
    flotante ni sombra. En la v5 tampoco lleva la regla izquierda del color de
    estado: la identidad la da la tipografía (h1 a 700) y el estado lo dice el
    badge. Breadcrumb + título + estado + meta, nada más antes de las tabs
-   (ver docs/DESIGN.md §13 y docs/GENERALUIUXChange/HSProyectoHeader.dc.html). */
+   (ver docs/DESIGN.md §13 y HSProyectoHeader.dc.html). */
 
 .proyecto-header {
   display: flex;

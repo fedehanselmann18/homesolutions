@@ -1,0 +1,70 @@
+name: Backup de la base
+
+# Backup diario de la base de producción (Postgres en Railway) a un bucket de
+# Cloudflare R2, fuera de Railway: si se pierde el servicio o el volumen, la
+# copia sigue estando.
+#
+# Secrets que hay que cargar en GitHub (Settings > Secrets and variables >
+# Actions):
+#   BACKUP_DATABASE_URL   DATABASE_PUBLIC_URL del servicio Postgres en Railway
+#   R2_ACCOUNT_ID         los mismos que usa el backend para los comprobantes
+#   R2_ACCESS_KEY_ID
+#   R2_SECRET_ACCESS_KEY
+#   R2_BACKUP_BUCKET      bucket SOLO para backups (ej. homesolutions-backups)
+# Variable opcional:
+#   PG_MAJOR              versión mayor del Postgres de Railway (default 17).
+#                         pg_dump tiene que ser igual o más nuevo que el server.
+#
+# Retención: configurarla en R2 con una regla de lifecycle del bucket (por
+# ejemplo, borrar objetos de más de 30 días). Acá no se borra nada.
+#
+# Restaurar (pisa los datos de la base destino):
+#   aws s3 cp s3://$R2_BACKUP_BUCKET/<archivo>.sql.gz . --endpoint-url https://$R2_ACCOUNT_ID.r2.cloudflarestorage.com
+#   gunzip -c <archivo>.sql.gz | psql "$DATABASE_URL"
+
+on:
+  schedule:
+    - cron: "17 6 * * *" # todos los días, 03:17 en Argentina
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+      PG_MAJOR: ${{ vars.PG_MAJOR || '17' }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: auto
+      R2_ENDPOINT: https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
+      BUCKET: ${{ secrets.R2_BACKUP_BUCKET }}
+    steps:
+      # Hasta que se carguen los secrets, el cron no falla todos los días:
+      # avisa y sale.
+      - name: Chequear configuración
+        id: config
+        run: |
+          if [ -z "$DATABASE_URL" ] || [ -z "$BUCKET" ]; then
+            echo "::warning::Faltan BACKUP_DATABASE_URL o R2_BACKUP_BUCKET; no se hace el backup."
+            echo "listo=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "listo=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: pg_dump
+        if: steps.config.outputs.listo == 'true'
+        # shell: bash explícito activa pipefail: si pg_dump falla, falla el paso.
+        shell: bash
+        run: |
+          ARCHIVO="homesolutions_$(date -u +%Y%m%d_%H%M%S).sql.gz"
+          docker run --rm "postgres:${PG_MAJOR}" \
+            pg_dump "$DATABASE_URL" --format=plain --no-owner --no-privileges \
+            | gzip > "$ARCHIVO"
+          # Un dump vacío o cortado pesa casi nada: mejor fallar que subirlo.
+          test "$(stat -c %s "$ARCHIVO")" -gt 1000
+          echo "ARCHIVO=$ARCHIVO" >> "$GITHUB_ENV"
+          ls -lh "$ARCHIVO"
+
+      - name: Subir a R2
+        if: steps.config.outputs.listo == 'true'
+        run: aws s3 cp "$ARCHIVO" "s3://$BUCKET/$ARCHIVO" --endpoint-url "$R2_ENDPOINT"

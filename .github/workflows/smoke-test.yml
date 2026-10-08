@@ -1,0 +1,34 @@
+name: Smoke test post-deploy
+
+# Railway y Vercel deployan solos desde la rama main (integración de GitHub de
+# cada uno) y avisan a GitHub cuando un deploy termina. Cuando un deploy de
+# producción sale bien, esto corre backend/scripts/smoke_test.py contra las
+# URLs públicas para confirmar que levantó bien (CORS, login, frontend).
+#
+# Variables opcionales (Settings > Secrets and variables > Actions > Variables):
+#   SMOKE_BACKEND_URL   default: https://api.homesolutions.company
+#   SMOKE_FRONTEND_URL  default: https://homesolutions.company
+
+on:
+  deployment_status:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+       contains(github.event.deployment.environment, 'roduction'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Correr smoke test
+        env:
+          BACKEND: ${{ vars.SMOKE_BACKEND_URL || 'https://api.homesolutions.company' }}
+          FRONTEND: ${{ vars.SMOKE_FRONTEND_URL || 'https://homesolutions.company' }}
+        run: python3 backend/scripts/smoke_test.py --backend "$BACKEND" --frontend "$FRONTEND"

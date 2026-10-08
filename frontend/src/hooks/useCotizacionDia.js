@@ -6,7 +6,7 @@ const TIPO_DEFAULT = "blue";
 
 /**
  * Estado del dólar de un form de carga (compra, gasto, cobro, nota): tipo de
- * cambio + cotización. Ver docs/PLAN_TIPO_CAMBIO.md, decisión #2.
+ * cambio + cotización.
  *
  * - Al crear, precarga la cotización de la tabla `cotizaciones`: la del día
  *   del movimiento (`fecha`) o la última cargada antes. Si la fecha o el

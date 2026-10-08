@@ -1,4 +1,4 @@
-// Doble moneda (ver docs/PLAN_TIPO_CAMBIO.md): "ars" -> "$ 1.234", "usd" ->
+// Doble moneda: "ars" -> "$ 1.234", "usd" ->
 // "US$ 1.234". Es el formato es-AR de Intl, así que en pantalla "$" pelado
 // siempre significa pesos. El default es pesos porque es la moneda de todo lo
 // que no se convirtió (catálogo de proveedores, detalle de compra, impuestos).

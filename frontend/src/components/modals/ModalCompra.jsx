@@ -118,7 +118,7 @@ export function ModalCompra({
   const toast = useToast();
   // La compra se paga en pesos (el catálogo del proveedor está en pesos): el
   // neto se arma en ARS y el USD lo congela el backend con esta cotización.
-  // Los impuestos heredan la misma (ver docs/PLAN_TIPO_CAMBIO.md).
+  // Los impuestos heredan la misma.
   const cotizacion = useCotizacionDia({ fecha: form.fecha, inicial: compra });
   const [intentoGuardar, setIntentoGuardar] = useState(false);
   const [camposIA, setCamposIA] = useState(new Set());

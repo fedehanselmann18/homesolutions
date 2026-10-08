@@ -229,7 +229,7 @@ describe("calcularAnalisis", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Doble moneda (docs/PLAN_TIPO_CAMBIO.md, Fase 5): cada moneda suma su cifra
+// Doble moneda: cada moneda suma su cifra
 // congelada, nada se reconvierte al leer, y los % salen siempre de los USD.
 // ---------------------------------------------------------------------------
 

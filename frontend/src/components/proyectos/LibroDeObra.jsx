@@ -42,9 +42,9 @@ const conSigno = (monto, signo, moneda) =>
  * agrupada por día, con un saldo acumulado calculado del
  * movimiento más viejo al más nuevo. Click en la fila abre el detalle; los
  * estados de pago/envío de una compra se togglean desde su badge, sin abrirlo.
- * Diseño: docs/GENERALUIUXChange/Movimientos v2.dc.html, variante 3a.
+ * Diseño: Movimientos v2.dc.html, variante 3a.
  *
- * Doble moneda (decisión 6 del rediseño, #5 de docs/PLAN_TIPO_CAMBIO.md): el
+ * Doble moneda: el
  * libro es la caja, así que el SALDO va en pesos nominales,
  * lo que efectivamente entró y salió. Cada fila muestra su importe en la
  * moneda en que se cargó -- compras y gastos en pesos, cobros en dólares -- y

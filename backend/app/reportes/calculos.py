@@ -8,7 +8,7 @@ tipo, top proveedores). Mismas fórmulas, mismos nombres de campo en español
 -- así si algún día hay que tocar un cálculo, se busca en los dos lugares a
 la vez y no se pisan.
 
-Doble moneda (ver docs/PLAN_TIPO_CAMBIO.md, Fase 3): calcular_analisis_proyecto
+Doble moneda: calcular_analisis_proyecto
 recibe la moneda y es UN SOLO cuerpo de fórmulas que se invoca dos veces
 (USD y ARS). Así las dos monedas usan exactamente la misma cuenta y nadie
 puede arreglar una y olvidarse de la otra. Cada movimiento ya trae sus dos

@@ -265,8 +265,7 @@ export function armarEvolucion(gastos, cobros, compras, hoy, moneda, cantidad = 
  * pestaña Análisis General) para que los números del Panel y los del detalle
  * de un proyecto no puedan divergir nunca.
  *
- * `moneda` y `cotizacionActual`: mismos que en calcularAnalisis (ver
- * docs/PLAN_TIPO_CAMBIO.md). Cada fila de proyecto lleva su moneda para que
+ * `moneda` y `cotizacionActual`: mismos que en calcularAnalisis. Cada fila de proyecto lleva su moneda para que
  * la tabla la formatee sin otra prop.
  */
 export function calcularPanel({

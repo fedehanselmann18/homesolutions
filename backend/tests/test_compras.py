@@ -205,7 +205,7 @@ def test_crear_nota_compra_devolucion_producto_actualiza_precio_total(
     compra_actualizada = client.get(f"/compras/{compra['id']}", headers=headers_admin).json()
     assert compra_actualizada["precio_total_ars"] == 100000.0  # 200000 neto - 100000 nota_credito
     # 200 USD del neto (a 1000) - 80 USD de la nota (a 1250). NO es 100000 / 1000:
-    # por eso se persisten las dos cifras (PLAN_TIPO_CAMBIO.md §3).
+    # por eso se persisten las dos cifras.
     assert compra_actualizada["precio_total_usd"] == 120.0
 
 

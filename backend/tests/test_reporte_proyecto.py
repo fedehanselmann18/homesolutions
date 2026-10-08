@@ -1,6 +1,5 @@
 """
-Reporte del proyecto en las dos monedas (ver app/reportes/calculos.py y
-docs/PLAN_TIPO_CAMBIO.md, Fase 3).
+Reporte del proyecto en las dos monedas (ver app/reportes/calculos.py).
 
 El escenario es el del problema de negocio, con números redondos: precio
 acordado 100.000 USD, se cobraron 65.000 USD con el dólar a 1000, y después

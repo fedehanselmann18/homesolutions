@@ -124,7 +124,7 @@ def test_actualizar_gasto_reemplaza_categorias_no_las_suma(
 
 
 # ---------------------------------------------------------------------------
-# Congelamiento del USD (PLAN_TIPO_CAMBIO.md §4.4): lo calcula SIEMPRE el
+# Congelamiento del USD: lo calcula SIEMPRE el
 # backend y recalcula ignorando lo que mande el front.
 # ---------------------------------------------------------------------------
 

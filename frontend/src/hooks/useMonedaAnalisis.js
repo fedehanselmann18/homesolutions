@@ -7,7 +7,7 @@ import { MONEDA_ANALISIS_DEFAULT } from "../utils/moneda";
 // proyecto, el de la fase y el panel también se ven en pesos, sin tener que
 // cambiarlo en cada pantalla. Vive en memoria a propósito (no en
 // localStorage): al recargar vuelve a dólares, que es la vara de
-// rentabilidad (ver docs/PLAN_TIPO_CAMBIO.md, decisión #5).
+// rentabilidad.
 let monedaActual = MONEDA_ANALISIS_DEFAULT;
 const suscriptores = new Set();
 

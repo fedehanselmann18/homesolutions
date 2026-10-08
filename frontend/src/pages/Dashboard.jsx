@@ -36,7 +36,7 @@ import { PageHeader } from "../components/shared/PageHeader";
 import { EstadoError } from "../components/shared/EstadoError";
 import "./Dashboard.css";
 
-// Panel — variante 4i de docs/GENERALUIUXChange/HS General.dc.html ("Números
+// Panel — variante 4i de HS General.dc.html ("Números
 // + gráfico + dos listas"): lo primero que se ve al entrar es cuánta plata
 // hay, qué falta cobrar, qué se debe y qué hay que resolver.
 

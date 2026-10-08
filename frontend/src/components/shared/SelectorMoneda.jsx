@@ -5,7 +5,7 @@ import { MONEDAS } from "../../utils/moneda";
 const OPCIONES = [MONEDAS.usd, MONEDAS.ars];
 
 /**
- * Switch US$ / Pesos de los análisis (ver docs/PLAN_TIPO_CAMBIO.md, Fase 5).
+ * Switch US$ / Pesos de los análisis.
  * Es un filtro excluyente, así que reusa FiltrosSegmentados en vez de
  * inventar otro control. La elección es global (useMonedaAnalisis): cambia
  * todos los análisis de la app a la vez.

@@ -6,7 +6,7 @@ import "./ProveedorItems.css";
 
 /**
  * Las dos formas de un proveedor en la lista "primero a quién se le debe"
- * (variante 4N de docs/GENERALUIUXChange/HS General.dc.html): una card para
+ * (variante 4N de HS General.dc.html): una card para
  * los que tienen deuda, con lo que se debe bien grande y la acción para
  * resolverlo, y una fila para los que están al día.
  */

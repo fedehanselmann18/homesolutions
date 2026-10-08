@@ -100,7 +100,7 @@ export function ModalCobro({
   const { extraer, extrayendo } = useExtraccionIA();
   const toast = useToast();
   // El cliente paga en dólares: el monto se tipea en USD y los pesos los
-  // congela el backend con esta cotización (ver docs/PLAN_TIPO_CAMBIO.md).
+  // congela el backend con esta cotización.
   const cotizacion = useCotizacionDia({ fecha: form.fecha, inicial: cobro });
   const [intentoGuardar, setIntentoGuardar] = useState(false);
   const [camposIA, setCamposIA] = useState(new Set());

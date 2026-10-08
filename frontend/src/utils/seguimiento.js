@@ -9,7 +9,7 @@ import { montoCobroNeto, montoGasto, precioTotalCompra, saldoPorCobrar } from ".
 // Una fase "en curso" que hace este tiempo que no se toca se marca como
 // estancada. Ajustable de una sola línea si a Agus le queda corto o largo.
 //
-// Doble moneda (ver docs/PLAN_TIPO_CAMBIO.md): cada item lleva `monto` en la
+// Doble moneda: cada item lleva `monto` en la
 // moneda en que se cargó (`moneda`) y `montoOtra` en la otra, congelada. Lo
 // que se debe a proveedores va en pesos primero (caveat 6.2: una compra
 // impaga es una obligación en pesos); la cobranza, en dólares (el contrato y
