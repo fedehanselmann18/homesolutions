@@ -72,7 +72,7 @@ export function ModalGasto({
   const { extraer, extrayendo } = useExtraccionIA();
   const toast = useToast();
   // El gasto se paga en pesos: el monto se tipea en ARS y el USD lo congela
-  // el backend con esta cotización (ver docs/PLAN_TIPO_CAMBIO.md).
+  // el backend con esta cotización.
   const cotizacion = useCotizacionDia({ fecha: form.fecha, inicial: gasto });
   const [intentoGuardar, setIntentoGuardar] = useState(false);
   const [camposIA, setCamposIA] = useState(new Set());

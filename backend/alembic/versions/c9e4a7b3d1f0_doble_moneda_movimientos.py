@@ -4,7 +4,7 @@ Revision ID: c9e4a7b3d1f0
 Revises: b5d2f8a1c6e3
 Create Date: 2026-10-05 00:00:00.000000
 
-Ver docs/PLAN_TIPO_CAMBIO.md §4.2. Compras, gastos, cobros y notas pasan a
+Compras, gastos, cobros y notas pasan a
 guardar cotizacion_dolar + tipo_cambio y las dos cifras (ARS y USD).
 
 Columnas NOT NULL y SIN backfill (decisión #7): la base de producción está
@@ -35,8 +35,8 @@ def _exigir_tablas_vacias() -> None:
     ]
     if con_filas:
         raise RuntimeError(
-            "Esta migración necesita las tablas de movimientos vacías (sin backfill, ver "
-            f"docs/PLAN_TIPO_CAMBIO.md decisión #7), y estas tienen filas: {', '.join(con_filas)}. "
+            "Esta migración necesita las tablas de movimientos vacías (sin backfill), "
+            f"y estas tienen filas: {', '.join(con_filas)}. "
             "Vacialas (o reseteá la base local) y volvé a correr alembic upgrade head."
         )
 

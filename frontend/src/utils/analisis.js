@@ -12,7 +12,7 @@ import {
   precioTotalCompra,
 } from "./moneda";
 
-// Doble moneda (ver docs/PLAN_TIPO_CAMBIO.md, Fase 5): todo el análisis es UN
+// Doble moneda: todo el análisis es UN
 // cuerpo de fórmulas que recibe la moneda y solo elige qué columna congelada
 // sumar de cada movimiento (accessors de utils/moneda.js). Mismo criterio que
 // backend/app/reportes/calculos.py, que es el que arma el PDF.

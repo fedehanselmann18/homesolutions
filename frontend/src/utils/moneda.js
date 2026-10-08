@@ -1,4 +1,4 @@
-// Doble moneda (ver docs/PLAN_TIPO_CAMBIO.md). Cada movimiento trae del
+// Doble moneda. Cada movimiento trae del
 // backend sus DOS cifras ya congeladas (sufijos _ars/_usd), así que acá no
 // se convierte nada al leer: solo se elige qué columna mirar según la moneda.
 // Son la contraparte de _Montos en backend/app/reportes/calculos.py -- si

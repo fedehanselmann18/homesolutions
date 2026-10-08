@@ -42,7 +42,7 @@ export function rubroPrincipal(productosDelProveedor, getTipoProducto) {
  * pendiente (mismo criterio que "compras pendientes de pago" de Seguimiento).
  *
  * Todo en PESOS: con un proveedor se compra y se debe en pesos (catálogo en
- * pesos, decisión #4 de docs/PLAN_TIPO_CAMBIO.md, y caveat 6.2 para la deuda).
+ * pesos).
  */
 export function calcularResumenProveedor(
   proveedor,

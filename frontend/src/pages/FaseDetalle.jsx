@@ -249,8 +249,7 @@ export function FaseDetalle() {
     proyecto: null,
   }).pendientes;
   const tabs = TABS.map((t) => (t.key === "seguimiento" ? { ...t, badge: pendientesFase } : t));
-  // Lo que se debe, en las dos monedas: la deuda es en pesos (caveat 6.2 de
-  // PLAN_TIPO_CAMBIO.md) y el USD congelado va de referencia.
+  // Lo que se debe, en las dos monedas: la deuda es en pesos y el USD congelado va de referencia.
   const montoSinPagarFase = {
     ars: comprasImpagasFase.reduce((acc, c) => acc + precioTotalCompra(c, "ars"), 0),
     usd: comprasImpagasFase.reduce((acc, c) => acc + precioTotalCompra(c, "usd"), 0),

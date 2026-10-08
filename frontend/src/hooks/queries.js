@@ -105,8 +105,7 @@ export const useCotizaciones = () =>
 /**
  * La última cotización cargada hasta `fecha` (hoy si no viene). `tipo` es
  * opcional. Sirve para dos cosas: precargar el dólar del día en los forms
- * (ver useCotizacionDia) y pasar a pesos el precio acordado ("cuánto vale hoy
- * el contrato", decisión #8 de PLAN_TIPO_CAMBIO.md).
+ * (ver useCotizacionDia) y pasar a pesos el precio acordado.
  */
 export const useUltimaCotizacion = ({ tipo, fecha } = {}) =>
   useQuery({

@@ -10,7 +10,7 @@ Convenciones:
   +- notas. precio_neto_ars SÍ se carga a mano (puede haber descuentos/redondeos
   que no coincidan exacto con la suma del detalle — eso se valida en el
   service, no se fuerza en el modelo).
-- Doble moneda (ver docs/PLAN_TIPO_CAMBIO.md): nombre pelado (monto, precio,
+- Doble moneda: nombre pelado (monto, precio,
   precio_unitario) = una sola moneda, pesos. Sufijo _ars/_usd = doble
   registro, las dos cifras persistidas con la cotización congelada del
   movimiento (CotizacionCongeladaMixin).
@@ -217,8 +217,7 @@ class Configuracion(Base):
 # Cotización del dólar
 # ---------------------------------------------------------------------------
 
-# Tipos de dólar con los que se puede cargar un movimiento (ver
-# docs/PLAN_TIPO_CAMBIO.md, decisión #3). A diferencia del resto de los
+# Tipos de dólar con los que se puede cargar un movimiento). A diferencia del resto de los
 # "tipo select" de este archivo, este SÍ se valida en el backend (Literal en
 # schemas.py): define con qué cotización se congela plata, no es una etiqueta.
 TIPOS_CAMBIO = ("oficial", "blue", "otro")
@@ -242,7 +241,7 @@ class Cotizacion(TimestampMixin, Base):
     id: Mapped[uuid.UUID] = uuid_pk()
     fecha: Mapped[date] = mapped_column(nullable=False, index=True)
     tipo: Mapped[str] = mapped_column(String(20), nullable=False)  # oficial | blue | otro
-    # Numeric(12,4): aguanta 1487.3456 con margen (ver PLAN_TIPO_CAMBIO.md, 6.6).
+    # Numeric(12,4): aguanta 1487.3456 con margen.
     valor: Mapped[float] = mapped_column(Numeric(12, 4), nullable=False)
 
 
@@ -253,8 +252,7 @@ class CotizacionCongeladaMixin:
     ese movimiento para siempre: una compra de marzo sigue valiendo lo que
     valió aunque después cambie el dólar o se edite la tabla cotizaciones.
 
-    Convive con las DOS cifras persistidas del movimiento (sufijos _ars/_usd,
-    ver la regla de nombres en PLAN_TIPO_CAMBIO.md §3): una la tipea el
+    Convive con las DOS cifras persistidas del movimiento (sufijos _ars/_usd): una la tipea el
     usuario y la otra la calcula el backend con app/tipo_cambio.py.
     """
 
@@ -285,7 +283,7 @@ class Proyecto(TimestampMixin, Base):
     estado: Mapped[str] = mapped_column(String(20), nullable=False)  # a_iniciar/en_curso/terminado
     # El precio se acuerda con el cliente en dólares. Su equivalente en pesos
     # NO se persiste: se calcula al leer con la última cotización cargada
-    # ("cuánto vale hoy el contrato", ver PLAN_TIPO_CAMBIO.md decisión #8).
+    # ("cuánto vale hoy el contrato").
     precio_acordado_usd: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     # El dólar del día de la firma, como trazabilidad. Nullable y fuera de
     # toda cuenta: un proyecto cargado tiempo después puede no tenerlo.
@@ -491,8 +489,7 @@ class Compra(CotizacionCongeladaMixin, TimestampMixin, Base):
         """
         Mismo criterio que precio_total_ars, pero cada nota suma con SU
         propio USD congelado: una nota tiene fecha propia, o sea otro dólar.
-        Por eso esto NO es precio_total_ars / cotizacion_dolar (ver
-        PLAN_TIPO_CAMBIO.md §3).
+        Por eso esto NO es precio_total_ars / cotizacion_dolar.
         """
         return float(self.precio_neto_usd) + self.impuestos_usd + _ajuste_notas(self.notas, "monto_usd")
 
@@ -566,7 +563,7 @@ class CompraImpuesto(TimestampMixin, Base):
     impuesto_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("impuestos.id", ondelete="RESTRICT"), nullable=False
     )
-    # Pesos (nombre pelado = una sola moneda, ver PLAN_TIPO_CAMBIO.md §3).
+    # Pesos (nombre pelado = una sola moneda).
     monto: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
 
     compra: Mapped["Compra"] = relationship(back_populates="impuestos_aplicados")

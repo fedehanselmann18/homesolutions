@@ -24,7 +24,7 @@ export const crearCompra = async (compra) => {
   //           detalle: [{ producto_id, cantidad, precio_unitario }],
   //           impuestos: [{ impuesto_id, monto }] }
   // usuario_id lo agrega el backend solo, del JWT; precio_neto_usd también
-  // (lo congela con la cotización, ver docs/PLAN_TIPO_CAMBIO.md)
+  //
   const { data } = await axiosClient.post("/compras/crear", compra);
   return data;
 };

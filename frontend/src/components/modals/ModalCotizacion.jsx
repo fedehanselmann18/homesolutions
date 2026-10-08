@@ -15,7 +15,7 @@ const OPCIONES_TIPO = TIPOS_CAMBIO.map((t) => ({ valor: t.value, label: t.label 
  * Alta y edición de una fila de la tabla de cotizaciones (ver
  * pages/Catalogos.jsx). Es la fuente de la que los forms de carga sugieren el
  * dólar del día: editarla NO toca los movimientos ya cargados, que guardan su
- * propia cotización congelada (ver docs/PLAN_TIPO_CAMBIO.md, decisión #2).
+ * propia cotización congelada.
  */
 export function ModalCotizacion({ cotizacion, onGuardar, onCerrar }) {
   const esEdicion = Boolean(cotizacion);

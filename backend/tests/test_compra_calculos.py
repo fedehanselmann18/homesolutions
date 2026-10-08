@@ -129,7 +129,7 @@ def _nota_compra_detalle(detalle_compra_id, cantidad, precio_unitario):
 
 # ---------------------------------------------------------------------------
 # Doble moneda: el USD de una compra NO es su total en pesos / su cotización,
-# porque cada nota trae su propio dólar (PLAN_TIPO_CAMBIO.md §3).
+# porque cada nota trae su propio dólar.
 # ---------------------------------------------------------------------------
 
 

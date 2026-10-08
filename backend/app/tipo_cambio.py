@@ -1,6 +1,5 @@
 """
-Congelamiento de la cotización en los movimientos de plata (ver
-docs/PLAN_TIPO_CAMBIO.md, §3 y §4.4).
+Congelamiento de la cotización en los movimientos de plata.
 
 Cada compra, gasto, cobro y nota guarda las dos cifras (ARS y USD) y la
 cotización con la que se cargó. Una de las dos cifras la tipea el usuario y

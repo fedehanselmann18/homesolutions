@@ -127,7 +127,7 @@ ningún `.env`).
 │       ├── hooks/             # lógica de estado reusable (ej. useAuthProvider)
 │       ├── api/                # cliente axios (cookies, CSRF, manejo de errores)
 │       └── context/            # contexto de auth (usuario actual, login/logout)
-├── docs/                      # DESIGN.md (sistema de diseño) y PLAN_TIPO_CAMBIO.md
+├── docs/                      # DESIGN.md (sistema de diseño)
 └── .github/workflows/         # CI
 ```
 

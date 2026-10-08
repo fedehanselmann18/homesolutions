@@ -47,7 +47,7 @@ const nuevaFilaId = () => `tmp-${++contadorFilaTemp}`;
  *
  * tipo_factura es SIEMPRE obligatorio, sin importar tipo/origen.
  *
- * Doble moneda (ver docs/PLAN_TIPO_CAMBIO.md): la nota lleva SU cotización,
+ * Doble moneda: la nota lleva SU cotización,
  * la de su fecha, no la de la compra o el cobro que ajusta. Las de compra se
  * cargan en pesos (los productos devueltos salen a precio de la compra
  * original, en pesos); las de cobro en dólares, como el cobro.

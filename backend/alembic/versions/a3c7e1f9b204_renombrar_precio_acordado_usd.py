@@ -5,8 +5,7 @@ Revises: f4b83c2e910a
 Create Date: 2026-10-05 00:00:00.000000
 
 Solo el nombre, sin tocar los datos: el campo nunca dijo su moneda y eso es
-lo que originó el plan de tipo de cambio (ver docs/PLAN_TIPO_CAMBIO.md,
-caveat 6.5). El precio se acuerda en dólares, así que el nombre lo dice.
+lo que originó el plan de tipo de cambio. El precio se acuerda en dólares, así que el nombre lo dice.
 """
 
 from typing import Sequence, Union

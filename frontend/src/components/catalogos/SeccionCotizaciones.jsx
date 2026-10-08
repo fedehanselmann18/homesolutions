@@ -31,7 +31,7 @@ import "./SeccionCotizaciones.css";
  * columnas propias: una cotización no es un nombre.
  *
  * Editar o borrar una fila no toca nada ya cargado: cada compra, gasto o
- * cobro guarda su propia cotización congelada (docs/PLAN_TIPO_CAMBIO.md). Por
+ * cobro guarda su propia cotización congelada. Por
  * eso acá no hay "en uso" que frene un borrado.
  */
 export function SeccionCotizaciones() {
