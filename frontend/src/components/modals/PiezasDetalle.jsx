@@ -11,7 +11,7 @@ import "./ModalDetalle.css";
 /**
  * Piezas compartidas por los tres modales de detalle (Compra / Gasto / Cobro).
  * Geometría de HS Modales (DESIGN.md §14) y estructura de contenido de
- * docs/GENERALUIUXChange/Movimientos v2.dc.html: cabecera con el importe,
+ * Movimientos v2.dc.html: cabecera con el importe,
  * banda si falta el comprobante, detalles en grilla, productos con su total,
  * archivos y, al pie, Borrar a la izquierda y Editar / la acción a la derecha.
  */

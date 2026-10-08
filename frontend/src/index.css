@@ -460,7 +460,7 @@ textarea:focus-visible,
    El borde de 1px va en todas las variantes (transparente en las rellenas)
    para que todas midan igual.
 
-   Botones v2 (docs/BUTTONSUIUXChange, variante 1a "Iconos por tipo"): la base
+   Botones v2 (, variante 1a "Iconos por tipo"): la base
    sube a 36px / 14px con el ícono a 16 y 8 de aire, y TODO botón de acción
    lleva ícono, el de lo que crea o hace (el de la entidad del sidebar o el del
    tipo de movimiento), nunca un "+" genérico. El tamaño del ícono lo fija

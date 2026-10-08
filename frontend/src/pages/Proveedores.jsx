@@ -25,7 +25,7 @@ import { Buscador } from "../components/shared/Buscador";
 import { EstadoVacio } from "../components/shared/EstadoVacio";
 import "./Proveedores.css";
 
-// Lista de proveedores — variante 4N de docs/GENERALUIUXChange/HS General.dc.html
+// Lista de proveedores — variante 4N de HS General.dc.html
 // ("Primero a quién se le debe"): arriba los que tienen deuda, ordenados por
 // lo que se debe, como cards con la acción para resolverlo; abajo los que
 // están al día, en filas. El criterio es ordenar por lo que hay que

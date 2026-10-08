@@ -43,7 +43,7 @@ function Alertas({ proyecto }) {
 
 /**
  * Card de un proyecto en la lista de Proyectos — variante 4L de
- * docs/GENERALUIUXChange/HS General.dc.html. `proyecto` es una fila de
+ * HS General.dc.html. `proyecto` es una fila de
  * calcularPanel (utils/panel.js): los números son los mismos del Panel y del
  * Análisis del proyecto, nunca un cálculo aparte.
  *

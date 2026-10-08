@@ -73,7 +73,7 @@ import { usePageTitle } from "../hooks/usePageTitle";
 
 import "./ProveedorDetalle.css";
 
-// Detalle de proveedor — variante 4P de docs/GENERALUIUXChange/HS General.dc.html
+// Detalle de proveedor — variante 4P de HS General.dc.html
 // ("Ficha lateral · Historial de compras"): la ficha del proveedor es una
 // columna fija del layout a la izquierda (no un drawer, DESIGN.md §15) y el
 // contenido son dos tabs, Catálogo e Historial de compras.
