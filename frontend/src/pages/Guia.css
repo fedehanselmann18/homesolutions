@@ -1,0 +1,168 @@
+/* Guía — sin diseño propio: nav de secciones a la izquierda (mismo lenguaje
+   que los items del sidebar, DESIGN.md §13) y el contenido en una card
+   (§10). En móvil el nav pasa arriba y scrollea en horizontal. */
+.guia {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+/* Como en Comparador: el separador del header ya da el aire de arriba. */
+.guia > .page-header {
+  margin-bottom: 0;
+}
+
+.guia__cuerpo {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: var(--space-8);
+  align-items: start;
+}
+
+/* --- nav de secciones --- */
+
+.guia-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  position: sticky;
+  top: var(--space-8);
+}
+
+.guia-nav__item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: 36px;
+  padding: 0 var(--space-2);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-tinta-muted);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--transicion),
+    color var(--transicion);
+}
+
+.guia-nav__item svg {
+  flex-shrink: 0;
+}
+
+.guia-nav__item:hover {
+  background: var(--color-relleno);
+  color: var(--color-tinta);
+}
+
+.guia-nav__item--activo,
+.guia-nav__item--activo:hover {
+  background: var(--color-oliva-sel);
+  color: var(--color-oliva);
+  font-weight: 600;
+}
+
+/* --- panel de contenido --- */
+
+.guia-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-card);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-lg);
+  background: var(--color-superficie);
+}
+
+.guia-panel__cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.guia-panel__titulo {
+  margin: 0;
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-tinta);
+}
+
+.guia-panel__resumen {
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--color-tinta-muted);
+}
+
+.guia-panel__bloques {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 68ch;
+}
+
+.guia-bloque__parrafo,
+.guia-bloque__pasos,
+.guia-bloque__lista {
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: 1.6;
+  color: var(--color-tinta);
+  text-wrap: pretty;
+}
+
+.guia-bloque__pasos,
+.guia-bloque__lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-left: var(--space-5);
+}
+
+/* El aviso es un "panel suave" (DESIGN.md §10) y no un bloque ámbar: §2
+   deja el accent de atención sólo para badges y errores de campo, nunca de
+   fondo de un bloque. Lo que lo separa del texto es el panel y el ícono. */
+.guia-aviso {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  margin: 0;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-superficie-suave);
+  color: var(--color-tinta);
+  font-size: var(--text-base);
+  line-height: 1.5;
+}
+
+.guia-aviso svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: var(--color-tinta-muted);
+}
+
+@media (max-width: 640px) {
+  .guia__cuerpo {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+
+  .guia-nav {
+    position: static;
+    flex-direction: row;
+    overflow-x: auto;
+    scrollbar-width: none;
+    overscroll-behavior-x: contain;
+  }
+
+  .guia-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .guia-nav__item {
+    flex-shrink: 0;
+  }
+}

@@ -18,6 +18,8 @@ const FaseDetalle = lazy(() => import("../pages/FaseDetalle"));
 const Proveedores = lazy(() => import("../pages/Proveedores"));
 const ProveedorDetalle = lazy(() => import("../pages/ProveedorDetalle"));
 const Catalogos = lazy(() => import("../pages/Catalogos"));
+// Sólo para admin: ProtectedRoute saca de acá a cualquier otro rol.
+const Guia = lazy(() => import("../pages/Guia"));
 // Subárbol exclusivo de la cuenta "Manager" (ver constants/manager.js): una
 // página por sección en vez de una sola pantalla con todas apiladas.
 const GestionEquipo = lazy(() => import("../pages/manager/GestionEquipo"));
@@ -53,6 +55,7 @@ export function AppRouter() {
                 no es Manager (ver comentario en pages/Catalogos.jsx). */}
             <Route path="/catalogos" element={<Catalogos />} />
             <Route path="/comparador" element={<Comparador />} />
+            <Route path="/guia" element={<Guia />} />
             {/* Solo la cuenta "Manager" llega a este subárbol: ProtectedRoute
                 saca de acá a cualquier otro usuario (y encierra a Manager
                 dentro de él). El índice redirige a "equipo" -- la URL base

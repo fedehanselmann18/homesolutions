@@ -2,11 +2,13 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/useAuth.js";
 import { RUTA_MANAGER_EQUIPO, esManager, esRutaManager } from "../constants/manager.js";
 
+const RUTAS_SOLO_ADMIN = ["/guia"];
+
 // Envuelve las rutas internas. Mientras useAuth resuelve si hay sesión
 // (loading), no renderiza nada para evitar un parpadeo hacia /login antes
 // de confirmar el token.
 export function ProtectedRoute() {
-  const { usuario, loading } = useAuth();
+  const { usuario, loading, isAdmin } = useAuth();
   const { pathname } = useLocation();
 
   if (loading) {
@@ -34,6 +36,14 @@ export function ProtectedRoute() {
 
   if (!esManager(usuario) && enSubarbolManager) {
     return <Navigate to="/" replace />;
+  }
+
+  // Páginas sólo para admin (hoy la guía). Acá sí se distingue "estás
+  // forzando la URL" de "no hay sesión": ya hay usuario, así que /no-autorizado
+  // dice la verdad. El link del sidebar tampoco se dibuja para otros roles,
+  // pero esto es lo que frena a quien escribe la dirección a mano.
+  if (RUTAS_SOLO_ADMIN.includes(pathname) && !isAdmin) {
+    return <Navigate to="/no-autorizado" replace />;
   }
 
   return <Outlet />;

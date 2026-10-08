@@ -10,6 +10,7 @@ import {
   History,
   Settings,
   FolderSearch,
+  BookOpen,
   LogOut,
 } from "lucide-react";
 import { useAuth } from "../context/useAuth";
@@ -40,6 +41,8 @@ const ITEMS_NAV = [
   { to: "/proveedores", label: "Proveedores", icono: Truck, contador: (c) => c.proveedores },
   { to: "/catalogos", label: "Catálogos", icono: Tags, contador: null },
   { to: "/comparador", label: "Comparador", icono: GitCompare, contador: null },
+  // La guía es sólo para admin (ver RUTAS_SOLO_ADMIN en ProtectedRoute).
+  { to: "/guia", label: "Guía", icono: BookOpen, contador: null, soloAdmin: true },
 ];
 
 // Subárbol exclusivo de la cuenta "Manager" (ver constants/manager.js): antes
@@ -59,6 +62,7 @@ const ITEMS_NAV_MANAGER = [
 // no se disparan para la cuenta "Manager", que no ve ninguna de estas
 // páginas (ver constants/manager.js) ni tiene permiso para pedir esos datos.
 function NavEquipo() {
+  const { isAdmin } = useAuth();
   const proyectosQuery = useProyectos();
   const proveedoresQuery = useProveedores();
 
@@ -101,7 +105,7 @@ function NavEquipo() {
   return (
     <>
       <div className="sidebar-grupo">
-        {ITEMS_NAV.map((item) => {
+        {ITEMS_NAV.filter((item) => isAdmin || !item.soloAdmin).map((item) => {
           const cantidad = item.contador?.(contadores);
           return (
             <NavLink
