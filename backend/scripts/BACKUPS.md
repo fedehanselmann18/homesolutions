@@ -30,27 +30,6 @@ cd backend
 
 Pide confirmación antes de pisar la base actual.
 
-## Programarlo todos los días (cron)
-
-1. Abrí el crontab de tu usuario:
-
-   ```bash
-   crontab -e
-   ```
-
-2. Agregá una línea para correrlo, por ejemplo, todos los días a las 3 AM
-   (ajustá la ruta a donde tengas el proyecto):
-
-   ```
-   0 3 * * * cd /Users/fedehanselmann/coding-projects/HomeSolutions/backend && ./scripts/backup_db.sh >> backups/backup.log 2>&1
-   ```
-
-3. Guardá y cerrá. Con `crontab -l` podés confirmar que quedó cargado.
-
-Si el cron no corre, en macOS a veces hay que darle permiso de "Acceso
-completo al disco" a `cron`/Terminal desde Ajustes del Sistema > Privacidad
-y seguridad.
-
 ## Más adelante (S3)
 
 Cuando pasen a producción, este mismo script sirve de base: después de crear
