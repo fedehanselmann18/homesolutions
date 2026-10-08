@@ -72,9 +72,17 @@ describe("LibroDeObra", () => {
     expect(saldos).toEqual(["$ 856.317", "$ 2.965.500", "$ 3.050.000"]);
   });
 
-  it("titula la columna de saldo en pesos", () => {
+  it("muestra debajo el mismo saldo acumulado en dólares", () => {
     render_();
-    expect(screen.getByText("Saldo $")).toBeInTheDocument();
+
+    // 05/03 cobro +3.050 -> 09/03 gasto -67,6 -> 12/03 compra -1.687,35
+    const saldos = [...document.querySelectorAll(".libro__saldo-usd")].map(texto);
+    expect(saldos).toEqual(["US$ 1.295", "US$ 2.982", "US$ 3.050"]);
+  });
+
+  it("titula la columna de saldo como saldo restante", () => {
+    render_();
+    expect(screen.getByText("Saldo restante")).toBeInTheDocument();
   });
 
   it("agrupa por día, sin subtotal", () => {

@@ -13,6 +13,7 @@ import {
   filtrarCompras,
   filtrarGastos,
   tieneAlerta,
+  tieneNotas,
 } from "../../utils/filtros";
 import { calcularSeguimiento, armarBandeja } from "../../utils/seguimiento";
 import { montoGasto, precioTotalCompra } from "../../utils/moneda";
@@ -139,6 +140,7 @@ const FILTROS_TIPO = [
   { key: "compras", label: "Compras" },
   { key: "gastos", label: "Gastos" },
   { key: "alertas", label: "Con alertas" },
+  { key: "conNotas", label: "Con nota de crédito/débito" },
 ];
 
 /**
@@ -182,12 +184,15 @@ export function AccionesFase({
   // "Con alertas": mismo criterio que la lista del proyecto (utils/filtros.js).
   const comprasConAlerta = comprasFiltradas.filter((c) => tieneAlerta("compra", c));
   const gastosConAlerta = gastosFiltrados.filter((g) => tieneAlerta("gasto", g));
+  // "Con nota de crédito/débito": sólo compras, un gasto no lleva notas.
+  const comprasConNotas = comprasFiltradas.filter(tieneNotas);
 
   const visiblesPorFiltro = {
     todo: [comprasFiltradas, gastosFiltrados],
     compras: [comprasFiltradas, []],
     gastos: [[], gastosFiltrados],
     alertas: [comprasConAlerta, gastosConAlerta],
+    conNotas: [comprasConNotas, []],
   };
   const [comprasVisibles, gastosVisibles] = visiblesPorFiltro[filtroTipo];
 
@@ -196,6 +201,7 @@ export function AccionesFase({
     compras: comprasFiltradas.length,
     gastos: gastosFiltrados.length,
     alertas: comprasConAlerta.length + gastosConAlerta.length,
+    conNotas: comprasConNotas.length,
   };
 
   // Pegados a la lista (no en el header de la página): es donde se mira lo que

@@ -146,6 +146,15 @@ export function tieneAlerta(tipo, movimiento) {
 }
 
 /**
+ * El filtro "Con nota de crédito/débito": compras y cobros que tienen al
+ * menos una nota cargada, de cualquiera de los dos tipos. Un gasto no lleva
+ * notas, así que nunca entra.
+ */
+export function tieneNotas(movimiento) {
+  return (movimiento.notas ?? []).length > 0;
+}
+
+/**
  * Qué filtros tienen sentido según el chip de tipo elegido en una lista de
  * movimientos. Un filtro que no aplica a un tipo no se ofrece: "Notas: con
  * nota de crédito" parado en Todo dejaría los gastos (que no tienen notas)
@@ -157,6 +166,9 @@ export const CAMPOS_FILTRO_POR_TIPO = {
   gastos: ["tipoFactura", "comprobante"],
   cobros: ["notas", "tipoFactura", "comprobante"],
   alertas: ["tipoFactura"],
+  // Acá el desplegable de notas sí aplica: sirve para quedarse sólo con las
+  // de crédito o sólo con las de débito.
+  conNotas: ["notas", "tipoFactura"],
 };
 
 /** Los filtros, con los que no aplican al tipo nuevo devueltos a su valor vacío. */

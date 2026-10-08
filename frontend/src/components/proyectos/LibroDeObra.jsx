@@ -69,7 +69,7 @@ export function LibroDeObra({
   permitirEdicion = true,
   // En una fase no entra plata, así que el acumulado no es un "saldo": el
   // rótulo se ajusta desde donde se use.
-  saldoLabel = "Saldo",
+  saldoLabel = "Saldo restante",
   // { tipo, id } del movimiento cuyo detalle está abierto: su fila queda
   // marcada, así al cerrar el modal se ve de dónde se venía.
   movimientoActivo,
@@ -93,6 +93,7 @@ export function LibroDeObra({
         entidad: compra,
         fecha: compra.fecha,
         importe: precioTotalCompra(compra, "ars"),
+        importeUsd: precioTotalCompra(compra, "usd"),
         mostrado: { monto: precioTotalCompra(compra, "ars"), moneda: "ars" },
         equivalente: { monto: precioTotalCompra(compra, "usd"), moneda: "usd" },
         titulo: compra.descripcion,
@@ -111,6 +112,7 @@ export function LibroDeObra({
         entidad: gasto,
         fecha: gasto.fecha,
         importe: montoGasto(gasto, "ars"),
+        importeUsd: montoGasto(gasto, "usd"),
         mostrado: { monto: montoGasto(gasto, "ars"), moneda: "ars" },
         equivalente: { monto: montoGasto(gasto, "usd"), moneda: "usd" },
         titulo: gasto.descripcion,
@@ -129,6 +131,7 @@ export function LibroDeObra({
         // El saldo suma los pesos congelados del cobro; lo que se muestra en
         // la fila es su cifra de verdad, la de dólares.
         importe: montoCobroNeto(cobro, "ars"),
+        importeUsd: montoCobroNeto(cobro, "usd"),
         mostrado: { monto: montoCobroNeto(cobro, "usd"), moneda: "usd" },
         equivalente: { monto: montoCobroNeto(cobro, "ars"), moneda: "ars" },
         titulo: cobro.descripcion,
@@ -143,12 +146,17 @@ export function LibroDeObra({
 
     // El saldo acumulado se calcula del más viejo al más nuevo aunque la
     // planilla después se muestre al revés: cada fila responde "cómo venía la
-    // caja justo después de este movimiento".
+    // caja justo después de este movimiento". Debajo va el mismo acumulado en
+    // dólares, sumando el dólar congelado de cada movimiento (no es el saldo
+    // en pesos pasado a la cotización de hoy).
     const cronologicos = [...items].sort((a, b) => a.fecha.localeCompare(b.fecha));
     let acumulado = 0;
+    let acumuladoUsd = 0;
     for (const item of cronologicos) {
       acumulado += TIPOS[item.tipo].signo * item.importe;
+      acumuladoUsd += TIPOS[item.tipo].signo * item.importeUsd;
       item.saldo = acumulado;
+      item.saldoUsd = acumuladoUsd;
     }
 
     return cronologicos.reverse();
@@ -211,7 +219,7 @@ export function LibroDeObra({
             <Paperclip size={14} strokeWidth={1.75} aria-label="Comprobante" />
           </span>
           <span className="libro__num">Importe</span>
-          <span className="libro__num">{saldoLabel} $</span>
+          <span className="libro__num">{saldoLabel}</span>
           {mostrarAcciones && <span />}
         </div>
 
@@ -288,7 +296,7 @@ function FilaMovimiento({
   onAgregarNota,
   onAbrirComprobante,
 }) {
-  const { tipo, entidad, mostrado, equivalente, saldo } = movimiento;
+  const { tipo, entidad, mostrado, equivalente, saldo, saldoUsd } = movimiento;
   const { signo, singular, icono: IconoTipo } = TIPOS[tipo];
   const esCompra = tipo === "compra";
 
@@ -336,13 +344,13 @@ function FilaMovimiento({
           )}
           {meta && <span className="libro__meta">{meta}</span>}
           {notasCredito > 0 && (
-            <span className="libro__nota" title="Notas de crédito">
+            <span className="libro__nota badge badge--sm badge--neutro" title="Notas de crédito">
               <FileMinus size={13} strokeWidth={1.75} aria-hidden="true" />
               {pluralizar(notasCredito, "nota de crédito", "notas de crédito")}
             </span>
           )}
           {notasDebito > 0 && (
-            <span className="libro__nota" title="Notas de débito">
+            <span className="libro__nota badge badge--sm badge--neutro" title="Notas de débito">
               <FilePlus size={13} strokeWidth={1.75} aria-hidden="true" />
               {pluralizar(notasDebito, "nota de débito", "notas de débito")}
             </span>
@@ -423,7 +431,12 @@ function FilaMovimiento({
         </span>
       </span>
 
-      <span className="libro__num libro__saldo-fila cifra">{formatMoneda(saldo)}</span>
+      <span className="libro__saldo-col">
+        <span className="libro__num libro__saldo-fila cifra">{formatMoneda(saldo)}</span>
+        <span className="libro__equivalente libro__saldo-usd cifra">
+          {formatMoneda(saldoUsd, "usd")}
+        </span>
+      </span>
 
       {mostrarAcciones && (
         <span className="libro__acciones acciones">

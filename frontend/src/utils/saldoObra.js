@@ -5,7 +5,7 @@ const sumar = (items, monto) => items.reduce((acc, item) => acc + monto(item), 0
 
 /**
  * Lo que entró menos lo que salió, de toda la obra. En pesos es el mismo
- * número que la última fila de la columna "Saldo $" del libro (la caja,
+ * número que la última fila de la columna "Saldo restante" del libro (la caja,
  * nominal); en dólares suma las cifras congeladas de cada movimiento.
  */
 export function saldoDeObra({ compras = [], gastos = [], cobros = [] }, moneda) {

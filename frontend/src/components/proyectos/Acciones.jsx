@@ -29,6 +29,7 @@ import {
   filtrarCobros,
   filtrarGastos,
   tieneAlerta,
+  tieneNotas,
 } from "../../utils/filtros";
 
 import "./Acciones.css";
@@ -39,6 +40,7 @@ const FILTROS_TIPO = [
   { key: "gastos", label: "Gastos" },
   { key: "cobros", label: "Cobros" },
   { key: "alertas", label: "Con alertas" },
+  { key: "conNotas", label: "Con nota de crédito/débito" },
 ];
 
 // "compra-<id>" -> { tipo, id }. Es lo que manda "Últimos movimientos" del
@@ -115,12 +117,23 @@ export function Acciones({ proyectoId, proyectoNombre, foco }) {
     [comprasFiltradas, gastosFiltrados, cobrosFiltrados]
   );
 
+  // Idem "Con nota de crédito/débito": compras y cobros (un gasto no tiene notas).
+  const conNotas = useMemo(
+    () => ({
+      compras: comprasFiltradas.filter(tieneNotas),
+      gastos: [],
+      cobros: cobrosFiltrados.filter(tieneNotas),
+    }),
+    [comprasFiltradas, cobrosFiltrados]
+  );
+
   const visiblesPorFiltro = {
     todo: { compras: comprasFiltradas, gastos: gastosFiltrados, cobros: cobrosFiltrados },
     compras: { compras: comprasFiltradas, gastos: [], cobros: [] },
     gastos: { compras: [], gastos: gastosFiltrados, cobros: [] },
     cobros: { compras: [], gastos: [], cobros: cobrosFiltrados },
     alertas: conAlerta,
+    conNotas,
   };
   const {
     compras: comprasVisibles,
@@ -323,6 +336,7 @@ export function Acciones({ proyectoId, proyectoNombre, foco }) {
     gastos: gastosFiltrados.length,
     cobros: cobrosFiltrados.length,
     alertas: conAlerta.compras.length + conAlerta.gastos.length + conAlerta.cobros.length,
+    conNotas: conNotas.compras.length + conNotas.cobros.length,
   };
 
   return (

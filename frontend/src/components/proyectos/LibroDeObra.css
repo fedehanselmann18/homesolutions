@@ -138,23 +138,27 @@
   color: var(--color-tinta);
 }
 
-.libro__contexto-item,
-.libro__nota {
+.libro__contexto-item {
   display: inline-flex;
   align-items: center;
   gap: var(--space-1-5);
   min-width: 0;
 }
 
-.libro__contexto-item svg,
-.libro__nota svg {
+.libro__contexto-item svg {
   flex-shrink: 0;
   color: var(--color-tinta-tenue);
 }
 
-.libro__meta,
-.libro__nota {
+.libro__meta {
   color: var(--color-tinta-muted);
+}
+
+/* Las notas de crédito/débito van en badge neutro chico (DESIGN.md §12) y no
+   como texto suelto: así una compra con nota se distingue de un vistazo del
+   resto del contexto gris, sin pedir atención como un estado. */
+.libro__nota svg {
+  flex-shrink: 0;
 }
 
 /* --- estados de pago / envío: badges apilados --- */
@@ -226,6 +230,15 @@
   font-size: var(--text-sm);
   color: var(--color-tinta-muted);
   white-space: nowrap;
+}
+
+/* El saldo en pesos y, debajo, el mismo acumulado en dólares: la misma
+   pila que la columna de importe. */
+.libro__saldo-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1-5);
 }
 
 .libro__saldo-fila {
@@ -348,7 +361,7 @@
   }
 
   .libro__tipo,
-  .libro__saldo-fila {
+  .libro__saldo-col {
     display: none;
   }
 

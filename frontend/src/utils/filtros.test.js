@@ -4,6 +4,7 @@ import {
   filtrarCobros,
   filtrarGastos,
   tieneAlerta,
+  tieneNotas,
   filtrosParaTipo,
   hayFiltrosActivos,
   FILTROS_VACIOS,
@@ -153,6 +154,18 @@ describe("tieneAlerta", () => {
   it("un gasto o un cobro con comprobante no tienen nada pendiente", () => {
     expect(tieneAlerta("gasto", conComprobante)).toBe(false);
     expect(tieneAlerta("cobro", conComprobante)).toBe(false);
+  });
+});
+
+describe("tieneNotas", () => {
+  it("entra con cualquier nota, de crédito o de débito", () => {
+    expect(tieneNotas({ notas: [{ tipo: "nota_credito" }] })).toBe(true);
+    expect(tieneNotas({ notas: [{ tipo: "nota_debito" }] })).toBe(true);
+  });
+
+  it("sin notas (o un gasto, que no las tiene) no entra", () => {
+    expect(tieneNotas({ notas: [] })).toBe(false);
+    expect(tieneNotas({})).toBe(false);
   });
 });
 
