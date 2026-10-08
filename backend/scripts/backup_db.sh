@@ -5,8 +5,6 @@
 #
 # Uso manual:
 #   cd backend && ./scripts/backup_db.sh
-#
-# Para programarlo todos los días, ver scripts/BACKUPS.md
 
 set -euo pipefail
 
