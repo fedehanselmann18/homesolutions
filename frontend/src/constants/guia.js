@@ -5,6 +5,7 @@ import {
   FileSignature,
   ListChecks,
   ScrollText,
+  Wallet,
 } from "lucide-react";
 
 /**
@@ -174,9 +175,14 @@ export const SECCIONES_GUIA = [
           "En una compra elegís el proveedor y la fase, y después agregás los productos de su catálogo con la cantidad. El precio de cada producto sale del catálogo y queda fijo en esa compra: si el proveedor cambia su lista después, la compra no se modifica. El total no se escribe: se calcula solo con los productos y los impuestos.",
       },
       {
+        tipo: "parrafo",
+        texto:
+          "El IVA se calcula solo: elegís «IVA 21» o «IVA 10,5» y la app pone el monto sobre el precio sin impuestos. Si la factura dice otra cosa por redondeo, escribí el monto a mano; con «usar el calculado» volvés al automático. Una factura lleva una sola alícuota de IVA. Las percepciones y otros impuestos sin porcentaje fijo se escriben a mano. Abajo ves el precio sin impuestos, con impuestos y, si hay notas, el final. Las alícuotas se arman en Ajustes, pestaña «Impuestos», y en el Análisis todos los IVA suman juntos.",
+      },
+      {
         tipo: "lista",
         items: [
-          "Pago: «A pagar» o «Pagado». Una compra que lleva 90 días o más sin pagar se pone en rojo.",
+          "Pago: «A pagar» o «Pagado». Si algún plazo de pago se vence sin pagar, la compra se pone en rojo y dice hace cuántos días venció.",
           "Envío: «Sin entregar» o «Entregado».",
           "Las dos cosas se cambian con un toque sobre la etiqueta de la compra en la lista, sin abrirla.",
         ],
@@ -187,9 +193,54 @@ export const SECCIONES_GUIA = [
           "A un gasto le podés poner una categoría (por ejemplo, fletes o viáticos) para después ver en qué se va la plata. Las categorías se arman en Ajustes, pestaña «Categorías de gasto».",
       },
       {
+        tipo: "parrafo",
+        texto:
+          "Cada compra, gasto, cobro y nota lleva su tipo de comprobante (Factura A, Remito, Factura interna…). Si te llega uno que no está, lo agregás en Ajustes, pestaña «Tipos de factura», y aparece enseguida al cargar y en los filtros. Si le cambiás el nombre a uno, cambia también en lo que ya cargaste. «Otros» no se puede borrar, y uno que ya usaste en algún movimiento tampoco.",
+      },
+      {
         tipo: "aviso",
         texto:
           "Un movimiento sin comprobante se puede guardar, pero queda con un triángulo de alerta en la lista hasta que le adjuntes el archivo. Lo adjuntás desde la ficha del movimiento, sin volver a cargarlo.",
+      },
+    ],
+  },
+  {
+    id: "plazos-cashflow",
+    titulo: "Plazos de pago y cash flow",
+    icono: Wallet,
+    resumen: "Cuándo se paga cada compra o gasto, y cuánta plata entra y sale.",
+    bloques: [
+      {
+        tipo: "parrafo",
+        texto:
+          "Cada compra y cada gasto lleva su condición de pago: «Contado» (se paga el día de la factura) o a plazos, como «30/60 días» (la mitad a 30 días y la mitad a 60, contados desde la fecha de la factura). Al elegirla, debajo ves cómo quedan los pagos. Aparte elegís, si querés, el medio de pago: efectivo, transferencia, cheque o tarjeta.",
+      },
+      {
+        tipo: "pasos",
+        items: [
+          "Abrí la ficha de la compra o el gasto: en la sección de pagos está cada plazo con su vencimiento y su monto.",
+          "Cuando pagues uno, tocá «Pagado» en ese plazo. La compra recién queda «Pagado» cuando están pagados todos.",
+          "Si te equivocaste, con la flechita lo volvés a dejar a pagar.",
+        ],
+      },
+      {
+        tipo: "lista",
+        items: [
+          "Un gasto nuevo arranca como Contado y pagado, así un flete se sigue cargando en un paso. Si es a plazos, elegí la condición y «A pagar».",
+          "Si cambia el total (editás el monto o cargás una nota de crédito o débito), lo que falta pagar se reparte solo entre los plazos que quedan. Los ya pagados no se tocan.",
+          "Con algún plazo ya pagado no se puede cambiar la condición de pago.",
+          "Las condiciones se arman en Ajustes, pestaña «Condiciones de pago». «Contado» no se puede borrar.",
+        ],
+      },
+      {
+        tipo: "parrafo",
+        texto:
+          "El cash flow (en el menú, y en cada proyecto como pestaña) muestra la plata que entró y salió de verdad, y lo que vence. Arriba: el saldo de caja de hoy, lo vencido sin pagar, lo que hay que pagar en los próximos 30 días y lo que falta cobrar del contrato. Abajo lo ves por mes, con los meses que vienen como proyección, o por semana, y la lista de próximos vencimientos. Se ve en pesos o en dólares, como el Análisis.",
+      },
+      {
+        tipo: "aviso",
+        texto:
+          "Un plazo sin pagar nunca cuenta como plata que salió, aunque la compra esté cargada. Lo vencido se muestra aparte, en rojo.",
       },
     ],
   },
@@ -254,7 +305,7 @@ export const SECCIONES_GUIA = [
         items: [
           "Importe: en la moneda en que se cargó, con su equivalente en la otra debajo.",
           "Saldo restante: cómo quedó la caja después de ese movimiento, en pesos y debajo en dólares.",
-          "Estado: en una compra, si está paga y si llegó. Un gasto o un cobro no tiene nada pendiente.",
+          "Estado: en una compra, si está paga y si llegó. Un gasto a plazos se ve en su ficha y en el cash flow; un cobro no tiene nada pendiente.",
           "El clip abre el comprobante; el triángulo avisa que falta.",
         ],
       },
