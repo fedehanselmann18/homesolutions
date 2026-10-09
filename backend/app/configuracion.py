@@ -7,7 +7,7 @@ config.py (que es el .env, sin acceso a DB) ni en routes/configuracion.py
 (app/ia/extractor.py, app/ia/catalogo.py).
 
 Por ahora la única clave migrada es GEMINI_MODEL (piloto). SECRET_KEY,
-credenciales de DB y de R2 NO se agregan acá a propósito: pasarlas por una
+credenciales de DB y del bucket NO se agregan acá a propósito: pasarlas por una
 tabla las expone a cualquiera con acceso de lectura a la base y a cualquier
 fuga de GET /configuracion, algo que un .env fuera del repo no tiene.
 

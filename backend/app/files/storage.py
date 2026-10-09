@@ -54,7 +54,7 @@ def contenido_coincide_con_extension(contenido: bytes, ext: str) -> bool:
 # carpeta), pero se resuelven SIEMPRE contra esta raíz y no contra el cwd:
 # si no, arrancar uvicorn desde otro directorio hacía que eliminar_comprobante
 # no encontrara el archivo y lo dejara huérfano en disco sin avisar.
-# Solo aplica al backend de disco local (dev); R2 no usa paths de filesystem.
+# Solo aplica al backend de disco local (dev); el bucket no usa paths de filesystem.
 RAIZ_BACKEND = Path(__file__).resolve().parents[2]
 
 
@@ -67,47 +67,50 @@ def ruta_absoluta(path) -> Path:
 # B-12: singleton con lock en vez de @lru_cache -- @lru_cache no tiene forma
 # de invalidarse selectivamente para ESTA función sin afectar otras (y
 # cache_clear() de una función sin argumentos igual no distingue "credenciales
-# viejas" de "quiero una instancia nueva"). Con esto, reset_r2_client() fuerza
+# viejas" de "quiero una instancia nueva"). Con esto, reset_bucket_client() fuerza
 # que la próxima llamada arme un cliente nuevo -- por ejemplo después de
-# rotar R2_ACCESS_KEY_ID/R2_SECRET_ACCESS_KEY -- sin reiniciar el proceso.
-_r2_client_instance = None
-_r2_client_lock = threading.Lock()
+# rotar S3_ACCESS_KEY_ID/S3_SECRET_ACCESS_KEY -- sin reiniciar el proceso.
+_bucket_client_instance = None
+_bucket_client_lock = threading.Lock()
 
 
-def _r2_client():
+def _bucket_client():
     """
-    Cliente boto3 apuntando al endpoint S3-compatible de Cloudflare R2.
+    Cliente boto3 apuntando al endpoint S3-compatible del bucket (Railway).
     Cacheado como singleton (no se reabre conexión en cada request) hasta
-    que se llame a reset_r2_client(). Solo se llama cuando
-    settings.r2_configurado es True.
+    que se llame a reset_bucket_client(). Solo se llama cuando
+    settings.bucket_configurado es True.
     """
-    global _r2_client_instance
-    if _r2_client_instance is None:
-        with _r2_client_lock:
+    global _bucket_client_instance
+    if _bucket_client_instance is None:
+        with _bucket_client_lock:
             # Doble chequeo: otro thread pudo haber creado el cliente
             # mientras este esperaba el lock (FastAPI corre las rutas sync
             # en un threadpool, esto sí puede pasar concurrentemente).
-            if _r2_client_instance is None:
-                _r2_client_instance = boto3.client(
+            if _bucket_client_instance is None:
+                _bucket_client_instance = boto3.client(
                     "s3",
-                    endpoint_url=settings.r2_endpoint_url,
-                    aws_access_key_id=settings.R2_ACCESS_KEY_ID,
-                    aws_secret_access_key=settings.R2_SECRET_ACCESS_KEY,
-                    region_name="auto",
-                    config=Config(signature_version="s3v4"),
+                    endpoint_url=settings.S3_ENDPOINT_URL,
+                    aws_access_key_id=settings.S3_ACCESS_KEY_ID,
+                    aws_secret_access_key=settings.S3_SECRET_ACCESS_KEY,
+                    region_name=settings.S3_REGION,
+                    config=Config(
+                        signature_version="s3v4",
+                        s3={"addressing_style": settings.S3_ADDRESSING_STYLE},
+                    ),
                 )
-    return _r2_client_instance
+    return _bucket_client_instance
 
 
-def reset_r2_client() -> None:
+def reset_bucket_client() -> None:
     """
-    Fuerza que la próxima llamada a _r2_client() arme una instancia nueva,
+    Fuerza que la próxima llamada a _bucket_client() arme una instancia nueva,
     con las credenciales que tenga settings en ese momento -- usar después
-    de rotar credenciales de R2, sin reiniciar el proceso del backend.
+    de rotar credenciales del bucket, sin reiniciar el proceso del backend.
     """
-    global _r2_client_instance
-    with _r2_client_lock:
-        _r2_client_instance = None
+    global _bucket_client_instance
+    with _bucket_client_lock:
+        _bucket_client_instance = None
 
 
 def _validar(archivo: UploadFile) -> str:
@@ -139,32 +142,32 @@ def _validar(archivo: UploadFile) -> str:
 
 def subir_comprobante(archivo: UploadFile, carpeta: str, entidad_id: str) -> str:
     """
-    Guarda el archivo (en R2 si está configurado, si no en disco local) y
+    Guarda el archivo (en el bucket si está configurado, si no en disco local) y
     devuelve la "key"/path relativo a guardar en la DB (columna
-    archivo_path). El formato del string difiere entre backends (R2 no
+    archivo_path). El formato del string difiere entre backends (el bucket no
     lleva el prefijo "uploads/"), pero es un detalle interno: ambos se
     resuelven de nuevo con el mismo backend al leerlos o borrarlos, porque
     cuál backend está activo se decide una sola vez por deploy (según haya
-    o no credenciales R2 en el .env), no por archivo.
+    o no credenciales del bucket en el .env), no por archivo.
 
     carpeta: "comprobantes_compra" | "comprobantes_gasto" | "comprobantes_cobro"
     entidad_id: compra_id / gasto_id / cobro_id
     """
     ext = _validar(archivo)
 
-    if settings.r2_configurado:
+    if settings.bucket_configurado:
         key = f"{carpeta}/{entidad_id}/{uuid.uuid4()}{ext}"
         try:
             # Body acepta un file-like (boto3 lo streamea solo): no hace
             # falta juntar el archivo entero en un bytes de Python primero.
-            _r2_client().put_object(
-                Bucket=settings.R2_BUCKET_NAME,
+            _bucket_client().put_object(
+                Bucket=settings.S3_BUCKET_NAME,
                 Key=key,
                 Body=archivo.file,
                 ContentType=CONTENT_TYPE_POR_EXTENSION.get(ext, "application/octet-stream"),
             )
         except (BotoCoreError, ClientError) as exc:
-            raise HTTPException(status_code=502, detail="No se pudo subir el comprobante a R2") from exc
+            raise HTTPException(status_code=502, detail="No se pudo subir el comprobante al bucket") from exc
         return key
 
     ruta_relativa = BASE_UPLOAD_DIR / carpeta / entidad_id / f"{uuid.uuid4()}{ext}"
@@ -180,7 +183,7 @@ def subir_comprobante(archivo: UploadFile, carpeta: str, entidad_id: str) -> str
 
 def eliminar_comprobante(path: str) -> None:
     """
-    Borra el archivo (de R2 o de disco local, según backend activo). No
+    Borra el archivo (del bucket o de disco local, según backend activo). No
     falla si ya no existe (por ejemplo si se borró a mano o el path quedó
     huérfano).
 
@@ -190,11 +193,13 @@ def eliminar_comprobante(path: str) -> None:
     cosas quedan huérfanos: o un archivo fantasma, o una fila que apunta a
     un archivo que ya no existe.
     """
-    if settings.r2_configurado:
+    if settings.bucket_configurado:
         try:
-            _r2_client().delete_object(Bucket=settings.R2_BUCKET_NAME, Key=path)
+            _bucket_client().delete_object(Bucket=settings.S3_BUCKET_NAME, Key=path)
         except (BotoCoreError, ClientError) as exc:
-            raise HTTPException(status_code=502, detail="No se pudo borrar el comprobante en R2") from exc
+            raise HTTPException(
+                status_code=502, detail="No se pudo borrar el comprobante en el bucket"
+            ) from exc
         return
 
     ruta = ruta_absoluta(path)
@@ -220,8 +225,8 @@ def ver_comprobante(path: str):
 
     Con disco local: FileResponse (streamea el archivo directo).
 
-    Con R2: ANTES esto devolvía un RedirectResponse a una URL firmada
-    temporal, para que el navegador bajara el archivo directo de R2 sin
+    Con bucket: ANTES esto devolvía un RedirectResponse a una URL firmada
+    temporal, para que el navegador bajara el archivo directo del bucket sin
     gastar ancho de banda del backend. Se rompía en producción: el frontend
     pide este endpoint con axios + withCredentials=true (para mandar la
     cookie de sesión), y el browser trata el redirect como parte de la
@@ -230,18 +235,18 @@ def ver_comprobante(path: str):
     con credentials), lo bloquea. Eso es justo el "Network Error" que tira
     axios sin ningún status code.
 
-    Por eso ahora el backend baja el objeto de R2 con boto3 y lo devuelve
+    Por eso ahora el backend baja el objeto del bucket con boto3 y lo devuelve
     él mismo: el navegador solo habla con nuestra propia API (que ya tiene
     CORS bien configurado), sin un segundo salto a un origen distinto.
     Los comprobantes están limitados a 10MB (MAX_SIZE_BYTES), así que
     traerlo entero a memoria en vez de streamearlo es una simplificación
     aceptable.
     """
-    if settings.r2_configurado:
+    if settings.bucket_configurado:
         try:
-            objeto = _r2_client().get_object(Bucket=settings.R2_BUCKET_NAME, Key=path)
+            objeto = _bucket_client().get_object(Bucket=settings.S3_BUCKET_NAME, Key=path)
         except (BotoCoreError, ClientError) as exc:
-            raise HTTPException(status_code=404, detail="Comprobante no encontrado en R2") from exc
+            raise HTTPException(status_code=404, detail="Comprobante no encontrado en el bucket") from exc
 
         contenido = objeto["Body"].read()
         media_type = objeto.get("ContentType") or mimetypes.guess_type(path)[0] or "application/octet-stream"
@@ -258,19 +263,19 @@ def ver_comprobante(path: str):
     return FileResponse(ruta, filename=ruta.name)
 
 
-def listar_objetos_r2() -> list[dict]:
+def listar_objetos_bucket() -> list[dict]:
     """
     Lista TODOS los objetos del bucket configurado, paginando internamente
     (list_objects_v2 devuelve como mucho 1000 por página). Solo tiene
-    sentido llamarla si settings.r2_configurado es True -- el caller decide
+    sentido llamarla si settings.bucket_configurado es True -- el caller decide
     eso (ver routes/storage.py), acá no se valida para no importar la
-    respuesta HTTP de "R2 no configurado" en un módulo que también sabe
+    respuesta HTTP de "bucket no configurado" en un módulo que también sabe
     hablar con disco local.
     """
     objetos = []
-    paginador = _r2_client().get_paginator("list_objects_v2")
+    paginador = _bucket_client().get_paginator("list_objects_v2")
     try:
-        for pagina in paginador.paginate(Bucket=settings.R2_BUCKET_NAME):
+        for pagina in paginador.paginate(Bucket=settings.S3_BUCKET_NAME):
             for obj in pagina.get("Contents", []):
                 objetos.append(
                     {
@@ -280,5 +285,5 @@ def listar_objetos_r2() -> list[dict]:
                     }
                 )
     except (BotoCoreError, ClientError) as exc:
-        raise HTTPException(status_code=502, detail="No se pudo listar los objetos de R2") from exc
+        raise HTTPException(status_code=502, detail="No se pudo listar los objetos del bucket") from exc
     return objetos

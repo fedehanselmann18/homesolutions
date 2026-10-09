@@ -6,7 +6,7 @@ ese árbol Y limpiar los archivos físicos de los comprobantes (ver
 routes/proyectos.py: delete_project itera el árbol y llama a
 eliminar_comprobante ANTES del db.delete). Acá se mockea eliminar_comprobante
 (mismo patrón que test_ia.py con extraer_comprobante) para no depender de
-disco/R2 y poder verificar con qué paths se la llamó.
+disco/bucket y poder verificar con qué paths se la llamó.
 """
 
 from datetime import date

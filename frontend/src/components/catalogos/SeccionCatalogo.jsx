@@ -39,6 +39,9 @@ export function SeccionCatalogo({
   // El ícono de la pestaña: el botón de alta lleva el de lo que crea.
   icono: Icono = Plus,
   conTipo = false,
+  // false: se respeta el orden en que llegan del backend (las fases
+  // predeterminadas van en el orden de la obra, no alfabético).
+  ordenAlfabetico = true,
   crear,
   actualizar,
   eliminar,
@@ -52,7 +55,8 @@ export function SeccionCatalogo({
   const [registroEditando, setRegistroEditando] = useState(null);
   const [registroAEliminar, setRegistroAEliminar] = useState(null);
 
-  const registros = [...(query.data ?? [])].sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
+  const registros = [...(query.data ?? [])];
+  if (ordenAlfabetico) registros.sort((a, b) => a.nombre.localeCompare(b.nombre, "es"));
 
   const invalidar = (keys) =>
     Promise.all(keys.map((key) => queryClient.invalidateQueries({ queryKey: key })));

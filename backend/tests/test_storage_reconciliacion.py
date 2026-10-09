@@ -1,11 +1,11 @@
 """
-Tests de la reconciliación de archivos en R2:
+Tests de la reconciliación de archivos en el bucket:
 GET /storage/reconciliacion (huérfanos y rotos) y POST
 /storage/reconciliacion/purgar.
 
-No pega contra R2 de verdad: se mockea `listar_objetos_r2` y
+No pega contra el bucket de verdad: se mockea `listar_objetos_bucket` y
 `eliminar_comprobante` en el namespace de app.routes.storage (mismo patrón
-que test_ia.py con extraer_comprobante), y se fuerza r2_configurado=True
+que test_ia.py con extraer_comprobante), y se fuerza bucket_configurado=True
 pisando las 4 variables de las que depende esa property -- no se puede
 monkeypatchear la property en sí porque Settings no le define setter.
 """
@@ -40,12 +40,12 @@ def headers_manager(usuario_manager):
 
 
 @pytest.fixture()
-def r2_configurado(monkeypatch):
-    monkeypatch.setattr(settings, "R2_ACCOUNT_ID", "cuenta-test")
-    monkeypatch.setattr(settings, "R2_ACCESS_KEY_ID", "key-test")
-    monkeypatch.setattr(settings, "R2_SECRET_ACCESS_KEY", "secret-test")
-    monkeypatch.setattr(settings, "R2_BUCKET_NAME", "bucket-test")
-    assert settings.r2_configurado is True
+def bucket_configurado(monkeypatch):
+    monkeypatch.setattr(settings, "S3_ENDPOINT_URL", "https://bucket.test")
+    monkeypatch.setattr(settings, "S3_ACCESS_KEY_ID", "key-test")
+    monkeypatch.setattr(settings, "S3_SECRET_ACCESS_KEY", "secret-test")
+    monkeypatch.setattr(settings, "S3_BUCKET_NAME", "bucket-test")
+    assert settings.bucket_configurado is True
 
 
 def _comprobante_gasto(db_session, archivo_path, usuario):
@@ -80,7 +80,7 @@ def _comprobante_gasto(db_session, archivo_path, usuario):
     return comprobante
 
 
-def _objeto_r2(key, tamanio=1024):
+def _objeto_bucket(key, tamanio=1024):
     return {"key": key, "tamanio_bytes": tamanio, "modificado_en": datetime.now(timezone.utc)}
 
 
@@ -89,19 +89,23 @@ def _objeto_r2(key, tamanio=1024):
 # ---------------------------------------------------------------------------
 
 
-def test_sin_r2_configurado_da_400(client, headers_manager):
+def test_sin_bucket_configurado_da_400(client, headers_manager):
     respuesta = client.get("/storage/reconciliacion", headers=headers_manager)
     assert respuesta.status_code == 400
 
 
-def test_un_admin_que_no_es_manager_no_puede_ver_la_reconciliacion(client, headers_admin, r2_configurado):
+def test_un_admin_que_no_es_manager_no_puede_ver_la_reconciliacion(client, headers_admin, bucket_configurado):
     assert client.get("/storage/reconciliacion", headers=headers_admin).status_code == 403
 
 
-def test_objeto_sin_fila_en_db_es_huerfano(client, db_session, headers_manager, r2_configurado, monkeypatch):
+def test_objeto_sin_fila_en_db_es_huerfano(
+    client, db_session, headers_manager, bucket_configurado, monkeypatch
+):
     import app.routes.storage as ruta_storage
 
-    monkeypatch.setattr(ruta_storage, "listar_objetos_r2", lambda: [_objeto_r2("comprobantes_gasto/x/1.pdf")])
+    monkeypatch.setattr(
+        ruta_storage, "listar_objetos_bucket", lambda: [_objeto_bucket("comprobantes_gasto/x/1.pdf")]
+    )
 
     cuerpo = client.get("/storage/reconciliacion", headers=headers_manager).json()
 
@@ -116,12 +120,14 @@ def test_objeto_sin_fila_en_db_es_huerfano(client, db_session, headers_manager, 
 
 
 def test_objeto_con_fila_en_db_no_es_huerfano(
-    client, db_session, headers_manager, usuario_admin, r2_configurado, monkeypatch
+    client, db_session, headers_manager, usuario_admin, bucket_configurado, monkeypatch
 ):
     import app.routes.storage as ruta_storage
 
     comprobante = _comprobante_gasto(db_session, "comprobantes_gasto/g1/real.pdf", usuario_admin)
-    monkeypatch.setattr(ruta_storage, "listar_objetos_r2", lambda: [_objeto_r2(comprobante.archivo_path)])
+    monkeypatch.setattr(
+        ruta_storage, "listar_objetos_bucket", lambda: [_objeto_bucket(comprobante.archivo_path)]
+    )
 
     cuerpo = client.get("/storage/reconciliacion", headers=headers_manager).json()
 
@@ -129,13 +135,13 @@ def test_objeto_con_fila_en_db_no_es_huerfano(
     assert cuerpo["rotos"] == []
 
 
-def test_fila_en_db_sin_objeto_en_r2_es_rota(
-    client, db_session, headers_manager, usuario_admin, r2_configurado, monkeypatch
+def test_fila_en_db_sin_objeto_en_bucket_es_rota(
+    client, db_session, headers_manager, usuario_admin, bucket_configurado, monkeypatch
 ):
     import app.routes.storage as ruta_storage
 
     comprobante = _comprobante_gasto(db_session, "comprobantes_gasto/g1/roto.pdf", usuario_admin)
-    monkeypatch.setattr(ruta_storage, "listar_objetos_r2", lambda: [])
+    monkeypatch.setattr(ruta_storage, "listar_objetos_bucket", lambda: [])
 
     cuerpo = client.get("/storage/reconciliacion", headers=headers_manager).json()
 
@@ -154,18 +160,18 @@ def test_fila_en_db_sin_objeto_en_r2_es_rota(
 # ---------------------------------------------------------------------------
 
 
-def test_sin_r2_configurado_purgar_da_400(client, headers_manager):
+def test_sin_bucket_configurado_purgar_da_400(client, headers_manager):
     respuesta = client.post("/storage/reconciliacion/purgar", json={"claves": ["x"]}, headers=headers_manager)
     assert respuesta.status_code == 400
 
 
-def test_lista_de_claves_vacia_es_rechazada(client, headers_manager, r2_configurado):
+def test_lista_de_claves_vacia_es_rechazada(client, headers_manager, bucket_configurado):
     respuesta = client.post("/storage/reconciliacion/purgar", json={"claves": []}, headers=headers_manager)
     assert respuesta.status_code == 422
 
 
 def test_purga_una_clave_huerfana(
-    client, db_session, headers_manager, usuario_manager, r2_configurado, monkeypatch
+    client, db_session, headers_manager, usuario_manager, bucket_configurado, monkeypatch
 ):
     import app.routes.storage as ruta_storage
 
@@ -186,7 +192,7 @@ def test_purga_una_clave_huerfana(
 
 
 def test_no_purga_una_clave_que_en_realidad_tiene_fila_en_db(
-    client, db_session, headers_manager, usuario_admin, r2_configurado, monkeypatch
+    client, db_session, headers_manager, usuario_admin, bucket_configurado, monkeypatch
 ):
     import app.routes.storage as ruta_storage
 
@@ -208,7 +214,7 @@ def test_no_purga_una_clave_que_en_realidad_tiene_fila_en_db(
 
 
 def test_una_purga_fallida_queda_omitida_sin_romper_el_resto(
-    client, db_session, headers_manager, r2_configurado, monkeypatch
+    client, db_session, headers_manager, bucket_configurado, monkeypatch
 ):
     from fastapi import HTTPException
 
@@ -232,7 +238,7 @@ def test_una_purga_fallida_queda_omitida_sin_romper_el_resto(
 
 
 def test_purgar_deja_fila_de_auditoria_con_las_claves_purgadas(
-    client, db_session, headers_manager, usuario_manager, r2_configurado, monkeypatch
+    client, db_session, headers_manager, usuario_manager, bucket_configurado, monkeypatch
 ):
     import app.routes.storage as ruta_storage
 
@@ -245,14 +251,14 @@ def test_purgar_deja_fila_de_auditoria_con_las_claves_purgadas(
     )
 
     fila = db_session.query(models.Auditoria).one()
-    assert fila.accion == "purgar huérfanos R2"
-    assert fila.tipo_recurso == "ArchivoR2"
+    assert fila.accion == "purgar huérfanos del bucket"
+    assert fila.tipo_recurso == "ArchivoBucket"
     assert fila.usuario_id == usuario_manager.id
     assert fila.detalle == {"claves": ["a.pdf", "b.pdf"]}
 
 
 def test_purgar_sin_nada_purgado_no_deja_fila_de_auditoria(
-    client, db_session, headers_manager, usuario_admin, r2_configurado, monkeypatch
+    client, db_session, headers_manager, usuario_admin, bucket_configurado, monkeypatch
 ):
     import app.routes.storage as ruta_storage
 

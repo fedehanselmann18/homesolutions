@@ -2,7 +2,7 @@
 Tests del panel de configuración de Manager:
 GET/PATCH/DELETE /configuracion (valores editables, con fallback a
 Settings/.env) y GET /configuracion/estado-integraciones (solo lectura de
-R2/Gemini).
+bucket/Gemini).
 """
 
 import pytest
@@ -163,7 +163,7 @@ def test_estado_integraciones_refleja_settings(client, headers_manager):
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
     assert cuerpo["gemini_configurado"] == bool(settings.GEMINI_API_KEY)
-    assert cuerpo["r2_configurado"] == settings.r2_configurado
+    assert cuerpo["bucket_configurado"] == settings.bucket_configurado
 
 
 def test_estado_integraciones_es_exclusivo_de_manager(client, headers_admin):

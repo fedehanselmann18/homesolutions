@@ -18,7 +18,7 @@ import "./GestionManager.css";
 /**
  * Página de Manager: valores editables sin redeployar (tabla
  * `configuracion` del backend) más el estado -- solo lectura -- de las
- * integraciones externas (R2, Gemini).
+ * integraciones externas (bucket, Gemini).
  */
 export function GestionConfiguracion() {
   usePageTitle("Configuración");

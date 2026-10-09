@@ -6,10 +6,10 @@ import { formatBytes, formatFechaHora } from "../../utils/formato";
 import { EstadoVacio } from "../shared/EstadoVacio";
 
 /**
- * Reconciliación de archivos en R2: objetos del
+ * Reconciliación de archivos en el bucket: objetos del
  * bucket sin ninguna fila de comprobante/nota que los referencie
  * (huérfanos, se pueden purgar acá) y el caso inverso -- filas con
- * archivo_path que ya no existe en R2 (rotos, solo para detectarlos: no hay
+ * archivo_path que ya no existe en el bucket (rotos, solo para detectarlos: no hay
  * nada que "arreglar" automáticamente, hay que decidir a mano si se
  * resubre el comprobante o se acepta el hueco).
  *
@@ -42,7 +42,7 @@ export function SeccionArchivos({ huerfanos, rotos, onPedirPurgar }) {
     <div className="manager-archivos">
       <section className="manager-archivos__seccion">
         <div className="manager-archivos__header">
-          <h3 className="manager-subtitulo">Huérfanos en R2 ({huerfanos.length})</h3>
+          <h3 className="manager-subtitulo">Huérfanos en el bucket ({huerfanos.length})</h3>
           {seleccionados.size > 0 && (
             <button
               type="button"
@@ -56,10 +56,10 @@ export function SeccionArchivos({ huerfanos, rotos, onPedirPurgar }) {
         </div>
 
         {huerfanos.length === 0 ? (
-          <EstadoVacio mensaje="No hay archivos en R2 sin una fila que los referencie." />
+          <EstadoVacio mensaje="No hay archivos en el bucket sin una fila que los referencie." />
         ) : (
           <div className="manager-tabla-scroll">
-            <table className="manager-tabla" aria-label="Archivos huérfanos en R2">
+            <table className="manager-tabla" aria-label="Archivos huérfanos en el bucket">
               <thead>
                 <tr>
                   <th>
@@ -102,7 +102,7 @@ export function SeccionArchivos({ huerfanos, rotos, onPedirPurgar }) {
           Comprobantes rotos ({rotos.length})
           <span className="manager-archivos__ayuda-inline">
             {" "}
-            -- filas que apuntan a un archivo que ya no está en R2
+            -- filas que apuntan a un archivo que ya no está en el bucket
           </span>
         </h3>
 

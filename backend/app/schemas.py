@@ -35,7 +35,7 @@ import uuid
 from datetime import date, datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # XX-XXXXXXXX-X, con o sin guiones (los grupos son fijos: 2 dígitos de tipo,
 # 8 de DNI/razón social, 1 verificador -- ver _validar_cuit).
@@ -281,11 +281,11 @@ class ConfiguracionUpdate(BaseModel):
 
 
 # ---------------------------------------------------------------------------
-# Reconciliación de archivos en R2
+# Reconciliación de archivos en el bucket
 # ---------------------------------------------------------------------------
 
 
-class ObjetoR2(BaseModel):
+class ObjetoBucket(BaseModel):
     """Un objeto del bucket que no tiene ninguna fila de comprobante/nota
     apuntándolo -- ver app/routes/storage.py."""
 
@@ -295,15 +295,15 @@ class ObjetoR2(BaseModel):
 
 
 class ArchivoRoto(BaseModel):
-    """El caso inverso: una fila con archivo_path que ya no existe en R2."""
+    """El caso inverso: una fila con archivo_path que ya no existe en el bucket."""
 
     tipo_recurso: str
     recurso_id: str
     archivo_path: str
 
 
-class ReconciliacionR2(BaseModel):
-    huerfanos: list[ObjetoR2]
+class ReconciliacionBucket(BaseModel):
+    huerfanos: list[ObjetoBucket]
     rotos: list[ArchivoRoto]
 
 
@@ -570,6 +570,39 @@ class CategoriaGastoOut(CategoriaGastoBase, TimestampOut):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
+
+
+def _nombre_fase_limpio(valor: str | None) -> str | None:
+    """Sin espacios de más, y nunca vacío: "  " no es un nombre de fase."""
+    if valor is None:
+        return None
+    limpio = " ".join(valor.split())
+    if not limpio:
+        raise ValueError("El nombre no puede estar vacío")
+    return limpio
+
+
+class FasePredeterminadaBase(BaseModel):
+    nombre: str = Field(max_length=150)
+
+    _limpiar_nombre = field_validator("nombre")(_nombre_fase_limpio)
+
+
+class FasePredeterminadaCreate(FasePredeterminadaBase):
+    pass
+
+
+class FasePredeterminadaUpdate(BaseModel):
+    nombre: str | None = Field(default=None, max_length=150)
+
+    _limpiar_nombre = field_validator("nombre")(_nombre_fase_limpio)
+
+
+class FasePredeterminadaOut(FasePredeterminadaBase, TimestampOut):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    orden: int
 
 
 class ImpuestoBase(BaseModel):

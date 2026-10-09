@@ -198,7 +198,7 @@ class Configuracion(Base):
     es un estado normal y esperado (no todo el mundo pisa el default), así
     que no hay semilla: la tabla arranca vacía a propósito.
 
-    NO uses esto para secretos: SECRET_KEY ni las credenciales de DB/R2 se
+    NO uses esto para secretos: SECRET_KEY ni las credenciales de DB/bucket se
     migran acá (ver el comentario de CLAVES_CONFIGURABLES) -- una tabla es
     legible por cualquiera con acceso a la base, algo que un .env fuera del
     repo no es.
@@ -367,6 +367,22 @@ class CategoriaGasto(TimestampMixin, Base):
 
     id: Mapped[uuid.UUID] = uuid_pk()
     nombre: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+
+
+class FasePredeterminada(TimestampMixin, Base):
+    """Nombre sugerido para una fase (Relevamiento y anteproyecto, Montaje
+    de unidades interiores...): son las opciones del select del modal de
+    fase. NO hay FK desde Fase -- la fase guarda el nombre como texto, así
+    que se puede escribir uno a mano que no esté acá, y renombrar o borrar
+    una predeterminada no toca las fases ya creadas."""
+
+    __tablename__ = "fases_predeterminadas"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    nombre: Mapped[str] = mapped_column(String(150), unique=True, nullable=False)
+    # Posición en el select (1, 2, 3...): las de fábrica siguen el orden
+    # natural de una obra; una nueva va al final (ver routes/fases_predeterminadas.py).
+    orden: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 
 
 class Impuesto(TimestampMixin, Base):

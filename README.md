@@ -23,7 +23,7 @@ pip install -r requirements-dev.txt   # instala requirements.txt + herramientas 
 cp .env.example .env
 # completar .env: credenciales de Postgres, SECRET_KEY (generarla con el
 # comando que indica el propio .env.example), y el resto según haga falta
-# (GEMINI_API_KEY para el autocompletado con IA, credenciales de R2 para
+# (GEMINI_API_KEY para el autocompletado con IA, credenciales del bucket S3 para
 # almacenamiento de comprobantes en producción -- ninguna de las dos es
 # obligatoria para levantar el backend en local)
 
@@ -111,7 +111,7 @@ ningún `.env`).
 │   │   ├── db/                # modelos SQLAlchemy (models.py) y sesión (db.py)
 │   │   ├── routes/            # un router por recurso (proyectos, compras, gastos, cobros...)
 │   │   ├── auth/               # JWT (access + refresh token), hashing, permisos
-│   │   ├── files/             # storage.py: comprobantes en disco local o Cloudflare R2
+│   │   ├── files/             # storage.py: comprobantes en disco local o bucket S3 (Railway)
 │   │   ├── ia/                # lectura automática de comprobantes con Gemini
 │   │   ├── reportes/          # generación de PDF (reporte financiero de proyecto)
 │   │   ├── schemas.py         # schemas Pydantic (Create/Update/Out por entidad)

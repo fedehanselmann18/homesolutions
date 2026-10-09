@@ -521,3 +521,53 @@ describe("proveedor y producto: errores en cada campo", () => {
     expect(screen.getByText("Faltan 4 campos: Marca, Modelo, Tipo, Precio")).toBeInTheDocument();
   });
 });
+
+describe("ModalFase: nombre de la lista o a mano", () => {
+  const SUGERIDOS = ["Relevamiento y anteproyecto", "Calefacción"];
+
+  it("el nombre se elige de las fases predeterminadas", async () => {
+    const onGuardar = vi.fn();
+    render(<ModalFase nombresSugeridos={SUGERIDOS} onGuardar={onGuardar} onCerrar={noop} />);
+
+    await userEvent.selectOptions(screen.getByRole("combobox", { name: /nombre/i }), "Calefacción");
+    await userEvent.click(screen.getByRole("button", { name: "Crear fase" }));
+
+    expect(onGuardar).toHaveBeenCalledWith(expect.objectContaining({ nombre: "Calefacción" }));
+  });
+
+  it("con «Otra (escribir a mano)» se tipea un nombre libre, y se puede volver a la lista", async () => {
+    const onGuardar = vi.fn();
+    render(<ModalFase nombresSugeridos={SUGERIDOS} onGuardar={onGuardar} onCerrar={noop} />);
+
+    await userEvent.selectOptions(
+      screen.getByRole("combobox", { name: /nombre/i }),
+      "Otra (escribir a mano)"
+    );
+    await userEvent.type(screen.getByRole("textbox", { name: /nombre/i }), "Entrega y garantía");
+    await userEvent.click(screen.getByRole("button", { name: "Crear fase" }));
+    expect(onGuardar).toHaveBeenCalledWith(
+      expect.objectContaining({ nombre: "Entrega y garantía" })
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "elegir de la lista" }));
+    expect(screen.getByRole("combobox", { name: /nombre/i })).toBeInTheDocument();
+  });
+
+  it("una fase con un nombre fuera de la lista se edita a mano", () => {
+    render(
+      <ModalFase
+        fase={{ id: 1, nombre: "Entrega y garantía", estado: "por_empezar" }}
+        nombresSugeridos={SUGERIDOS}
+        onGuardar={noop}
+        onCerrar={noop}
+      />
+    );
+    expect(screen.getByRole("textbox", { name: /nombre/i })).toHaveValue("Entrega y garantía");
+  });
+
+  it("sin fases predeterminadas queda el input de texto, sin link a la lista", () => {
+    render(<ModalFase onGuardar={noop} onCerrar={noop} />);
+    expect(screen.getByRole("textbox", { name: /nombre/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "elegir de la lista" })).toBeNull();
+  });
+});

@@ -39,9 +39,9 @@ export const SECCIONES_GUIA = [
         items: [
           "Proveedores: en Proveedores tocá «Nuevo proveedor».",
           "Productos de cada proveedor: abrí el proveedor, andá a la pestaña «Catálogo» y cargá los productos con «Producto», o traelos de una lista con «Importar».",
-          "El dólar del día: en Catálogos, pestaña «Cotizaciones», tocá «Nueva cotización». Si lo cargás ahora, después la app lo sugiere sola en cada compra, gasto y cobro.",
+          "El dólar del día: en Ajustes, pestaña «Cotizaciones», tocá «Nueva cotización». Si lo cargás ahora, después la app lo sugiere sola en cada compra, gasto y cobro.",
           "El proyecto: en Proyectos tocá «Nuevo proyecto» y poné el precio acordado en dólares.",
-          "Las fases: adentro del proyecto, en «Fases del proyecto», tocá «Nueva fase» por cada etapa de la obra.",
+          "Las fases: adentro del proyecto, en «Fases del proyecto», tocá «Nueva fase» por cada etapa de la obra. El nombre lo elegís de la lista de fases predeterminadas (se arma en Ajustes, pestaña «Fases predeterminadas») o, con «Otra (escribir a mano)», lo escribís vos.",
           "Los movimientos: en la pestaña «Acciones» del proyecto cargá «Nueva compra», «Gasto» y «Cobro» a medida que pasan.",
         ],
       },
@@ -117,7 +117,7 @@ export const SECCIONES_GUIA = [
       {
         tipo: "parrafo",
         texto:
-          "El dólar del día se carga en Catálogos, pestaña «Cotizaciones», con «Nueva cotización»: fecha, tipo de dólar (Blue, Oficial u Otro) y cuántos pesos vale. Al cargar una compra, un gasto o un cobro, la app sugiere el del día del movimiento o, si ese día no hay, el último cargado antes. Podés cambiarlo desde el «cambiar» que aparece debajo del monto.",
+          "El dólar del día se carga en Ajustes, pestaña «Cotizaciones», con «Nueva cotización»: fecha, tipo de dólar (Blue, Oficial u Otro) y cuántos pesos vale. Al cargar una compra, un gasto o un cobro, la app sugiere el del día del movimiento o, si ese día no hay, el último cargado antes. Podés cambiarlo desde el «cambiar» que aparece debajo del monto.",
       },
       {
         tipo: "parrafo",
@@ -137,7 +137,7 @@ export const SECCIONES_GUIA = [
       {
         tipo: "parrafo",
         texto:
-          "Corregir o borrar una cotización en Catálogos no cambia nada de lo que ya está cargado. Sólo afecta a lo que cargues de ahí en adelante.",
+          "Corregir o borrar una cotización en Ajustes no cambia nada de lo que ya está cargado. Sólo afecta a lo que cargues de ahí en adelante.",
       },
     ],
   },
@@ -184,7 +184,7 @@ export const SECCIONES_GUIA = [
       {
         tipo: "parrafo",
         texto:
-          "A un gasto le podés poner una categoría (por ejemplo, fletes o viáticos) para después ver en qué se va la plata. Las categorías se arman en Catálogos, pestaña «Categorías de gasto».",
+          "A un gasto le podés poner una categoría (por ejemplo, fletes o viáticos) para después ver en qué se va la plata. Las categorías se arman en Ajustes, pestaña «Categorías de gasto».",
       },
       {
         tipo: "aviso",

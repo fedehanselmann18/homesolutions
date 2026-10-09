@@ -13,7 +13,7 @@ import SeccionArchivos from "../../components/manager/SeccionArchivos";
 import "./GestionManager.css";
 
 /**
- * Página de Manager: reconciliación de archivos en R2. Solo aplica con R2
+ * Página de Manager: reconciliación de archivos en el bucket. Solo aplica con el bucket
  * configurado -- sin eso el backend responde 400, que acá se trata como
  * estado informativo (no hay nada roto, la comparación directamente no
  * aplica en disco local).
@@ -23,7 +23,7 @@ export function GestionArchivos() {
   const toast = useToast();
 
   const [datos, setDatos] = useState(null);
-  const [r2NoConfigurado, setR2NoConfigurado] = useState(false);
+  const [bucketNoConfigurado, setBucketNoConfigurado] = useState(false);
   const [cargando, setCargando] = useState(true);
   const [errorCarga, setErrorCarga] = useState(null);
   const [pendientePurgar, setPendientePurgar] = useState(null);
@@ -36,11 +36,11 @@ export function GestionArchivos() {
   const cargarDatos = useCallback(async () => {
     try {
       setDatos(await getReconciliacion());
-      setR2NoConfigurado(false);
+      setBucketNoConfigurado(false);
       setErrorCarga(null);
     } catch (err) {
       if (err?.response?.status === 400) {
-        setR2NoConfigurado(true);
+        setBucketNoConfigurado(true);
       } else {
         setErrorCarga(obtenerMensajeError(err));
       }
@@ -76,18 +76,18 @@ export function GestionArchivos() {
     <div className="manager-pagina">
       <PageHeader
         titulo="Archivos"
-        subtitulo="Reconciliación entre R2 y la base: huérfanos y comprobantes rotos. Solo lo ve esta cuenta."
+        subtitulo="Reconciliación entre el bucket y la base: huérfanos y comprobantes rotos. Solo lo ve esta cuenta."
       />
 
       {cargando ? (
-        <Cargando texto="Comparando con R2..." />
+        <Cargando texto="Comparando con el bucket..." />
       ) : errorCarga ? (
         <EstadoError mensaje={errorCarga} />
-      ) : r2NoConfigurado ? (
+      ) : bucketNoConfigurado ? (
         <div className="manager-pagina__tarjeta">
           <EstadoVacio
             grande
-            mensaje="R2 no está configurado en este entorno: los comprobantes se guardan en disco local, sin nada que comparar acá."
+            mensaje="El bucket de comprobantes no está configurado en este entorno: los comprobantes se guardan en disco local, sin nada que comparar acá."
           />
         </div>
       ) : (
@@ -104,7 +104,7 @@ export function GestionArchivos() {
       {pendientePurgar && (
         <ModalConfirmar
           titulo="Purgar archivos huérfanos"
-          mensaje="Se borran del bucket R2 para siempre. Ninguna fila de la base los referencia, así que no afecta ningún comprobante visible en la app."
+          mensaje="Se borran del bucket para siempre. Ninguna fila de la base los referencia, así que no afecta ningún comprobante visible en la app."
           nombreRecurso={`${pendientePurgar.length} archivo(s) seleccionado(s)`}
           textoConfirmar="Purgar"
           onConfirmar={confirmarPurga}

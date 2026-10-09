@@ -7,7 +7,7 @@ import "./Manager.css";
  * Panel de configuración de Manager: valores
  * editables sin redeployar (hoy solo GEMINI_MODEL, piloto) más el estado
  * -- solo lectura -- de las integraciones que SÍ dependen de variables de
- * entorno reales (R2, Gemini): esas nunca se migran a la tabla porque son
+ * entorno reales (bucket, Gemini): esas nunca se migran a la tabla porque son
  * credenciales, así que acá solo se puede ver si están seteadas, no
  * tocarlas.
  */
@@ -16,9 +16,9 @@ export function SeccionConfiguracion({ integraciones, claves, guardando, onGuard
     <div className="manager-configuracion">
       <div className="manager-configuracion__integraciones">
         <EstadoIntegracion
-          nombre="Cloudflare R2"
+          nombre="Bucket de comprobantes"
           ayuda="Almacenamiento de comprobantes. Si no está, se guardan en disco local."
-          configurado={integraciones?.r2_configurado}
+          configurado={integraciones?.bucket_configurado}
         />
         <EstadoIntegracion
           nombre="Gemini (IA)"

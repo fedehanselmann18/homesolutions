@@ -1,7 +1,7 @@
 import axiosClient from "../api/axiosClient";
 
-// Reconciliación de archivos en R2: exclusivo de
-// "Manager" y solo aplica con R2 configurado -- en disco local (dev) el
+// Reconciliación de archivos en el bucket: exclusivo de
+// "Manager" y solo aplica con el bucket configurado -- en disco local (dev) el
 // backend responde 400, que la página trata como estado informativo, no
 // como error (ver GestionArchivos.jsx).
 

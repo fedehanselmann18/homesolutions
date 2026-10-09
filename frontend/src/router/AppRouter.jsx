@@ -53,7 +53,9 @@ export function AppRouter() {
             <Route path="/proveedores/:id" element={<ProveedorDetalle />} />
             {/* Fuera del subárbol de Manager a propósito: lo usa un admin que
                 no es Manager (ver comentario en pages/Catalogos.jsx). */}
-            <Route path="/catalogos" element={<Catalogos />} />
+            <Route path="/ajustes" element={<Catalogos />} />
+            {/* Ajustes se llamaba «Catálogos»: el link viejo sigue andando. */}
+            <Route path="/catalogos" element={<Navigate to="/ajustes" replace />} />
             <Route path="/comparador" element={<Comparador />} />
             <Route path="/guia" element={<Guia />} />
             {/* Solo la cuenta "Manager" llega a este subárbol: ProtectedRoute

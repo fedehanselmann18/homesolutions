@@ -6,6 +6,7 @@ import { Fases } from "./Fases";
 import {
   useProyecto,
   useFasesPorProyecto,
+  useFasesPredeterminadas,
   useGastosPorProyecto,
   useComprasPorProyecto,
 } from "../../hooks/queries";
@@ -39,6 +40,7 @@ beforeEach(() => {
   auth.rol = "admin";
   useProyecto.mockReturnValue(ok({ id: 7, precio_acordado_usd: 10000, precio_acordado_ars: 0 }));
   useFasesPorProyecto.mockReturnValue(ok(FASES));
+  useFasesPredeterminadas.mockReturnValue(ok([{ id: 1, orden: 1, nombre: "Calefacción" }]));
   useGastosPorProyecto.mockReturnValue(
     ok([
       { id: 1, fase_id: 1, monto_usd: 500, monto_ars: 0, tipo_factura: "A" },

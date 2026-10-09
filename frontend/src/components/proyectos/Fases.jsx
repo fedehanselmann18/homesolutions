@@ -6,6 +6,7 @@ import { crearFase, actualizarFase, eliminarFase, moverFase } from "../../servic
 import {
   useProyecto,
   useFasesPorProyecto,
+  useFasesPredeterminadas,
   useGastosPorProyecto,
   useComprasPorProyecto,
 } from "../../hooks/queries";
@@ -47,6 +48,12 @@ export function Fases({ proyectoId }) {
 
   const proyectoQuery = useProyecto(proyectoId);
   const fasesQuery = useFasesPorProyecto(proyectoId);
+  // Opciones del select de nombre en ModalFase (Ajustes → «Fases predeterminadas»).
+  const fasesPredeterminadasQuery = useFasesPredeterminadas();
+  const nombresSugeridos = useMemo(
+    () => (fasesPredeterminadasQuery.data ?? []).map((f) => f.nombre),
+    [fasesPredeterminadasQuery.data]
+  );
   const gastosQuery = useGastosPorProyecto(proyectoId);
   const comprasQuery = useComprasPorProyecto(proyectoId);
   const fases = fasesQuery.data ?? [];
@@ -323,6 +330,7 @@ export function Fases({ proyectoId }) {
               faseEditando ? fases.findIndex((f) => f.id === faseEditando.id) + 1 : fases.length + 1
             } de ${proyectoQuery.data.nombre}`
           }
+          nombresSugeridos={nombresSugeridos}
           onGuardar={handleGuardarFase}
           onCerrar={() => setModalAbierto(false)}
         />

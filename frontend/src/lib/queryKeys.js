@@ -41,6 +41,9 @@ export const queryKeys = {
   impuestos: {
     all: ["impuestos"],
   },
+  fasesPredeterminadas: {
+    all: ["fasesPredeterminadas"],
+  },
   cotizaciones: {
     all: ["cotizaciones"],
     // Prefijo común a propósito: crear/editar una cotización invalida

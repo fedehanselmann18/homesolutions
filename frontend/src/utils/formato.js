@@ -113,7 +113,7 @@ export function pluralizar(cantidad, singular, plural = `${singular}s`) {
 }
 
 // Tamaño de archivo legible (1536 -> "1.5 KB"), para la reconciliación de
-// R2 (ver GestionArchivos.jsx). Los comprobantes están topeados a 10MB (ver
+// bucket (ver GestionArchivos.jsx). Los comprobantes están topeados a 10MB (ver
 // MAX_SIZE_BYTES en el backend), así que nunca hace falta ir más allá de MB.
 export function formatBytes(bytes) {
   if (bytes < 1024) return `${bytes} B`;

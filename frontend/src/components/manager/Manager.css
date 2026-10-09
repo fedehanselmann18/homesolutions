@@ -294,7 +294,7 @@
   width: 220px;
 }
 
-/* --- Archivos (reconciliación R2) --- */
+/* --- Archivos (reconciliación del bucket) --- */
 
 .manager-archivos__seccion + .manager-archivos__seccion {
   margin-top: var(--space-8);

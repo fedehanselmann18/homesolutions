@@ -2,7 +2,7 @@
 Panel de configuración de Manager: valores
 editables desde la app sin redeployar (tabla `configuracion`, ver
 models.Configuracion) más el estado -- solo lectura -- de las integraciones
-externas (R2, Gemini), que dependen de variables que NUNCA se migran acá
+externas (bucket de comprobantes, Gemini), que dependen de variables que NUNCA se migran acá
 (son credenciales, ver el comentario de app/configuracion.py).
 
 Todo el router es exclusivo de "Manager" (requiere_manager), igual que
@@ -46,12 +46,12 @@ def get_estado_integraciones(current_user: models.Usuario = Depends(requiere_man
     """
     Estado de las integraciones que dependen de variables de entorno que
     nunca pasan por la tabla `configuracion` (son credenciales): si están
-    seteadas o no, sin exponer los valores. R2 reusa la property que ya
-    usa app/files/storage.py para decidir disco vs. R2; Gemini es la misma
+    seteadas o no, sin exponer los valores. El bucket reusa la property que ya
+    usa app/files/storage.py para decidir disco vs. bucket; Gemini es la misma
     condición que revienta con 502 en /ia si falta.
     """
     return {
-        "r2_configurado": settings.r2_configurado,
+        "bucket_configurado": settings.bucket_configurado,
         "gemini_configurado": bool(settings.GEMINI_API_KEY),
     }
 

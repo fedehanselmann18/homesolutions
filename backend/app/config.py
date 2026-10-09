@@ -94,27 +94,37 @@ class Settings(BaseSettings):
     # setear esto en "lax" explícito, más seguro que "none" y alcanza igual.
     COOKIE_SAMESITE: Optional[str] = None
 
-    # Almacenamiento de comprobantes en Cloudflare R2 (S3-compatible). Si
-    # estas 4 variables no están seteadas, app/files/storage.py guarda los
-    # archivos en disco local (comportamiento de siempre, para dev). En
-    # producción (Railway) el disco no persiste entre deploys/reinicios, así
-    # que ahí sí hay que completarlas antes de subir comprobantes reales.
-    # Ver panel de Cloudflare > R2 > "Manage API tokens" para generar las
-    # credenciales y el nombre del bucket creado ahí.
-    R2_ACCOUNT_ID: Optional[str] = None
-    R2_ACCESS_KEY_ID: Optional[str] = None
-    R2_SECRET_ACCESS_KEY: Optional[str] = None
-    R2_BUCKET_NAME: Optional[str] = None
+    # Almacenamiento de comprobantes en un bucket S3-compatible (en
+    # producción: el Storage Bucket de Railway; sirve igual para R2, S3 o
+    # cualquier otro que hable S3). Si las 4 obligatorias no están seteadas,
+    # app/files/storage.py guarda los archivos en disco local (comportamiento
+    # de siempre, para dev). En producción el disco del servicio no persiste
+    # entre deploys/reinicios, así que ahí sí hay que completarlas antes de
+    # subir comprobantes reales.
+    #
+    # En Railway salen de la pestaña "Credentials" del bucket, y se cargan en
+    # el servicio del backend como referencias de variables:
+    #   S3_ENDPOINT_URL      <- ENDPOINT  (ej. https://t3.storageapi.dev)
+    #   S3_ACCESS_KEY_ID     <- ACCESS_KEY_ID
+    #   S3_SECRET_ACCESS_KEY <- SECRET_ACCESS_KEY
+    #   S3_BUCKET_NAME       <- BUCKET    (NO usar RAILWAY_BUCKET_NAME: ese es
+    #                                      el nombre visible, no el de la API)
+    #   S3_REGION            <- REGION    (opcional, default "auto")
+    S3_ENDPOINT_URL: Optional[str] = None
+    S3_ACCESS_KEY_ID: Optional[str] = None
+    S3_SECRET_ACCESS_KEY: Optional[str] = None
+    S3_BUCKET_NAME: Optional[str] = None
+    S3_REGION: str = "auto"
+    # "virtual" (bucket como subdominio del endpoint) es lo que usan los
+    # buckets nuevos de Railway. Los buckets viejos de Railway pueden pedir
+    # "path": la pestaña Credentials del bucket dice cuál corresponde.
+    S3_ADDRESSING_STYLE: str = "virtual"
 
     @property
-    def r2_configurado(self) -> bool:
+    def bucket_configurado(self) -> bool:
         return all(
-            [self.R2_ACCOUNT_ID, self.R2_ACCESS_KEY_ID, self.R2_SECRET_ACCESS_KEY, self.R2_BUCKET_NAME]
+            [self.S3_ENDPOINT_URL, self.S3_ACCESS_KEY_ID, self.S3_SECRET_ACCESS_KEY, self.S3_BUCKET_NAME]
         )
-
-    @property
-    def r2_endpoint_url(self) -> str:
-        return f"https://{self.R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
 
 
 settings = Settings()

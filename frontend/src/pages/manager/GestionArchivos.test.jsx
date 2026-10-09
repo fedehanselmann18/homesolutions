@@ -33,14 +33,16 @@ describe("GestionArchivos (página de Manager)", () => {
     vi.clearAllMocks();
   });
 
-  it("muestra un estado informativo cuando R2 no está configurado (400)", async () => {
+  it("muestra un estado informativo cuando el bucket no está configurado (400)", async () => {
     getReconciliacion.mockRejectedValue({
-      response: { status: 400, data: { detail: "R2 no configurado" } },
+      response: { status: 400, data: { detail: "bucket no configurado" } },
     });
 
     render(<GestionArchivos />);
 
-    expect(await screen.findByText(/R2 no está configurado/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/bucket de comprobantes no está configurado/i)
+    ).toBeInTheDocument();
   });
 
   it("lista huérfanos y rotos por separado", async () => {
@@ -49,7 +51,7 @@ describe("GestionArchivos (página de Manager)", () => {
 
     expect(await screen.findByText(/comprobantes_gasto\/g1\/huerfano\.pdf/)).toBeInTheDocument();
     expect(screen.getByText(/comprobantes_compra\/c1\/roto\.pdf/)).toBeInTheDocument();
-    expect(screen.getByText("Huérfanos en R2 (1)")).toBeInTheDocument();
+    expect(screen.getByText("Huérfanos en el bucket (1)")).toBeInTheDocument();
     expect(screen.getByText(/Comprobantes rotos \(1\)/)).toBeInTheDocument();
   });
 

@@ -12,7 +12,7 @@ export const getConfiguracion = async () => {
   return data;
 };
 
-// Estado -- solo lectura -- de las integraciones externas (R2, Gemini):
+// Estado -- solo lectura -- de las integraciones externas (bucket, Gemini):
 // dependen de variables que nunca pasan por esta tabla (son credenciales).
 export const getEstadoIntegraciones = async () => {
   const { data } = await axiosClient.get("/configuracion/estado-integraciones");

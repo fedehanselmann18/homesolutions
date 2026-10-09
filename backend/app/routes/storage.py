@@ -1,13 +1,13 @@
 """
-Reconciliación de archivos en R2: `eliminar_comprobante`
+Reconciliación de archivos en el bucket: `eliminar_comprobante`
 (app/files/storage.py) se llama explícitamente antes de cada borrado en
 proyectos.py/compras.py/gastos.py/cobros.py/fases.py, así que esto NO es una
 red de seguridad para un borrado que "se olvidó" -- es la red para lo que
-ese borrado explícito no puede cubrir: un upload que llegó a R2 pero el
+ese borrado explícito no puede cubrir: un upload que llegó al bucket pero el
 commit de la fila en DB falló, un request interrumpido a mitad de camino, o
 un bug futuro en algún endpoint nuevo que suba sin registrar.
 
-Solo tiene sentido con R2 configurado: el disco local (dev) no tiene un
+Solo tiene sentido con el bucket configurado: el disco local (dev) no tiene un
 "listar todo el bucket" que comparar, y en producción los deploys de
 Railway no persisten el disco entre reinicios de todos modos.
 
@@ -23,18 +23,18 @@ from app.auth.oAuth2 import requiere_manager
 from app.config import settings
 from app.db import models
 from app.db.db import get_db
-from app.files.storage import eliminar_comprobante, listar_objetos_r2
+from app.files.storage import eliminar_comprobante, listar_objetos_bucket
 from app.schemas import (
     ArchivoRoto,
-    ObjetoR2,
+    ObjetoBucket,
     PurgarHuerfanosRequest,
     PurgarHuerfanosResultado,
-    ReconciliacionR2,
+    ReconciliacionBucket,
 )
 
 router = APIRouter(prefix="/storage", tags=["storage"])
 
-# Todas las tablas que guardan un archivo_path apuntando a R2/disco. Sumar
+# Todas las tablas que guardan un archivo_path apuntando al bucket/disco. Sumar
 # una tabla nueva con archivo_path es agregarla acá -- la reconciliación ya
 # es genérica sobre esta lista.
 TABLAS_CON_ARCHIVO = [
@@ -55,33 +55,33 @@ def _archivo_paths_en_db(db: Session) -> dict[str, tuple[str, str]]:
     return mapa
 
 
-def _exigir_r2_configurado() -> None:
-    if not settings.r2_configurado:
+def _exigir_bucket_configurado() -> None:
+    if not settings.bucket_configurado:
         raise HTTPException(
             status_code=400,
-            detail="R2 no está configurado: esta comparación no aplica en disco local.",
+            detail="El bucket de comprobantes no está configurado: esta comparación no aplica en disco local.",
         )
 
 
-@router.get("/reconciliacion", response_model=ReconciliacionR2, status_code=status.HTTP_200_OK)
+@router.get("/reconciliacion", response_model=ReconciliacionBucket, status_code=status.HTTP_200_OK)
 def get_reconciliacion(
     db: Session = Depends(get_db),
     current_user: models.Usuario = Depends(requiere_manager),
 ):
-    _exigir_r2_configurado()
+    _exigir_bucket_configurado()
 
-    objetos_r2 = listar_objetos_r2()
-    claves_r2 = {objeto["key"] for objeto in objetos_r2}
+    objetos_bucket = listar_objetos_bucket()
+    claves_bucket = {objeto["key"] for objeto in objetos_bucket}
     mapa_db = _archivo_paths_en_db(db)
 
-    huerfanos = [ObjetoR2(**objeto) for objeto in objetos_r2 if objeto["key"] not in mapa_db]
+    huerfanos = [ObjetoBucket(**objeto) for objeto in objetos_bucket if objeto["key"] not in mapa_db]
     rotos = [
         ArchivoRoto(tipo_recurso=tipo, recurso_id=fila_id, archivo_path=path)
         for path, (tipo, fila_id) in mapa_db.items()
-        if path not in claves_r2
+        if path not in claves_bucket
     ]
 
-    return ReconciliacionR2(huerfanos=huerfanos, rotos=rotos)
+    return ReconciliacionBucket(huerfanos=huerfanos, rotos=rotos)
 
 
 @router.post(
@@ -101,7 +101,7 @@ def purgar_huerfanos(
     de revalidar es una sola query más, y la alternativa es borrar un
     comprobante real por una carrera de un caso en un millón.
     """
-    _exigir_r2_configurado()
+    _exigir_bucket_configurado()
 
     mapa_db = _archivo_paths_en_db(db)
     purgadas = []
@@ -121,8 +121,8 @@ def purgar_huerfanos(
         log_auditoria(
             db,
             current_user.id,
-            "purgar huérfanos R2",
-            "ArchivoR2",
+            "purgar huérfanos del bucket",
+            "ArchivoBucket",
             None,
             detalle={"claves": purgadas},
         )

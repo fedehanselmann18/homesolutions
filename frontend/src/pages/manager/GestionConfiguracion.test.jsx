@@ -23,7 +23,7 @@ const CLAVES = [
   },
 ];
 
-const ESTADO = { r2_configurado: false, gemini_configurado: true };
+const ESTADO = { bucket_configurado: false, gemini_configurado: true };
 
 const esperarCarga = () => screen.findByText("GEMINI_MODEL");
 
@@ -38,7 +38,7 @@ describe("GestionConfiguracion (página de Manager)", () => {
     render(<GestionConfiguracion />);
     await esperarCarga();
 
-    expect(screen.getByText("No configurado")).toBeInTheDocument(); // R2
+    expect(screen.getByText("No configurado")).toBeInTheDocument(); // bucket
     expect(screen.getByText("Configurado")).toBeInTheDocument(); // Gemini
   });
 

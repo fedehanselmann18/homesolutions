@@ -7,7 +7,13 @@ import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { Catalogos } from "./Catalogos";
-import { useCategorias, useCategoriasGasto, useCotizaciones, useImpuestos } from "../hooks/queries";
+import {
+  useCategorias,
+  useCategoriasGasto,
+  useCotizaciones,
+  useFasesPredeterminadas,
+  useImpuestos,
+} from "../hooks/queries";
 import { eliminarImpuesto } from "../services/impuestosService";
 import { crearCotizacion } from "../services/cotizacionService";
 
@@ -19,6 +25,7 @@ vi.mock("../services/impuestosService");
 vi.mock("../services/categoriaGastoService");
 vi.mock("../services/categoriaService");
 vi.mock("../services/cotizacionService");
+vi.mock("../services/fasePredeterminadaService");
 vi.mock("../context/useAuth", () => ({
   default: () => ({ usuario: { rol: rolActual } }),
   useAuth: () => ({ usuario: { rol: rolActual } }),
@@ -44,6 +51,13 @@ beforeEach(() => {
   useCategorias.mockReturnValue(ok([{ id: "c1", nombre: "Cables", tipo: "materiales" }]));
   useCotizaciones.mockReturnValue(
     ok([{ id: "q1", fecha: "2026-10-01", tipo: "blue", valor: 1450 }])
+  );
+  useFasesPredeterminadas.mockReturnValue(
+    ok([
+      { id: "f1", orden: 1, nombre: "Relevamiento y anteproyecto" },
+      { id: "f2", orden: 2, nombre: "Ingeniería de detalle" },
+      { id: "f3", orden: 3, nombre: "Calefacción" },
+    ])
   );
 });
 
@@ -146,5 +160,20 @@ describe("Catalogos", () => {
       expect(screen.getByText("01/10/2026")).toBeInTheDocument();
       expect(screen.queryByRole("button", { name: /nueva|editar|eliminar/i })).toBeNull();
     });
+  });
+
+  it("las fases predeterminadas salen en el orden de la obra, no alfabético", async () => {
+    renderCatalogos();
+    await userEvent.click(screen.getByRole("tab", { name: /^Fases predeterminadas/ }));
+
+    const nombres = screen
+      .getAllByText(/Relevamiento|Ingeniería|Calefacción/)
+      .map((el) => el.textContent);
+    expect(nombres).toEqual([
+      "Relevamiento y anteproyecto",
+      "Ingeniería de detalle",
+      "Calefacción",
+    ]);
+    expect(screen.getByRole("button", { name: /nueva fase/i })).toBeInTheDocument();
   });
 });
