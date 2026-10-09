@@ -10,6 +10,7 @@ from app.audit import log_auditoria
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db import models
 from app.db.db import get_db
+from app.estados_obra import activar_por_movimiento
 from app.files.storage import eliminar_comprobante, subir_comprobante, ver_comprobante
 from app.limiter import limiter
 from app.pagination import ParametrosPaginacion
@@ -191,6 +192,8 @@ def create_compra(
         nueva_compra.impuestos_aplicados.append(
             models.CompraImpuesto(impuesto_id=imp.impuesto_id, monto=imp.monto)
         )
+
+    activar_por_movimiento(db, fase=fase)
 
     try:
         db.add(nueva_compra)

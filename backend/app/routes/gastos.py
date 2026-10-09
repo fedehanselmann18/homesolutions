@@ -6,6 +6,7 @@ from app.audit import log_auditoria
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db import models
 from app.db.db import get_db
+from app.estados_obra import activar_por_movimiento
 from app.files.storage import eliminar_comprobante, subir_comprobante, ver_comprobante
 from app.limiter import limiter
 from app.pagination import ParametrosPaginacion
@@ -91,6 +92,7 @@ def create_gasto(
     if not proyecto:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
 
+    fase = None
     if gasto.fase_id:
         fase = db.query(models.Fase).filter(models.Fase.id == gasto.fase_id).first()
         if not fase:
@@ -120,6 +122,8 @@ def create_gasto(
         tipo_factura=gasto.tipo_factura,
         categorias=categorias,
     )
+
+    activar_por_movimiento(db, fase=fase, proyecto=proyecto)
 
     try:
         db.add(nuevo_gasto)
