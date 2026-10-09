@@ -347,7 +347,9 @@ export function Dashboard() {
                         type="button"
                         className="panel-movimiento"
                         onClick={() =>
-                          navigate(`/proyectos/${m.proyectoId}?tab=acciones&foco=${m.tipo}-${m.id}`)
+                          navigate(
+                            `/proyectos/${m.proyectoId}?tab=acciones&foco=${m.foco ?? `${m.tipo}-${m.id}`}`
+                          )
                         }
                       >
                         <span
@@ -363,7 +365,7 @@ export function Dashboard() {
                           {m.descripcion || tipo.singular}
                         </span>
                         <span className="panel-movimiento__monto cifra">
-                          {signoTexto(tipo.signo)}
+                          {signoTexto(m.signo ?? tipo.signo)}
                           {formatMoneda(Math.abs(m.monto), moneda)}
                         </span>
                         <span className="panel-movimiento__contexto">{m.proyectoNombre}</span>

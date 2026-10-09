@@ -14,6 +14,7 @@ import {
   validarFecha,
 } from "../../utils/formValidation";
 import { textoEquivalente } from "../../utils/moneda";
+import { hoyISO } from "../../utils/formato";
 import { ErrorCampo } from "../shared/ErrorCampo";
 import ModalShell, { AccionesFormulario } from "./ModalShell";
 import { BotonIA, MarcaIA } from "./PiezasIA";
@@ -61,7 +62,7 @@ export function ModalGasto({
   const [form, setForm] = useState({
     descripcion: "",
     monto: "",
-    fecha: "",
+    fecha: hoyISO(),
     tipo_factura: "",
     fase_id: faseFija?.id ?? "",
     categoria_gasto_ids: "",

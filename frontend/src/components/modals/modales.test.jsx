@@ -368,7 +368,8 @@ describe("smoke de modales", () => {
     expect(screen.getByText("Escribí una descripción corta.")).toBeInTheDocument();
     expect(screen.getByText("Elegí el tipo de comprobante.")).toBeInTheDocument();
     expect(document.querySelector(".shell__footer-aviso")).toHaveTextContent(
-      /Faltan 4 campos: Descripción, Monto, Fecha, Comprobante/
+      // La fecha ya no falta: arranca en hoy.
+      /Faltan 3 campos: Descripción, Monto, Comprobante/
     );
   });
 

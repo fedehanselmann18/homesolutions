@@ -303,3 +303,36 @@
     display: none;
   }
 }
+
+/* Celular: los 6 links con texto no entran en 375px y "Ajustes", el
+   Comparador y la Guía quedaban afuera, sin pista de que se podía scrollear.
+   Acá van sólo los íconos, repartidos en el ancho. El texto sigue en el DOM
+   (visualmente oculto) para lectores de pantalla. */
+@media (max-width: 560px) {
+  .sidebar-nav {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .sidebar-nav > .sidebar-grupo {
+    flex: 1;
+    justify-content: space-around;
+  }
+
+  .sidebar-link {
+    padding: var(--space-2);
+  }
+
+  .sidebar-link-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .sidebar-avatar {
+    display: none;
+  }
+}

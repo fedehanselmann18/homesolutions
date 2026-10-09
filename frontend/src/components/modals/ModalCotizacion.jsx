@@ -6,8 +6,10 @@ import ModalShell, { AccionesFormulario } from "./ModalShell";
 import { ControlOpcion } from "../shared/ControlOpcion";
 import { TIPOS_CAMBIO } from "../../utils/moneda";
 import { validarFecha } from "../../utils/formValidation";
+import { hoyISO } from "../../utils/formato";
 
-const hoy = () => new Date().toISOString().slice(0, 10);
+// Fecha local, no UTC (ver hoyISO).
+const hoy = () => hoyISO();
 
 const OPCIONES_TIPO = TIPOS_CAMBIO.map((t) => ({ valor: t.value, label: t.label }));
 

@@ -16,7 +16,7 @@ import {
 import { ComprobantesUploader } from "../shared/ComprobantesUploader";
 import { ControlOpcion } from "../shared/ControlOpcion";
 import { SeccionNotas } from "../shared/SeccionNotas";
-import { formatMoneda } from "../../utils/formato";
+import { formatMoneda, hoyISO } from "../../utils/formato";
 import { TIPOS_FACTURA } from "../../constants/tipoFactura";
 import { getTipoProducto } from "../../constants/tipoProducto";
 import { getCondicionPagoLabel } from "../../constants/estadoCompra";
@@ -103,7 +103,9 @@ export function ModalCompra({
     proveedor_id: proveedorFijo?.id ?? "",
     descripcion: "",
     tipo_factura: "",
-    fecha: "",
+    // Arranca en hoy: casi siempre se carga en el día, la IA la pisa si lee
+    // la factura, y con fecha ya hay sugerencia del dólar.
+    fecha: hoyISO(),
     condicion_pago: "",
     estado_pago: "pendiente",
     estado_envio: "pedido",

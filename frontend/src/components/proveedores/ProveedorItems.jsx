@@ -102,8 +102,9 @@ export function ProveedorFila({ resumen, onAbrir, onEditar, onEliminar }) {
           </>
         )}
       </span>
-      <span className="proveedor-fila__total cifra" title="Comprado histórico">
-        {formatMoneda(totalComprado)}
+      <span className="proveedor-fila__total" title="Total comprado a este proveedor">
+        <span className="cifra">{formatMoneda(totalComprado)}</span>
+        <span className="proveedor-fila__total-etiqueta">comprado en total</span>
       </span>
       <span className="acciones proveedor-fila__acciones">
         {onEditar && (

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { DollarSign } from "lucide-react";
 
 import { TIPOS_CAMBIO, getTipoCambioLabel } from "../../utils/moneda";
@@ -79,6 +79,13 @@ export function CamposCotizacion({
   const conError = requerido && mostrarError && Boolean(error);
   const sinSugerencia = !hayValor && !buscandoSugerencia;
   const mostrarCampos = abierto || conError || (requerido && sinSugerencia);
+
+  // Si los campos se abrieron solos por falta de sugerencia, quedan abiertos:
+  // si no, al tipear el primer dígito ya "hay valor", la condición de arriba
+  // se apaga y el input se desmonta en medio de la escritura (quedaba "1").
+  useEffect(() => {
+    if (requerido && sinSugerencia && !sugerencia) setAbierto(true);
+  }, [requerido, sinSugerencia, sugerencia]);
 
   const esLaSugerida =
     sugerencia && sugerencia.tipo === tipo && Number(sugerencia.valor) === Number(valor);

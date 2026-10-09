@@ -470,3 +470,70 @@ describe("calcularPanel — Para resolver y deuda con proveedores", () => {
     expect(panel.kpis.deudaProveedores).toEqual({ monto: 2000, compras: 2, vencidas: 1 });
   });
 });
+
+describe("calcularPanel -- obras 'a iniciar' con movimientos y signo de las notas", () => {
+  const HOY_PANEL = new Date("2026-10-09");
+  const compraConNota = {
+    id: "c1",
+    fase_id: 10,
+    descripcion: "compre aires",
+    fecha: "2026-10-08",
+    precio_neto_usd: 3000,
+    precio_total_usd: 3190,
+    impuestos_aplicados: [],
+    notas: [
+      {
+        id: "n1",
+        tipo: "nota_credito",
+        descripcion: "Descuento",
+        monto_usd: 326,
+        fecha: "2026-10-08",
+      },
+    ],
+  };
+
+  it("una obra 'a iniciar' que ya tiene movimientos cuenta como activa en el Panel", () => {
+    const panel = calcularPanel({
+      proyectos: [
+        { id: 1, estado: "a_iniciar", nombre: "Terravista", precio_acordado_usd: 103000 },
+        { id: 2, estado: "a_iniciar", nombre: "Sin nada" },
+      ],
+      fases: [{ id: 10, proyecto_id: 1 }],
+      compras: [compraConNota],
+      hoy: HOY_PANEL,
+    });
+    expect(panel.proyectosActivos.map((p) => p.id)).toEqual([1]);
+    expect(panel.kpis.enCurso).toBe(1);
+    expect(panel.kpis.aIniciar).toBe(1); // la que no tiene nada sigue "a iniciar"
+    expect(panel.kpis.pendienteDeCobrar).toBe(103000);
+  });
+
+  it("la nota de crédito de una compra suma a la caja y lleva a su compra", () => {
+    const panel = calcularPanel({
+      proyectos: [{ id: 1, estado: "en_curso", nombre: "Terravista" }],
+      fases: [{ id: 10, proyecto_id: 1 }],
+      compras: [compraConNota],
+      hoy: HOY_PANEL,
+    });
+    const nota = panel.actividad.find((m) => m.tipo === "nota_credito");
+    expect(nota.signo).toBe(1);
+    expect(nota.foco).toBe("compra-c1");
+  });
+
+  it("la nota de crédito de un cobro resta de la caja", () => {
+    const panel = calcularPanel({
+      proyectos: [{ id: 1, estado: "en_curso" }],
+      cobros: [
+        {
+          id: "k1",
+          proyecto_id: 1,
+          fecha: "2026-10-01",
+          monto_neto_usd: 90,
+          notas: [{ id: "n2", tipo: "nota_credito", monto_usd: 10, fecha: "2026-10-02" }],
+        },
+      ],
+      hoy: HOY_PANEL,
+    });
+    expect(panel.actividad.find((m) => m.tipo === "nota_credito").signo).toBe(-1);
+  });
+});

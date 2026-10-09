@@ -16,10 +16,32 @@ function colorSegmentoFase(estado) {
   return LINEA; // hex plano: los segmentos van por style inline, no CSS var
 }
 
+// "2 sin pagar · 1 sin comprobante": qué hay detrás del número de la card.
+function detallePendientes(proyecto, sinComprobante) {
+  const partes = [
+    [proyecto.comprasImpagas, "sin pagar"],
+    [proyecto.comprasSinEntregar, "sin entregar"],
+    [
+      proyecto.fasesEstancadas,
+      proyecto.fasesEstancadas === 1 ? "fase estancada" : "fases estancadas",
+    ],
+    [sinComprobante, "sin comprobante"],
+  ];
+  return partes
+    .filter(([n]) => n > 0)
+    .map(([n, texto]) => `${n} ${texto}`)
+    .join(" · ");
+}
+
 // El contador de alertas de arriba a la derecha: rojo si hay deuda vencida,
 // ámbar si hay pendientes, y un tilde tenue si está todo al día.
 function Alertas({ proyecto }) {
-  const total = proyecto.comprasImpagas + proyecto.comprasSinEntregar + proyecto.fasesEstancadas;
+  const sinComprobante = proyecto.sinComprobante ?? 0;
+  const total =
+    proyecto.comprasImpagas +
+    proyecto.comprasSinEntregar +
+    proyecto.fasesEstancadas +
+    sinComprobante;
   if (total === 0) {
     return (
       <span className="proyecto-card__alertas" title="Sin pendientes">
@@ -33,7 +55,7 @@ function Alertas({ proyecto }) {
   return (
     <span
       className={`proyecto-card__alertas proyecto-card__alertas--${grave ? "problema" : "atencion"}`}
-      title={`${total} ${total === 1 ? "pendiente" : "pendientes"}`}
+      title={detallePendientes(proyecto, sinComprobante)}
     >
       <Icono size={14} strokeWidth={2} aria-hidden="true" />
       {total}

@@ -46,6 +46,17 @@ function claveMesDeDate(fecha) {
   return `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, "0")}`;
 }
 
+/**
+ * Efecto de una nota de crédito/débito sobre la caja según su origen:
+ *  - compra: crédito +1 (te devuelven), débito −1 (te refacturan)
+ *  - cobro:  crédito −1 (le devolvés al cliente), débito +1 (le cobrás más)
+ */
+export function signoNota(nota) {
+  const credito = nota.tipo === "nota_credito";
+  if (nota.origenTipo === "cobro") return credito ? -1 : 1;
+  return credito ? 1 : -1;
+}
+
 function armarActividad(resumenes, moneda) {
   const movimientos = [];
 
@@ -85,22 +96,21 @@ function armarActividad(resumenes, moneda) {
     // Las notas de crédito/débito son movimientos de plata por sí mismas
     // (antes no aparecían acá aunque ya afectaban precio_total/monto_neto) --
     // tipo queda como "nota_credito"/"nota_debito" (ver Dashboard.jsx TIPOS_MOVIMIENTO).
-    notasDeCompras(comprasDelProyecto).forEach((n) =>
+    //
+    // `signo` es el efecto sobre la CAJA, y depende de a qué movimiento se le
+    // hizo la nota: una nota de crédito de una compra es plata que vuelve (+),
+    // la de un cobro es plata que se le devuelve al cliente (−). El signo fijo
+    // de TIPOS_MOVIMIENTO es el de la cuenta corriente, no el de la caja.
+    // `foco` lleva al movimiento padre: la nota no es una fila del libro.
+    [...notasDeCompras(comprasDelProyecto), ...notasDeCobros(cobrosDelProyecto)].forEach((n) =>
       movimientos.push({
         ...comun,
         id: n.id,
         tipo: n.tipo,
+        signo: signoNota(n),
+        foco: `${n.origenTipo}-${n.origenId}`,
         descripcion: n.descripcion,
-        monto: montoNota(n, moneda),
-        fecha: n.fecha,
-      })
-    );
-    notasDeCobros(cobrosDelProyecto).forEach((n) =>
-      movimientos.push({
-        ...comun,
-        id: n.id,
-        tipo: n.tipo,
-        descripcion: n.descripcion,
+        origenDescripcion: n.origenDescripcion,
         monto: montoNota(n, moneda),
         fecha: n.fecha,
       })
@@ -312,7 +322,18 @@ export function calcularPanel({
     };
   });
 
-  const enCurso = resumenes.filter((r) => r.proyecto.estado === "en_curso");
+  // "Activos" para el Panel: los en curso y también los "a iniciar" que ya
+  // tienen movimientos cargados -- si Agus carga una compra antes de pasar la
+  // obra a En curso, la obra ya está viva y no puede desaparecer del Panel.
+  // (El backend además la pasa sola a en_curso con el primer movimiento.)
+  const tieneMovimientos = (r) =>
+    r.gastosDelProyecto.length > 0 ||
+    r.cobrosDelProyecto.length > 0 ||
+    r.comprasDelProyecto.length > 0;
+  const esActivo = (r) =>
+    r.proyecto.estado === "en_curso" || (r.proyecto.estado === "a_iniciar" && tieneMovimientos(r));
+  const enCurso = resumenes.filter(esActivo);
+  const idsActivos = new Set(enCurso.map((r) => r.proyecto.id));
   const mesActual = claveMesDeDate(hoy);
   const delMes = (items) => items.filter((i) => claveMes(i.fecha) === mesActual);
 
@@ -354,7 +375,14 @@ export function calcularPanel({
   // para "proyectosActivos" (compat, sólo en_curso) como para
   // "proyectosResumen" (los 3 estados, para los filtros En curso/A
   // iniciar/Terminados de la dirección 1a).
-  function construirFilaProyecto({ proyecto, analisis, fasesDelProyecto, comprasDelProyecto }) {
+  function construirFilaProyecto({
+    proyecto,
+    analisis,
+    fasesDelProyecto,
+    comprasDelProyecto,
+    gastosDelProyecto,
+    cobrosDelProyecto,
+  }) {
     const cerradas = fasesDelProyecto.filter((f) => ESTADOS_FASE_CERRADA.includes(f.estado)).length;
     const impagas = comprasDelProyecto.filter(esCompraImpaga);
     // Mismo criterio que "fasesEstancadas" en calcularSeguimiento: una fase
@@ -391,6 +419,13 @@ export function calcularPanel({
       montoImpago: sumar(impagas, (c) => precioTotalCompra(c, moneda)),
       comprasSinEntregar: comprasDelProyecto.filter(esCompraSinEntregar).length,
       fasesEstancadas: estancadas,
+      // Movimientos sin factura/remito adjunto: mismo criterio que
+      // "Sin comprobante" en Seguimiento. Sin esto la card decía "Al día"
+      // con la pestaña Seguimiento llena de pendientes.
+      sinComprobante:
+        comprasDelProyecto.filter(sinComprobante).length +
+        gastosDelProyecto.filter(sinComprobante).length +
+        cobrosDelProyecto.filter(sinComprobante).length,
       // Estado por fase, en el orden de la obra -- lo usa la barra de
       // segmentos de la card de proyecto (variante 4L) para pintar cada fase.
       fasesResumen: [...fasesDelProyecto]
@@ -406,7 +441,7 @@ export function calcularPanel({
     .sort((a, b) => b.pctPresupuesto - a.pctPresupuesto);
 
   // Compat: sólo en_curso, mismo criterio que siempre tuvo esta clave.
-  const proyectosActivos = proyectosResumen.filter((p) => p.estado === "en_curso");
+  const proyectosActivos = proyectosResumen.filter((p) => idsActivos.has(p.id));
 
   // "Requiere acción": todo lo que un proyecto en curso tiene pendiente de
   // resolver, sumado en los 3 proyectos -- mismos 3 criterios que
@@ -435,7 +470,10 @@ export function calcularPanel({
     kpis: {
       enCurso: enCurso.length,
       terminados: resumenes.filter((r) => r.proyecto.estado === "terminado").length,
-      aIniciar: resumenes.filter((r) => r.proyecto.estado === "a_iniciar").length,
+      // Los "a iniciar" con movimientos ya cuentan en enCurso (ver esActivo).
+      aIniciar: resumenes.filter(
+        (r) => r.proyecto.estado === "a_iniciar" && !idsActivos.has(r.proyecto.id)
+      ).length,
       disponibleTotal: sumar(enCurso, (r) => r.analisis.totales.disponible),
       cobradoMes,
       pendienteDeCobrar,

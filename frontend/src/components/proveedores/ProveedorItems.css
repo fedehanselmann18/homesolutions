@@ -112,8 +112,17 @@
 }
 
 .proveedor-fila__total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   text-align: right;
   font-size: var(--text-base);
+}
+
+/* Sin esto el monto al lado de "Al día" no decía si era deuda o qué. */
+.proveedor-fila__total-etiqueta {
+  font-size: var(--text-xs);
+  color: var(--color-tinta-tenue);
 }
 
 .proveedor-fila__acciones {

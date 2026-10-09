@@ -4,7 +4,7 @@ import { Building2, CalendarDays, Sparkles } from "lucide-react";
 import { ComprobantesUploader } from "../shared/ComprobantesUploader";
 import { ControlOpcion } from "../shared/ControlOpcion";
 import { SeccionNotas } from "../shared/SeccionNotas";
-import { formatMoneda, formatNumero } from "../../utils/formato";
+import { formatMoneda, formatNumero, hoyISO } from "../../utils/formato";
 import { TIPOS_FACTURA } from "../../constants/tipoFactura";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
@@ -90,7 +90,7 @@ export function ModalCobro({
   const [form, setForm] = useState({
     descripcion: "",
     monto: "",
-    fecha: "",
+    fecha: hoyISO(),
     tipo_factura: "",
     proyecto_id: proyectoActual?.id ?? "",
   });

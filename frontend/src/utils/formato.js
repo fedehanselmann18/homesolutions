@@ -143,3 +143,14 @@ export function iniciales(nombre = "") {
   if (partes.length >= 2) return (partes[0][0] + partes[1][0]).toUpperCase();
   return nombre.slice(0, 2).toUpperCase();
 }
+
+/**
+ * Hoy como "AAAA-MM-DD" en la hora LOCAL (lo que espera un <input type="date">).
+ * No usar toISOString(): eso es UTC y en Argentina, después de las 21, ya da
+ * el día siguiente.
+ */
+export function hoyISO(fecha = new Date()) {
+  const mm = String(fecha.getMonth() + 1).padStart(2, "0");
+  const dd = String(fecha.getDate()).padStart(2, "0");
+  return `${fecha.getFullYear()}-${mm}-${dd}`;
+}

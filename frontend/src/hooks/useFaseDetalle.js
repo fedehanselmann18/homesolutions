@@ -120,7 +120,15 @@ export function useFaseDetalle(faseId) {
     comprasProyectoQuery.data,
   ]);
 
-  const invalidar = (recurso) => queryClient.invalidateQueries({ queryKey: [recurso] });
+  // Una compra o un gasto nuevo pueden pasar la fase y la obra a "en curso"
+  // solos (ver backend app/estados_obra.py): se refrescan también esas dos.
+  const invalidar = (recurso) => {
+    queryClient.invalidateQueries({ queryKey: [recurso] });
+    if (recurso === "compras" || recurso === "gastos") {
+      queryClient.invalidateQueries({ queryKey: ["fases"] });
+      queryClient.invalidateQueries({ queryKey: ["proyectos"] });
+    }
+  };
 
   // --- Marcar como terminada ---
   const marcarTerminada = async () => {
