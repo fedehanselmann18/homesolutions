@@ -30,7 +30,6 @@ import ModalCobro from "../modals/ModalCobro";
 import { calcularSeguimiento, armarBandeja } from "../../utils/seguimiento";
 import { formatMoneda } from "../../utils/formato";
 import { obtenerDetalleBackend } from "../../utils/errorHandling";
-import { DIAS_DEUDA_VENCIDA } from "../../constants/estadoCompra";
 import "./Seguimiento.css";
 
 export function Seguimiento({ proyectoId, foco }) {
@@ -115,7 +114,7 @@ export function Seguimiento({ proyectoId, foco }) {
 
   const { cobranza, comprasSinComprobante, gastosSinComprobante, cobrosSinComprobante, totales } =
     seguimiento;
-  const grupos = armarBandeja(seguimiento, { diasVencida: DIAS_DEUDA_VENCIDA });
+  const grupos = armarBandeja(seguimiento);
   const cantidadSinComprobante =
     comprasSinComprobante.length + gastosSinComprobante.length + cobrosSinComprobante.length;
 

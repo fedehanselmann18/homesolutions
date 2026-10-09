@@ -17,9 +17,8 @@ import { ComprobantesUploader } from "../shared/ComprobantesUploader";
 import { ControlOpcion } from "../shared/ControlOpcion";
 import { SeccionNotas } from "../shared/SeccionNotas";
 import { formatMoneda, hoyISO } from "../../utils/formato";
-import { TIPOS_FACTURA } from "../../constants/tipoFactura";
+import { useOpcionesTipoFactura } from "../../hooks/useTiposFactura";
 import { getTipoProducto } from "../../constants/tipoProducto";
-import { getCondicionPagoLabel } from "../../constants/estadoCompra";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
 import { ATENCION_TEXTO, OLIVA_OSCURO } from "../../constants/colores";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
@@ -27,6 +26,16 @@ import { useExtraccionIA } from "../../hooks/useExtraccionIA";
 import { useToast } from "../../context/useToast";
 import { avisoFaltantes, validarRequerido, validarFecha } from "../../utils/formValidation";
 import { ErrorCampo } from "../shared/ErrorCampo";
+import { FilasImpuestos } from "./FilasImpuestos";
+import { CamposPago } from "./CamposPago";
+import { condicionBloqueada } from "../../utils/plazos";
+import {
+  filasDesdeAplicados,
+  grupoRepetido,
+  impuestosParaGuardar,
+  nuevaFilaImpuesto,
+  totalImpuestos as sumarImpuestos,
+} from "../../utils/impuestos";
 import ModalShell from "./ModalShell";
 import { BotonIA, MarcaIA } from "./PiezasIA";
 import { LogoCargando } from "../shared/LogoCargando";
@@ -35,10 +44,6 @@ import { useCotizacionDia } from "../../hooks/useCotizacionDia";
 
 import "./ModalCompra.css";
 
-const OPCIONES_FACTURA = TIPOS_FACTURA.map((t) => ({ valor: t.value, label: t.label }));
-const OPCIONES_CONDICION = ["contado", "cuenta_corriente", "cheque", "transferencia"].map(
-  (valor) => ({ valor, label: getCondicionPagoLabel(valor) })
-);
 // Pago y envío son dos valores de un dato, no un interruptor (DESIGN.md §9):
 // segmentado con el ícono y el color de texto de su badge.
 const OPCIONES_PAGO = [
@@ -53,7 +58,7 @@ const OPCIONES_ENVIO = [
 // Los tres pasos de 5b. Cada uno valida sus campos antes de avanzar.
 const PASOS = [
   { label: "Comprobante y datos", campos: ["proveedor_id", "fase_id", "descripcion", "fecha"] },
-  { label: "Condiciones", campos: ["tipo_factura", "condicion_pago"] },
+  { label: "Condiciones", campos: ["tipo_factura"] },
   { label: "Productos e impuestos", campos: [] },
 ];
 
@@ -63,7 +68,6 @@ const ETIQUETAS = {
   descripcion: "Descripción",
   fecha: "Fecha",
   tipo_factura: "Tipo de factura",
-  condicion_pago: "Condición de pago",
 };
 
 let contadorFilaTemp = 0;
@@ -106,7 +110,9 @@ export function ModalCompra({
     // Arranca en hoy: casi siempre se carga en el día, la IA la pisa si lee
     // la factura, y con fecha ya hay sugerencia del dólar.
     fecha: hoyISO(),
-    condicion_pago: "",
+    // Vacío = «Contado» (lo pone el backend y CamposPago lo muestra elegido).
+    condicion_pago_id: "",
+    medio_pago: "",
     estado_pago: "pendiente",
     estado_envio: "pedido",
   });
@@ -136,7 +142,8 @@ export function ModalCompra({
         descripcion: compra.descripcion ?? "",
         tipo_factura: compra.tipo_factura ?? "",
         fecha: compra.fecha ?? "",
-        condicion_pago: compra.condicion_pago ?? "",
+        condicion_pago_id: compra.condicion_pago_id ?? "",
+        medio_pago: compra.medio_pago ?? "",
         estado_pago: compra.estado_pago ?? "pendiente",
         estado_envio: compra.estado_envio ?? "pedido",
       });
@@ -148,15 +155,21 @@ export function ModalCompra({
           precio_unitario: d.precio_unitario,
         }))
       );
+      // Un IVA guardado sigue al neto sólo si coincide con el cálculo: un
+      // monto sobrescrito a mano no se pisa solo (ver utils/impuestos.js).
       setImpuestos(
-        (compra.impuestos_aplicados ?? []).map((i) => ({
-          _id: nuevaFilaId(),
-          impuesto_id: i.impuesto_id,
-          monto: i.monto,
-        }))
+        filasDesdeAplicados(
+          compra.impuestos_aplicados ?? [],
+          Number(compra.precio_neto_ars),
+          impuestosDisponibles
+        )
       );
     }
     setComprobantesCambios({ archivos: [], eliminarIds: [] });
+    // impuestosDisponibles queda afuera a propósito: si la lista de Ajustes se
+    // refresca con el modal abierto, no hay que pisar lo que Agus ya editó. Si
+    // llega después de abrir, las filas quedan fijas (con su monto guardado).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [compra, faseFija, proveedorFijo]);
 
   const productosDelProveedor = productosDisponibles.filter(
@@ -170,7 +183,9 @@ export function ModalCompra({
     (acc, fila) => acc + (Number(fila.cantidad) || 0) * (Number(fila.precio_unitario) || 0),
     0
   );
-  const totalImpuestos = impuestos.reduce((acc, fila) => acc + (Number(fila.monto) || 0), 0);
+  // Un impuesto con alícuota (IVA) se calcula solo sobre el neto.
+  const totalImpuestos = sumarImpuestos(impuestos, precioNeto, impuestosDisponibles);
+  const precioConImpuestos = precioNeto + totalImpuestos;
 
   // Las notas de crédito/débito ya existentes entran en el total que se
   // muestra, igual que en la ficha de detalle: si no, el modal de edición
@@ -205,7 +220,6 @@ export function ModalCompra({
     if (name === "fase_id") return faseFija || value ? null : "Elegí la fase.";
     if (name === "proveedor_id") return proveedorFijo || value ? null : "Elegí el proveedor.";
     if (name === "tipo_factura") return value ? null : "Elegí el tipo de factura.";
-    if (name === "condicion_pago") return value ? null : "Elegí la condición de pago.";
     return null;
   };
 
@@ -283,11 +297,10 @@ export function ModalCompra({
       if (resultado.impuestos?.length) {
         setImpuestos((prev) => [
           ...prev,
-          ...resultado.impuestos.map((linea) => ({
-            _id: nuevaFilaId(),
-            impuesto_id: linea.impuesto_id,
-            monto: linea.monto,
-          })),
+          // El monto que leyó la IA es el impreso en la factura: queda fijo.
+          ...resultado.impuestos.map((linea) =>
+            nuevaFilaImpuesto({ impuesto_id: linea.impuesto_id, monto: linea.monto })
+          ),
         ]);
       }
 
@@ -329,20 +342,12 @@ export function ModalCompra({
     setDetalle((prev) => prev.filter((fila) => fila._id !== id));
   };
 
-  // --- Impuestos ---
+  // --- Impuestos (las filas las maneja FilasImpuestos) ---
   const agregarFilaImpuesto = () => {
-    setImpuestos((prev) => [...prev, { _id: nuevaFilaId(), impuesto_id: "", monto: "" }]);
+    setImpuestos((prev) => [...prev, nuevaFilaImpuesto()]);
   };
-
-  const actualizarFilaImpuesto = (id, campo, valor) => {
-    setImpuestos((prev) =>
-      prev.map((fila) => (fila._id === id ? { ...fila, [campo]: valor } : fila))
-    );
-  };
-
-  const eliminarFilaImpuesto = (id) => {
-    setImpuestos((prev) => prev.filter((fila) => fila._id !== id));
-  };
+  // Una alícuota de IVA por factura: no se guarda con dos del mismo grupo.
+  const impuestoRepetido = grupoRepetido(impuestos, impuestosDisponibles);
 
   // --- Pasos y validación ---
   const erroresDe = (campos) =>
@@ -378,6 +383,10 @@ export function ModalCompra({
       setPaso(conError);
       return;
     }
+    if (impuestoRepetido) {
+      setPaso(PASOS.findIndex((p) => p.label === "Productos e impuestos"));
+      return;
+    }
 
     setGuardando(true);
     try {
@@ -387,6 +396,8 @@ export function ModalCompra({
           ...cotizacion.payload,
           fase_id: faseFija?.id ?? form.fase_id,
           proveedor_id: proveedorFijo?.id ?? form.proveedor_id,
+          condicion_pago_id: form.condicion_pago_id || null,
+          medio_pago: form.medio_pago || null,
           precio_neto_ars: precioNeto,
           detalle: detalle
             .filter((f) => f.producto_id)
@@ -395,12 +406,7 @@ export function ModalCompra({
               cantidad: Number(f.cantidad),
               precio_unitario: Number(f.precio_unitario),
             })),
-          impuestos: impuestos
-            .filter((f) => f.impuesto_id)
-            .map((f) => ({
-              impuesto_id: f.impuesto_id,
-              monto: Number(f.monto),
-            })),
+          impuestos: impuestosParaGuardar(impuestos, precioNeto, impuestosDisponibles),
         },
         comprobantesCambios
       );
@@ -428,12 +434,14 @@ export function ModalCompra({
   const ultimoPaso = paso === PASOS.length - 1;
   const cantidadProductos = detalle.filter((f) => f.producto_id).length;
   const desglose = [
-    `Neto ${formatMoneda(precioNeto)}${
+    // Como en un comercio: sin impuestos, los impuestos, y con impuestos.
+    `Sin impuestos ${formatMoneda(precioNeto)}${
       cantidadProductos > 0
         ? ` (${cantidadProductos} ${cantidadProductos === 1 ? "producto" : "productos"})`
         : ""
     }`,
     `impuestos ${formatMoneda(totalImpuestos)}`,
+    `con impuestos ${formatMoneda(precioConImpuestos)}`,
     notasCredito > 0 && `notas de crédito −${formatMoneda(notasCredito)}`,
     notasDebito > 0 && `notas de débito +${formatMoneda(notasDebito)}`,
     precioTotalUsd > 0 && `≈ ${formatMoneda(precioTotalUsd, "usd")}`,
@@ -485,6 +493,9 @@ export function ModalCompra({
     </button>
   );
 
+  // Los tipos se arman en Ajustes; el actual se agrega si todavía no llegó la lista.
+  const opcionesFactura = useOpcionesTipoFactura(form.tipo_factura);
+
   return (
     <ModalShell
       titulo={esEdicion ? "Editar compra" : "Nueva compra"}
@@ -498,6 +509,8 @@ export function ModalCompra({
       cerrarDeshabilitado={guardando}
       encabezadoExtra={pasos}
       desglose={desglose}
+      // Con notas, el total ya no es el "con impuestos": es el final.
+      totalLabel={notas.length > 0 ? "Final" : "Con impuestos"}
       total={precioTotal}
       totalGrande
       aviso={avisoFaltantes(faltantes)}
@@ -645,19 +658,21 @@ export function ModalCompra({
         <>
           <ControlOpcion
             etiqueta="Tipo de factura"
-            opciones={OPCIONES_FACTURA}
+            opciones={opcionesFactura}
             valor={form.tipo_factura}
             onCambiar={(valor) => cambiar("tipo_factura", valor)}
             error={errores.tipo_factura}
             hint={camposIA.has("tipo_factura") ? <MarcaIA /> : null}
             disabled={guardando}
           />
-          <ControlOpcion
-            etiqueta="Condición de pago"
-            opciones={OPCIONES_CONDICION}
-            valor={form.condicion_pago}
-            onCambiar={(valor) => cambiar("condicion_pago", valor)}
-            error={errores.condicion_pago}
+          <CamposPago
+            condicionId={form.condicion_pago_id}
+            onCambiarCondicion={(valor) => cambiar("condicion_pago_id", valor)}
+            medio={form.medio_pago}
+            onCambiarMedio={(valor) => cambiar("medio_pago", valor)}
+            fecha={form.fecha}
+            total={precioConImpuestos}
+            bloqueada={condicionBloqueada(compra, form.estado_pago)}
             disabled={guardando}
           />
           {/* Los estados son campos del formulario como cualquier otro: se
@@ -797,42 +812,13 @@ export function ModalCompra({
             {impuestos.length === 0 && (
               <p className="modal-form-seccion-vacio">Sin impuestos cargados todavía.</p>
             )}
-            {impuestos.map((fila) => (
-              <div key={fila._id} className="tabla-form__impuesto">
-                <select
-                  className="campo campo--sm"
-                  value={fila.impuesto_id}
-                  onChange={(e) => actualizarFilaImpuesto(fila._id, "impuesto_id", e.target.value)}
-                  aria-label="Impuesto"
-                >
-                  <option value="">Impuesto…</option>
-                  {impuestosDisponibles.map((imp) => (
-                    <option key={imp.id} value={imp.id}>
-                      {imp.nombre}
-                    </option>
-                  ))}
-                </select>
-                <div className="campo campo--sm">
-                  <span className="campo__prefijo">$</span>
-                  <input
-                    type="number"
-                    aria-label="Monto del impuesto"
-                    value={fila.monto}
-                    onChange={(e) => actualizarFilaImpuesto(fila._id, "monto", e.target.value)}
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-                <button
-                  type="button"
-                  className="btn-icono btn-icono--sm"
-                  aria-label="Quitar impuesto"
-                  onClick={() => eliminarFilaImpuesto(fila._id)}
-                >
-                  <X aria-hidden="true" />
-                </button>
-              </div>
-            ))}
+            <FilasImpuestos
+              filas={impuestos}
+              onCambiar={setImpuestos}
+              base={precioNeto}
+              disponibles={impuestosDisponibles}
+              disabled={guardando}
+            />
           </div>
 
           {/* Las notas son de sólo lectura: una nota impacta contra la API al

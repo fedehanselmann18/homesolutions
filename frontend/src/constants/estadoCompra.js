@@ -11,7 +11,8 @@
 //
 // El criterio es el semáforo de los accents: resuelto en oliva (pagado,
 // entregado), requiere atención en ámbar (a pagar, sin entregar) y problema en
-// rojo, que sólo aparece cuando la deuda tiene DIAS_DEUDA_VENCIDA o más.
+// rojo, que sólo aparece cuando un plazo de pago está vencido (oct 2026:
+// antes era "impaga hace 90 días o más"; ahora cada compra tiene sus plazos).
 import { Wallet, Truck } from "lucide-react";
 import {
   OLIVA,
@@ -26,10 +27,6 @@ import {
   TINTA_MUTED,
   RELLENO,
 } from "./colores";
-
-// Desde cuántos días una compra impaga pasa de "a pagar" a deuda vencida.
-// Es el mismo corte que usa la lista de proveedores (variante 4N).
-export const DIAS_DEUDA_VENCIDA = 90;
 
 const RESUELTO = { color: OLIVA, bg: OLIVA_TINT, fg: OLIVA_OSCURO };
 const PAR_ATENCION = { color: ATENCION, bg: ATENCION_TINT, fg: ATENCION_TEXTO };
@@ -46,13 +43,6 @@ const ESTADO_ENVIO = {
   entregado: { ...RESUELTO, label: "Entregado", icono: Truck },
 };
 
-const CONDICION_PAGO = {
-  contado: "Contado",
-  cuenta_corriente: "Cuenta corriente",
-  cheque: "Cheque",
-  transferencia: "Transferencia",
-};
-
 export function getEstadoPago(estado) {
   return ESTADO_PAGO[estado] ?? { ...PAR_NEUTRO, label: estado, icono: null };
 }
@@ -62,18 +52,18 @@ export function getEstadoEnvio(estado) {
 }
 
 /**
- * El estado de pago con su antigüedad: una compra impaga dice hace cuántos
- * días lo está ("118 días sin pagar") y pasa a rojo desde DIAS_DEUDA_VENCIDA.
- * Es lo que muestra una fila; `getEstadoPago` es el estado pelado.
+ * El estado de pago con su vencimiento: una compra (o gasto) con un plazo
+ * vencido sin pagar pasa a rojo y dice hace cuántos días ("Vencida hace 12
+ * días"); si no venció nada, es el "A pagar" de siempre. `diasVencida` sale
+ * de utils/plazos.js (null si no hay nada vencido). Es lo que muestra una
+ * fila; `getEstadoPago` es el estado pelado.
  */
-export function getEstadoPagoConAntiguedad(estado, dias) {
+export function getEstadoPagoConVencimiento(estado, diasVencida) {
   const base = getEstadoPago(estado);
-  if (estado !== "pendiente" || dias == null) return base;
-  if (dias >= DIAS_DEUDA_VENCIDA)
-    return { ...base, ...PAR_PROBLEMA, label: `${dias} días sin pagar` };
-  return base;
-}
-
-export function getCondicionPagoLabel(condicion) {
-  return CONDICION_PAGO[condicion] ?? condicion;
+  if (estado !== "pendiente" || !diasVencida) return base;
+  return {
+    ...base,
+    ...PAR_PROBLEMA,
+    label: `Vencida hace ${diasVencida} ${diasVencida === 1 ? "día" : "días"}`,
+  };
 }

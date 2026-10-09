@@ -1,7 +1,7 @@
 import { calcularAnalisis } from "./analisis";
 import { esCompraImpaga, esCompraSinEntregar, diasDesde, DIAS_FASE_ESTANCADA } from "./seguimiento";
 import { describirFaseActual, ESTADOS_FASE_CERRADA } from "./fases";
-import { DIAS_DEUDA_VENCIDA } from "../constants/estadoCompra";
+import { diasVencida, pendienteCompra } from "./plazos";
 import { notasDeCompras, notasDeCobros } from "./notas";
 import {
   MONEDA_ANALISIS_DEFAULT,
@@ -125,7 +125,7 @@ const sinComprobante = (movimiento) => (movimiento.comprobantes ?? []).length ==
 /**
  * "Para resolver" del Panel (variante 4i): lo pendiente de los proyectos en
  * curso en una sola lista, ordenada por urgencia -- primero lo que ya es un
- * problema (deuda de DIAS_DEUDA_VENCIDA días o más), después lo que pide
+ * problema (un plazo de pago vencido), después lo que pide
  * atención, y dentro de cada nivel lo más viejo arriba. Mismos criterios que
  * la pestaña Seguimiento de cada proyecto, que es adonde lleva cada ítem.
  *
@@ -160,7 +160,7 @@ function armarParaResolver(enCurso, nombreProveedor, hoy) {
             key: `pago-${c.id}`,
             foco: `pagar-${c.id}`,
             tipo: "pago",
-            nivel: base.dias >= DIAS_DEUDA_VENCIDA ? "problema" : "atencion",
+            nivel: diasVencida(c, hoy) ? "problema" : "atencion",
           });
         }
         if (esCompraSinEntregar(c)) {
@@ -413,10 +413,11 @@ export function calcularPanel({
       // Pendientes de compra del proyecto: mismo criterio que la pestaña
       // Seguimiento, que es donde se ve el detalle de cada una.
       comprasImpagas: impagas.length,
-      // Impagas hace DIAS_DEUDA_VENCIDA días o más: lo que pasa el contador
-      // de alertas de la card de proyecto de "atención" a "problema".
-      comprasVencidas: impagas.filter((c) => diasDesde(c.fecha, hoy) >= DIAS_DEUDA_VENCIDA).length,
-      montoImpago: sumar(impagas, (c) => precioTotalCompra(c, moneda)),
+      // Con algún plazo vencido: lo que pasa el contador de alertas de la
+      // card de proyecto de "atención" a "problema".
+      comprasVencidas: impagas.filter((c) => diasVencida(c, hoy)).length,
+      // Lo que falta pagar (sin los plazos ya pagados).
+      montoImpago: sumar(impagas, (c) => pendienteCompra(c, moneda)),
       comprasSinEntregar: comprasDelProyecto.filter(esCompraSinEntregar).length,
       fasesEstancadas: estancadas,
       // Movimientos sin factura/remito adjunto: mismo criterio que
@@ -459,9 +460,9 @@ export function calcularPanel({
   // moneda en que se le paga a un proveedor.
   const impagas = compras.filter(esCompraImpaga);
   const deudaProveedores = {
-    monto: sumar(impagas, (c) => precioTotalCompra(c, "ars")),
+    monto: sumar(impagas, (c) => pendienteCompra(c, "ars")),
     compras: impagas.length,
-    vencidas: impagas.filter((c) => diasDesde(c.fecha, hoy) >= DIAS_DEUDA_VENCIDA).length,
+    vencidas: impagas.filter((c) => diasVencida(c, hoy)).length,
   };
 
   const paraResolver = armarParaResolver(enCurso, (id) => nombresProveedor.get(id) ?? null, hoy);

@@ -5,10 +5,9 @@ import { BadgeEstado } from "./BadgeEstado";
 import { EstadoVacio } from "./EstadoVacio";
 import { formatMontoDeItem } from "../../utils/moneda";
 import {
-  DIAS_DEUDA_VENCIDA,
   getEstadoEnvio,
   getEstadoPago,
-  getEstadoPagoConAntiguedad,
+  getEstadoPagoConVencimiento,
 } from "../../constants/estadoCompra";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import {
@@ -27,14 +26,11 @@ const PAR_ATENCION = { color: ATENCION, bg: ATENCION_TINT, fg: ATENCION_TEXTO };
 function estadoDeItem(item) {
   switch (item.estado) {
     case "impaga":
-      // Desde DIAS_DEUDA_VENCIDA el par rojo de estadoCompra; antes, el
-      // ámbar de "a pagar" pero con los días, que es lo que ordena la lista.
-      return item.dias >= DIAS_DEUDA_VENCIDA
-        ? getEstadoPagoConAntiguedad("pendiente", item.dias)
-        : {
-            ...getEstadoPago("pendiente"),
-            label: item.dias > 1 ? `${item.dias} días sin pagar` : "A pagar",
-          };
+      // Con un plazo vencido, el par rojo de estadoCompra ("Vencida hace N
+      // días"); si no, el ámbar de "a pagar".
+      return item.diasVencida
+        ? getEstadoPagoConVencimiento("pendiente", item.diasVencida)
+        : getEstadoPago("pendiente");
     case "sinEntregar":
       return getEstadoEnvio("pedido");
     case "sinComprobante":

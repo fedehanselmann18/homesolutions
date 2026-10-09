@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DollarSign, Layers, Percent, Receipt, Tag } from "lucide-react";
+import { CalendarClock, DollarSign, FileText, Layers, Percent, Receipt, Tag } from "lucide-react";
 
 import {
   useCategorias,
@@ -7,6 +7,8 @@ import {
   useCotizaciones,
   useFasesPredeterminadas,
   useImpuestos,
+  useTiposFactura,
+  useCondicionesPago,
 } from "../hooks/queries";
 import { queryKeys } from "../lib/queryKeys";
 import { usePageTitle } from "../hooks/usePageTitle";
@@ -26,16 +28,32 @@ import {
   actualizarFasePredeterminada,
   eliminarFasePredeterminada,
 } from "../services/fasePredeterminadaService";
+import {
+  crearTipoFactura,
+  actualizarTipoFactura,
+  eliminarTipoFactura,
+} from "../services/tipoFacturaService";
+import {
+  crearCondicionPago,
+  actualizarCondicionPago,
+  eliminarCondicionPago,
+} from "../services/condicionPagoService";
+import ModalCondicionPago from "../components/modals/ModalCondicionPago";
+import { describirDias } from "../utils/plazos";
 
 import { PageHeader } from "../components/shared/PageHeader";
 import { Tabs } from "../components/shared/Tabs";
 import { SeccionCatalogo } from "../components/catalogos/SeccionCatalogo";
 import { SeccionCotizaciones } from "../components/catalogos/SeccionCotizaciones";
+import ModalImpuesto from "../components/modals/ModalImpuesto";
+import { formatoAlicuota } from "../utils/impuestos";
 import "./Catalogos.css";
 
 const TABS = [
   { key: "impuestos", label: "Impuestos", icono: Percent },
   { key: "categoriasGasto", label: "Categorías de gasto", icono: Receipt },
+  { key: "tiposFactura", label: "Tipos de factura", icono: FileText },
+  { key: "condicionesPago", label: "Condiciones de pago", icono: CalendarClock },
   { key: "categorias", label: "Categorías de producto", icono: Tag },
   { key: "cotizaciones", label: "Cotizaciones", icono: DollarSign },
   { key: "fasesPredeterminadas", label: "Fases predeterminadas", icono: Layers },
@@ -44,8 +62,9 @@ const TABS = [
 /**
  * Ajustes (antes «Catálogos»): alta, edición y borrado de las listas que usan
  * los formularios de carga: impuestos (ModalCompra), categorías de gasto
- * (ModalGasto), categorías de producto (ModalProducto, importar catálogo) y
- * fases predeterminadas (el select de nombre de ModalFase). Y la tabla de
+ * (ModalGasto), tipos de factura (compras, gastos, cobros y notas, y el
+ * filtro de las listas), categorías de producto (ModalProducto, importar
+ * catálogo) y fases predeterminadas (el select de nombre de ModalFase). Y la tabla de
  * cotizaciones del dólar, de la que los forms de carga sugieren el valor del día.
  *
  * Vive en el árbol protegido normal y NO en el panel Manager: ese subárbol se
@@ -53,6 +72,12 @@ const TABS = [
  * carga esto, es rol admin pero no es Manager -- ProtectedRoute lo sacaría.
  * El rol lectura ve las listas pero no los controles de escritura.
  */
+// "21 % · IVA" al lado del nombre de un impuesto; nada si no tiene ni uno ni otro.
+const detalleImpuesto = (impuesto) =>
+  [impuesto.alicuota && formatoAlicuota(impuesto.alicuota), impuesto.grupo]
+    .filter(Boolean)
+    .join(" · ") || null;
+
 export function Catalogos() {
   usePageTitle("Ajustes");
   const [tabActiva, setTabActiva] = useState(TABS[0].key);
@@ -62,12 +87,16 @@ export function Catalogos() {
   const categoriasQuery = useCategorias();
   const cotizacionesQuery = useCotizaciones();
   const fasesPredeterminadasQuery = useFasesPredeterminadas();
+  const tiposFacturaQuery = useTiposFactura();
+  const condicionesPagoQuery = useCondicionesPago();
 
   // Cada pestaña cuenta lo que tiene, como "Catálogo 7" en un proveedor. Las
   // queries son las mismas que usan las secciones (React Query las dedupea).
   const contadores = {
     impuestos: impuestosQuery.data?.length,
     categoriasGasto: categoriasGastoQuery.data?.length,
+    tiposFactura: tiposFacturaQuery.data?.length,
+    condicionesPago: condicionesPagoQuery.data?.length,
     categorias: categoriasQuery.data?.length,
     cotizaciones: cotizacionesQuery.data?.length,
     fasesPredeterminadas: fasesPredeterminadasQuery.data?.length,
@@ -78,7 +107,7 @@ export function Catalogos() {
     <div className="catalogos">
       <PageHeader
         titulo="Ajustes"
-        subtitulo="Impuestos, categorías, cotizaciones del dólar y fases que se usan al cargar obras, compras, gastos y cobros."
+        subtitulo="Impuestos, categorías, tipos de factura, condiciones de pago, cotizaciones del dólar y fases que se usan al cargar obras, compras, gastos y cobros."
       />
 
       <Tabs tabs={tabs} activa={tabActiva} onCambiar={setTabActiva} etiqueta="Ajustes" />
@@ -92,9 +121,12 @@ export function Catalogos() {
           actualizar={actualizarImpuesto}
           eliminar={eliminarImpuesto}
           icono={Percent}
+          ModalFormulario={ModalImpuesto}
+          detalle={detalleImpuesto}
           textos={{
             singular: "impuesto",
-            descripcion: "Se aplican a las compras (IVA, percepciones, etc.).",
+            descripcion:
+              "Se aplican a las compras (IVA, percepciones, etc.). Con alícuota, el monto se calcula solo; los del mismo grupo suman juntos en el Análisis.",
             nuevo: "Nuevo impuesto",
             creado: "Impuesto creado.",
             tituloNuevo: "Nuevo impuesto",
@@ -127,6 +159,64 @@ export function Catalogos() {
             cargando: "Cargando categorías de gasto...",
             vacio: "Todavía no hay categorías de gasto cargadas.",
             error: "No se pudieron cargar las categorías de gasto.",
+          }}
+        />
+      )}
+
+      {tabActiva === "tiposFactura" && (
+        <SeccionCatalogo
+          query={tiposFacturaQuery}
+          // Los movimientos guardan el código, no el nombre: renombrar no deja
+          // nada viejo fuera de esta misma lista.
+          queryKey={queryKeys.tiposFactura.all}
+          // En el orden del select (A, B, C… y «Otros» al final), no alfabético.
+          ordenAlfabetico={false}
+          crear={crearTipoFactura}
+          actualizar={actualizarTipoFactura}
+          eliminar={eliminarTipoFactura}
+          icono={FileText}
+          textos={{
+            singular: "tipo de factura",
+            descripcion:
+              "El comprobante de cada compra, gasto, cobro y nota (Factura A, Remito…). Uno nuevo va al final, antes de «Otros». «Otros» no se borra, y uno que ya tiene movimientos tampoco.",
+            nuevo: "Nuevo tipo",
+            creado: "Tipo de factura creado.",
+            tituloNuevo: "Nuevo tipo de factura",
+            tituloEditar: "Editar tipo de factura",
+            tituloEliminar: "Eliminar tipo de factura",
+            cargando: "Cargando tipos de factura...",
+            vacio: "Todavía no hay tipos de factura cargados.",
+            error: "No se pudieron cargar los tipos de factura.",
+          }}
+        />
+      )}
+
+      {tabActiva === "condicionesPago" && (
+        <SeccionCatalogo
+          query={condicionesPagoQuery}
+          // Las compras y gastos traen su condición anidada (con el nombre):
+          // renombrar una deja viejas esas listas.
+          queryKey={queryKeys.condicionesPago.all}
+          keysAlEditar={[queryKeys.compras.all, queryKeys.gastos.all]}
+          ordenAlfabetico={false}
+          crear={crearCondicionPago}
+          actualizar={actualizarCondicionPago}
+          eliminar={eliminarCondicionPago}
+          icono={CalendarClock}
+          ModalFormulario={ModalCondicionPago}
+          detalle={(condicion) => describirDias(condicion.dias)}
+          textos={{
+            singular: "condición de pago",
+            descripcion:
+              "Cuándo se paga una compra o un gasto. 30/60 = mitad a 30 días y mitad a 60, contados desde la fecha de la factura. «Contado» no se borra, y una que ya usaste tampoco.",
+            nuevo: "Nueva condición",
+            creado: "Condición de pago creada.",
+            tituloNuevo: "Nueva condición de pago",
+            tituloEditar: "Editar condición de pago",
+            tituloEliminar: "Eliminar condición de pago",
+            cargando: "Cargando condiciones de pago...",
+            vacio: "Todavía no hay condiciones de pago cargadas.",
+            error: "No se pudieron cargar las condiciones de pago.",
           }}
         />
       )}

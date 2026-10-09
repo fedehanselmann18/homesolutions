@@ -1,7 +1,7 @@
 import { useId, useState } from "react";
 import { Plus, SlidersHorizontal, X } from "lucide-react";
 
-import { TIPOS_FACTURA } from "../../constants/tipoFactura";
+import { useTiposFactura } from "../../hooks/queries";
 import {
   FILTRO_NOTAS,
   FILTRO_ESTADO_PAGO,
@@ -12,8 +12,6 @@ import {
 import { formatFecha } from "../../utils/formato";
 
 import "./FiltrosLista.css";
-
-const OPCIONES_TIPO_FACTURA = [{ value: "", label: "Todos" }, ...TIPOS_FACTURA];
 
 /**
  * Filtros de una lista de Compras / Cobros / Gastos (Movimientos v2).
@@ -56,6 +54,12 @@ export function FiltrosLista({
 }) {
   const [abierto, setAbierto] = useState(false);
   const idPanel = useId();
+  // Los tipos se arman en Ajustes: uno nuevo aparece acá sin tocar código.
+  const { data: tiposFactura } = useTiposFactura();
+  const opcionesTipoFactura = [
+    { value: "", label: "Todos" },
+    ...(tiposFactura ?? []).map((t) => ({ value: t.codigo, label: t.nombre })),
+  ];
 
   const cambiarCampo = (campo, valor) => onCambiar({ ...filtros, [campo]: valor });
 
@@ -70,7 +74,7 @@ export function FiltrosLista({
     mostrarEstadoPago && { campo: "estadoPago", label: "Pago", opciones: FILTRO_ESTADO_PAGO },
     mostrarEstadoEnvio && { campo: "estadoEnvio", label: "Envío", opciones: FILTRO_ESTADO_ENVIO },
     mostrarNotas && { campo: "notas", label: "Notas", opciones: FILTRO_NOTAS },
-    { campo: "tipoFactura", label: "Tipo de factura", opciones: OPCIONES_TIPO_FACTURA },
+    { campo: "tipoFactura", label: "Tipo de factura", opciones: opcionesTipoFactura },
     mostrarComprobante && {
       campo: "comprobante",
       label: "Comprobante",

@@ -1,3 +1,4 @@
+import { hoyISO } from "./formato";
 import { describe, it, expect } from "vitest";
 import { calcularPanel } from "./panel";
 import { armarBandeja, calcularSeguimiento } from "./seguimiento";
@@ -460,14 +461,29 @@ describe("calcularPanel — Para resolver y deuda con proveedores", () => {
     });
   });
 
-  it("la deuda con proveedores suma todas las compras impagas en pesos", () => {
+  it("la deuda con proveedores suma lo que falta pagar; vencida = algún plazo vencido", () => {
+    // "a": 30 días, cargada hace 10 -> vence en 20, no vencida.
+    // "b": un plazo pagado y otro vencido hace 30 días -> debe sólo ese.
+    const plazo = (numero, venceEnDias, monto, pagado = false) => ({
+      numero,
+      fecha_vencimiento: hoyISO(new Date(hoy.getTime() + venceEnDias * 86400000)),
+      monto,
+      pagado,
+    });
     const panel = calcularPanel({
       proyectos,
       fases,
-      compras: [compra("a", 10), compra("b", 120), compra("c", 5, { estado_pago: "pagado" })],
+      compras: [
+        compra("a", 10, { cotizacion_dolar: 1000, plazos: [plazo(1, 20, 1000)] }),
+        compra("b", 120, {
+          cotizacion_dolar: 1000,
+          plazos: [plazo(1, -60, 400, true), plazo(2, -30, 600)],
+        }),
+        compra("c", 5, { estado_pago: "pagado" }),
+      ],
       hoy,
     });
-    expect(panel.kpis.deudaProveedores).toEqual({ monto: 2000, compras: 2, vencidas: 1 });
+    expect(panel.kpis.deudaProveedores).toEqual({ monto: 1600, compras: 2, vencidas: 1 });
   });
 });
 

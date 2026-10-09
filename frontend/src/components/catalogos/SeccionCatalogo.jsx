@@ -30,6 +30,9 @@ import "./SeccionCatalogo.css";
  * sus categorías, la compra sus impuestos aplicados) y quedan viejas al
  * renombrarlo. Alta y borrado no las afectan: un registro recién creado no
  * está en uso, y uno en uso no se puede borrar.
+ *
+ * Un registro con `protegido: true` (hoy sólo «Otros» de tipos de factura)
+ * se puede editar pero no muestra el botón de borrar.
  */
 export function SeccionCatalogo({
   query,
@@ -42,6 +45,11 @@ export function SeccionCatalogo({
   // false: se respeta el orden en que llegan del backend (las fases
   // predeterminadas van en el orden de la obra, no alfabético).
   ordenAlfabetico = true,
+  // Un modal de alta/edición propio (ej. ModalImpuesto, con alícuota y
+  // grupo) en vez del de sólo nombre. Recibe { titulo, registro, onGuardar, onCerrar }.
+  ModalFormulario = null,
+  // Un dato chico al lado del nombre ("21 % · IVA"), o null.
+  detalle = null,
   crear,
   actualizar,
   eliminar,
@@ -137,7 +145,12 @@ export function SeccionCatalogo({
           const tipo = conTipo ? getTipoProducto(registro.tipo) : null;
           return (
             <div key={registro.id} className="planilla__fila">
-              <span className="seccion-catalogo__nombre">{registro.nombre}</span>
+              <span className="seccion-catalogo__nombre">
+                {registro.nombre}
+                {detalle?.(registro) && (
+                  <span className="seccion-catalogo__detalle"> {detalle(registro)}</span>
+                )}
+              </span>
 
               {tipo && (
                 <span className="seccion-catalogo__tipo">
@@ -157,15 +170,17 @@ export function SeccionCatalogo({
                   >
                     <Pencil aria-hidden="true" />
                   </button>
-                  <button
-                    type="button"
-                    className="btn-icono btn-icono--sm btn-icono--peligro"
-                    onClick={() => setRegistroAEliminar(registro)}
-                    aria-label={`Eliminar ${registro.nombre}`}
-                    title="Eliminar"
-                  >
-                    <Trash2 aria-hidden="true" />
-                  </button>
+                  {!registro.protegido && (
+                    <button
+                      type="button"
+                      className="btn-icono btn-icono--sm btn-icono--peligro"
+                      onClick={() => setRegistroAEliminar(registro)}
+                      aria-label={`Eliminar ${registro.nombre}`}
+                      title="Eliminar"
+                    >
+                      <Trash2 aria-hidden="true" />
+                    </button>
+                  )}
                 </span>
               )}
             </div>
@@ -190,7 +205,14 @@ export function SeccionCatalogo({
       {contenido}
 
       {modalAbierto &&
-        (conTipo ? (
+        (ModalFormulario ? (
+          <ModalFormulario
+            titulo={registroEditando ? textos.tituloEditar : textos.tituloNuevo}
+            registro={registroEditando}
+            onGuardar={handleGuardar}
+            onCerrar={cerrarModal}
+          />
+        ) : conTipo ? (
           <ModalCategoria
             categoria={registroEditando}
             onGuardar={handleGuardar}

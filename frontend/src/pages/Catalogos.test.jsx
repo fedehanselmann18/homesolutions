@@ -13,9 +13,13 @@ import {
   useCotizaciones,
   useFasesPredeterminadas,
   useImpuestos,
+  useTiposFactura,
+  useCondicionesPago,
 } from "../hooks/queries";
-import { eliminarImpuesto } from "../services/impuestosService";
+import { crearImpuesto, eliminarImpuesto } from "../services/impuestosService";
+import { crearCondicionPago } from "../services/condicionPagoService";
 import { crearCotizacion } from "../services/cotizacionService";
+import { CONDICIONES_PAGO_PRUEBA, TIPOS_FACTURA_PRUEBA } from "../test/tiposFactura";
 
 let rolActual = "admin";
 const toastError = vi.fn();
@@ -26,6 +30,8 @@ vi.mock("../services/categoriaGastoService");
 vi.mock("../services/categoriaService");
 vi.mock("../services/cotizacionService");
 vi.mock("../services/fasePredeterminadaService");
+vi.mock("../services/tipoFacturaService");
+vi.mock("../services/condicionPagoService");
 vi.mock("../context/useAuth", () => ({
   default: () => ({ usuario: { rol: rolActual } }),
   useAuth: () => ({ usuario: { rol: rolActual } }),
@@ -52,6 +58,8 @@ beforeEach(() => {
   useCotizaciones.mockReturnValue(
     ok([{ id: "q1", fecha: "2026-10-01", tipo: "blue", valor: 1450 }])
   );
+  useTiposFactura.mockReturnValue(ok(TIPOS_FACTURA_PRUEBA));
+  useCondicionesPago.mockReturnValue(ok(CONDICIONES_PAGO_PRUEBA));
   useFasesPredeterminadas.mockReturnValue(
     ok([
       { id: "f1", orden: 1, nombre: "Relevamiento y anteproyecto" },
@@ -175,5 +183,113 @@ describe("Catalogos", () => {
       "Calefacción",
     ]);
     expect(screen.getByRole("button", { name: /nueva fase/i })).toBeInTheDocument();
+  });
+
+  describe("pestaña Tipos de factura", () => {
+    it("salen en el orden del select, con «Otros» al final", async () => {
+      renderCatalogos();
+      await userEvent.click(screen.getByRole("tab", { name: /^Tipos de factura/ }));
+
+      const nombres = screen
+        .getAllByText(/^(Factura|Remito|Recibo|Otros)/)
+        .map((el) => el.textContent);
+      expect(nombres).toEqual([
+        "Factura A",
+        "Factura B",
+        "Factura C",
+        "Remito",
+        "Recibo",
+        "Factura interna",
+        "Otros",
+      ]);
+      expect(screen.getByRole("tab", { name: "Tipos de factura 7" })).toBeInTheDocument();
+    });
+
+    it("«Otros» se puede editar pero no muestra el botón de borrar", async () => {
+      renderCatalogos();
+      await userEvent.click(screen.getByRole("tab", { name: /^Tipos de factura/ }));
+
+      expect(screen.getByRole("button", { name: "Editar Otros" })).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Eliminar Otros" })).toBeNull();
+      expect(screen.getByRole("button", { name: "Eliminar Remito" })).toBeInTheDocument();
+    });
+
+    it("el rol lectura ve los tipos sin controles de escritura", async () => {
+      rolActual = "lectura";
+      renderCatalogos();
+      await userEvent.click(screen.getByRole("tab", { name: /^Tipos de factura/ }));
+
+      expect(screen.getByText("Factura interna")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /nuevo|editar|eliminar/i })).toBeNull();
+    });
+  });
+
+  describe("pestaña Impuestos", () => {
+    it("muestra la alícuota y el grupo al lado del nombre", () => {
+      useImpuestos.mockReturnValue(
+        ok([{ id: "i2", nombre: "IVA 10,5", alicuota: 10.5, grupo: "IVA" }])
+      );
+      renderCatalogos();
+
+      expect(screen.getByText("10,5 % · IVA")).toBeInTheDocument();
+    });
+
+    it("el alta manda alícuota y grupo; vacíos van como null", async () => {
+      crearImpuesto.mockResolvedValue({});
+      renderCatalogos();
+      await userEvent.click(screen.getByRole("button", { name: /nuevo impuesto/i }));
+      const dialogo = screen.getByRole("dialog");
+
+      await userEvent.type(within(dialogo).getByRole("textbox", { name: /nombre/i }), "IVA 21");
+      await userEvent.type(within(dialogo).getByLabelText("Alícuota"), "21");
+      await userEvent.type(within(dialogo).getByLabelText("Grupo"), "IVA");
+      await userEvent.click(within(dialogo).getByRole("button", { name: "Crear" }));
+
+      expect(crearImpuesto).toHaveBeenCalledWith({ nombre: "IVA 21", alicuota: 21, grupo: "IVA" });
+    });
+
+    it("sin alícuota se guarda como percepción a mano", async () => {
+      crearImpuesto.mockResolvedValue({});
+      renderCatalogos();
+      await userEvent.click(screen.getByRole("button", { name: /nuevo impuesto/i }));
+      const dialogo = screen.getByRole("dialog");
+
+      await userEvent.type(
+        within(dialogo).getByRole("textbox", { name: /nombre/i }),
+        "Percepción IIBB"
+      );
+      await userEvent.click(within(dialogo).getByRole("button", { name: "Crear" }));
+
+      expect(crearImpuesto).toHaveBeenCalledWith({
+        nombre: "Percepción IIBB",
+        alicuota: null,
+        grupo: null,
+      });
+    });
+  });
+
+  describe("pestaña Condiciones de pago", () => {
+    it("lista las condiciones con sus días y Contado sin botón de borrar", async () => {
+      renderCatalogos();
+      await userEvent.click(screen.getByRole("tab", { name: /^Condiciones de pago/ }));
+
+      expect(screen.getByText("Un pago, el día de la factura")).toBeInTheDocument();
+      expect(screen.getByText("A 30 y 60 días")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Eliminar Contado" })).toBeNull();
+      expect(screen.getByRole("button", { name: "Eliminar 30 días" })).toBeInTheDocument();
+    });
+
+    it("al escribir los días el nombre se arma solo y se mandan ordenados", async () => {
+      crearCondicionPago.mockResolvedValue({});
+      renderCatalogos();
+      await userEvent.click(screen.getByRole("tab", { name: /^Condiciones de pago/ }));
+      await userEvent.click(screen.getByRole("button", { name: /nueva condición/i }));
+      const dialogo = screen.getByRole("dialog");
+
+      await userEvent.type(within(dialogo).getByLabelText("Días de cada pago"), "90/45");
+      await userEvent.click(within(dialogo).getByRole("button", { name: "Crear" }));
+
+      expect(crearCondicionPago).toHaveBeenCalledWith({ nombre: "45/90 días", dias: [45, 90] });
+    });
   });
 });

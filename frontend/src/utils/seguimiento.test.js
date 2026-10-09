@@ -17,6 +17,16 @@ const compra = (id, dias, extra = {}) => ({
   ...extra,
 });
 
+// Compra impaga con un plazo que vence hace `vencioHace` días (negativo: en el futuro).
+const impaga = (id, dias, vencioHace, extra = {}) =>
+  compra(id, dias, {
+    estado_pago: "pendiente",
+    plazos: [
+      { id, numero: 1, fecha_vencimiento: haceDias(vencioHace), monto: 1000, pagado: false },
+    ],
+    ...extra,
+  });
+
 const armar = (datos) =>
   armarBandeja(
     calcularSeguimiento({
@@ -24,17 +34,13 @@ const armar = (datos) =>
       proveedores: [{ id: 1, nombre: "ClimaTotal" }],
       hoy: HOY,
       ...datos,
-    }),
-    { diasVencida: 90 }
+    })
   );
 
 describe("armarBandeja", () => {
-  it("una compra impaga de 90 días o más va a Vencido; una más nueva, a Pendiente", () => {
+  it("una compra con un plazo vencido va a Vencido; una con plazos por vencer, a Pendiente", () => {
     const grupos = armar({
-      compras: [
-        compra("vieja", 120, { estado_pago: "pendiente" }),
-        compra("nueva", 12, { estado_pago: "pendiente" }),
-      ],
+      compras: [impaga("vieja", 120, 90), impaga("nueva", 12, -18)],
     });
     expect(grupos.map((g) => g.clave)).toEqual(["vencido", "pendiente"]);
     expect(grupos[0].items.map((i) => i.id)).toEqual(["vieja"]);
@@ -43,10 +49,7 @@ describe("armarBandeja", () => {
 
   it("ordena lo pendiente por antigüedad, mezclando pagos y entregas", () => {
     const grupos = armar({
-      compras: [
-        compra("a", 3, { estado_pago: "pendiente" }),
-        compra("b", 20, { estado_envio: "pedido" }),
-      ],
+      compras: [impaga("a", 3, -27), compra("b", 20, { estado_envio: "pedido" })],
     });
     expect(grupos[0].items.map((i) => [i.id, i.accion])).toEqual([
       ["b", "entregar"],
@@ -58,7 +61,7 @@ describe("armarBandeja", () => {
     const grupos = armar({
       proyecto: { precio_acordado_usd: 10000 },
       cobros: [{ id: 1, monto_neto_usd: 4000, monto_usd: 4000, comprobantes: [{ id: 1 }] }],
-      compras: [compra("a", 3, { estado_pago: "pendiente" })],
+      compras: [impaga("a", 3, -27)],
     });
     const ultimo = grupos[0].items.at(-1);
     expect(ultimo).toMatchObject({ tipo: "cobranza", accion: "cobrar" });
@@ -122,5 +125,28 @@ describe("armarBandeja", () => {
 
   it("sin nada pendiente no devuelve grupos", () => {
     expect(armar({ compras: [compra("ok", 3)] })).toEqual([]);
+  });
+});
+
+describe("deuda con plazos", () => {
+  it("una compra a 30/60 con el primer plazo pagado debe sólo lo que falta", () => {
+    const resultado = calcularSeguimiento({
+      proyecto: { precio_acordado_usd: 0 },
+      proveedores: [{ id: 1, nombre: "ClimaTotal" }],
+      hoy: HOY,
+      compras: [
+        compra("x", 40, {
+          estado_pago: "pendiente",
+          cotizacion_dolar: 1000,
+          plazos: [
+            { numero: 1, fecha_vencimiento: haceDias(10), monto: 600, pagado: true },
+            { numero: 2, fecha_vencimiento: haceDias(-20), monto: 400, pagado: false },
+          ],
+        }),
+      ],
+    });
+    expect(resultado.totales.deudaTotal).toBe(400);
+    expect(resultado.deudaPorProveedor[0].monto).toBe(400);
+    expect(resultado.comprasImpagas[0].diasVencida).toBeNull();
   });
 });

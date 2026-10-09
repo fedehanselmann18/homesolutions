@@ -2,6 +2,7 @@
 // para que el listado (tarjetas) y el detalle usen siempre el mismo criterio.
 import { esCompraImpaga, diasDesde } from "./seguimiento";
 import { precioTotalCompra } from "./moneda";
+import { diasVencida, pendienteCompra } from "./plazos";
 import {
   notasDeCompras,
   totalNotasCredito as sumarNotasCredito,
@@ -60,13 +61,19 @@ export function calcularResumenProveedor(
     comprasDelProveedor,
     cantidadProductos: productosDelProveedor.length,
     totalComprado: sumar(comprasDelProveedor, (c) => precioTotalCompra(c, "ars")),
-    deuda: sumar(comprasImpagas, (c) => precioTotalCompra(c, "ars")),
+    // Lo que falta pagar (sin los plazos ya pagados), no el total de cada compra.
+    deuda: sumar(comprasImpagas, (c) => pendienteCompra(c, "ars")),
     // Para la lista "primero a quién se le debe" (variante 4N): qué se debe,
     // hace cuánto la más vieja y cuándo fue la última compra.
     comprasImpagas,
     diasDeudaMasVieja: comprasImpagas.length
       ? Math.max(...comprasImpagas.map((c) => diasDesde(c.fecha, hoy)))
       : 0,
+    // El plazo vencido más viejo (null si no hay nada vencido): pinta de rojo.
+    diasVencidaMasVieja: comprasImpagas.reduce((max, c) => {
+      const dias = diasVencida(c, hoy);
+      return dias && (!max || dias > max) ? dias : max;
+    }, null),
     ultimaCompra: comprasDelProveedor.reduce(
       (ultima, c) => (!ultima || c.fecha > ultima ? c.fecha : ultima),
       null

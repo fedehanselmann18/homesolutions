@@ -1,6 +1,6 @@
 import { formatMonedaDual } from "../../utils/formato";
 import { leyendaOtraMoneda } from "../../utils/moneda";
-import { getTipoFacturaLabel } from "../../constants/tipoFactura";
+import { useEtiquetaTipoFactura } from "../../hooks/useTiposFactura";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
 import { OLIVA, ATENCION } from "../../constants/colores";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
@@ -35,6 +35,7 @@ export function ModalDetalleCobro({
   onEliminar,
   canManage = false,
 }) {
+  const etiquetaFactura = useEtiquetaTipoFactura();
   const notas = cobro.notas ?? [];
   const comprobantes = cobro.comprobantes ?? [];
   // Los netos los calcula el backend (Cobro.monto_neto_usd/_ars); cada nota
@@ -70,7 +71,7 @@ export function ModalDetalleCobro({
           campos={[
             {
               label: "Comprobante",
-              valor: getTipoFacturaLabel(cobro.tipo_factura),
+              valor: etiquetaFactura(cobro.tipo_factura),
               punto: comprobantes.length > 0 ? OLIVA : ATENCION,
             },
             usuarioNombre && { label: "Cargado por", valor: usuarioNombre },

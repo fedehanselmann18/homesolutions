@@ -1,13 +1,11 @@
 import { formatMoneda, formatMonedaDual, pluralizar } from "../../utils/formato";
 import { leyendaOtraMoneda } from "../../utils/moneda";
-import { getTipoFacturaLabel } from "../../constants/tipoFactura";
-import {
-  getEstadoPagoConAntiguedad,
-  getEstadoEnvio,
-  getCondicionPagoLabel,
-} from "../../constants/estadoCompra";
+import { useEtiquetaTipoFactura } from "../../hooks/useTiposFactura";
+import { getEstadoPagoConVencimiento, getEstadoEnvio } from "../../constants/estadoCompra";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
-import { diasDesde } from "../../utils/seguimiento";
+import { diasVencida } from "../../utils/plazos";
+import { getMedioPagoLabel } from "../../constants/medioPago";
+import { SeccionPlazos } from "../shared/SeccionPlazos";
 import { OLIVA, ATENCION } from "../../constants/colores";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { SeccionNotas } from "../shared/SeccionNotas";
@@ -48,10 +46,11 @@ export function ModalDetalleCompra({
   onEliminar,
   canManage = false,
 }) {
+  const etiquetaFactura = useEtiquetaTipoFactura();
   const pagado = compra.estado_pago === "pagado";
   const entregado = compra.estado_envio === "entregado";
-  const dias = diasDesde(compra.fecha, new Date());
-  const estadoPago = getEstadoPagoConAntiguedad(compra.estado_pago, dias);
+  const vencida = diasVencida(compra, new Date());
+  const estadoPago = getEstadoPagoConVencimiento(compra.estado_pago, vencida);
   const estadoEnvio = getEstadoEnvio(compra.estado_envio);
   const puedeTogglear = canManage;
 
@@ -75,11 +74,15 @@ export function ModalDetalleCompra({
   // paréntesis. Los impuestos heredan la cotización de la compra; cada nota
   // trae la suya (por eso el USD del total no es total en pesos / cotización).
   const usd = (ars) => Number(ars) / Number(compra.cotizacion_dolar);
+  const hayNotas = notasCredito > 0 || notasDebito > 0;
+  const totalImpuestosArs = impuestos.reduce((acc, i) => acc + Number(i.monto), 0);
+  const conImpuestosArs = Number(compra.precio_neto_ars) + totalImpuestosArs;
+  const conImpuestosUsd = Number(compra.precio_neto_usd) + usd(totalImpuestosArs);
   const dual = (ars, usdCongelado) =>
     formatMonedaDual(ars, usdCongelado ?? usd(ars), { principal: "ars" });
 
   const titulosEstado = {
-    pago: pagado ? "Pagado" : `Impaga hace ${pluralizar(dias, "día")}`,
+    pago: pagado ? "Pagado" : vencida ? `Vencida hace ${pluralizar(vencida, "día")}` : "A pagar",
     envio: entregado ? "Entregado" : "Sin entregar",
   };
 
@@ -145,12 +148,16 @@ export function ModalDetalleCompra({
           campos={[
             faseNombre && { label: "Fase", valor: faseNombre },
             proveedorNombre && { label: "Proveedor", valor: proveedorNombre },
-            { label: "Condición de pago", valor: getCondicionPagoLabel(compra.condicion_pago) },
+            { label: "Condición de pago", valor: compra.condicion_pago?.nombre ?? "Contado" },
+            compra.medio_pago && {
+              label: "Medio de pago",
+              valor: getMedioPagoLabel(compra.medio_pago),
+            },
             { label: "Pago", valor: titulosEstado.pago, punto: estadoPago.color },
             { label: "Envío", valor: titulosEstado.envio, punto: estadoEnvio.color },
             {
               label: "Comprobante",
-              valor: getTipoFacturaLabel(compra.tipo_factura),
+              valor: etiquetaFactura(compra.tipo_factura),
               punto: comprobantes.length > 0 ? OLIVA : ATENCION,
             },
             compra.categorias?.length > 0 && {
@@ -184,13 +191,23 @@ export function ModalDetalleCompra({
 
         <TotalesDetalle
           filas={[
-            { label: "Neto", valor: dual(compra.precio_neto_ars, compra.precio_neto_usd) },
+            // Como en un comercio: sin impuestos, cada impuesto, con impuestos.
+            // Si hay notas, abajo va además el precio final.
+            {
+              label: "Precio sin impuestos",
+              valor: dual(compra.precio_neto_ars, compra.precio_neto_usd),
+            },
             ...(impuestos.length > 0
               ? impuestos.map((i) => ({
                   label: i.impuesto?.nombre ?? "Impuesto",
                   valor: dual(i.monto),
                 }))
               : [{ label: "Impuestos", valor: formatMoneda(0) }]),
+            {
+              label: "Precio con impuestos",
+              valor: dual(conImpuestosArs, conImpuestosUsd),
+              variante: hayNotas ? undefined : "total",
+            },
             notasCredito > 0 && {
               label: "Notas de crédito",
               valor: `-${dual(notasCredito, totalNotasCredito(notas, "usd"))}`,
@@ -201,14 +218,16 @@ export function ModalDetalleCompra({
               valor: `+${dual(notasDebito, totalNotasDebito(notas, "usd"))}`,
               variante: "suma",
             },
-            {
-              label: "Total",
+            hayNotas && {
+              label: "Precio final",
               valor: dual(compra.precio_total_ars, compra.precio_total_usd),
               variante: "total",
             },
           ].filter(Boolean)}
         />
       </SeccionDetalle>
+
+      <SeccionPlazos movimiento={compra} />
 
       <ArchivosDetalle
         comprobantes={comprobantes}

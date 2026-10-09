@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { CalendarDays, CircleAlert, Plus, X } from "lucide-react";
 import { TIPOS_NOTA, ORIGENES_NOTA_COMPRA, ORIGENES_NOTA_COBRO } from "../../constants/notas";
-import { TIPOS_FACTURA } from "../../constants/tipoFactura";
+import { useOpcionesTipoFactura } from "../../hooks/useTiposFactura";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { restanteDetalleCompra } from "../../utils/notas";
 import { formatMoneda, hoyISO } from "../../utils/formato";
@@ -13,6 +13,13 @@ import { CampoMonto, CamposCotizacion } from "./CamposCotizacion";
 import { ControlOpcion } from "../shared/ControlOpcion";
 import { ZonaArchivo, FilaArchivo } from "../shared/ComprobantesUploader";
 import { useCotizacionDia } from "../../hooks/useCotizacionDia";
+import { FilasImpuestos } from "./FilasImpuestos";
+import {
+  grupoRepetido,
+  impuestosParaGuardar,
+  nuevaFilaImpuesto,
+  totalImpuestos as sumarImpuestos,
+} from "../../utils/impuestos";
 
 const EXTENSIONES_PERMITIDAS = ".pdf,.jpg,.jpeg,.png";
 
@@ -21,8 +28,6 @@ const OPCIONES_TIPO = TIPOS_NOTA.map((t) => ({
   label: t.value === "nota_credito" ? "Crédito" : "Débito",
   icono: TIPOS_MOVIMIENTO[t.value].icono,
 }));
-const OPCIONES_FACTURA = TIPOS_FACTURA.map((t) => ({ valor: t.value, label: t.label }));
-
 let contadorFilaTemp = 0;
 const nuevaFilaId = () => `tmp-${++contadorFilaTemp}`;
 
@@ -168,17 +173,9 @@ export function ModalNota({
     return Math.max(0, restanteHistorico - usadoEnOtrasFilas);
   };
 
-  // --- Impuestos de la devolución ---
+  // --- Impuestos de la devolución (las filas las maneja FilasImpuestos) ---
   const agregarFilaImpuesto = () => {
-    setImpuestos((prev) => [...prev, { _id: nuevaFilaId(), impuesto_id: "", monto: "" }]);
-  };
-
-  const actualizarFilaImpuesto = (id, campo, valor) => {
-    setImpuestos((prev) => prev.map((f) => (f._id === id ? { ...f, [campo]: valor } : f)));
-  };
-
-  const eliminarFilaImpuesto = (id) => {
-    setImpuestos((prev) => prev.filter((f) => f._id !== id));
+    setImpuestos((prev) => [...prev, nuevaFilaImpuesto()]);
   };
 
   const totalLineas = detalles.reduce((acc, fila) => {
@@ -186,7 +183,8 @@ export function ModalNota({
     if (!linea) return acc;
     return acc + (Number(fila.cantidad) || 0) * Number(linea.precio_unitario);
   }, 0);
-  const totalImpuestosDevolucion = impuestos.reduce((acc, f) => acc + (Number(f.monto) || 0), 0);
+  // El IVA de la devolución se calcula sobre lo que se devuelve.
+  const totalImpuestosDevolucion = sumarImpuestos(impuestos, totalLineas, impuestosDisponibles);
   const montoDevolucion = totalLineas + totalImpuestosDevolucion;
 
   const handleSubmit = async (e) => {
@@ -216,6 +214,11 @@ export function ModalNota({
         setError("Agregá al menos un producto.");
         return;
       }
+      const repetido = grupoRepetido(impuestos, impuestosDisponibles);
+      if (repetido) {
+        setError(`Una nota lleva una sola alícuota de ${repetido}.`);
+        return;
+      }
       if (esDevolucion) {
         const excedida = lineasValidas.find((fila) => {
           const restante = restanteDetalleCompra(entidad, fila.detalle_compra_id);
@@ -234,9 +237,7 @@ export function ModalNota({
           detalle_compra_id: f.detalle_compra_id,
           cantidad: Number(f.cantidad),
         })),
-        impuestos: impuestos
-          .filter((f) => f.impuesto_id)
-          .map((f) => ({ impuesto_id: f.impuesto_id, monto: Number(f.monto) })),
+        impuestos: impuestosParaGuardar(impuestos, totalLineas, impuestosDisponibles),
       };
     } else {
       payloadExtra = { [`monto_${monedaMonto}`]: Number(form.monto) };
@@ -266,6 +267,9 @@ export function ModalNota({
     ...origenes.map((o) => ({ valor: o.value, label: o.label })),
   ];
   const tipoInfo = TIPOS_MOVIMIENTO[form.tipo];
+
+  // Los tipos se arman en Ajustes; el actual se agrega si todavía no llegó la lista.
+  const opcionesFactura = useOpcionesTipoFactura(form.tipo_factura);
 
   return (
     <ModalShell
@@ -341,7 +345,7 @@ export function ModalNota({
 
       <ControlOpcion
         etiqueta="Comprobante"
-        opciones={OPCIONES_FACTURA}
+        opciones={opcionesFactura}
         valor={form.tipo_factura}
         onCambiar={(valor) => cambiar("tipo_factura", valor)}
         disabled={guardando}
@@ -467,44 +471,13 @@ export function ModalNota({
               Agregar impuesto
             </button>
           </h3>
-          {impuestos.map((fila) => (
-            <div key={fila._id} className="tabla-form__impuesto">
-              <select
-                className="campo campo--sm"
-                value={fila.impuesto_id}
-                onChange={(e) => actualizarFilaImpuesto(fila._id, "impuesto_id", e.target.value)}
-                aria-label="Impuesto"
-                required
-              >
-                <option value="">Impuesto…</option>
-                {impuestosDisponibles.map((imp) => (
-                  <option key={imp.id} value={imp.id}>
-                    {imp.nombre}
-                  </option>
-                ))}
-              </select>
-              <div className="campo campo--sm">
-                <span className="campo__prefijo">$</span>
-                <input
-                  type="number"
-                  aria-label="Monto del impuesto"
-                  value={fila.monto}
-                  onChange={(e) => actualizarFilaImpuesto(fila._id, "monto", e.target.value)}
-                  min="0"
-                  step="0.01"
-                  required
-                />
-              </div>
-              <button
-                type="button"
-                className="btn-icono btn-icono--sm"
-                onClick={() => eliminarFilaImpuesto(fila._id)}
-                aria-label="Quitar impuesto"
-              >
-                <X aria-hidden="true" />
-              </button>
-            </div>
-          ))}
+          <FilasImpuestos
+            filas={impuestos}
+            onCambiar={setImpuestos}
+            base={totalLineas}
+            disponibles={impuestosDisponibles}
+            disabled={guardando}
+          />
 
           <dl className="tabla-form__totales">
             <div>

@@ -1,0 +1,59 @@
+/* Plazos de pago en la ficha de una compra o un gasto (SeccionPlazos.jsx):
+   una fila por plazo con cuándo vence, el estado, el monto y la acción. */
+.plazos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.plazos__fila {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-linea);
+}
+
+.plazos__fila:last-child {
+  border-bottom: none;
+}
+
+.plazos__cuando {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.plazos__fecha {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-tinta);
+}
+
+.plazos__estado {
+  font-size: var(--text-xs);
+  color: var(--color-atencion-texto, var(--color-tinta-muted));
+}
+
+.plazos__fila--pagado .plazos__estado {
+  color: var(--color-exito-dark);
+}
+
+.plazos__fila--vencido .plazos__estado {
+  color: var(--color-error-texto);
+  font-weight: 600;
+}
+
+.plazos__monto {
+  font-size: var(--text-sm);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.plazos__fila--pagado .plazos__monto {
+  color: var(--color-tinta-muted);
+}

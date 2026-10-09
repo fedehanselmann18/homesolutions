@@ -58,6 +58,7 @@ describe("Guia", () => {
       "proyectos",
       "moneda",
       "gastos-compras-cobros",
+      "plazos-cashflow",
       "notas",
       "libro-obra",
     ]);

@@ -1,7 +1,12 @@
 import { leyendaOtraMoneda } from "../../utils/moneda";
-import { getTipoFacturaLabel } from "../../constants/tipoFactura";
+import { useEtiquetaTipoFactura } from "../../hooks/useTiposFactura";
 import { OLIVA, ATENCION } from "../../constants/colores";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
+import { getEstadoPagoConVencimiento } from "../../constants/estadoCompra";
+import { getMedioPagoLabel } from "../../constants/medioPago";
+import { diasVencida } from "../../utils/plazos";
+import { BadgeEstado } from "../shared/BadgeEstado";
+import { SeccionPlazos } from "../shared/SeccionPlazos";
 import {
   DetalleShell,
   CabeceraMovimiento,
@@ -27,7 +32,9 @@ export function ModalDetalleGasto({
   onEditar,
   onEliminar,
 }) {
+  const etiquetaFactura = useEtiquetaTipoFactura();
   const comprobantes = gasto.comprobantes ?? [];
+  const vencida = diasVencida(gasto, new Date());
 
   return (
     <DetalleShell
@@ -43,7 +50,12 @@ export function ModalDetalleGasto({
         titulo={gasto.descripcion}
         monto={gasto.monto_ars}
         secundario={leyendaOtraMoneda(gasto.monto_usd, "usd", gasto)}
-        badges={<span className="badge badge--marca">Pagado</span>}
+        // Pagado sólo si se pagaron todos los plazos (un gasto a 30 días no).
+        badges={
+          <BadgeEstado
+            estado={getEstadoPagoConVencimiento(gasto.estado_pago ?? "pagado", vencida)}
+          />
+        }
       />
 
       {comprobantes.length === 0 && <BandaFaltante onAgregar={onAgregarComprobante} />}
@@ -58,13 +70,19 @@ export function ModalDetalleGasto({
             },
             {
               label: "Comprobante",
-              valor: getTipoFacturaLabel(gasto.tipo_factura),
+              valor: etiquetaFactura(gasto.tipo_factura),
               punto: comprobantes.length > 0 ? OLIVA : ATENCION,
+            },
+            gasto.medio_pago && {
+              label: "Medio de pago",
+              valor: getMedioPagoLabel(gasto.medio_pago),
             },
             usuarioNombre && { label: "Cargado por", valor: usuarioNombre },
           ]}
         />
       </SeccionDetalle>
+
+      <SeccionPlazos movimiento={gasto} />
 
       <ArchivosDetalle
         comprobantes={comprobantes}

@@ -7,6 +7,13 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import LibroDeObra, { MOVIMIENTOS_POR_PAGINA } from "./LibroDeObra";
+import { hoyISO } from "../../utils/formato";
+
+// Los tipos de factura de Ajustes (los de fábrica), sin servidor.
+vi.mock("../../hooks/queries", async () => {
+  const { TIPOS_FACTURA_PRUEBA } = await import("../../test/tiposFactura");
+  return { useTiposFactura: () => ({ isLoading: false, data: TIPOS_FACTURA_PRUEBA }) };
+});
 
 const compra = {
   id: 1,
@@ -110,27 +117,28 @@ describe("LibroDeObra", () => {
     expect(contexto.querySelector(".libro__meta").textContent).toBe("Factura A · 1 producto");
   });
 
-  it("una compra impaga dice 'A pagar' y la antigüedad va en el título", () => {
-    const hace = (dias) => {
+  it("una compra con plazos sin vencer dice 'A pagar'", () => {
+    const enDias = (dias) => {
       const fecha = new Date();
-      fecha.setDate(fecha.getDate() - dias);
-      return fecha.toISOString().slice(0, 10);
+      fecha.setDate(fecha.getDate() + dias);
+      return hoyISO(fecha);
     };
-    render_({ compras: [{ ...compra, fecha: hace(12) }] });
+    const plazos = [{ id: 1, numero: 1, fecha_vencimiento: enDias(10), monto: 1, pagado: false }];
+    render_({ compras: [{ ...compra, plazos }] });
 
-    const badge = screen.getByRole("button", { name: /impaga hace 12 días/i });
+    const badge = screen.getByRole("button", { name: /^A pagar/ });
     expect(badge).toHaveTextContent("A pagar");
   });
 
-  it("desde los 90 días impaga la compra pasa a decir cuántos", () => {
-    render_();
-    // La compra de prueba es de marzo y quedó en "pendiente".
-    expect(screen.getByText(/\d+ días sin pagar/)).toBeInTheDocument();
+  it("con un plazo vencido sin pagar la compra dice hace cuántos días", () => {
+    const plazos = [{ id: 1, numero: 1, fecha_vencimiento: "2026-03-12", monto: 1, pagado: false }];
+    render_({ compras: [{ ...compra, plazos }] });
+    expect(screen.getByText(/Vencida hace \d+ días/)).toBeInTheDocument();
   });
 
   it("no marca como impaga una compra ya pagada", () => {
     render_({ compras: [{ ...compra, estado_pago: "pagado" }] });
-    expect(screen.queryByText(/días sin pagar/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Vencida hace/)).not.toBeInTheDocument();
     expect(screen.queryByText("A pagar")).not.toBeInTheDocument();
   });
 
@@ -178,7 +186,7 @@ describe("LibroDeObra", () => {
   it("muestra los estados con su texto aunque el usuario no pueda cambiarlos", () => {
     render_({ canManage: false });
 
-    expect(screen.getByRole("button", { name: /impaga hace/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /vencida hace/i })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Entregado" })).toBeDisabled();
   });
 

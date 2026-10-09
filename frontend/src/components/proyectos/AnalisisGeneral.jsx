@@ -23,6 +23,7 @@ import {
   useCotizacionActual,
 } from "../../hooks/queries";
 import { useMonedaAnalisis } from "../../hooks/useMonedaAnalisis";
+import { useEtiquetaTipoFactura } from "../../hooks/useTiposFactura";
 import { SelectorMoneda } from "../shared/SelectorMoneda";
 
 import { TarjetaKpi } from "../shared/TarjetaKpi";
@@ -192,6 +193,7 @@ export function AnalisisGeneral({ proyectoId }) {
     () => (datos ? calcularAnalisis({ ...datos, moneda, cotizacionActual }) : null),
     [datos, moneda, cotizacionActual]
   );
+  const etiquetaFactura = useEtiquetaTipoFactura();
   // Atajos para no repetir la moneda en cada cifra de la pantalla.
   const fm = (monto) => formatMoneda(monto, moneda);
   const fmCorta = (monto) => formatMonedaCorta(monto, moneda);
@@ -220,7 +222,7 @@ export function AnalisisGeneral({ proyectoId }) {
     gastosPorCategoria,
     impuestosPorTipo,
     comprasPorTipoYProducto,
-    pagosPorTipoFactura,
+    pagosPorTipoFactura: pagosPorCodigoFactura,
     avanceFases,
     egresosPorFase,
     cobradoPorFase,
@@ -228,6 +230,11 @@ export function AnalisisGeneral({ proyectoId }) {
     topProveedores,
     notas,
   } = analisis;
+  // calcularAnalisis agrupa por código; el nombre sale de la lista de Ajustes.
+  const pagosPorTipoFactura = pagosPorCodigoFactura.map((fila) => ({
+    ...fila,
+    label: etiquetaFactura(fila.tipo),
+  }));
 
   const totalFases = avanceFases.reduce((acc, f) => acc + f.cantidad, 0);
   // En pesos el precio acordado no tiene cifra congelada: sale de la última

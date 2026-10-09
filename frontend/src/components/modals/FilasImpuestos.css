@@ -1,0 +1,28 @@
+/* Filas de impuesto de compra y nota (FilasImpuestos.jsx). La fila en sí
+   usa .tabla-form__impuesto de modal-base.css; acá va sólo la pista de la
+   alícuota debajo ("21 % sobre $ 100.000" / "A mano. Calculado: …"). */
+.filas-impuestos__fila {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.filas-impuestos__pista {
+  margin: 0;
+}
+
+/* Mismo look que .seccion-notas-link: una acción chica dentro del texto. */
+.filas-impuestos__link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-exito-dark);
+  cursor: pointer;
+}
+
+.filas-impuestos__link:hover {
+  text-decoration: underline;
+}

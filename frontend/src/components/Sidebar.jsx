@@ -5,6 +5,7 @@ import {
   Truck,
   SlidersHorizontal,
   GitCompare,
+  Wallet,
   Users,
   UserPlus,
   History,
@@ -39,6 +40,7 @@ const ITEMS_NAV = [
   { to: "/", label: "Panel", icono: LayoutDashboard, contador: null },
   { to: "/proyectos", label: "Proyectos", icono: Building2, contador: (c) => c.proyectos },
   { to: "/proveedores", label: "Proveedores", icono: Truck, contador: (c) => c.proveedores },
+  { to: "/cash-flow", label: "Cash flow", icono: Wallet, contador: null },
   { to: "/ajustes", label: "Ajustes", icono: SlidersHorizontal, contador: null },
   { to: "/comparador", label: "Comparador", icono: GitCompare, contador: null },
   // La guía es sólo para admin (ver RUTAS_SOLO_ADMIN en ProtectedRoute).

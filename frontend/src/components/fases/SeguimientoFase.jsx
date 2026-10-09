@@ -3,7 +3,6 @@ import { useMemo, useRef, useState } from "react";
 import { calcularSeguimiento, armarBandeja } from "../../utils/seguimiento";
 import { formatMoneda } from "../../utils/formato";
 import { obtenerDetalleBackend } from "../../utils/errorHandling";
-import { DIAS_DEUDA_VENCIDA } from "../../constants/estadoCompra";
 import { useToast } from "../../context/useToast";
 import { Bandeja } from "../shared/Bandeja";
 import { ModalDetalleCompra } from "../modals/ModalDetalleCompra";
@@ -71,7 +70,7 @@ export function SeguimientoFase({
   const [ocupado, setOcupado] = useState(null); // key del item en curso
 
   const { comprasSinEntregar, comprasSinComprobante, gastosSinComprobante, totales } = seguimiento;
-  const grupos = armarBandeja(seguimiento, { diasVencida: DIAS_DEUDA_VENCIDA });
+  const grupos = armarBandeja(seguimiento);
 
   const nombreProveedor = (proveedorId) => proveedores.find((p) => p.id === proveedorId)?.nombre;
   const compraPorId = (id) => comprasFase.find((c) => c.id === id);

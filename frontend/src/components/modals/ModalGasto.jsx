@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Building2, CalendarDays, Sparkles } from "lucide-react";
+import { Building2, CalendarDays, CircleCheck, Clock, Sparkles } from "lucide-react";
 
 import { ComprobantesUploader } from "../shared/ComprobantesUploader";
 import { ControlOpcion } from "../shared/ControlOpcion";
-import { TIPOS_FACTURA } from "../../constants/tipoFactura";
+import { useOpcionesTipoFactura } from "../../hooks/useTiposFactura";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { useExtraccionIA } from "../../hooks/useExtraccionIA";
 import { useToast } from "../../context/useToast";
@@ -20,8 +20,15 @@ import ModalShell, { AccionesFormulario } from "./ModalShell";
 import { BotonIA, MarcaIA } from "./PiezasIA";
 import { CampoMonto, CamposCotizacion } from "./CamposCotizacion";
 import { useCotizacionDia } from "../../hooks/useCotizacionDia";
+import { CamposPago } from "./CamposPago";
+import { condicionBloqueada } from "../../utils/plazos";
+import { ATENCION_TEXTO, OLIVA_OSCURO } from "../../constants/colores";
 
-const OPCIONES_FACTURA = TIPOS_FACTURA.map((t) => ({ valor: t.value, label: t.label }));
+// Igual que en la compra: "Pagado" deja todos los plazos pagados.
+const OPCIONES_PAGO = [
+  { valor: "pagado", label: "Pagado", icono: CircleCheck, color: OLIVA_OSCURO },
+  { valor: "pendiente", label: "A pagar", icono: Clock, color: ATENCION_TEXTO },
+];
 
 const validarCampo = (name, value) => {
   if (name === "descripcion") return validarRequerido(value, "Escribí una descripción corta.");
@@ -66,6 +73,10 @@ export function ModalGasto({
     tipo_factura: "",
     fase_id: faseFija?.id ?? "",
     categoria_gasto_ids: "",
+    // Default Contado y pagado: un flete se sigue cargando en un paso.
+    condicion_pago_id: "",
+    medio_pago: "",
+    estado_pago: "pagado",
   });
   const [comprobantesCambios, setComprobantesCambios] = useState({ archivos: [], eliminarIds: [] });
   const [guardando, setGuardando] = useState(false);
@@ -91,6 +102,9 @@ export function ModalGasto({
         // editan gastos que ya son de esta fase).
         fase_id: faseFija?.id ?? gasto.fase_id ?? "",
         categoria_gasto_ids: gasto.categorias?.[0]?.id ?? "",
+        condicion_pago_id: gasto.condicion_pago_id ?? "",
+        medio_pago: gasto.medio_pago ?? "",
+        estado_pago: gasto.estado_pago ?? "pagado",
       });
     }
     setComprobantesCambios({ archivos: [], eliminarIds: [] });
@@ -165,6 +179,9 @@ export function ModalGasto({
       // siempre la fija, sin depender del estado del selector (que ni se dibuja).
       fase_id: faseFija?.id ?? (form.fase_id || null),
       categoria_gasto_ids: form.categoria_gasto_ids ? [form.categoria_gasto_ids] : [],
+      condicion_pago_id: form.condicion_pago_id || null,
+      medio_pago: form.medio_pago || null,
+      estado_pago: form.estado_pago,
     };
 
     // proyecto_id no se manda desde acá: Acciones.jsx ya sabe en qué
@@ -187,6 +204,9 @@ export function ModalGasto({
         ...(cotizacion.error ? ["Cotización"] : []),
       ]
     : [];
+
+  // Los tipos se arman en Ajustes; el actual se agrega si todavía no llegó la lista.
+  const opcionesFactura = useOpcionesTipoFactura(form.tipo_factura);
 
   return (
     <ModalShell
@@ -277,11 +297,30 @@ export function ModalGasto({
 
       <ControlOpcion
         etiqueta="Comprobante"
-        opciones={OPCIONES_FACTURA}
+        opciones={opcionesFactura}
         valor={form.tipo_factura}
         onCambiar={(valor) => cambiar("tipo_factura", valor)}
         error={errores.tipo_factura}
         hint={camposIA.has("tipo_factura") ? <MarcaIA /> : null}
+        disabled={guardando}
+      />
+
+      <CamposPago
+        condicionId={form.condicion_pago_id}
+        onCambiarCondicion={(valor) => cambiar("condicion_pago_id", valor)}
+        medio={form.medio_pago}
+        onCambiarMedio={(valor) => cambiar("medio_pago", valor)}
+        fecha={form.fecha}
+        total={Number(form.monto) || 0}
+        bloqueada={condicionBloqueada(gasto, form.estado_pago)}
+        disabled={guardando}
+      />
+      <ControlOpcion
+        etiqueta="Pago"
+        opciones={OPCIONES_PAGO}
+        valor={form.estado_pago}
+        onCambiar={(valor) => cambiar("estado_pago", valor)}
+        variante="segmentado"
         disabled={guardando}
       />
 

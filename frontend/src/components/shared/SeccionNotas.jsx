@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X, FileMinus, FilePlus, ChevronDown } from "lucide-react";
 import { getOrigenNotaLabel } from "../../constants/notas";
-import { getTipoFacturaLabel } from "../../constants/tipoFactura";
+import { useEtiquetaTipoFactura } from "../../hooks/useTiposFactura";
 import { formatCotizacion, formatFecha, formatMonedaDual } from "../../utils/formato";
 import { getTipoCambioLabel } from "../../utils/moneda";
 import { obtenerMensajeError } from "../../utils/errorHandling";
@@ -46,6 +46,7 @@ export function SeccionNotas({
   onEliminar,
   canManage = false,
 }) {
+  const etiquetaFactura = useEtiquetaTipoFactura();
   const [eliminandoId, setEliminandoId] = useState(null);
   const [viendoId, setViendoId] = useState(null);
   const [abiertaIds, setAbiertaIds] = useState(() => new Set());
@@ -142,7 +143,7 @@ export function SeccionNotas({
                   <p className="seccion-notas-item-motivo">{n.descripcion}</p>
                   <div className="seccion-notas-item-meta">
                     {n.origen && <span>{getOrigenNotaLabel(n.origen, contexto)}</span>}
-                    {n.tipo_factura && <span>{getTipoFacturaLabel(n.tipo_factura)}</span>}
+                    {n.tipo_factura && <span>{etiquetaFactura(n.tipo_factura)}</span>}
                     {n.fecha && <span>{formatFecha(n.fecha)}</span>}
                     {n.cotizacion_dolar && (
                       <span>
@@ -219,7 +220,7 @@ export function SeccionNotas({
                   <div className="seccion-notas-item-detalle">
                     <div className="seccion-notas-item-meta">
                       {n.origen && <span>{getOrigenNotaLabel(n.origen, contexto)}</span>}
-                      {n.tipo_factura && <span>{getTipoFacturaLabel(n.tipo_factura)}</span>}
+                      {n.tipo_factura && <span>{etiquetaFactura(n.tipo_factura)}</span>}
                       {n.fecha && <span>{formatFecha(n.fecha)}</span>}
                       {n.cotizacion_dolar && (
                         <span>

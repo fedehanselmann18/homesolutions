@@ -10,6 +10,11 @@ vi.mock("../../context/useAuth", () => ({
   default: () => ({ usuario: { rol: "admin" } }),
   useAuth: () => ({ usuario: { rol: "admin" } }),
 }));
+// SeccionPlazos invalida queries al marcar un plazo: acá no hay provider.
+vi.mock("@tanstack/react-query", async (original) => ({
+  ...(await original()),
+  useQueryClient: () => ({ invalidateQueries: vi.fn() }),
+}));
 vi.mock("../../context/useToast", () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn() }),
 }));
@@ -17,12 +22,18 @@ vi.mock("../../hooks/useExtraccionIA", () => ({
   useExtraccionIA: () => ({ extraer: vi.fn(), extrayendo: false }),
 }));
 // La sugerencia del dólar del día (useCotizacionDia): una fija, sin servidor.
-vi.mock("../../hooks/queries", () => ({
-  useUltimaCotizacion: () => ({
-    isLoading: false,
-    data: { id: "c1", fecha: "2026-03-01", tipo: "blue", valor: 1250 },
-  }),
-}));
+// Y los tipos de factura de Ajustes, los de fábrica.
+vi.mock("../../hooks/queries", async () => {
+  const { TIPOS_FACTURA_PRUEBA, CONDICIONES_PAGO_PRUEBA } = await import("../../test/tiposFactura");
+  return {
+    useUltimaCotizacion: () => ({
+      isLoading: false,
+      data: { id: "c1", fecha: "2026-03-01", tipo: "blue", valor: 1250 },
+    }),
+    useTiposFactura: () => ({ isLoading: false, data: TIPOS_FACTURA_PRUEBA }),
+    useCondicionesPago: () => ({ isLoading: false, data: CONDICIONES_PAGO_PRUEBA }),
+  };
+});
 
 import ModalCompra from "./ModalCompra";
 import ModalGasto from "./ModalGasto";
@@ -44,7 +55,9 @@ const compra = {
   descripcion: "Membrana asfáltica",
   fecha: "2026-03-12",
   tipo_factura: "factura_a",
-  condicion_pago: "cuenta_corriente",
+  condicion_pago_id: "cp30",
+  condicion_pago: { id: "cp30", nombre: "30 días", dias: [30] },
+  medio_pago: "transferencia",
   estado_pago: "pendiente",
   estado_envio: "entregado",
   // Doble moneda: pesos tipeados, USD congelado por el backend a 1250 (la nota
@@ -213,15 +226,18 @@ describe("smoke de modales", () => {
 
   it("ModalDetalleCompra muestra el desglose completo", () => {
     render(<ModalDetalleCompra compra={compra} productos={productos} onCerrar={noop} />);
-    expect(screen.getByText("Neto")).toBeInTheDocument();
+    // Como en un comercio: sin impuestos, con impuestos y, con notas, el final.
+    expect(screen.getByText("Precio sin impuestos")).toBeInTheDocument();
     expect(screen.getByText("IVA 21%")).toBeInTheDocument();
+    expect(screen.getByText("Precio con impuestos")).toBeInTheDocument();
     expect(screen.getByText("Notas de crédito")).toBeInTheDocument();
-    expect(screen.getAllByText("Total").length).toBeGreaterThan(0);
+    expect(screen.getByText("Precio final")).toBeInTheDocument();
     // Pesos primero (se pagó en pesos) y el USD congelado entre paréntesis.
     const textos = [...document.querySelectorAll("span")].map((n) =>
       n.textContent.replace(/\u00a0/g, " ")
     );
     expect(textos).toContain("$ 1.842.300 (US$ 1.474)");
+    expect(textos).toContain("$ 2.229.183 (US$ 1.783)");
     expect(textos).toContain("-$ 120.000 (US$ 80)");
     expect(textos).toContain("$ 2.109.183 (US$ 1.702)");
   });
@@ -275,7 +291,7 @@ describe("smoke de modales", () => {
 
     // El badge también es el control que cambia el estado (como en la fila
     // del libro).
-    await userEvent.click(screen.getByRole("button", { name: /impaga hace .* — marcar pagado/i }));
+    await userEvent.click(screen.getByRole("button", { name: /vencida hace .* — marcar pagado/i }));
     expect(onTogglePago).toHaveBeenCalledTimes(1);
     await userEvent.click(screen.getByRole("button", { name: /entregado — marcar sin entregar/i }));
     expect(onToggleEnvio).toHaveBeenCalled();
@@ -297,7 +313,7 @@ describe("smoke de modales", () => {
 
   it("a un usuario de lectura los estados no le cambian nada", () => {
     render(<ModalDetalleCompra compra={compra} productos={productos} onCerrar={noop} />);
-    expect(screen.getByRole("button", { name: /impaga hace/i })).toBeDisabled();
+    expect(screen.getByRole("button", { name: /vencida hace/i })).toBeDisabled();
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /borrar/i })).not.toBeInTheDocument();
   });
@@ -346,6 +362,14 @@ describe("smoke de modales", () => {
     expect(caja.querySelector("input")).toHaveValue(84500);
     // Equivalente con la cotización que quedó congelada (1250).
     expect(caja.querySelector(".campo__sufijo")).toHaveTextContent("≈ US$ 68");
+  });
+
+  it("el comprobante ofrece los tipos de Ajustes, incluido «Factura interna»", () => {
+    render(<ModalCobro onGuardar={noop} onCerrar={noop} />);
+    const grupo = screen.getByRole("radiogroup", { name: "Comprobante" });
+    const opciones = [...grupo.querySelectorAll('[role="radio"]')].map((r) => r.textContent);
+    expect(opciones).toContain("Factura interna");
+    expect(opciones.at(-1)).toBe("Otros");
   });
 
   it("el tipo de factura es un control de opción, sin selects ni switches", () => {
@@ -459,10 +483,7 @@ describe("smoke de modales", () => {
       "aria-checked",
       "true"
     );
-    expect(screen.getByRole("radio", { name: "Cuenta corriente" })).toHaveAttribute(
-      "aria-checked",
-      "true"
-    );
+    expect(screen.getByRole("radio", { name: "30 días" })).toHaveAttribute("aria-checked", "true");
     expect(screen.getByRole("radio", { name: "Pendiente" })).toHaveAttribute(
       "aria-checked",
       "true"
@@ -485,10 +506,13 @@ describe("smoke de modales", () => {
       />
     );
     const desglose = container.querySelector(".shell__desglose");
-    expect(desglose).toHaveTextContent("Neto $ 1.284.000 (1 producto)");
+    expect(desglose).toHaveTextContent("Sin impuestos $ 1.284.000 (1 producto)");
     expect(desglose).toHaveTextContent("impuestos $ 386.883");
+    expect(desglose).toHaveTextContent("con impuestos $ 1.670.883");
     expect(desglose).toHaveTextContent("notas de crédito −$ 120.000");
     expect(container.querySelector(".shell__footer-total-monto")).toHaveTextContent("$ 1.550.883");
+    // Con notas, el total del pie es el final, no el "con impuestos".
+    expect(container.querySelector(".shell__footer-total-label")).toHaveTextContent("Final");
     expect(screen.getByRole("button", { name: "Guardar cambios" })).toBeInTheDocument();
   });
 });

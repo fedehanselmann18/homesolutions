@@ -1,7 +1,6 @@
 import { Banknote, ChevronRight, Pencil, Phone, ShoppingCart, Trash2 } from "lucide-react";
 
 import { formatFecha, formatMoneda, iniciales, pluralizar } from "../../utils/formato";
-import { DIAS_DEUDA_VENCIDA } from "../../constants/estadoCompra";
 import "./ProveedorItems.css";
 
 /**
@@ -27,8 +26,15 @@ export function Avatar({ nombre, grande = false }) {
  * `onRegistrarPago` sólo viene para un admin.
  */
 export function ProveedorDeudaCard({ resumen, proyectos = [], onRegistrarPago, onVerCompras }) {
-  const { proveedor, deuda, comprasImpagas, diasDeudaMasVieja: dias } = resumen;
-  const vencida = dias >= DIAS_DEUDA_VENCIDA;
+  const {
+    proveedor,
+    deuda,
+    comprasImpagas,
+    diasDeudaMasVieja: dias,
+    diasVencidaMasVieja,
+  } = resumen;
+  // Rojo si algún plazo venció sin pagarse (antes: 90 días o más).
+  const vencida = Boolean(diasVencidaMasVieja);
   const detalle = [
     pluralizar(comprasImpagas.length, "compra sin pagar", "compras sin pagar"),
     proyectos.join(", "),
@@ -43,7 +49,11 @@ export function ProveedorDeudaCard({ resumen, proyectos = [], onRegistrarPago, o
       <span className="proveedor-deuda__monto cifra">{formatMoneda(deuda)}</span>
       <span className="proveedor-deuda__detalle">{detalle}</span>
       <span className={`badge badge--sm ${vencida ? "badge--peligro" : "badge--atencion"}`}>
-        {comprasImpagas.length > 1 ? `Más vieja: ${dias} días` : pluralizar(dias, "día")}
+        {vencida
+          ? `Vencida hace ${pluralizar(diasVencidaMasVieja, "día")}`
+          : comprasImpagas.length > 1
+            ? `Más vieja: ${dias} días`
+            : pluralizar(dias, "día")}
       </span>
       <div className="proveedor-deuda__acciones">
         {onRegistrarPago && (

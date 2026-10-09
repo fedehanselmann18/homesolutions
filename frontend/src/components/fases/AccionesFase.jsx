@@ -18,7 +18,6 @@ import {
 import { calcularSeguimiento, armarBandeja } from "../../utils/seguimiento";
 import { montoGasto, precioTotalCompra } from "../../utils/moneda";
 import { formatMoneda, formatNumero } from "../../utils/formato";
-import { DIAS_DEUDA_VENCIDA } from "../../constants/estadoCompra";
 
 import "../proyectos/Acciones.css";
 import "./AccionesFase.css";
@@ -28,7 +27,9 @@ const PENDIENTES_EN_PANEL = 5;
 
 function textoPendiente(item) {
   if (item.estado === "impaga") {
-    return item.dias >= DIAS_DEUDA_VENCIDA ? `${item.dias} días sin pagar` : "a pagar";
+    return item.diasVencida
+      ? `vencida hace ${item.diasVencida === 1 ? "1 día" : `${item.diasVencida} días`}`
+      : "a pagar";
   }
   if (item.estado === "sinEntregar") return "sin entregar";
   return "falta comprobante";
@@ -51,9 +52,9 @@ function PanelFase({
 }) {
   const pendientes = useMemo(
     () =>
-      armarBandeja(calcularSeguimiento({ compras, gastos, productos, proveedores }), {
-        diasVencida: DIAS_DEUDA_VENCIDA,
-      }).flatMap((grupo) => grupo.items.map((item) => ({ ...item, grupo: grupo.clave }))),
+      armarBandeja(calcularSeguimiento({ compras, gastos, productos, proveedores })).flatMap(
+        (grupo) => grupo.items.map((item) => ({ ...item, grupo: grupo.clave }))
+      ),
     [compras, gastos, productos, proveedores]
   );
   const visibles = pendientes.slice(0, PENDIENTES_EN_PANEL);

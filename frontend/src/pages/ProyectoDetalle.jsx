@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { Layers, ArrowRightLeft, ChartNoAxesColumn, Bell } from "lucide-react";
+import { Layers, ArrowRightLeft, ChartNoAxesColumn, Bell, Wallet } from "lucide-react";
 import {
   useProyecto,
   useFasesPorProyecto,
@@ -14,6 +14,7 @@ import Fases from "../components/proyectos/Fases";
 import Acciones from "../components/proyectos/Acciones";
 import AnalisisGeneral from "../components/proyectos/AnalisisGeneral";
 import Seguimiento from "../components/proyectos/Seguimiento";
+import CashFlowProyecto from "../components/proyectos/CashFlowProyecto";
 import { Cargando } from "../components/shared/Cargando";
 import { EstadoError } from "../components/shared/EstadoError";
 import { Tabs } from "../components/shared/Tabs";
@@ -26,6 +27,7 @@ const TABS = [
   { key: "acciones", label: "Acciones", icono: ArrowRightLeft },
   { key: "analisis", label: "Análisis General", icono: ChartNoAxesColumn },
   { key: "seguimiento", label: "Seguimiento", icono: Bell },
+  { key: "cashflow", label: "Cash flow", icono: Wallet },
 ];
 
 function ProyectoDetalle() {
@@ -107,6 +109,7 @@ function ProyectoDetalle() {
       {tabActiva === "seguimiento" && (
         <Seguimiento proyectoId={proyecto.id} foco={focoDeTab("seguimiento")} />
       )}
+      {tabActiva === "cashflow" && <CashFlowProyecto proyectoId={proyecto.id} />}
     </div>
   );
 }

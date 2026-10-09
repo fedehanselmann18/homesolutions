@@ -1,4 +1,5 @@
 import { montoCobroNeto, montoGasto, precioTotalCompra, saldoPorCobrar } from "./moneda";
+import { diasVencida, pendienteCompra } from "./plazos";
 
 // Lo que necesita atención dentro de UN proyecto. La lógica venía de la
 // sección "Necesita atención" del Panel (utils/panel.js), que agrupaba por
@@ -61,10 +62,15 @@ function describirCompra(compra, productos, proveedores, hoy) {
     moneda: "ars",
     monto: precioTotalCompra(compra, "ars"),
     montoOtra: precioTotalCompra(compra, "usd"),
+    // Lo que falta pagar de verdad (sin los plazos ya pagados): es la deuda.
+    pendiente: pendienteCompra(compra, "ars"),
+    pendienteOtra: pendienteCompra(compra, "usd"),
     fecha: compra.fecha,
-    condicionPago: compra.condicion_pago,
+    condicionPago: compra.condicion_pago?.nombre ?? null,
     tipoFactura: compra.tipo_factura,
     dias: diasDesde(compra.fecha, hoy),
+    // Días desde el vencimiento del plazo pendiente más viejo (null si nada venció).
+    diasVencida: diasVencida(compra, hoy),
   };
 }
 
@@ -146,8 +152,8 @@ export function calcularSeguimiento({
       montoOtra: 0,
       compras: 0,
     };
-    actual.monto += compra.monto;
-    actual.montoOtra += compra.montoOtra;
+    actual.monto += compra.pendiente;
+    actual.montoOtra += compra.pendienteOtra;
     actual.compras += 1;
     deuda.set(compra.proveedor, actual);
   });
@@ -195,8 +201,8 @@ export function calcularSeguimiento({
     deudaPorProveedor,
     // Cada total en la moneda de sus items (ver arriba) + `*Otra` en la otra.
     totales: {
-      deudaTotal: sumar(comprasImpagas),
-      deudaTotalOtra: sumarOtra(comprasImpagas),
+      deudaTotal: comprasImpagas.reduce((acc, c) => acc + c.pendiente, 0),
+      deudaTotalOtra: comprasImpagas.reduce((acc, c) => acc + c.pendienteOtra, 0),
       montoSinComprobante: sumar(gastosSinComprobante),
       montoSinComprobanteOtra: sumarOtra(gastosSinComprobante),
       montoComprasSinComprobante: sumar(comprasSinComprobante),
@@ -238,7 +244,7 @@ export const GRUPOS_BANDEJA = [
  * (impaga | sinEntregar | sinComprobante | estancada | porCobrar) y `monto`
  * un item de `formatMontoDeItem` o null. Los grupos vacíos no se devuelven.
  */
-export function armarBandeja(seguimiento, { diasVencida }) {
+export function armarBandeja(seguimiento) {
   const {
     cobranza,
     comprasImpagas,
@@ -258,14 +264,19 @@ export function armarBandeja(seguimiento, { diasVencida }) {
     titulo: c.descripcion,
     subtitulo: `${c.proveedor} · compra`,
     estado: "impaga",
-    monto: c,
+    // Lo que falta pagar, no el total: un 30/60 con un plazo pagado debe la mitad.
+    monto: { ...c, monto: c.pendiente, montoOtra: c.pendienteOtra },
     dias: c.dias,
+    diasVencida: c.diasVencida,
   }));
 
-  const vencido = impagas.filter((i) => i.dias >= diasVencida).sort(porDias);
+  // Vencido = algún plazo pasó su fecha sin pagarse (antes: 90 días o más).
+  const vencido = impagas
+    .filter((i) => i.diasVencida)
+    .sort((a, b) => b.diasVencida - a.diasVencida);
 
   const pendiente = [
-    ...impagas.filter((i) => i.dias < diasVencida),
+    ...impagas.filter((i) => !i.diasVencida),
     ...comprasSinEntregar.map((c) => ({
       key: `entregar-${c.id}`,
       tipo: "compra",

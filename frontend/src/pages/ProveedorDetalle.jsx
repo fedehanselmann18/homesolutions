@@ -47,11 +47,11 @@ import { getCategorias } from "../services/categoriaService";
 import useAuth from "../context/useAuth";
 import { getTipoProducto } from "../constants/tipoProducto";
 import { OLIVA, ERROR } from "../constants/colores";
-import { getEstadoPagoConAntiguedad, getEstadoEnvio } from "../constants/estadoCompra";
-import { getTipoFacturaLabel } from "../constants/tipoFactura";
+import { getEstadoPagoConVencimiento, getEstadoEnvio } from "../constants/estadoCompra";
+import { diasVencida } from "../utils/plazos";
+import { useEtiquetaTipoFactura } from "../hooks/useTiposFactura";
 import { formatMoneda, formatFecha, pluralizar } from "../utils/formato";
 import { precioTotalCompra } from "../utils/moneda";
-import { diasDesde } from "../utils/seguimiento";
 import { calcularResumenProveedor } from "../utils/proveedores";
 import { FILTROS_VACIOS, filtrarCompras } from "../utils/filtros";
 
@@ -135,13 +135,14 @@ function MenuMas({ items }) {
 
 /** Una compra del historial: cuadradito de fecha, título, obra y meta, estados. */
 function FilaCompra({ compra, proyecto, canManage, onAbrir, onTogglePago, onToggleEnvio }) {
+  const etiquetaFactura = useEtiquetaTipoFactura();
   const fecha = new Date(`${compra.fecha}T00:00:00`);
-  const dias = diasDesde(compra.fecha, new Date());
+  const vencida = diasVencida(compra, new Date());
   const pagado = compra.estado_pago === "pagado";
   const entregado = compra.estado_envio === "entregado";
   const tieneComprobante = (compra.comprobantes ?? []).length > 0;
   const meta = [
-    getTipoFacturaLabel(compra.tipo_factura),
+    etiquetaFactura(compra.tipo_factura),
     compra.detalle?.length ? pluralizar(compra.detalle.length, "producto") : null,
   ]
     .filter(Boolean)
@@ -204,9 +205,9 @@ function FilaCompra({ compra, proyecto, canManage, onAbrir, onTogglePago, onTogg
       <span className="historial-fila__estados">
         <BadgeEstado
           chico
-          estado={getEstadoPagoConAntiguedad(compra.estado_pago, dias)}
+          estado={getEstadoPagoConVencimiento(compra.estado_pago, vencida)}
           titulo={titulo(
-            pagado ? "Pagado" : `Impaga hace ${pluralizar(dias, "día")}`,
+            pagado ? "Pagado" : vencida ? `Vencida hace ${pluralizar(vencida, "día")}` : "A pagar",
             pagado ? "marcar sin pagar" : "marcar pagado"
           )}
           onToggle={canManage ? detener(onTogglePago) : undefined}

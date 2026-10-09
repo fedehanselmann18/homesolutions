@@ -16,7 +16,10 @@ const compraImpaga = {
   estado_envio: "entregado",
   precio_total_ars: 146000,
   precio_total_usd: 100,
+  cotizacion_dolar: 1460,
   comprobantes: [{ id: 1 }],
+  // A 30 días: todavía no venció, así que va a Pendiente (no a Vencido).
+  plazos: [{ id: 1, numero: 1, fecha_vencimiento: haceDias(-20), monto: 146000, pagado: false }],
 };
 const gastoSinComprobante = {
   id: "g1",

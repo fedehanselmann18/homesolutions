@@ -1,5 +1,4 @@
 import { ESTADO_LABELS } from "../constants/estados";
-import { getTipoFacturaLabel } from "../constants/tipoFactura";
 import { getTipoProducto } from "../constants/tipoProducto";
 import { notasDeCompras, notasDeCobros, totalNotasCredito, totalNotasDebito } from "./notas";
 import {
@@ -55,11 +54,16 @@ function gastosPorCategoria(gastos, moneda) {
   return aLista(acumulado).sort((a, b) => b.monto - a.monto);
 }
 
+/**
+ * Impuestos agrupados por su `grupo` ("IVA" junta IVA 21 e IVA 10,5); los
+ * que no tienen grupo, por su nombre. Mismo criterio que el PDF
+ * (reportes/calculos.py, _impuestos_por_tipo).
+ */
 function impuestosPorTipo(compras, moneda) {
   const acumulado = {};
   compras.forEach((compra) => {
     (compra.impuestos_aplicados ?? []).forEach((aplicado) => {
-      const nombre = aplicado.impuesto?.nombre ?? "Impuesto";
+      const nombre = aplicado.impuesto?.grupo || aplicado.impuesto?.nombre || "Impuesto";
       acumulado[nombre] =
         (acumulado[nombre] ?? 0) + enMonedaDeCompra(aplicado.monto, compra, moneda);
     });
@@ -109,7 +113,11 @@ function comprasPorTipoYProducto(compras, productos, moneda) {
     .sort((a, b) => b.monto - a.monto);
 }
 
-/** Pagos = salidas de dinero (gastos + compras), agrupadas por tipo de factura. */
+/**
+ * Pagos = salidas de dinero (gastos + compras), agrupadas por tipo de factura.
+ * Devuelve el código (`tipo`); el nombre lo pone quien dibuja, con la lista de
+ * Ajustes (ver AnalisisGeneral), así esta función sigue pura.
+ */
 function pagosPorTipoFactura(gastos, compras, moneda) {
   const acumulado = {};
   const registrar = (tipo, monto) => {
@@ -122,7 +130,7 @@ function pagosPorTipoFactura(gastos, compras, moneda) {
   compras.forEach((compra) => registrar(compra.tipo_factura, precioTotalCompra(compra, moneda)));
 
   return Object.entries(acumulado)
-    .map(([tipo, datos]) => ({ tipo, label: getTipoFacturaLabel(tipo), ...datos }))
+    .map(([tipo, datos]) => ({ tipo, ...datos }))
     .sort((a, b) => b.monto - a.monto);
 }
 

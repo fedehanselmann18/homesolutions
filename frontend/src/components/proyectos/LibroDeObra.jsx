@@ -16,10 +16,10 @@ import {
 
 import { formatMoneda, formatFechaLarga, pluralizar } from "../../utils/formato";
 import { nombreDeArchivo } from "../../utils/archivos";
-import { getEstadoPagoConAntiguedad, getEstadoEnvio } from "../../constants/estadoCompra";
-import { getTipoFacturaLabel } from "../../constants/tipoFactura";
+import { getEstadoPagoConVencimiento, getEstadoEnvio } from "../../constants/estadoCompra";
+import { diasVencida } from "../../utils/plazos";
+import { useEtiquetaTipoFactura } from "../../hooks/useTiposFactura";
 import { montoCobroNeto, montoGasto, precioTotalCompra } from "../../utils/moneda";
-import { diasDesde } from "../../utils/seguimiento";
 import { TIPOS_MOVIMIENTO as TIPOS, signoTexto } from "../../constants/tipoMovimiento";
 
 import "./LibroDeObra.css";
@@ -81,6 +81,7 @@ export function LibroDeObra({
   onAgregarNota,
   onVerComprobante,
 }) {
+  const etiquetaFactura = useEtiquetaTipoFactura();
   const [errorComprobante, setErrorComprobante] = useState("");
   const [pagina, setPagina] = useState(0);
 
@@ -101,10 +102,10 @@ export function LibroDeObra({
         fase: nombreFase?.(compra.fase_id),
         proveedor: nombreProveedor?.(compra.proveedor_id),
         meta: [
-          getTipoFacturaLabel(compra.tipo_factura),
+          etiquetaFactura(compra.tipo_factura),
           compra.detalle?.length ? pluralizar(compra.detalle.length, "producto") : null,
         ],
-        diasImpaga: diasDesde(compra.fecha, hoy),
+        diasVencida: diasVencida(compra, hoy),
       })),
       ...gastos.map((gasto) => ({
         key: `gasto-${gasto.id}`,
@@ -119,7 +120,7 @@ export function LibroDeObra({
         fase: gasto.fase_id ? nombreFase?.(gasto.fase_id) : null,
         meta: [
           gasto.fase_id ? null : "Gasto general",
-          getTipoFacturaLabel(gasto.tipo_factura),
+          etiquetaFactura(gasto.tipo_factura),
           gasto.categorias?.map((c) => c.nombre).join(", ") || null,
         ],
       })),
@@ -136,7 +137,7 @@ export function LibroDeObra({
         equivalente: { monto: montoCobroNeto(cobro, "ars"), moneda: "ars" },
         titulo: cobro.descripcion,
         meta: [
-          getTipoFacturaLabel(cobro.tipo_factura),
+          etiquetaFactura(cobro.tipo_factura),
           Number(cobro.monto_usd) !== montoCobroNeto(cobro, "usd")
             ? `Bruto ${formatMoneda(cobro.monto_usd, "usd")}`
             : null,
@@ -160,7 +161,7 @@ export function LibroDeObra({
     }
 
     return cronologicos.reverse();
-  }, [compras, gastos, cobros, nombreFase, nombreProveedor, nombreProyecto]);
+  }, [compras, gastos, cobros, nombreFase, nombreProveedor, nombreProyecto, etiquetaFactura]);
 
   const totalPaginas = Math.max(1, Math.ceil(movimientos.length / MOVIMIENTOS_POR_PAGINA));
   // Si un filtro achica la lista, la página en la que se estaba puede dejar
@@ -362,11 +363,13 @@ function FilaMovimiento({
         {esCompra ? (
           <>
             <BadgeEstado
-              estado={getEstadoPagoConAntiguedad(entidad.estado_pago, movimiento.diasImpaga)}
+              estado={getEstadoPagoConVencimiento(entidad.estado_pago, movimiento.diasVencida)}
               titulo={tituloEstado(
                 entidad.estado_pago === "pagado"
                   ? "Pagado"
-                  : `Impaga hace ${pluralizar(movimiento.diasImpaga, "día")}`,
+                  : movimiento.diasVencida
+                    ? `Vencida hace ${pluralizar(movimiento.diasVencida, "día")}`
+                    : "A pagar",
                 entidad.estado_pago === "pagado"
                   ? "click para marcar sin pagar"
                   : "click para marcar pagado",

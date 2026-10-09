@@ -5,7 +5,7 @@ import { ComprobantesUploader } from "../shared/ComprobantesUploader";
 import { ControlOpcion } from "../shared/ControlOpcion";
 import { SeccionNotas } from "../shared/SeccionNotas";
 import { formatMoneda, formatNumero, hoyISO } from "../../utils/formato";
-import { TIPOS_FACTURA } from "../../constants/tipoFactura";
+import { useOpcionesTipoFactura } from "../../hooks/useTiposFactura";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { useExtraccionIA } from "../../hooks/useExtraccionIA";
@@ -22,8 +22,6 @@ import ModalShell, { AccionesFormulario } from "./ModalShell";
 import { BotonIA, MarcaIA } from "./PiezasIA";
 import { CampoMonto, CamposCotizacion } from "./CamposCotizacion";
 import { useCotizacionDia } from "../../hooks/useCotizacionDia";
-
-const OPCIONES_FACTURA = TIPOS_FACTURA.map((t) => ({ valor: t.value, label: t.label }));
 
 const validarCampo = (name, value) => {
   if (name === "descripcion") return validarRequerido(value, "Escribí una descripción corta.");
@@ -234,6 +232,9 @@ export function ModalCobro({
   const acordado = Number(proyectoActual?.precio_acordado_usd) || 0;
   const nombreProyecto = proyectoActual?.nombre;
 
+  // Los tipos se arman en Ajustes; el actual se agrega si todavía no llegó la lista.
+  const opcionesFactura = useOpcionesTipoFactura(form.tipo_factura);
+
   return (
     <ModalShell
       titulo={esEdicion ? "Editar cobro" : "Nuevo cobro"}
@@ -332,7 +333,7 @@ export function ModalCobro({
 
       <ControlOpcion
         etiqueta="Comprobante"
-        opciones={OPCIONES_FACTURA}
+        opciones={opcionesFactura}
         valor={form.tipo_factura}
         onCambiar={(valor) => cambiar("tipo_factura", valor)}
         error={errores.tipo_factura}

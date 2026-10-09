@@ -5,6 +5,12 @@ import userEvent from "@testing-library/user-event";
 import { FiltrosLista } from "./FiltrosLista";
 import { FILTROS_VACIOS } from "../../utils/filtros";
 
+// Los tipos de factura de Ajustes (los de fábrica), sin servidor.
+vi.mock("../../hooks/queries", async () => {
+  const { TIPOS_FACTURA_PRUEBA } = await import("../../test/tiposFactura");
+  return { useTiposFactura: () => ({ isLoading: false, data: TIPOS_FACTURA_PRUEBA }) };
+});
+
 describe("FiltrosLista", () => {
   it("el panel arranca cerrado y se abre con Filtrar", async () => {
     render(<FiltrosLista filtros={FILTROS_VACIOS} onCambiar={() => {}} mostrarEstadoPago />);
@@ -31,5 +37,34 @@ describe("FiltrosLista", () => {
       </FiltrosLista>
     );
     expect(screen.getByText("chips de tipo")).toBeInTheDocument();
+  });
+
+  it("el filtro de tipo de factura usa los tipos de Ajustes", async () => {
+    render(<FiltrosLista filtros={FILTROS_VACIOS} onCambiar={() => {}} />);
+    await userEvent.click(screen.getByRole("button", { name: /filtrar/i }));
+
+    const opciones = [...screen.getByLabelText("Tipo de factura").options].map(
+      (o) => o.textContent
+    );
+    expect(opciones).toEqual([
+      "Todos",
+      "Factura A",
+      "Factura B",
+      "Factura C",
+      "Remito",
+      "Recibo",
+      "Factura interna",
+      "Otros",
+    ]);
+  });
+
+  it("un filtro aplicado muestra el nombre del tipo, no el código", () => {
+    render(
+      <FiltrosLista
+        filtros={{ ...FILTROS_VACIOS, tipoFactura: "factura_interna" }}
+        onCambiar={() => {}}
+      />
+    );
+    expect(screen.getByText("Tipo de factura: Factura interna")).toBeInTheDocument();
   });
 });

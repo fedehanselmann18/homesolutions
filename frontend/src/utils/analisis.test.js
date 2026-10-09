@@ -284,4 +284,45 @@ describe("calcularAnalisis en dos monedas", () => {
     expect(totales.precioAcordado).toBeNull();
     expect(totales.pctGastado).toBeCloseTo(56.4);
   });
+
+  it("los pagos por tipo de factura se agrupan por código, sin nombre (lo pone la pantalla)", () => {
+    const resultado = calcularAnalisis({
+      proyecto: { precio_acordado_usd: 1000 },
+      gastos: [
+        { monto_ars: 1000, monto_usd: 1, tipo_factura: "factura_interna" },
+        { monto_ars: 500, monto_usd: 0.5, tipo_factura: "factura_interna" },
+        { monto_ars: 200, monto_usd: 0.2, tipo_factura: "recibo" },
+      ],
+      moneda: "ars",
+    });
+
+    expect(resultado.pagosPorTipoFactura).toEqual([
+      { tipo: "factura_interna", cantidad: 2, monto: 1500 },
+      { tipo: "recibo", cantidad: 1, monto: 200 },
+    ]);
+  });
+
+  it("IVA 21 e IVA 10,5 suman juntos como IVA; los sin grupo, por su nombre", () => {
+    const compra = (impuesto, monto) => ({
+      precio_neto_ars: 100000,
+      precio_neto_usd: 100,
+      cotizacion_dolar: 1000,
+      impuestos_aplicados: [{ monto, impuesto }],
+      notas: [],
+    });
+    const resultado = calcularAnalisis({
+      proyecto: { precio_acordado_usd: 1000 },
+      compras: [
+        compra({ nombre: "IVA 21", alicuota: 21, grupo: "IVA" }, 21000),
+        compra({ nombre: "IVA 10,5", alicuota: 10.5, grupo: "IVA" }, 10500),
+        compra({ nombre: "Percepción IIBB", alicuota: null, grupo: null }, 3000),
+      ],
+      moneda: "ars",
+    });
+
+    expect(resultado.impuestosPorTipo).toEqual([
+      expect.objectContaining({ nombre: "IVA", monto: 31500 }),
+      expect.objectContaining({ nombre: "Percepción IIBB", monto: 3000 }),
+    ]);
+  });
 });
