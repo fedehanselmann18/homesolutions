@@ -16,7 +16,11 @@ jobs:
 
     services:
       postgres:
-        image: postgres:16
+        # Misma imagen oficial de Docker Hub, pero servida desde el mirror
+        # público de AWS ECR: Docker Hub corta las descargas anónimas por IP
+        # (toomanyrequests) y los runners de GitHub comparten IP con muchos
+        # otros repos, así que el job fallaba antes de correr un solo test.
+        image: public.ecr.aws/docker/library/postgres:16
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres

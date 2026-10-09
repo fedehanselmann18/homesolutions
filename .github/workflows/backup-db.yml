@@ -59,10 +59,12 @@ jobs:
       - name: pg_dump
         if: steps.config.outputs.listo == 'true'
         # shell: bash explícito activa pipefail: si pg_dump falla, falla el paso.
+        # La imagen sale del mirror de AWS ECR (la misma oficial de Docker Hub)
+        # para no chocar con el límite de descargas anónimas de Docker Hub.
         shell: bash
         run: |
           ARCHIVO="homesolutions_$(date -u +%Y%m%d_%H%M%S).sql.gz"
-          docker run --rm "postgres:${PG_MAJOR}" \
+          docker run --rm "public.ecr.aws/docker/library/postgres:${PG_MAJOR}" \
             pg_dump "$DATABASE_URL" --format=plain --no-owner --no-privileges \
             | gzip > "$ARCHIVO"
           # Un dump vacío o cortado pesa casi nada: mejor fallar que subirlo.
