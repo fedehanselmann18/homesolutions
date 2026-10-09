@@ -37,7 +37,7 @@ def _crear_compra(client, headers, fase, proveedor):
             **COTIZACION,
             "tipo_factura": "factura_a",
             "fecha": "2026-10-08",
-            "condicion_pago": "contado",
+            "medio_pago": "efectivo",
             "estado_pago": "pagado",
             "estado_envio": "entregado",
             "detalle": [],

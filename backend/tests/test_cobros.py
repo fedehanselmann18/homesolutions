@@ -116,7 +116,7 @@ def test_crear_nota_cobro_actualiza_monto_neto(
         f"/cobros/{cobro.id}/notas",
         data={
             "tipo": "nota_credito",
-            "tipo_factura": "nota_credito_a",
+            "tipo_factura": "factura_a",
             "monto_usd": 20,
             # Otra fecha, otro dólar: la nota NO usa la cotización del cobro.
             "cotizacion_dolar": 1200,
@@ -181,7 +181,7 @@ def test_nota_de_cobro_sin_cotizacion_valida_se_rechaza(
         f"/cobros/{cobro.id}/notas",
         data={
             "tipo": "nota_credito",
-            "tipo_factura": "nota_credito_a",
+            "tipo_factura": "factura_a",
             "monto_usd": 20,
             "cotizacion_dolar": 0,
             "tipo_cambio": "blue",

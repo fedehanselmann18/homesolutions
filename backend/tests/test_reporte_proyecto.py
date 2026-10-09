@@ -138,7 +138,7 @@ def _cargar_proyecto(db_session, usuario):
         **congelado,
         tipo_factura="factura_a",
         fecha=date(2026, 3, 1),
-        condicion_pago="contado",
+        medio_pago="efectivo",
         estado_pago="pendiente",
         estado_envio="pedido",
     )

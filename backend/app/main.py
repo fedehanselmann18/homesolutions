@@ -19,6 +19,7 @@ from app.routes import (
     categorias,
     cobros,
     compras,
+    condiciones_pago,
     configuracion,
     cotizaciones,
     fases,
@@ -27,10 +28,12 @@ from app.routes import (
     ia,
     impuestos,
     login,
+    plazos_pago,
     productos,
     proveedores,
     proyectos,
     storage,
+    tipos_factura,
     usuarios,
 )
 from app.security_middleware import CSRFMiddleware, SecurityHeadersMiddleware, UnhandledExceptionMiddleware
@@ -117,6 +120,9 @@ app.include_router(categorias.router)
 app.include_router(categoriagasto.router)
 app.include_router(fases_predeterminadas.router)
 app.include_router(impuestos.router)
+app.include_router(tipos_factura.router)
+app.include_router(condiciones_pago.router)
+app.include_router(plazos_pago.router)
 app.include_router(cotizaciones.router)
 app.include_router(proveedores.router)
 app.include_router(fases.router)

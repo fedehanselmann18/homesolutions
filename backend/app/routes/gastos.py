@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile, status
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 
+from app import plazos
 from app.audit import log_auditoria
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db import models
@@ -12,6 +13,7 @@ from app.limiter import limiter
 from app.pagination import ParametrosPaginacion
 from app.schemas import ComprobanteGastoOut, GastoCreate, GastoOut, GastoUpdate
 from app.tipo_cambio import a_usd
+from app.tipos_factura import validar_tipo_factura
 
 router = APIRouter(prefix="/gastos", tags=["gastos"])
 
@@ -24,7 +26,11 @@ def get_all_gastos(
 ):
     query = (
         db.query(models.Gasto)
-        .options(joinedload(models.Gasto.categorias))
+        .options(
+            joinedload(models.Gasto.categorias),
+            selectinload(models.Gasto.plazos),
+            joinedload(models.Gasto.condicion_pago),
+        )
         .order_by(models.Gasto.fecha_creacion.desc())
         .offset(paginacion.offset)
     )
@@ -39,7 +45,11 @@ def get_gasto_by_id(
 ):
     gasto = (
         db.query(models.Gasto)
-        .options(joinedload(models.Gasto.categorias))
+        .options(
+            joinedload(models.Gasto.categorias),
+            selectinload(models.Gasto.plazos),
+            joinedload(models.Gasto.condicion_pago),
+        )
         .filter(models.Gasto.id == gasto_id)
         .first()
     )
@@ -58,7 +68,11 @@ def get_gastos_by_proyecto(
 
     return (
         db.query(models.Gasto)
-        .options(joinedload(models.Gasto.categorias))
+        .options(
+            joinedload(models.Gasto.categorias),
+            selectinload(models.Gasto.plazos),
+            joinedload(models.Gasto.condicion_pago),
+        )
         .filter(models.Gasto.proyecto_id == proyecto_id)
         .all()
     )
@@ -74,7 +88,11 @@ def get_gastos_by_fase(
 
     return (
         db.query(models.Gasto)
-        .options(joinedload(models.Gasto.categorias))
+        .options(
+            joinedload(models.Gasto.categorias),
+            selectinload(models.Gasto.plazos),
+            joinedload(models.Gasto.condicion_pago),
+        )
         .filter(models.Gasto.fase_id == fase_id)
         .all()
     )
@@ -98,6 +116,8 @@ def create_gasto(
         if not fase:
             raise HTTPException(status_code=404, detail="Fase no encontrada")
 
+    validar_tipo_factura(db, gasto.tipo_factura)
+
     categorias = []
     if gasto.categoria_gasto_ids:
         categorias = (
@@ -120,8 +140,12 @@ def create_gasto(
         descripcion=gasto.descripcion,
         fecha=gasto.fecha,
         tipo_factura=gasto.tipo_factura,
+        medio_pago=gasto.medio_pago,
         categorias=categorias,
     )
+    # Default Contado y pagado: un flete se sigue cargando en un paso.
+    condicion = plazos.buscar_condicion(db, gasto.condicion_pago_id)
+    plazos.armar_plazos(nuevo_gasto, condicion, pagado=gasto.estado_pago == plazos.PAGADO)
 
     activar_por_movimiento(db, fase=fase, proyecto=proyecto)
 
@@ -150,6 +174,9 @@ def update_gasto(
 
     datos = gasto.model_dump(exclude_unset=True)
 
+    if "tipo_factura" in datos:
+        validar_tipo_factura(db, datos["tipo_factura"])
+
     if "fase_id" in datos and datos["fase_id"] is not None:
         fase = db.query(models.Fase).filter(models.Fase.id == datos["fase_id"]).first()
         if not fase:
@@ -162,6 +189,8 @@ def update_gasto(
             raise HTTPException(status_code=404, detail="Una o más categorías de gasto no existen")
         gasto_existente.categorias = categorias
 
+    condicion_nueva, estado_nuevo = plazos.extraer_cambios_de_pago(db, datos)
+
     for key, value in datos.items():
         setattr(gasto_existente, key, value)
 
@@ -169,6 +198,8 @@ def update_gasto(
     # los valores que quedaron (uno puede venir nuevo y el otro ser el de antes).
     if "monto_ars" in datos or "cotizacion_dolar" in datos:
         gasto_existente.monto_usd = a_usd(gasto_existente.monto_ars, gasto_existente.cotizacion_dolar)
+
+    plazos.actualizar(gasto_existente, condicion_nueva, estado_nuevo, cambio_fecha="fecha" in datos)
 
     try:
         db.commit()

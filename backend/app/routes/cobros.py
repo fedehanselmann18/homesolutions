@@ -13,6 +13,7 @@ from app.limiter import limiter
 from app.pagination import ParametrosPaginacion
 from app.schemas import CobroCreate, CobroOut, CobroUpdate, ComprobanteCobroOut, NotaCobroOut, TipoCambio
 from app.tipo_cambio import a_ars
+from app.tipos_factura import validar_tipo_factura
 
 router = APIRouter(prefix="/cobros", tags=["cobros"])
 
@@ -66,6 +67,8 @@ def create_cobro(
     if not proyecto:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
 
+    validar_tipo_factura(db, cobro.tipo_factura)
+
     nuevo_cobro = models.Cobro(
         proyecto_id=cobro.proyecto_id,
         usuario_id=current_user.id,  # del JWT, nunca del body
@@ -103,6 +106,8 @@ def update_cobro(
         raise HTTPException(status_code=404, detail="Cobro no encontrado")
 
     datos = cobro.model_dump(exclude_unset=True)
+    if "tipo_factura" in datos:
+        validar_tipo_factura(db, datos["tipo_factura"])
     for key, value in datos.items():
         setattr(cobro_existente, key, value)
 
@@ -219,7 +224,7 @@ def crear_nota_cobro(
     cobro_id: str,
     archivo: UploadFile = File(...),
     tipo: str = Form(...),  # "nota_credito" | "nota_debito"
-    tipo_factura: str = Form(...),  # SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro)
+    tipo_factura: str = Form(...),  # SIEMPRE obligatorio: código de un TipoFactura
     monto_usd: float = Form(...),  # en dólares, como el cobro; el ARS se congela acá
     cotizacion_dolar: float = Form(..., gt=0),  # la de la fecha de la nota, no la del cobro
     tipo_cambio: TipoCambio = Form(...),
@@ -235,6 +240,9 @@ def crear_nota_cobro(
 
     if tipo not in ("nota_credito", "nota_debito"):
         raise HTTPException(status_code=400, detail="tipo debe ser 'nota_credito' o 'nota_debito'")
+
+    # Antes de subir el archivo: si no, un tipo inválido deja un comprobante huérfano.
+    validar_tipo_factura(db, tipo_factura)
 
     path = subir_comprobante(archivo, "notas_cobro", cobro_id)
 

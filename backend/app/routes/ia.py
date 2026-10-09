@@ -13,6 +13,7 @@ from app.ia.catalogo import LecturaCatalogoError, leer_catalogo
 from app.ia.extractor import ExtraccionIAError, extraer_comprobante
 from app.limiter import limiter
 from app.schemas import IAExtraccionComprobante, IALecturaCatalogo
+from app.tipos_factura import listar as listar_tipos_factura
 
 router = APIRouter(prefix="/ia", tags=["ia"])
 
@@ -95,6 +96,7 @@ async def extraer_comprobante_endpoint(
             mime_type=MIME_POR_EXTENSION[ext],
             tipo_entidad=tipo_entidad,
             contexto=contexto_dict,
+            tipos_factura=[{"codigo": t.codigo, "nombre": t.nombre} for t in listar_tipos_factura(db)],
             # Editable desde Manager sin redeployar
             # -- ver app/configuracion.py para el fallback a Settings/.env.
             modelo=obtener_valor(db, "GEMINI_MODEL"),

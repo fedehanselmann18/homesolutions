@@ -26,10 +26,9 @@ from google.genai import types
 
 from app.config import settings
 from app.schemas import IAExtraccionComprobante
+from app.tipos_factura import CODIGO_OTROS
 
 logger = logging.getLogger(__name__)
-
-TIPOS_FACTURA_VALIDOS = ["factura_a", "factura_b", "factura_c", "remito", "recibo", "otros"]
 
 # Qué campos tiene sentido pedirle a la IA según qué formulario se está
 # completando. Cobro no tiene fase/categoría/proveedor (Cobro no los tiene
@@ -51,7 +50,24 @@ def _cliente() -> genai.Client:
     return genai.Client(api_key=settings.GEMINI_API_KEY)
 
 
-def _armar_prompt(tipo_entidad: str, contexto: dict) -> str:
+def _instruccion_tipo_factura(tipos_factura: list[dict]) -> str:
+    """Los tipos salen de la tabla tipos_factura (los arma Agus en Ajustes):
+    se le pasan a Gemini como `codigo (nombre)` y tiene que devolver el código."""
+    opciones = ", ".join(f"{t['codigo']} ({t['nombre']})" for t in tipos_factura)
+    instruccion = (
+        "tipo_factura tiene que ser EXACTAMENTE uno de estos códigos (entre "
+        f"paréntesis, cómo se llama cada uno): {opciones}. Si es una factura, "
+        "mirá qué letra tiene arriba para elegir la que corresponde; si es un "
+        "remito o un recibo, usá ese."
+    )
+    if any(t["codigo"] == CODIGO_OTROS for t in tipos_factura):
+        instruccion += f" Si no es ninguno de esos, '{CODIGO_OTROS}'."
+    else:
+        instruccion += " Si no es ninguno de esos, null."
+    return instruccion
+
+
+def _armar_prompt(tipo_entidad: str, contexto: dict, tipos_factura: list[dict]) -> str:
     campos = CAMPOS_POR_ENTIDAD[tipo_entidad]
     partes = [
         "Sos un asistente que lee comprobantes de gastos de una empresa de "
@@ -60,10 +76,7 @@ def _armar_prompt(tipo_entidad: str, contexto: dict) -> str:
         "Extraé SOLO los campos que te pido abajo. Si no podés leer un dato "
         "con confianza, dejalo en null y contá el motivo en 'advertencias' "
         "en vez de inventarlo.",
-        "tipo_factura tiene que ser EXACTAMENTE uno de estos valores: "
-        f"{', '.join(TIPOS_FACTURA_VALIDOS)} (mirá qué letra tiene arriba la "
-        "factura para elegir entre factura_a/factura_b/factura_c; si es un "
-        "remito o un recibo usá esa palabra; si no es ninguna de esas, 'otros').",
+        _instruccion_tipo_factura(tipos_factura),
     ]
 
     if "monto" in campos:
@@ -145,9 +158,18 @@ def _armar_prompt(tipo_entidad: str, contexto: dict) -> str:
 
 
 def extraer_comprobante(
-    archivo_bytes: bytes, mime_type: str, tipo_entidad: str, contexto: dict, modelo: str | None = None
+    archivo_bytes: bytes,
+    mime_type: str,
+    tipo_entidad: str,
+    contexto: dict,
+    tipos_factura: list[dict],
+    modelo: str | None = None,
 ) -> IAExtraccionComprobante:
     """
+    `tipos_factura`: [{"codigo", "nombre"}] de la tabla tipos_factura, leídos
+    por el caller (no del contexto que manda el front: lo que se valida acá
+    no lo decide el cliente).
+
     `modelo`: override de settings.GEMINI_MODEL, resuelto por el caller
     contra la tabla `configuracion` (ver app/configuracion.py). Este módulo
     no toca la DB directamente -- no tiene sesión a mano y no la necesita
@@ -159,7 +181,7 @@ def extraer_comprobante(
         raise ExtraccionIAError(f"tipo_entidad inválido: {tipo_entidad}")
 
     cliente = _cliente()
-    prompt = _armar_prompt(tipo_entidad, contexto)
+    prompt = _armar_prompt(tipo_entidad, contexto, tipos_factura)
 
     try:
         respuesta = cliente.models.generate_content(
@@ -182,7 +204,7 @@ def extraer_comprobante(
     except (json.JSONDecodeError, TypeError) as exc:
         raise ExtraccionIAError("La IA no devolvió un resultado legible.") from exc
 
-    return _validar_y_limpiar(datos, tipo_entidad, contexto)
+    return _validar_y_limpiar(datos, tipo_entidad, contexto, tipos_factura)
 
 
 def _ids_validos(contexto: dict, clave: str) -> set[str]:
@@ -273,7 +295,9 @@ def _limpiar_impuestos(datos: dict, contexto: dict, advertencias: list[str]) -> 
     return limpio
 
 
-def _validar_y_limpiar(datos: dict, tipo_entidad: str, contexto: dict) -> IAExtraccionComprobante:
+def _validar_y_limpiar(
+    datos: dict, tipo_entidad: str, contexto: dict, tipos_factura: list[dict] = ()
+) -> IAExtraccionComprobante:
     """
     Nunca confiar a ciegas en lo que devuelve el modelo: si sugirió un id que
     no está en el catálogo que le pasamos, se descarta a None y se avisa en
@@ -293,7 +317,7 @@ def _validar_y_limpiar(datos: dict, tipo_entidad: str, contexto: dict) -> IAExtr
         return valor
 
     tipo_factura = datos.get("tipo_factura")
-    if tipo_factura not in TIPOS_FACTURA_VALIDOS:
+    if tipo_factura not in {t["codigo"] for t in tipos_factura}:
         if tipo_factura is not None:
             advertencias.append(f"No reconocí el tipo de factura '{tipo_factura}', elegilo a mano.")
         tipo_factura = None

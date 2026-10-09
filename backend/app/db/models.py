@@ -3,9 +3,11 @@ Modelos de SQLAlchemy para HomeSolutions.
 
 Convenciones:
 - Todos los PK son UUID.
-- Los campos "tipo select" (estado, tipo_factura, condicion_pago, etc.) son
-  String simple, sin Enum/CHECK — la validación de esos valores la maneja
-  el front (ya definido así en el modelado con Agus).
+- Los campos "tipo select" (estado, condicion_pago, etc.) son String simple,
+  sin Enum/CHECK — la validación de esos valores la maneja el front (ya
+  definido así en el modelado con Agus). Excepción: tipo_factura, que es una
+  lista configurable desde Ajustes (TipoFactura) y guarda el *código* del
+  tipo con FK a tipos_factura.codigo (RESTRICT).
 - precio_total_ars/_usd de Compra NO se guardan: son precio_neto + impuestos
   +- notas. precio_neto_ars SÍ se carga a mano (puede haber descuentos/redondeos
   que no coincidan exacto con la suma del detalle — eso se valida en el
@@ -34,6 +36,7 @@ from datetime import date, datetime
 
 from sqlalchemy import (  # CORREGIDO: + UniqueConstraint
     Boolean,
+    CheckConstraint,
     Column,
     DateTime,
     ForeignKey,
@@ -43,6 +46,7 @@ from sqlalchemy import (  # CORREGIDO: + UniqueConstraint
     Table,
     UniqueConstraint,
     func,
+    text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -385,11 +389,99 @@ class FasePredeterminada(TimestampMixin, Base):
     orden: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 
 
+class TipoFactura(TimestampMixin, Base):
+    """Tipo de comprobante (Factura A, Remito, Factura interna...): las
+    opciones del select de compras, gastos, cobros y notas. Se administran
+    desde Ajustes.
+
+    Los movimientos guardan el `codigo` (no el id) con FK RESTRICT: renombrar
+    cambia la etiqueta en todo el historial sin tocar los movimientos, y no
+    se puede borrar un tipo en uso. El código se arma del nombre al crear y
+    no cambia nunca (ver app/tipos_factura.py)."""
+
+    __tablename__ = "tipos_factura"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    codigo: Mapped[str] = mapped_column(String(30), unique=True, nullable=False)
+    nombre: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    # Posición en el select; uno nuevo va al final ("Otros" igual sale último,
+    # ver app/tipos_factura.py).
+    orden: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+
+
+def _condicion_contado(context):
+    """Default de condicion_pago_id: «Contado». Las rutas lo ponen siempre
+    (con sus plazos); esto cubre lo que se crea directo con el ORM (scripts,
+    tests), que si no chocaría contra el NOT NULL."""
+    return context.connection.execute(
+        text("SELECT id FROM condiciones_pago WHERE protegido ORDER BY orden LIMIT 1")
+    ).scalar()
+
+
+class CondicionPago(TimestampMixin, Base):
+    """Cuándo se paga una compra o un gasto: «Contado» (sin plazos: un solo
+    pago el día de la factura), «30 días» ([30]), «30/60 días» ([30, 60]: mitad
+    y mitad)... Se arman en Ajustes. Los días cuentan desde la fecha del
+    movimiento. «Contado» (protegido) no se borra ni cambia sus días: es el
+    default de los gastos."""
+
+    __tablename__ = "condiciones_pago"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    nombre: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    # Lista de días ordenada, sin repetidos: [] = contado, [30, 60] = dos plazos.
+    dias: Mapped[list[int]] = mapped_column(JSONB, nullable=False, default=list)
+    orden: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    protegido: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+
+class PlazoPago(TimestampMixin, Base):
+    """Un pago de una compra o de un gasto según su condición (30/60 días =
+    dos plazos). En pesos, como su movimiento; en dólares se convierte con la
+    cotización congelada del movimiento (no tiene USD propio). Lo pendiente
+    se reparte solo cuando cambia el total (ver app/plazos.py). Pertenece a
+    una compra O a un gasto, nunca a los dos (CHECK)."""
+
+    __tablename__ = "plazos_pago"
+    __table_args__ = (
+        CheckConstraint("(compra_id IS NULL) <> (gasto_id IS NULL)", name="ck_plazos_pago_compra_o_gasto"),
+    )
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    compra_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("compras.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    gasto_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("gastos.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    numero: Mapped[int] = mapped_column(Integer, nullable=False)  # 1, 2, 3... en orden de vencimiento
+    dias: Mapped[int] = mapped_column(Integer, nullable=False)  # 0 = contado / ajuste del día
+    fecha_vencimiento: Mapped[date] = mapped_column(nullable=False, index=True)
+    monto: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
+    pagado: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    fecha_pago: Mapped[date | None] = mapped_column(nullable=True)
+
+    compra: Mapped["Compra | None"] = relationship(back_populates="plazos")
+    gasto: Mapped["Gasto | None"] = relationship(back_populates="plazos")
+
+
 class Impuesto(TimestampMixin, Base):
+    """IVA, percepciones, IIBB... (se arman en Ajustes).
+
+    - alicuota: porcentaje fijo (21.00, 10.50). Si está, el front calcula el
+      monto sobre el neto (y Agus lo puede sobrescribir para igualar el
+      redondeo de la factura). Sin alícuota, el monto se tipea a mano.
+    - grupo: cómo suma en el Análisis y el PDF ("IVA" junta IVA 21 e IVA
+      10,5). Sin grupo, suma por su nombre. Una compra o nota no puede tener
+      dos impuestos del mismo grupo: una alícuota de IVA por factura.
+    """
+
     __tablename__ = "impuestos"
 
     id: Mapped[uuid.UUID] = uuid_pk()
     nombre: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    alicuota: Mapped[float | None] = mapped_column(Numeric(5, 2), nullable=True)
+    grupo: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
 
 producto_categoria = Table(
@@ -447,12 +539,25 @@ class Compra(CotizacionCongeladaMixin, TimestampMixin, Base):
     # cotizacion_dolar (ver app/tipo_cambio.py).
     precio_neto_ars: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     precio_neto_usd: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
-    tipo_factura: Mapped[str] = mapped_column(String(30), nullable=False)
+    tipo_factura: Mapped[str] = mapped_column(
+        String(30), ForeignKey("tipos_factura.codigo", ondelete="RESTRICT"), nullable=False
+    )
     fecha: Mapped[date] = mapped_column(nullable=False)  # fecha de negocio, se carga a mano
-    condicion_pago: Mapped[str] = mapped_column(String(30), nullable=False)
-    estado_pago: Mapped[str] = mapped_column(String(20), nullable=False)  # pendiente/pagado
+    # Cuándo se paga (Contado, 30/60 días...): arma los plazos (ver app/plazos.py).
+    condicion_pago_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("condiciones_pago.id", ondelete="RESTRICT"), nullable=False, default=_condicion_contado
+    )
+    # Cómo se paga (efectivo/transferencia/cheque/tarjeta), opcional. Lista fija en el front.
+    medio_pago: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    # pendiente/pagado. DERIVADO de los plazos (pagado = todos pagados): se
+    # guarda para que filtros, Panel y PDF no tengan que recorrer plazos.
+    estado_pago: Mapped[str] = mapped_column(String(20), nullable=False)
     estado_envio: Mapped[str] = mapped_column(String(20), nullable=False)  # pedido/entregado
 
+    condicion_pago: Mapped["CondicionPago"] = relationship()
+    plazos: Mapped[list["PlazoPago"]] = relationship(
+        back_populates="compra", cascade="all, delete-orphan", order_by="PlazoPago.numero"
+    )
     fase: Mapped["Fase"] = relationship(back_populates="compras")
     proveedor: Mapped["Proveedor"] = relationship()
     usuario: Mapped["Usuario"] = relationship()
@@ -618,9 +723,9 @@ class NotaCompra(CotizacionCongeladaMixin, TimestampMixin, Base):
     - tipo: "nota_credito" (a favor nuestro, resta de precio_total) |
       "nota_debito" (en contra nuestro, suma a precio_total).
     - origen: "devolucion_producto" | "acuerdo_comercial" | "otro" -- string
-      libre, se valida en el front (mismo criterio que tipo_factura). Solo
+      libre, se valida en el front. Solo
       nota_credito admite "devolucion_producto".
-    - tipo_factura: SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro),
+    - tipo_factura: SIEMPRE obligatorio (código de un TipoFactura),
       sin importar tipo/origen -- el usuario pidió que toda nota, sea crédito
       o débito, quede etiquetada con el tipo de comprobante que la respalda.
     - detalles: líneas de producto devuelto, SOLO si origen="devolucion_producto"
@@ -649,7 +754,9 @@ class NotaCompra(CotizacionCongeladaMixin, TimestampMixin, Base):
 
     tipo: Mapped[str] = mapped_column(String(20), nullable=False)  # nota_credito | nota_debito
     origen: Mapped[str | None] = mapped_column(String(30), nullable=True)
-    tipo_factura: Mapped[str] = mapped_column(String(30), nullable=False)
+    tipo_factura: Mapped[str] = mapped_column(
+        String(30), ForeignKey("tipos_factura.codigo", ondelete="RESTRICT"), nullable=False
+    )
     monto_ars: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     monto_usd: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     descripcion: Mapped[str] = mapped_column(String(500), nullable=False)  # motivo
@@ -766,8 +873,22 @@ class Gasto(CotizacionCongeladaMixin, TimestampMixin, Base):
     monto_usd: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     descripcion: Mapped[str] = mapped_column(String(500), nullable=False)
     fecha: Mapped[date] = mapped_column(nullable=False)  # fecha de negocio, se carga a mano
-    tipo_factura: Mapped[str] = mapped_column(String(30), nullable=False)
+    tipo_factura: Mapped[str] = mapped_column(
+        String(30), ForeignKey("tipos_factura.codigo", ondelete="RESTRICT"), nullable=False
+    )
+    # Igual que en Compra: condición (arma los plazos), medio opcional y
+    # estado derivado. Por default Contado y pagado: cargar un flete sigue
+    # siendo un paso.
+    condicion_pago_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("condiciones_pago.id", ondelete="RESTRICT"), nullable=False, default=_condicion_contado
+    )
+    medio_pago: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    estado_pago: Mapped[str] = mapped_column(String(20), nullable=False, default="pagado")
 
+    condicion_pago: Mapped["CondicionPago"] = relationship()
+    plazos: Mapped[list["PlazoPago"]] = relationship(
+        back_populates="gasto", cascade="all, delete-orphan", order_by="PlazoPago.numero"
+    )
     proyecto: Mapped["Proyecto"] = relationship(back_populates="gastos")
     fase: Mapped["Fase | None"] = relationship(back_populates="gastos")
     usuario: Mapped["Usuario"] = relationship()
@@ -809,7 +930,9 @@ class Cobro(CotizacionCongeladaMixin, TimestampMixin, Base):
     monto_ars: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     descripcion: Mapped[str] = mapped_column(String(500), nullable=False)
     fecha: Mapped[date] = mapped_column(nullable=False)  # fecha de negocio, se carga a mano
-    tipo_factura: Mapped[str] = mapped_column(String(30), nullable=False)
+    tipo_factura: Mapped[str] = mapped_column(
+        String(30), ForeignKey("tipos_factura.codigo", ondelete="RESTRICT"), nullable=False
+    )
 
     proyecto: Mapped["Proyecto"] = relationship(back_populates="cobros")
     usuario: Mapped["Usuario"] = relationship()
@@ -872,9 +995,10 @@ class NotaCobro(CotizacionCongeladaMixin, TimestampMixin, Base):
     origen: Mapped[str | None] = mapped_column(
         String(30), nullable=True
     )  # ajuste_precio | acuerdo_comercial | otro
+    # SIEMPRE obligatorio, ver NotaCompra
     tipo_factura: Mapped[str] = mapped_column(
-        String(30), nullable=False
-    )  # SIEMPRE obligatorio, ver NotaCompra
+        String(30), ForeignKey("tipos_factura.codigo", ondelete="RESTRICT"), nullable=False
+    )
     monto_usd: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
     monto_ars: Mapped[float] = mapped_column(Numeric(14, 2), nullable=False)
     descripcion: Mapped[str] = mapped_column(String(500), nullable=False)

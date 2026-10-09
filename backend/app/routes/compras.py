@@ -4,8 +4,9 @@ from datetime import date
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 
+from app import plazos
 from app.audit import log_auditoria
 from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db import models
@@ -23,6 +24,7 @@ from app.schemas import (
     TipoCambio,
 )
 from app.tipo_cambio import a_usd
+from app.tipos_factura import validar_tipo_factura
 
 router = APIRouter(prefix="/compras", tags=["compras"])
 
@@ -43,6 +45,8 @@ def get_all_compras(
         .joinedload(models.DetalleCompra.producto)
         .joinedload(models.Producto.categorias),
         joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
+        selectinload(models.Compra.plazos),
+        joinedload(models.Compra.condicion_pago),
         joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
         joinedload(models.Compra.notas)
         .joinedload(models.NotaCompra.impuestos_aplicados)
@@ -69,6 +73,10 @@ def get_compra_by_id(
             .joinedload(models.DetalleCompra.producto)
             .joinedload(models.Producto.categorias),
             joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
+            selectinload(models.Compra.plazos),
+            joinedload(models.Compra.condicion_pago),
+            selectinload(models.Compra.plazos),
+            joinedload(models.Compra.condicion_pago),
             joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
             joinedload(models.Compra.notas)
             .joinedload(models.NotaCompra.impuestos_aplicados)
@@ -97,6 +105,10 @@ def get_compras_by_fase(
             .joinedload(models.DetalleCompra.producto)
             .joinedload(models.Producto.categorias),
             joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
+            selectinload(models.Compra.plazos),
+            joinedload(models.Compra.condicion_pago),
+            selectinload(models.Compra.plazos),
+            joinedload(models.Compra.condicion_pago),
             joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
             joinedload(models.Compra.notas)
             .joinedload(models.NotaCompra.impuestos_aplicados)
@@ -126,6 +138,10 @@ def get_compras_by_proyecto(
             .joinedload(models.DetalleCompra.producto)
             .joinedload(models.Producto.categorias),
             joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
+            selectinload(models.Compra.plazos),
+            joinedload(models.Compra.condicion_pago),
+            selectinload(models.Compra.plazos),
+            joinedload(models.Compra.condicion_pago),
             joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
             joinedload(models.Compra.notas)
             .joinedload(models.NotaCompra.impuestos_aplicados)
@@ -157,6 +173,8 @@ def create_compra(
     if not proveedor:
         raise HTTPException(status_code=404, detail="Proveedor no encontrado")
 
+    validar_tipo_factura(db, compra.tipo_factura)
+
     nueva_compra = models.Compra(
         fase_id=compra.fase_id,
         proveedor_id=compra.proveedor_id,
@@ -170,8 +188,8 @@ def create_compra(
         tipo_cambio=compra.tipo_cambio,
         tipo_factura=compra.tipo_factura,
         fecha=compra.fecha,
-        condicion_pago=compra.condicion_pago,
-        estado_pago=compra.estado_pago,
+        medio_pago=compra.medio_pago,
+        estado_pago=compra.estado_pago,  # lo vuelve a derivar armar_plazos
         estado_envio=compra.estado_envio,
     )
 
@@ -185,6 +203,7 @@ def create_compra(
             )
         )
 
+    _validar_un_impuesto_por_grupo(db, [imp.impuesto_id for imp in compra.impuestos])
     for imp in compra.impuestos:
         impuesto = db.query(models.Impuesto).filter(models.Impuesto.id == imp.impuesto_id).first()
         if not impuesto:
@@ -192,6 +211,10 @@ def create_compra(
         nueva_compra.impuestos_aplicados.append(
             models.CompraImpuesto(impuesto_id=imp.impuesto_id, monto=imp.monto)
         )
+
+    # Los plazos salen de la condición, sobre el total con impuestos.
+    condicion = plazos.buscar_condicion(db, compra.condicion_pago_id)
+    plazos.armar_plazos(nueva_compra, condicion, pagado=compra.estado_pago == plazos.PAGADO)
 
     activar_por_movimiento(db, fase=fase)
 
@@ -251,6 +274,29 @@ def _reconciliar_detalle(db: Session, compra: models.Compra, lineas) -> None:
     compra.detalle = resultado
 
 
+UN_IMPUESTO_POR_GRUPO = "Una factura lleva un solo impuesto de cada grupo: elegí una sola alícuota de {grupo}"
+
+
+def _validar_un_impuesto_por_grupo(db: Session, impuesto_ids) -> None:
+    """Una alícuota de IVA por factura: no puede haber dos impuestos del mismo
+    grupo (IVA 21 + IVA 10,5) en una compra o nota. Los que no tienen grupo
+    (percepciones sueltas) no cuentan. Los ids inexistentes los rechaza el
+    alta después con su 404."""
+    if not impuesto_ids:
+        return
+    grupos = [
+        grupo
+        for (grupo,) in db.query(models.Impuesto.grupo).filter(models.Impuesto.id.in_(impuesto_ids)).all()
+        if grupo
+    ]
+    vistos = set()
+    for grupo in grupos:
+        clave = grupo.casefold()
+        if clave in vistos:
+            raise HTTPException(status_code=400, detail=UN_IMPUESTO_POR_GRUPO.format(grupo=grupo))
+        vistos.add(clave)
+
+
 def _reconciliar_impuestos(db: Session, compra: models.Compra, lineas) -> None:
     """
     Mismo criterio que _reconciliar_detalle. Acá no hay notas apuntando a
@@ -291,6 +337,9 @@ def update_compra(
 
     datos = compra.model_dump(exclude_unset=True)
 
+    if "tipo_factura" in datos:
+        validar_tipo_factura(db, datos["tipo_factura"])
+
     if "fase_id" in datos:
         fase = db.query(models.Fase).filter(models.Fase.id == datos["fase_id"]).first()
         if not fase:
@@ -306,6 +355,9 @@ def update_compra(
     # arriba garantiza que sólo estén acá si el cliente los mandó de verdad.
     lineas_detalle = datos.pop("detalle", None)
     lineas_impuestos = datos.pop("impuestos", None)
+    # Pago: la condición rearma los plazos, el estado los marca todos. Se
+    # aplican después de los montos (ver plazos.actualizar).
+    condicion_nueva, estado_nuevo = plazos.extraer_cambios_de_pago(db, datos)
 
     for key, value in datos.items():
         setattr(compra_existente, key, value)
@@ -320,7 +372,10 @@ def update_compra(
     if lineas_detalle is not None:
         _reconciliar_detalle(db, compra_existente, compra.detalle)
     if lineas_impuestos is not None:
+        _validar_un_impuesto_por_grupo(db, [linea.impuesto_id for linea in compra.impuestos])
         _reconciliar_impuestos(db, compra_existente, compra.impuestos)
+
+    plazos.actualizar(compra_existente, condicion_nueva, estado_nuevo, cambio_fecha="fecha" in datos)
 
     try:
         db.commit()
@@ -460,7 +515,7 @@ def crear_nota_compra(
     compra_id: str,
     archivo: UploadFile = File(...),
     tipo: str = Form(...),  # "nota_credito" | "nota_debito"
-    tipo_factura: str = Form(...),  # SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro)
+    tipo_factura: str = Form(...),  # SIEMPRE obligatorio: código de un TipoFactura
     descripcion: str = Form(...),
     fecha: date = Form(...),
     # La de la fecha de la nota, no la de su compra: es otro día, otro dólar.
@@ -491,7 +546,19 @@ def crear_nota_compra(
     if origen == "reposicion_producto" and tipo != "nota_debito":
         raise HTTPException(status_code=400, detail="'reposicion_producto' solo aplica a nota_debito")
 
+    # Antes de subir el archivo: si no, un tipo inválido deja un comprobante huérfano.
+    validar_tipo_factura(db, tipo_factura)
+
     usa_lineas_producto = origen in ("devolucion_producto", "reposicion_producto")
+
+    # Una alícuota de IVA por nota, también antes de subir el archivo. El JSON
+    # malformado lo sigue rechazando el parseo de abajo.
+    if usa_lineas_producto and impuestos_json:
+        try:
+            ids_impuestos = [i.get("impuesto_id") for i in json.loads(impuestos_json) if i.get("impuesto_id")]
+        except (json.JSONDecodeError, TypeError, AttributeError):
+            ids_impuestos = []
+        _validar_un_impuesto_por_grupo(db, ids_impuestos)
 
     path = subir_comprobante(archivo, "notas_compra", compra_id)
 
@@ -601,6 +668,12 @@ def crear_nota_compra(
     nueva_nota.monto_usd = a_usd(nueva_nota.monto_ars, cotizacion_dolar)
 
     db.add(nueva_nota)
+    # La nota cambia el total: lo que falta pagar se reparte de nuevo entre
+    # los plazos pendientes (o, si estaba todo pagado y es de débito, queda
+    # un plazo de ajuste que vence el día de la nota).
+    db.flush()
+    db.expire(compra, ["notas"])
+    plazos.repartir_pendientes(compra, fecha_ajuste=fecha)
     db.commit()
     db.refresh(nueva_nota)
 
@@ -640,8 +713,13 @@ def eliminar_nota_compra(
     if not nota:
         raise HTTPException(status_code=404, detail="Nota no encontrada")
 
+    compra = nota.compra
     eliminar_comprobante(nota.archivo_path)
     db.delete(nota)
+    # Sin la nota cambia el total: se reparte de nuevo lo que falta pagar.
+    db.flush()
+    db.expire(compra, ["notas"])
+    plazos.repartir_pendientes(compra)
     db.commit()
 
     return {"detail": "Nota eliminada"}

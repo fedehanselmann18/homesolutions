@@ -12,7 +12,8 @@ import io
 import uuid
 
 from app import schemas
-from app.ia.extractor import ExtraccionIAError, _validar_y_limpiar
+from app.db import models
+from app.ia.extractor import ExtraccionIAError, _armar_prompt, _validar_y_limpiar
 
 ARCHIVO_PDF_FALSO = ("factura.pdf", io.BytesIO(b"%PDF-1.4 contenido falso"), "application/pdf")
 
@@ -101,6 +102,35 @@ def test_extraccion_ok_devuelve_lo_que_da_el_extractor(client, headers_admin, mo
     assert cuerpo["monto"] == 15000.0
     assert cuerpo["tipo_factura"] == "factura_b"
     assert cuerpo["proveedor_id"] is None  # gasto no pide proveedor
+
+
+def test_extraccion_le_pasa_los_tipos_de_factura_de_la_base(client, headers_admin, db_session, monkeypatch):
+    """Los tipos salen de la tabla (incluido uno que agregó Agus), no de una
+    lista fija ni de lo que mande el front en el contexto."""
+    import app.routes.ia as ruta_ia
+
+    db_session.add(models.TipoFactura(codigo="ticket", nombre="Ticket", orden=99))
+    db_session.commit()
+    recibido = {}
+
+    def _mock(**kwargs):
+        recibido.update(kwargs)
+        return _mock_ok()
+
+    monkeypatch.setattr(ruta_ia, "extraer_comprobante", _mock)
+
+    resp = client.post(
+        "/ia/extraer-comprobante",
+        data={"tipo_entidad": "gasto", "contexto": '{"tipos_factura": [{"codigo": "trucho"}]}'},
+        files={"archivo": ARCHIVO_PDF_FALSO},
+        headers=headers_admin,
+    )
+    assert resp.status_code == 200
+    codigos = [t["codigo"] for t in recibido["tipos_factura"]]
+    assert "factura_interna" in codigos
+    assert "ticket" in codigos
+    assert "trucho" not in codigos
+    assert codigos[-1] == "otros"
 
 
 def test_extraccion_con_error_de_ia_da_502(client, headers_admin, monkeypatch):
@@ -255,3 +285,43 @@ def test_gasto_no_expone_detalle():
     resultado = _validar_y_limpiar(datos, "gasto", {})
 
     assert resultado.detalle == []
+
+
+TIPOS = [
+    {"codigo": "factura_a", "nombre": "Factura A"},
+    {"codigo": "factura_interna", "nombre": "Factura interna"},
+    {"codigo": "otros", "nombre": "Otros"},
+]
+
+
+def test_tipo_factura_de_la_lista_se_acepta():
+    datos = {"tipo_factura": "factura_interna", "advertencias": []}
+
+    resultado = _validar_y_limpiar(datos, "cobro", {}, TIPOS)
+
+    assert resultado.tipo_factura == "factura_interna"
+    assert resultado.advertencias == []
+
+
+def test_tipo_factura_fuera_de_la_lista_se_descarta_aunque_sea_de_fabrica():
+    # "remito" existía en la lista fija vieja; si Agus lo borró, ya no vale.
+    datos = {"tipo_factura": "remito", "advertencias": []}
+
+    resultado = _validar_y_limpiar(datos, "cobro", {}, TIPOS)
+
+    assert resultado.tipo_factura is None
+    assert any("tipo de factura" in a for a in resultado.advertencias)
+
+
+def test_prompt_lista_codigo_y_nombre_de_cada_tipo():
+    prompt = _armar_prompt("cobro", {}, TIPOS)
+
+    assert "factura_interna (Factura interna)" in prompt
+    assert "'otros'" in prompt
+
+
+def test_prompt_sin_otros_pide_null():
+    prompt = _armar_prompt("cobro", {}, TIPOS[:2])
+
+    assert "'otros'" not in prompt
+    assert "null" in prompt

@@ -3,17 +3,22 @@
 Carga inicial de catálogos en producción a partir de las respuestas del
 Google Form de Agus (docs/carga-inicial/FORM_CARGA_INICIAL.gs).
 
-Qué carga (secciones 1 a 5 del form):
+Qué carga (secciones 1 a 6 del form):
     1. Impuestos                 -> POST /impuestos/crear
     2. Categorías de gasto       -> POST /categorias-gasto/crear
     3. Categorías de equipo      -> POST /categorias/crear  (tipo "equipo")
     4. Categorías de materiales  -> POST /categorias/crear  (tipo "materiales")
     5. Categorías de mano de obra-> POST /categorias/crear  (tipo "mano_obra")
+    6. Tipos de comprobante      -> POST /tipos-factura/crear
 
-Qué NO carga (sección 6): tipos de comprobante y condiciones de pago no son
-tablas, son listas fijas en el código (frontend/src/constants/tipoFactura.js y
-estadoCompra.js / ModalCompra.jsx). El script solo avisa si Agus destildó o
-agregó alguno, porque eso es un cambio de código, no de datos.
+Qué NO carga (también sección 6): la pregunta "la condición de pago puede
+ser" del form lista en realidad MEDIOS de pago (contado, cheque,
+transferencia...). Desde oct 2026 los medios son una lista fija en el código
+(frontend/src/constants/medioPago.js) y las condiciones (Contado, 30/60
+días...) las siembra la migración y se arman en Ajustes. El script solo
+avisa si Agus agregó algún medio que la app no tiene, porque eso es un
+cambio de código. Los tipos de comprobante que Agus no tildó tampoco se
+borran: el script nunca borra (se sacan a mano desde Ajustes).
 
 Va por la API (no directo a la base): no hace falta la URL de la base de
 Railway y pasa por las mismas validaciones que la app. El usuario con el que
@@ -39,6 +44,7 @@ import csv
 import getpass
 import http.cookiejar
 import json
+import re
 import sys
 import urllib.error
 import urllib.parse
@@ -65,10 +71,11 @@ PREFIJO_OBSERVACIONES = "observaciones"
 RUBROS = ["Instalación Sanitaria", "Instalación Eléctrica", "Instalación de Aire Acondicionado"]
 OFICIOS = ["Plomero", "Electricista", "Instalador de Caños"]
 
-# Sección 6: lo que hoy tiene el código. Si cambian en el front, cambiar acá
-# y en el .gs.
-TIPOS_FACTURA_CODIGO = ["Factura A", "Factura B", "Factura C", "Remito", "Recibo", "Otros"]
-CONDICIONES_PAGO_CODIGO = ["Contado", "Cuenta corriente", "Cheque", "Transferencia"]
+# Sección 6: los medios de pago que tiene el código (constants/medioPago.js).
+# "Contado" y "Cuenta corriente" del form son condiciones, no medios: se
+# aceptan sin aviso porque ya existen como condición (Contado / plazos).
+MEDIOS_PAGO_CODIGO = ["Efectivo", "Transferencia", "Cheque", "Tarjeta"]
+YA_SON_CONDICIONES = ["Contado", "Cuenta corriente"]
 
 
 # --- Lectura del CSV --------------------------------------------------------
@@ -95,6 +102,35 @@ def buscar_columna(respuesta: dict[str, str], pedazo: str, obligatoria: bool = T
     return ""
 
 
+_DECIMALES = re.compile(r"^\d+\s*%?\s*$")
+
+
+def _unir_decimales(partes: list[str]) -> list[str]:
+    """La coma decimal también es coma: 'IVA 10,5%' llega partido en 'IVA 10'
+    y '5%'. Si un pedazo son sólo dígitos (con % opcional) y el anterior
+    termina en dígito, se vuelven a pegar."""
+    unidas: list[str] = []
+    for parte in partes:
+        if unidas and _DECIMALES.match(parte) and unidas[-1].rstrip()[-1:].isdigit():
+            unidas[-1] = f"{unidas[-1].rstrip()},{parte.strip()}"
+        else:
+            unidas.append(parte)
+    return unidas
+
+
+_IVA = re.compile(r"^\s*i\.?\s*v\.?\s*a\.?\s*(\d+(?:[.,]\d+)?)\s*%?\s*$", re.IGNORECASE)
+
+
+def datos_impuesto(nombre: str) -> dict:
+    """'IVA 21%' / 'IVA 10,5' -> con alícuota y grupo IVA, así la app calcula
+    el monto y en el Análisis suman juntos. Cualquier otro (percepciones,
+    IIBB, 'IVA' a secas) va sólo con nombre: se carga a mano."""
+    encontrado = _IVA.match(nombre)
+    if not encontrado:
+        return {"nombre": nombre}
+    return {"nombre": nombre, "alicuota": float(encontrado.group(1).replace(",", ".")), "grupo": "IVA"}
+
+
 def separar_opciones(valor: str) -> list[str]:
     """'IVA, Percepción de IVA, Tasa municipal' -> lista, sin vacíos ni repetidos.
 
@@ -104,7 +140,7 @@ def separar_opciones(valor: str) -> list[str]:
     """
     vistos: set[str] = set()
     opciones: list[str] = []
-    for parte in valor.split(","):
+    for parte in _unir_decimales(valor.split(",")):
         nombre = " ".join(parte.split())
         if nombre and _clave(nombre) not in vistos:
             vistos.add(_clave(nombre))
@@ -240,30 +276,33 @@ class Api:
 
 def imprimir_plan(plan: dict):
     print("\n== Lo que eligió Agus ==")
-    print(f"Impuestos ({len(plan['impuestos'])}): {', '.join(plan['impuestos']) or '-'}")
+    impuestos = [
+        (
+            f"{n} (calculado al {format(d['alicuota'], 'g').replace('.', ',')} %)"
+            if "alicuota" in (d := datos_impuesto(n))
+            else n
+        )
+        for n in plan["impuestos"]
+    ]
+    print(f"Impuestos ({len(impuestos)}): {', '.join(impuestos) or '-'}")
     print(
         f"Categorías de gasto ({len(plan['categorias_gasto'])}): {', '.join(plan['categorias_gasto']) or '-'}"
     )
     for tipo in ("equipo", "materiales", "mano_obra"):
         nombres = [n for n, t in plan["categorias"] if t == tipo]
         print(f"Categorías de {tipo} ({len(nombres)}): {', '.join(nombres) or '-'}")
+    print(f"Tipos de comprobante ({len(plan['tipos_factura'])}): {', '.join(plan['tipos_factura']) or '-'}")
 
     for nombre, tipo_1, tipo_2 in plan["conflictos"]:
         print(f'  ! "{nombre}" está en {tipo_1} y en {tipo_2}; se carga sólo como {tipo_1}.')
 
     avisos = []
-    for etiqueta, elegidos, codigo in (
-        ("tipo de comprobante", plan["tipos_factura"], TIPOS_FACTURA_CODIGO),
-        ("condición de pago", plan["condiciones_pago"], CONDICIONES_PAGO_CODIGO),
-    ):
-        if not elegidos:
-            continue
-        nuevos, destildados = diferencias_con_codigo(elegidos, codigo)
+    elegidos = plan["condiciones_pago"]
+    if elegidos:
+        nuevos, _ = diferencias_con_codigo(elegidos, MEDIOS_PAGO_CODIGO + YA_SON_CONDICIONES)
         if nuevos:
-            avisos.append(f"Agus agregó {etiqueta}: {', '.join(nuevos)}")
-        if destildados:
-            avisos.append(f"Agus no tildó {etiqueta}: {', '.join(destildados)}")
-    print("\n== Sección 6 (comprobantes y pagos: viven en el código, no se cargan) ==")
+            avisos.append(f"Agus agregó medio de pago: {', '.join(nuevos)}")
+    print("\n== Medios de pago (viven en el código, no se cargan) ==")
     if avisos:
         for a in avisos:
             print(f"  ! {a} -> si lo querés reflejar, es un cambio de código.")
@@ -279,7 +318,7 @@ def imprimir_plan(plan: dict):
 def aplicar(api: Api, plan: dict) -> int:
     errores = 0
     grupos = [
-        ("Impuestos", "/impuestos/", "/impuestos/crear", [({"nombre": n}) for n in plan["impuestos"]]),
+        ("Impuestos", "/impuestos/", "/impuestos/crear", [datos_impuesto(n) for n in plan["impuestos"]]),
         (
             "Categorías de gasto",
             "/categorias-gasto/",
@@ -291,6 +330,12 @@ def aplicar(api: Api, plan: dict) -> int:
             "/categorias/",
             "/categorias/crear",
             [{"nombre": n, "tipo": t} for n, t in plan["categorias"]],
+        ),
+        (
+            "Tipos de comprobante",
+            "/tipos-factura/",
+            "/tipos-factura/crear",
+            [{"nombre": n} for n in plan["tipos_factura"]],
         ),
     ]
     print("\n== Cargando ==")

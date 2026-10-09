@@ -42,7 +42,7 @@ def create_impuesto(
     db: Session = Depends(get_db),
     current_user: models.Usuario = Depends(requiere_admin),
 ):
-    nuevo_impuesto = models.Impuesto(nombre=impuesto.nombre)
+    nuevo_impuesto = models.Impuesto(**impuesto.model_dump())
     try:
         db.add(nuevo_impuesto)
         db.commit()

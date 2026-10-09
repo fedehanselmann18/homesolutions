@@ -8,9 +8,11 @@ Convención por entidad:
 - <Entidad>Out     -> lo que se devuelve (incluye id, timestamps y, donde aplica,
                        relaciones anidadas)
 
-Los campos "tipo select" (estado, tipo_factura, condicion_pago, etc.) se dejan
-como `str` simple, sin Literal/Enum — la validación de esos valores la maneja
-el front, mismo criterio que en los modelos de SQLAlchemy.
+Los campos "tipo select" (estado, condicion_pago, etc.) se dejan como `str`
+simple, sin Literal/Enum — la validación de esos valores la maneja el front,
+mismo criterio que en los modelos de SQLAlchemy. tipo_factura también es
+`str`, pero es el código de un TipoFactura de la base y lo validan las rutas
+(ver app/tipos_factura.py).
 
 TimestampOut: como TODOS los modelos de SQLAlchemy tienen fecha_creacion/
 fecha_actualizacion automáticas (ver TimestampMixin en models.py), TODOS los
@@ -35,7 +37,9 @@ import uuid
 from datetime import date, datetime
 from typing import Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator
+
+from app.tipos_factura import CODIGO_OTROS
 
 # XX-XXXXXXXX-X, con o sin guiones (los grupos son fijos: 2 dígitos de tipo,
 # 8 de DNI/razón social, 1 verificador -- ver _validar_cuit).
@@ -572,6 +576,108 @@ class CategoriaGastoOut(CategoriaGastoBase, TimestampOut):
     id: uuid.UUID
 
 
+def _nombre_tipo_factura_limpio(valor: str | None) -> str | None:
+    """Sin espacios de más, y nunca vacío."""
+    if valor is None:
+        return None
+    limpio = " ".join(valor.split())
+    if not limpio:
+        raise ValueError("El nombre no puede estar vacío")
+    return limpio
+
+
+class TipoFacturaBase(BaseModel):
+    nombre: str = Field(max_length=100)
+
+    _limpiar_nombre = field_validator("nombre")(_nombre_tipo_factura_limpio)
+
+
+class TipoFacturaCreate(TipoFacturaBase):
+    pass
+
+
+class TipoFacturaUpdate(BaseModel):
+    # El código no se edita nunca: sólo el nombre.
+    nombre: str | None = Field(default=None, max_length=100)
+
+    _limpiar_nombre = field_validator("nombre")(_nombre_tipo_factura_limpio)
+
+
+def _dias_ordenados(valor: list[int] | None) -> list[int] | None:
+    """[60, 30, 30] -> [30, 60]. Cada día entre 1 y 365, como mucho 12 plazos."""
+    if valor is None:
+        return None
+    dias = sorted(set(valor))
+    if any(d < 1 or d > 365 for d in dias):
+        raise ValueError("Cada plazo tiene que ser de 1 a 365 días")
+    if len(dias) > 12:
+        raise ValueError("Como mucho 12 plazos")
+    return dias
+
+
+class CondicionPagoBase(BaseModel):
+    nombre: str = Field(max_length=100)
+    # [] = contado (un pago el día de la factura); [30, 60] = mitad y mitad.
+    dias: list[int] = []
+
+    _limpiar_nombre = field_validator("nombre")(_nombre_tipo_factura_limpio)
+    _ordenar_dias = field_validator("dias")(_dias_ordenados)
+
+
+class CondicionPagoCreate(CondicionPagoBase):
+    pass
+
+
+class CondicionPagoUpdate(BaseModel):
+    nombre: str | None = Field(default=None, max_length=100)
+    dias: list[int] | None = None
+
+    _limpiar_nombre = field_validator("nombre")(_nombre_tipo_factura_limpio)
+    _ordenar_dias = field_validator("dias")(_dias_ordenados)
+
+
+class CondicionPagoOut(CondicionPagoBase, TimestampOut):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    orden: int
+    protegido: bool
+
+
+class PlazoPagoOut(TimestampOut):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    compra_id: uuid.UUID | None = None
+    gasto_id: uuid.UUID | None = None
+    numero: int
+    dias: int
+    fecha_vencimiento: date
+    monto: float  # pesos; en USD hereda la cotización de su movimiento
+    pagado: bool
+    fecha_pago: date | None = None
+
+
+class PlazoPagoUpdate(BaseModel):
+    pagado: bool
+    # Sin mandarla: hoy. Sólo cuenta si pagado=True.
+    fecha_pago: date | None = None
+
+
+class TipoFacturaOut(TipoFacturaBase, TimestampOut):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    codigo: str
+    orden: int
+
+    @computed_field
+    @property
+    def protegido(self) -> bool:
+        """«Otros» no se borra: es al que cae la IA."""
+        return self.codigo == CODIGO_OTROS
+
+
 def _nombre_fase_limpio(valor: str | None) -> str | None:
     """Sin espacios de más, y nunca vacío: "  " no es un nombre de fase."""
     if valor is None:
@@ -605,8 +711,22 @@ class FasePredeterminadaOut(FasePredeterminadaBase, TimestampOut):
     orden: int
 
 
+def _grupo_limpio(valor: str | None) -> str | None:
+    """Sin espacios de más; vacío = sin grupo (suma por su nombre)."""
+    if valor is None:
+        return None
+    limpio = " ".join(valor.split())
+    return limpio or None
+
+
 class ImpuestoBase(BaseModel):
     nombre: str
+    # Porcentaje (21 = 21 %). None: el monto se tipea a mano.
+    alicuota: float | None = Field(default=None, gt=0, le=100)
+    # Cómo suma en el Análisis ("IVA"). None: suma por su nombre.
+    grupo: str | None = Field(default=None, max_length=50)
+
+    _limpiar_grupo = field_validator("grupo")(_grupo_limpio)
 
 
 class ImpuestoCreate(ImpuestoBase):
@@ -615,6 +735,10 @@ class ImpuestoCreate(ImpuestoBase):
 
 class ImpuestoUpdate(BaseModel):
     nombre: str | None = None
+    alicuota: float | None = Field(default=None, gt=0, le=100)
+    grupo: str | None = Field(default=None, max_length=50)
+
+    _limpiar_grupo = field_validator("grupo")(_grupo_limpio)
 
 
 class ImpuestoOut(ImpuestoBase, TimestampOut):
@@ -731,7 +855,7 @@ class NotaCompraOut(TimestampOut):
     usuario_id: uuid.UUID
     tipo: str  # "nota_credito" | "nota_debito"
     origen: str | None = None  # "devolucion_producto" | "acuerdo_comercial" | "otro"
-    tipo_factura: str  # SIEMPRE obligatorio (factura A/B/C, remito, recibo, otro)
+    tipo_factura: str  # SIEMPRE obligatorio: código de un TipoFactura
     monto_ars: float
     monto_usd: float  # congelado con la cotización de LA NOTA, no la de su compra
     cotizacion_dolar: float
@@ -748,14 +872,20 @@ class CompraBase(BaseModel):
     precio_neto_ars: float  # se tipea en pesos; el USD lo congela el backend
     tipo_factura: str
     fecha: date
-    condicion_pago: str
-    estado_pago: str  # pendiente/pagado
+    # Cómo se paga (efectivo/transferencia/cheque/tarjeta), opcional.
+    medio_pago: str | None = Field(default=None, max_length=30)
+    # pendiente/pagado. Al crear: "pagado" deja todos los plazos pagados. Al
+    # editar: marca o desmarca todos (el badge de la lista). Después es
+    # derivado de los plazos (ver app/plazos.py).
+    estado_pago: str
     estado_envio: str  # pedido/entregado
 
 
 class CompraCreate(CompraBase, CotizacionCongeladaIn):
     fase_id: uuid.UUID
     proveedor_id: uuid.UUID
+    # Cuándo se paga (arma los plazos). Sin mandarla: Contado.
+    condicion_pago_id: uuid.UUID | None = None
     # CORREGIDO: se saca usuario_id — lo asigna el service desde el JWT (DatosToken.user_id),
     # nunca lo manda el front.
     detalle: list[DetalleCompraCreate] = []  # sus categorías se derivan de acá, no se eligen a mano
@@ -771,7 +901,8 @@ class CompraUpdate(CotizacionCongeladaUpdate):
     precio_neto_ars: float | None = None
     tipo_factura: str | None = None
     fecha: date | None = None
-    condicion_pago: str | None = None
+    condicion_pago_id: uuid.UUID | None = None
+    medio_pago: str | None = Field(default=None, max_length=30)
     estado_pago: str | None = None
     estado_envio: str | None = None
     # El modal de edición manda la compra entera: es un formulario, así que lo
@@ -806,6 +937,9 @@ class CompraOut(CompraBase, CotizacionCongeladaOut, TimestampOut):
     impuestos_aplicados: list[CompraImpuestoOut] = []
     comprobantes: list[ComprobanteCompraOut] = []
     notas: list[NotaCompraOut] = []  # cuenta corriente: notas de crédito/débito
+    condicion_pago_id: uuid.UUID
+    condicion_pago: "CondicionPagoOut"
+    plazos: list["PlazoPagoOut"] = []
 
 
 # ---------------------------------------------------------------------------
@@ -832,6 +966,10 @@ class GastoCreate(GastoBase, CotizacionCongeladaIn):
     fase_id: uuid.UUID | None = None
     # CORREGIDO: se saca usuario_id — lo asigna el service desde el JWT.
     categoria_gasto_ids: list[uuid.UUID] = []
+    # Default Contado y pagado: cargar un flete sigue siendo un paso.
+    condicion_pago_id: uuid.UUID | None = None
+    medio_pago: str | None = Field(default=None, max_length=30)
+    estado_pago: str = "pagado"
 
 
 class GastoUpdate(CotizacionCongeladaUpdate):
@@ -842,6 +980,9 @@ class GastoUpdate(CotizacionCongeladaUpdate):
     fecha: date | None = None
     tipo_factura: str | None = None
     categoria_gasto_ids: list[uuid.UUID] | None = None
+    condicion_pago_id: uuid.UUID | None = None
+    medio_pago: str | None = Field(default=None, max_length=30)
+    estado_pago: str | None = None  # marca o desmarca todos los plazos
 
 
 class GastoOut(GastoBase, CotizacionCongeladaOut, TimestampOut):
@@ -854,6 +995,11 @@ class GastoOut(GastoBase, CotizacionCongeladaOut, TimestampOut):
     usuario_id: uuid.UUID
     categorias: list[CategoriaGastoOut] = []
     comprobantes: list[ComprobanteGastoOut] = []
+    condicion_pago_id: uuid.UUID
+    condicion_pago: "CondicionPagoOut"
+    medio_pago: str | None = None
+    estado_pago: str
+    plazos: list["PlazoPagoOut"] = []
 
 
 # ---------------------------------------------------------------------------

@@ -7,7 +7,7 @@ Cómo funciona:
   desarrollo. Si no existe, la crea sola la primera vez que corrés pytest.
 - Cada test corre DENTRO de una transacción que se rollbackea al terminar,
   así los tests no se pisan entre sí ni dependen del orden en que corren, y
-  no hace falta recrear las tablas en cada test (son las mismas 25 tablas de
+  no hace falta recrear las tablas en cada test (son las mismas tablas de
   siempre, se crean una sola vez por sesión de pytest).
 - El fixture `client` pisa la dependencia get_db de la app para que las
   rutas usen esa misma sesión de test en vez de conectarse a la base real.
@@ -17,7 +17,7 @@ import uuid
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, select
 from sqlalchemy.orm import sessionmaker
 
 from app.auth.oAuth2 import NOMBRE_USUARIO_MANAGER, create_access_token
@@ -53,11 +53,65 @@ def _crear_db_test_si_no_existe():
     admin_engine.dispose()
 
 
+# Lo mismo que siembra la migración b7e3c5a1d9f2. create_all arma el esquema
+# pero no corre migraciones, y sin estos tipos cualquier movimiento choca con
+# la FK de tipo_factura. Se cargan una vez por sesión, fuera de la
+# transacción de cada test: lo que un test cree o borre se rollbackea igual.
+TIPOS_FACTURA_DE_FABRICA = [
+    ("factura_a", "Factura A"),
+    ("factura_b", "Factura B"),
+    ("factura_c", "Factura C"),
+    ("remito", "Remito"),
+    ("recibo", "Recibo"),
+    ("factura_interna", "Factura interna"),
+    ("otros", "Otros"),
+]
+
+
+# Lo mismo que siembra la migración d8b1f4a7c2e9: «Contado» (protegido) es
+# el default de compras y gastos, sin él no se puede crear ninguno.
+CONDICIONES_PAGO_DE_FABRICA = [
+    ("Contado", [], True),
+    ("30 días", [30], False),
+    ("60 días", [60], False),
+    ("90 días", [90], False),
+    ("30/60 días", [30, 60], False),
+    ("30/60/90 días", [30, 60, 90], False),
+    ("30/60/90/120 días", [30, 60, 90, 120], False),
+]
+
+
+def _sembrar_condiciones_pago(engine):
+    with sessionmaker(bind=engine)() as session:
+        existentes = set(session.scalars(select(models.CondicionPago.nombre)))
+        session.add_all(
+            models.CondicionPago(nombre=nombre, dias=dias, orden=orden, protegido=protegido)
+            for orden, (nombre, dias, protegido) in enumerate(CONDICIONES_PAGO_DE_FABRICA, start=1)
+            if nombre not in existentes
+        )
+        session.commit()
+
+
+def _sembrar_tipos_factura(engine):
+    # Idempotente: si una corrida anterior se cortó antes del drop_all, las
+    # tablas (y los tipos) ya están.
+    with sessionmaker(bind=engine)() as session:
+        existentes = set(session.scalars(select(models.TipoFactura.codigo)))
+        session.add_all(
+            models.TipoFactura(codigo=codigo, nombre=nombre, orden=orden)
+            for orden, (codigo, nombre) in enumerate(TIPOS_FACTURA_DE_FABRICA, start=1)
+            if codigo not in existentes
+        )
+        session.commit()
+
+
 @pytest.fixture(scope="session")
 def db_engine():
     _crear_db_test_si_no_existe()
     engine = create_engine(_TEST_DB_URL)
     Base.metadata.create_all(bind=engine)
+    _sembrar_tipos_factura(engine)
+    _sembrar_condiciones_pago(engine)
     yield engine
     Base.metadata.drop_all(bind=engine)
     engine.dispose()

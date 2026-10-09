@@ -86,9 +86,9 @@ def _armar_arbol_completo(db_session, usuario, proveedor):
         precio_neto_usd=100,
         cotizacion_dolar=1000,
         tipo_cambio="blue",
-        tipo_factura="A",
+        tipo_factura="factura_a",
         fecha=date(2026, 1, 1),
-        condicion_pago="contado",
+        medio_pago="efectivo",
         estado_pago="pagado",
         estado_envio="entregado",
     )
@@ -103,7 +103,7 @@ def _armar_arbol_completo(db_session, usuario, proveedor):
         tipo_cambio="blue",
         descripcion="Gasto test",
         fecha=date(2026, 1, 1),
-        tipo_factura="A",
+        tipo_factura="factura_a",
     )
     gasto.comprobantes = [models.ComprobanteGasto(archivo_path="uploads/comprobantes_gasto/g1/b.pdf")]
 
@@ -116,7 +116,7 @@ def _armar_arbol_completo(db_session, usuario, proveedor):
         tipo_cambio="blue",
         descripcion="Cobro test",
         fecha=date(2026, 1, 1),
-        tipo_factura="A",
+        tipo_factura="factura_a",
     )
     cobro.comprobantes = [models.ComprobanteCobro(archivo_path="uploads/comprobantes_cobro/co1/c.pdf")]
 

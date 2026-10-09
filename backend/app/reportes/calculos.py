@@ -140,7 +140,10 @@ def _impuestos_por_tipo(compras: list, m: _Montos) -> list[dict]:
     acumulado: dict[str, float] = {}
     for compra in compras:
         for aplicado in compra.impuestos_aplicados:
-            nombre = aplicado.impuesto.nombre if aplicado.impuesto else "Impuesto"
+            # Por grupo ("IVA" junta IVA 21 e IVA 10,5); sin grupo, por nombre.
+            # Mismo criterio que impuestosPorTipo en el front (utils/analisis.js).
+            impuesto = aplicado.impuesto
+            nombre = (impuesto.grupo or impuesto.nombre) if impuesto else "Impuesto"
             acumulado[nombre] = acumulado.get(nombre, 0.0) + m.impuesto(aplicado)
     return sorted(
         [{"nombre": n, "monto": m_} for n, m_ in acumulado.items()],
