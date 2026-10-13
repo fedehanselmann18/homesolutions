@@ -7,7 +7,8 @@ name: Smoke test post-deploy
 #
 # Variables opcionales (Settings > Secrets and variables > Actions > Variables):
 #   SMOKE_BACKEND_URL   default: https://api.homesolutions.company
-#   SMOKE_FRONTEND_URL  default: https://homesolutions.company
+#   SMOKE_FRONTEND_URL  default: https://www.homesolutions.company (con www: el dominio
+#                       pelado redirige a www y no está en los orígenes de CORS)
 
 on:
   deployment_status:
@@ -30,5 +31,5 @@ jobs:
       - name: Correr smoke test
         env:
           BACKEND: ${{ vars.SMOKE_BACKEND_URL || 'https://api.homesolutions.company' }}
-          FRONTEND: ${{ vars.SMOKE_FRONTEND_URL || 'https://homesolutions.company' }}
+          FRONTEND: ${{ vars.SMOKE_FRONTEND_URL || 'https://www.homesolutions.company' }}
         run: python3 backend/scripts/smoke_test.py --backend "$BACKEND" --frontend "$FRONTEND"

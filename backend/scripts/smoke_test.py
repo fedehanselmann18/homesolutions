@@ -25,7 +25,10 @@ import urllib.error
 import urllib.request
 
 BACKEND_DEFAULT = "https://api.homesolutions.company"
-FRONTEND_DEFAULT = "https://homesolutions.company"
+# Con www: el dominio pelado (homesolutions.company) redirige con un 308 a
+# www, y no está entre los orígenes de CORS del backend -- probar contra él
+# daba 3 FAIL en cada deploy aunque la app anduviera bien.
+FRONTEND_DEFAULT = "https://www.homesolutions.company"
 
 VERDE = "\033[32m"
 ROJO = "\033[31m"
@@ -35,7 +38,10 @@ RESET = "\033[0m"
 def get(url, headers=None):
     req = urllib.request.Request(url, headers=headers or {})
     with urllib.request.urlopen(req, timeout=10) as resp:
-        return resp.status, dict(resp.headers), resp.read()
+        # resp.headers y no dict(resp.headers): el objeto busca sin importar
+        # mayúsculas, el dict no -- y el proxy de Railway manda los headers
+        # en minúsculas ("access-control-allow-origin").
+        return resp.status, resp.headers, resp.read()
 
 
 def chequeo(nombre, fn):
@@ -86,8 +92,8 @@ def main():
             },
         )
         with urllib.request.urlopen(req, timeout=10) as resp:
-            headers = dict(resp.headers)
-        allow_origin = headers.get("Access-Control-Allow-Origin")
+            # Sin dict(): ver el comentario en get().
+            allow_origin = resp.headers.get("Access-Control-Allow-Origin")
         assert allow_origin == frontend, (
             f"Access-Control-Allow-Origin={allow_origin!r}, esperaba {frontend!r} "
             f"-- revisar FRONTEND_ORIGINS en las variables de Railway"
