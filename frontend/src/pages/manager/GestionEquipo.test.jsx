@@ -74,7 +74,7 @@ describe("GestionEquipo (página de Manager)", () => {
 
     await user.click(within(filaDe("Agustin")).getByRole("button", { name: /contraseña/i }));
 
-    await user.type(screen.getByPlaceholderText("Mínimo 8 caracteres"), "clave-larga-ok");
+    await user.type(screen.getByPlaceholderText("Mínimo 10 caracteres"), "clave-larga-ok");
     await user.type(screen.getByPlaceholderText("Repetila"), "clave-larga-ok");
     await user.click(screen.getByRole("button", { name: /cambiar contraseña/i }));
 
@@ -89,10 +89,10 @@ describe("GestionEquipo (página de Manager)", () => {
     await esperarCarga();
 
     await user.click(within(filaDe("Agustin")).getByRole("button", { name: /contraseña/i }));
-    await user.type(screen.getByPlaceholderText("Mínimo 8 caracteres"), "corta12");
-    await user.type(screen.getByPlaceholderText("Repetila"), "corta12");
+    await user.type(screen.getByPlaceholderText("Mínimo 10 caracteres"), "corta-123");
+    await user.type(screen.getByPlaceholderText("Repetila"), "corta-123");
 
-    expect(await screen.findByText(/al menos 8 caracteres/i)).toBeInTheDocument();
+    expect(await screen.findByText(/al menos 10 caracteres/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /cambiar contraseña/i }));
     expect(resetearPasswordUsuario).not.toHaveBeenCalled();

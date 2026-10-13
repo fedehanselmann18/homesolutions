@@ -130,6 +130,7 @@ def test_rate_limit_de_login_bloquea_despues_de_5_intentos_por_minuto(client, us
         data={"username": usuario_admin.nombre_usuario, "password": "no-es-esta"},
     )
     assert respuesta.status_code == 429
+    assert "detail" not in respuesta.json()  # el de slowapi, no el bloqueo por cuenta
 
 
 def test_rate_limit_de_login_no_se_saltea_cambiando_x_forwarded_for(client, usuario_admin):
@@ -150,6 +151,11 @@ def test_rate_limit_de_login_no_se_saltea_cambiando_x_forwarded_for(client, usua
         headers={"X-Forwarded-For": "10.0.0.99, 203.0.113.7"},
     )
     assert respuesta.status_code == 429
+    # Tiene que ser el 429 del límite por IP (slowapi, sin "detail") y no el
+    # del bloqueo por cuenta (app/intentos_login.py), que también salta a los
+    # 5 fallos -- si no, este test pasaría aunque el límite por IP se
+    # salteara cambiando el X-Forwarded-For.
+    assert "detail" not in respuesta.json()
 
 
 # ---------------------------------------------------------------------------

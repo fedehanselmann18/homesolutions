@@ -3,7 +3,7 @@ import { useState } from "react";
 import { KeyRound } from "lucide-react";
 
 import ModalShell, { AccionesFormulario } from "../modals/ModalShell";
-import { validarPassword } from "../../utils/formValidation";
+import { MINIMO_PASSWORD, validarPassword } from "../../utils/formValidation";
 import { ErrorCampo } from "../shared/ErrorCampo";
 import "./Manager.css";
 
@@ -66,7 +66,7 @@ export function ModalResetearPassword({ usuario, guardando, onConfirmar, onCerra
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder="Mínimo 8 caracteres"
+            placeholder={`Mínimo ${MINIMO_PASSWORD} caracteres`}
             className={errorPassword ? "campo--error" : undefined}
             aria-invalid={errorPassword ? true : undefined}
           />

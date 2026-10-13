@@ -1,14 +1,20 @@
+import logging
 import secrets
+from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, Request, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
+from app import intentos_login
+from app.audit import log_auditoria
 from app.auth.exceptions import invalid_login_exception, invalid_token_exception
 from app.auth.oAuth2 import (
     create_access_token,
     create_refresh_token,
     get_refresh_token,
+    refresh_token_revocado,
     resolver_usuario_vigente,
     verify_refresh_token,
 )
@@ -16,8 +22,10 @@ from app.auth.verification import verify_password
 from app.config import settings
 from app.db import models
 from app.db.db import get_db
-from app.limiter import limiter
+from app.limiter import ip_del_cliente, limiter
 from app.schemas import RespuestaLogin
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -81,6 +89,19 @@ def _setear_cookies_sesion(response: Response, access_token: str) -> None:
     )
 
 
+def _cuenta_bloqueada(minutos: int) -> HTTPException:
+    """
+    429 con un detail en castellano que el front muestra tal cual (ver
+    Login.jsx). El 429 del límite por IP de slowapi no trae "detail", así
+    que ahí el front cae a su mensaje genérico de "demasiados intentos".
+    """
+    espera = "1 minuto" if minutos == 1 else f"{minutos} minutos"
+    return HTTPException(
+        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+        detail=f"Demasiados intentos fallidos con esta cuenta. Probá de nuevo en {espera}.",
+    )
+
+
 @router.post("/login", response_model=RespuestaLogin, status_code=status.HTTP_200_OK)
 @limiter.limit("5/minute")
 def login(
@@ -91,9 +112,22 @@ def login(
 ):
 
     user = db.query(models.Usuario).filter(models.Usuario.nombre_usuario == user_credentials.username).first()
+    ip = ip_del_cliente(request)
 
     if not user:
+        # Solo al log del servidor: intentos_login/auditoria cuelgan de una
+        # cuenta real, y anotar nombres inventados le dejaría a cualquiera
+        # llenar esas tablas. Acá alcanza el límite por IP del decorador.
+        logger.warning("Login fallido con usuario inexistente desde %s", ip)
         raise invalid_login_exception
+
+    # Bloqueo por cuenta (ver app/intentos_login.py): se corta ANTES de
+    # verify_password. Si se chequeara la contraseña durante el bloqueo, el
+    # atacante seguiría probando igual y el bloqueo no frenaría nada.
+    minutos_bloqueo = intentos_login.minutos_de_bloqueo(db, user.id)
+    if minutos_bloqueo is not None:
+        logger.warning("Login rechazado por bloqueo: cuenta %s, ip %s", user.nombre_usuario, ip)
+        raise _cuenta_bloqueada(minutos_bloqueo)
 
     # OJO con el orden: verify_password se llama SIEMPRE, incluso si la
     # cuenta está desactivada, y recién después se combinan los dos
@@ -104,10 +138,25 @@ def login(
     # desactivadas sin conocer ninguna contraseña.
     password_ok = verify_password(user_credentials.password, user.hashed_password)
 
+    if not password_ok:
+        fallidos, minutos_bloqueo = intentos_login.registrar_fallo(db, user.id)
+        # A la auditoría (la ve Manager): usuario_id es la cuenta ATACADA, no
+        # quien probó -- de ese solo se sabe la IP.
+        log_auditoria(
+            db,
+            user.id,
+            "login fallido",
+            "Sesion",
+            user.id,
+            detalle={"ip": ip, "fallidos": fallidos, "bloqueo_minutos": minutos_bloqueo},
+        )
+
     if not password_ok or not user.activo:
         # Mismo error genérico de siempre: no se revela si falló por la
         # contraseña o porque la cuenta está desactivada.
         raise invalid_login_exception
+
+    intentos_login.limpiar(db, user.id)
 
     access_token = create_access_token(data={"user_id": str(user.id)})
     _setear_cookies_sesion(response, access_token)
@@ -150,6 +199,8 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_db))
     """
     refresh_token = get_refresh_token(request)
     token_data = verify_refresh_token(refresh_token, invalid_token_exception)
+    if refresh_token_revocado(db, token_data.jti):
+        raise invalid_token_exception
     user = resolver_usuario_vigente(token_data, db, invalid_token_exception)
 
     access_token = create_access_token(data={"user_id": str(user.id)})
@@ -158,8 +209,39 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_db))
     return {"message": "Token renovado"}
 
 
+def _revocar_refresh_token(request: Request, db: Session) -> None:
+    """
+    Da de baja el refresh token de la cookie (si hay uno válido): sin esto,
+    cerrar sesión solo borraba la cookie del browser y una copia robada del
+    token seguía sirviendo hasta vencer. Solo ESTE token -- las sesiones de
+    la persona en otros dispositivos siguen abiertas.
+
+    De paso limpia las filas ya vencidas: pasado su "exp" el token no sirve
+    de todos modos, así que la tabla no crece sin techo.
+    """
+    token = request.cookies.get("refresh_token")
+    if not token:
+        return
+    try:
+        token_data = verify_refresh_token(token, invalid_token_exception)
+    except Exception:
+        # Token vencido, adulterado o con un formato que PyJWT no esperaba:
+        # no hay nada que revocar, y el logout tiene que borrar las cookies
+        # igual -- nunca puede fallar por una cookie rota.
+        return
+
+    tabla = models.RefreshTokenRevocado.__table__
+    db.execute(insert(tabla).values(jti=token_data.jti, expira_en=token_data.exp).on_conflict_do_nothing())
+    db.query(models.RefreshTokenRevocado).filter(
+        models.RefreshTokenRevocado.expira_en < datetime.now(timezone.utc)
+    ).delete(synchronize_session=False)
+    db.commit()
+
+
 @router.post("/logout", status_code=status.HTTP_200_OK)
-def logout(response: Response):
+def logout(request: Request, response: Response, db: Session = Depends(get_db)):
+    _revocar_refresh_token(request, db)
+
     # secure/samesite/domain/path tienen que coincidir con los que se
     # usaron al crearlas -- si no, en algunos browsers el Set-Cookie de
     # borrado no pisa la cookie original y queda viva hasta que expire sola.

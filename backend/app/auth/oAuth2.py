@@ -1,3 +1,4 @@
+import secrets
 from datetime import datetime, timedelta, timezone
 
 import jwt
@@ -84,8 +85,14 @@ def create_refresh_token(data: dict) -> str:
     token se pueda usar como si fuera un access token en una ruta protegida
     (y viceversa): verify_access_token/verify_refresh_token chequean cada
     uno el tipo que esperan.
+
+    El "jti" (id único por token) es lo que permite dar de baja ESTE refresh
+    token en /auth/logout sin tocar las otras sesiones de la persona (ver
+    models.RefreshTokenRevocado).
     """
-    return _crear_token(data, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS), "refresh")
+    return _crear_token(
+        {**data, "jti": secrets.token_urlsafe(16)}, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS), "refresh"
+    )
 
 
 def _verificar_token(token: str, tipo_esperado: str, credentials_exception) -> DatosToken:
@@ -101,7 +108,13 @@ def _verificar_token(token: str, tipo_esperado: str, credentials_exception) -> D
         if id is None or iat is None:
             raise credentials_exception
 
-        token_data = DatosToken(user_id=id, iat=datetime.fromtimestamp(iat, tz=timezone.utc))
+        exp = decoded_token.get("exp")
+        token_data = DatosToken(
+            user_id=id,
+            iat=datetime.fromtimestamp(iat, tz=timezone.utc),
+            jti=decoded_token.get("jti"),
+            exp=datetime.fromtimestamp(exp, tz=timezone.utc) if exp is not None else None,
+        )
 
     except PyJWTError:
         raise credentials_exception
@@ -114,7 +127,19 @@ def verify_access_token(token: str, credentials_exception) -> DatosToken:
 
 
 def verify_refresh_token(token: str, credentials_exception) -> DatosToken:
-    return _verificar_token(token, "refresh", credentials_exception)
+    """
+    Además de firma/tipo/vencimiento, exige "jti": sin él no hay forma de
+    revocarlo en el logout. Los refresh tokens emitidos antes de que existiera
+    el claim dejan de servir -- cada persona se vuelve a loguear una vez.
+    """
+    token_data = _verificar_token(token, "refresh", credentials_exception)
+    if not token_data.jti or token_data.exp is None:
+        raise credentials_exception
+    return token_data
+
+
+def refresh_token_revocado(db: Session, jti: str) -> bool:
+    return db.get(models.RefreshTokenRevocado, jti) is not None
 
 
 def _registrar_actividad_si_corresponde(db: Session, user: models.Usuario) -> None:

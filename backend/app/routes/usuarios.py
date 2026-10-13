@@ -3,6 +3,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app import intentos_login
 from app.audit import log_auditoria
 from app.auth.oAuth2 import NOMBRE_USUARIO_MANAGER, get_current_user, requiere_manager
 from app.auth.verification import hash_password
@@ -431,6 +432,10 @@ def resetear_password(
     usuario.hashed_password = hash_password(datos.password)
     db.commit()
     db.refresh(usuario)
+    # Con la contraseña nueva, los fallos viejos ya no dicen nada: se
+    # destraba la cuenta si estaba bloqueada (ver app/intentos_login.py).
+    # Es la forma de sacar a alguien de un bloqueo sin esperar.
+    intentos_login.limpiar(db, usuario.id)
 
     _log_accion_manager(db, current_user, "resetear contraseña", usuario.nombre_usuario, usuario.id)
     return usuario

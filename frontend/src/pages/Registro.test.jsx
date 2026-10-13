@@ -81,9 +81,9 @@ describe("Registro", () => {
 
     await screen.findByRole("option", { name: "Agustin" });
     await user.selectOptions(screen.getByRole("combobox"), "Agustin");
-    await completarPasswords(user, "corta12");
+    await completarPasswords(user, "corta-123");
 
-    expect(await screen.findByText(/al menos 8 caracteres/i)).toBeInTheDocument();
+    expect(await screen.findByText(/al menos 10 caracteres/i)).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: /crear cuenta/i }));
     expect(crearUsuario).not.toHaveBeenCalled();

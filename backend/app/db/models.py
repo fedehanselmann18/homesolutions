@@ -127,6 +127,48 @@ class UsuarioAutorizado(TimestampMixin, Base):
     rol: Mapped[str] = mapped_column(String(20), nullable=False)  # "admin" | "lectura"
 
 
+class IntentoLogin(Base):
+    """
+    Logins fallidos seguidos de cada cuenta y hasta cuándo está bloqueada
+    (ver app/intentos_login.py): el freno contra fuerza bruta POR CUENTA, que
+    complementa el límite por IP de slowapi.
+
+    Tabla aparte y no columnas en usuarios, a propósito: cualquier UPDATE a
+    la fila del usuario dispara onupdate de fecha_actualizacion, que es el
+    reloj de revocación de sesión (B-06) -- un atacante probando contraseñas
+    desloguearía a la persona real en cada intento. Acá eso no puede pasar.
+
+    Sin TimestampMixin por lo mismo que Auditoria: las fechas que importan son
+    las propias (ultimo_fallo, bloqueado_hasta), no las de la fila.
+    """
+
+    __tablename__ = "intentos_login"
+
+    usuario_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("usuarios.id", ondelete="CASCADE"), primary_key=True
+    )
+    fallidos: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
+    ultimo_fallo: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    bloqueado_hasta: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
+class RefreshTokenRevocado(Base):
+    """
+    Refresh tokens dados de baja con /auth/logout, por su claim "jti" (ver
+    auth/oAuth2.py). Sin esto, cerrar sesión solo borraba la cookie del
+    browser: una copia robada del token seguía sirviendo hasta vencer (7 días).
+
+    Lista negra y no lista blanca de sesiones: solo crece con los logouts, y
+    las filas vencidas se limpian solas en el próximo logout (expira_en =
+    el "exp" del token; pasado eso el token ya no sirve de todos modos).
+    """
+
+    __tablename__ = "refresh_tokens_revocados"
+
+    jti: Mapped[str] = mapped_column(String(64), primary_key=True)
+    expira_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
+
+
 # ---------------------------------------------------------------------------
 # Auditoría
 # ---------------------------------------------------------------------------

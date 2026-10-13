@@ -101,11 +101,22 @@ class DatosToken(BaseModel):
     # auth/oAuth2.py (B-06): un token con iat anterior a la última
     # modificación del usuario se trata como inválido.
     iat: Optional[datetime] = None
+    # Solo los refresh tokens: id único (claim "jti") y vencimiento (claim
+    # "exp"), para poder darlos de baja uno por uno en /auth/logout (ver
+    # models.RefreshTokenRevocado).
+    jti: Optional[str] = None
+    exp: Optional[datetime] = None
 
 
 # ---------------------------------------------------------------------------
 # Usuario
 # ---------------------------------------------------------------------------
+
+
+# Largo mínimo de contraseña al crear la cuenta o al resetearla. Las cuentas
+# ya creadas con menos siguen entrando: la regla solo mira contraseñas nuevas.
+# Espejo en el front: MINIMO_PASSWORD de utils/formValidation.js.
+MINIMO_PASSWORD = 10
 
 
 class UsuarioBase(BaseModel):
@@ -127,8 +138,8 @@ class UsuarioCreate(UsuarioBase):
     @field_validator("password")
     @classmethod
     def password_minima(cls, valor: str) -> str:
-        if len(valor) < 8:
-            raise ValueError("La contraseña tiene que tener al menos 8 caracteres")
+        if len(valor) < MINIMO_PASSWORD:
+            raise ValueError(f"La contraseña tiene que tener al menos {MINIMO_PASSWORD} caracteres")
         return valor
 
 
@@ -136,7 +147,7 @@ class UsuarioResetPassword(BaseModel):
     """
     Body de POST /usuarios/{user_id}/resetear-password: solo la contraseña
     nueva, que escribe a mano la cuenta "Manager" (ver requiere_manager en
-    auth/oAuth2.py). Mismo mínimo de 8 caracteres que al crear la cuenta.
+    auth/oAuth2.py). Mismo mínimo (MINIMO_PASSWORD) que al crear la cuenta.
     """
 
     password: str
@@ -144,8 +155,8 @@ class UsuarioResetPassword(BaseModel):
     @field_validator("password")
     @classmethod
     def password_minima(cls, valor: str) -> str:
-        if len(valor) < 8:
-            raise ValueError("La contraseña tiene que tener al menos 8 caracteres")
+        if len(valor) < MINIMO_PASSWORD:
+            raise ValueError(f"La contraseña tiene que tener al menos {MINIMO_PASSWORD} caracteres")
         return valor
 
 
