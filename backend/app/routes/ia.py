@@ -1,4 +1,6 @@
+import io
 import json
+import zipfile
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile, status
@@ -8,7 +10,7 @@ from app.auth.oAuth2 import requiere_admin
 from app.configuracion import obtener_valor
 from app.db import models
 from app.db.db import get_db
-from app.files.storage import contenido_coincide_con_extension
+from app.files.storage import contenido_coincide_con_extension, tamanio_de
 from app.ia.catalogo import LecturaCatalogoError, leer_catalogo
 from app.ia.extractor import ExtraccionIAError, extraer_comprobante
 from app.limiter import limiter
@@ -39,6 +41,42 @@ MIME_POR_EXTENSION_CATALOGO = {
     ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     ".csv": "text/csv",
 }
+
+
+# Un .xlsx es un .zip: 10MB comprimidos pueden ser gigas al abrirlo (zip
+# bomb), y pandas/openpyxl lo descomprimen entero en memoria. Ninguna lista
+# de precios real se acerca a esto.
+TAMANIO_MAXIMO_XLSX_DESCOMPRIMIDO = 50 * 1024 * 1024
+ENTRADAS_MAXIMAS_XLSX = 1000
+
+
+async def _leer_archivo_con_tope(archivo: UploadFile) -> bytes:
+    """Rechaza por tamaño ANTES de leer (ver tamanio_de) y recién ahí lo carga."""
+    if tamanio_de(archivo) > TAMANIO_MAXIMO_BYTES:
+        raise HTTPException(status_code=400, detail="El archivo supera los 10MB")
+    return await archivo.read()
+
+
+def _validar_xlsx_descomprimido(contenido: bytes) -> None:
+    """
+    Mira el índice del zip sin descomprimir nada. Los tamaños del índice los
+    escribe quien arma el archivo, pero zipfile (que es lo que usa openpyxl)
+    no lee más de lo que declara cada entrada, así que son un tope real.
+    """
+    try:
+        with zipfile.ZipFile(io.BytesIO(contenido)) as zip_xlsx:
+            entradas = zip_xlsx.infolist()
+    except zipfile.BadZipFile:
+        raise HTTPException(status_code=400, detail="El archivo no es un Excel válido")
+
+    if (
+        len(entradas) > ENTRADAS_MAXIMAS_XLSX
+        or sum(entrada.file_size for entrada in entradas) > TAMANIO_MAXIMO_XLSX_DESCOMPRIMIDO
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail="El Excel es demasiado grande para leerlo. Probá con una planilla más chica.",
+        )
 
 
 @router.post(
@@ -79,9 +117,7 @@ async def extraer_comprobante_endpoint(
     if ext not in EXTENSIONES_PERMITIDAS:
         raise HTTPException(status_code=400, detail=f"Extensión no permitida: {ext}")
 
-    contenido = await archivo.read()
-    if len(contenido) > TAMANIO_MAXIMO_BYTES:
-        raise HTTPException(status_code=400, detail="El archivo supera los 10MB")
+    contenido = await _leer_archivo_con_tope(archivo)
     if not contenido_coincide_con_extension(contenido, ext):
         raise HTTPException(status_code=400, detail="El contenido del archivo no coincide con su extensión")
 
@@ -148,13 +184,13 @@ async def leer_catalogo_endpoint(
     if ext not in EXTENSIONES_PERMITIDAS_CATALOGO:
         raise HTTPException(status_code=400, detail=f"Extensión no permitida: {ext}")
 
-    contenido = await archivo.read()
-    if len(contenido) > TAMANIO_MAXIMO_BYTES:
-        raise HTTPException(status_code=400, detail="El archivo supera los 10MB")
+    contenido = await _leer_archivo_con_tope(archivo)
     # .csv es texto plano, no tiene magic bytes confiables para validar --
     # el resto (incluido .xlsx, que es un .zip) sí los tiene.
     if ext != ".csv" and not contenido_coincide_con_extension(contenido, ext):
         raise HTTPException(status_code=400, detail="El contenido del archivo no coincide con su extensión")
+    if ext == ".xlsx":
+        _validar_xlsx_descomprimido(contenido)
 
     try:
         contexto_dict = json.loads(contexto)

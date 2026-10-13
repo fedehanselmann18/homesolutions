@@ -14,7 +14,10 @@ Middlewares chicos, agrupados acá para no ensuciar main.py:
    X-CSRF-Token, el mismo valor que el server puso en la cookie csrf_token
    (legible por JS a propósito, a diferencia de access_token).
 
-3. UnhandledExceptionMiddleware: red de seguridad para bugs/fallos no
+3. LimiteTamanioRequestMiddleware: rechaza requests con un body más grande
+   de lo que la app acepta, antes de leerlo (ver la clase).
+
+4. UnhandledExceptionMiddleware: red de seguridad para bugs/fallos no
    anticipados (ej. la DB se cae a mitad de un request). Sin esto, una
    excepción que se escapa de una ruta la agarra Starlette con su
    ServerErrorMiddleware, que es MÁS externo que CORSMiddleware (ver el
@@ -68,13 +71,18 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 class CSRFMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         if request.method in MUTATING_METHODS and request.url.path not in CSRF_EXEMPT_PATHS:
-            tiene_auth_header = bool(request.headers.get("authorization"))
+            # Tiene que ser "Bearer ...", no cualquier Authorization: get_token
+            # (auth/oAuth2.py) ignora los otros esquemas (Basic, etc.) y cae a
+            # la cookie -- si acá alcanzara con que el header exista, un
+            # "Authorization: Basic x" salteaba el CSRF y autenticaba igual
+            # con la cookie.
+            tiene_bearer = request.headers.get("authorization", "").lower().startswith("bearer ")
             tiene_cookie_sesion = bool(request.cookies.get("access_token"))
 
             # Solo exigimos CSRF si la sesión viaja por cookie. Un cliente que
-            # ya manda su propio Authorization header (ej. tests, un futuro
-            # cliente mobile) no depende de que el browser adjunte nada solo.
-            if tiene_cookie_sesion and not tiene_auth_header:
+            # ya manda su propio token Bearer (ej. tests, un futuro cliente
+            # mobile) no depende de que el browser adjunte nada solo.
+            if tiene_cookie_sesion and not tiene_bearer:
                 csrf_cookie = request.cookies.get("csrf_token")
                 csrf_header = request.headers.get("x-csrf-token")
                 if not csrf_cookie or not csrf_header or csrf_cookie != csrf_header:
@@ -83,6 +91,34 @@ class CSRFMiddleware(BaseHTTPMiddleware):
                         content={"detail": "Token CSRF inválido o faltante"},
                     )
 
+        return await call_next(request)
+
+
+# Lo más grande que la app acepta es un archivo de 10MB (comprobantes y
+# lecturas con IA, ver files/storage.py) más los campos del form: 12MB deja
+# margen para el encoding multipart sin habilitar nada que no se use.
+TAMANIO_MAXIMO_REQUEST = 12 * 1024 * 1024
+
+
+class LimiteTamanioRequestMiddleware(BaseHTTPMiddleware):
+    """
+    Corta con 413 un request que declara un Content-Length más grande que
+    TAMANIO_MAXIMO_REQUEST, ANTES de leer el body. Sin esto el servidor
+    recibía (y spooleaba a disco) el archivo entero, del tamaño que fuera, y
+    recién después la ruta se fijaba si pasaba los 10MB.
+
+    Los browsers siempre mandan Content-Length al subir un FormData. Un
+    request sin ese header (chunked) pasa de largo y lo frenan los chequeos de
+    tamaño de cada ruta, como antes.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        largo = request.headers.get("content-length")
+        if largo is not None and largo.isdigit() and int(largo) > TAMANIO_MAXIMO_REQUEST:
+            return JSONResponse(
+                status_code=413,
+                content={"detail": "El archivo es demasiado grande (máximo 10MB)."},
+            )
         return await call_next(request)
 
 

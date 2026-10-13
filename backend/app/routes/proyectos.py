@@ -1,3 +1,7 @@
+import re
+import unicodedata
+from urllib.parse import quote
+
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload
@@ -178,9 +182,23 @@ def get_reporte_pdf_proyecto(
     )
     pdf_bytes = generar_pdf_proyecto(proyecto, fases, gastos, cobros, compras, reporte, cotizacion)
 
-    nombre_archivo = f"reporte-{proyecto.nombre}.pdf".replace(" ", "-").replace("/", "-")
     return Response(
         content=pdf_bytes,
         media_type="application/pdf",
-        headers={"Content-Disposition": f'attachment; filename="{nombre_archivo}"'},
+        headers={"Content-Disposition": _content_disposition(f"reporte-{proyecto.nombre}.pdf")},
     )
+
+
+def _content_disposition(nombre_archivo: str) -> str:
+    """
+    Los headers HTTP viajan en latin-1: un nombre de obra con "—" (el guion
+    largo que mete el autocorrector del celu), "€" o un emoji tiraba un 500
+    al armar la respuesta, y unas comillas en el nombre cortaban el header.
+    Va en las dos formas del RFC 6266: filename= en ASCII pelado para
+    clientes viejos, y filename*= en UTF-8 con el nombre real, que es el que
+    usan los browsers.
+    """
+    nombre = re.sub(r"[\s/\\]+", "-", nombre_archivo)
+    ascii_plano = unicodedata.normalize("NFKD", nombre).encode("ascii", "ignore").decode("ascii")
+    ascii_plano = re.sub(r"[^A-Za-z0-9._-]", "", ascii_plano) or "reporte.pdf"
+    return f"attachment; filename=\"{ascii_plano}\"; filename*=UTF-8''{quote(nombre, safe='')}"

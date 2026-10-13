@@ -24,6 +24,7 @@ from __future__ import annotations
 import io
 from datetime import date, datetime
 from pathlib import Path
+from xml.sax.saxutils import escape
 
 from reportlab.graphics.charts.barcharts import HorizontalBarChart, VerticalBarChart
 from reportlab.graphics.charts.piecharts import Pie
@@ -618,10 +619,16 @@ def generar_pdf_proyecto(
 
     story = []
 
-    story.append(Paragraph(proyecto.nombre, estilos["titulo"]))
+    # Paragraph interpreta marcado tipo HTML (<b>, <img src=...>, &...): un
+    # texto que cargó el usuario va SIEMPRE escapado. Sin esto, una obra
+    # llamada "Lote <3" rompía el PDF (500), y un <img src="http://..."> en
+    # el nombre hacía que el backend saliera a buscar esa URL (SSRF) o leyera
+    # imágenes del disco del servidor. Las tablas y los gráficos no hacen
+    # falta: Table con strings y String de los Drawing no interpretan marcado.
+    story.append(Paragraph(escape(proyecto.nombre), estilos["titulo"]))
     story.append(
         Paragraph(
-            f"{proyecto.direccion} · Inicio: {formato_fecha(proyecto.fecha_inicio)} · "
+            f"{escape(proyecto.direccion or '')} · Inicio: {formato_fecha(proyecto.fecha_inicio)} · "
             f"Estado: {proyecto.estado.replace('_', ' ').capitalize()}",
             estilos["subtitulo"],
         )

@@ -113,6 +113,20 @@ def reset_bucket_client() -> None:
         _bucket_client_instance = None
 
 
+def tamanio_de(archivo: UploadFile) -> int:
+    """
+    Tamaño real del archivo subido, sin leerlo a memoria: FastAPI ya lo dejó
+    en un archivo temporal (en RAM si es chico, en disco si es grande), así
+    que alcanza con ir al final y preguntar la posición. Deja el puntero al
+    inicio. Hay que usarlo ANTES de archivo.read(): leer primero y medir
+    después cargaba el archivo entero en memoria, del tamaño que fuera.
+    """
+    archivo.file.seek(0, 2)
+    tamanio = archivo.file.tell()
+    archivo.file.seek(0)
+    return tamanio
+
+
 def _validar(archivo: UploadFile) -> str:
     """Chequeos comunes a ambos backends: extensión, tamaño y contenido real
     (magic bytes). Lee SOLO los primeros BYTES_FIRMA bytes para el chequeo de
@@ -124,10 +138,7 @@ def _validar(archivo: UploadFile) -> str:
     if ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(status_code=400, detail=f"Extensión no permitida: {ext}")
 
-    archivo.file.seek(0, 2)
-    tamaño = archivo.file.tell()
-    archivo.file.seek(0)
-    if tamaño > MAX_SIZE_BYTES:
+    if tamanio_de(archivo) > MAX_SIZE_BYTES:
         raise HTTPException(status_code=400, detail="El archivo supera los 10MB")
 
     firma = archivo.file.read(BYTES_FIRMA)

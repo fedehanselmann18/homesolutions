@@ -10,6 +10,7 @@ puras de app.ia.catalogo, sin mock.
 
 import io
 import uuid
+import zipfile
 
 from app.ia.catalogo import LecturaCatalogoError, _validar_y_limpiar
 
@@ -56,8 +57,12 @@ def test_xlsx_es_una_extension_permitida(client, headers_admin, monkeypatch):
         "leer_catalogo",
         lambda **kwargs: schemas.IALecturaCatalogo(),
     )
-    # Firma real de .xlsx (es un .zip) -- si no, contenido_coincide_con_extension lo rechaza.
-    archivo = ("catalogo.xlsx", io.BytesIO(b"PK\x03\x04 contenido falso"), "application/vnd.ms-excel")
+    # Un .zip de verdad (un .xlsx lo es): la firma sola ya no alcanza, porque
+    # antes de leerlo se revisa el índice del zip (ver _validar_xlsx_descomprimido).
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, "w") as zip_xlsx:
+        zip_xlsx.writestr("xl/workbook.xml", "<workbook/>")
+    archivo = ("catalogo.xlsx", io.BytesIO(buffer.getvalue()), "application/vnd.ms-excel")
     resp = client.post(
         "/ia/leer-catalogo",
         data={"contexto": "{}"},

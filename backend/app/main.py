@@ -36,7 +36,12 @@ from app.routes import (
     tipos_factura,
     usuarios,
 )
-from app.security_middleware import CSRFMiddleware, SecurityHeadersMiddleware, UnhandledExceptionMiddleware
+from app.security_middleware import (
+    CSRFMiddleware,
+    LimiteTamanioRequestMiddleware,
+    SecurityHeadersMiddleware,
+    UnhandledExceptionMiddleware,
+)
 
 logging.basicConfig(
     level=logging.INFO,
@@ -103,6 +108,9 @@ async def manejador_error_validacion(request: Request, exc: RequestValidationErr
 # SecurityHeaders/CORS como cualquier response común.
 app.add_middleware(UnhandledExceptionMiddleware)
 app.add_middleware(SlowAPIMiddleware)
+# Adentro de CORS (como CSRF): un 413 que corta acá vuelve igual por CORS y el
+# browser lo ve como 413 y no como "bloqueado por CORS".
+app.add_middleware(LimiteTamanioRequestMiddleware)
 app.add_middleware(CSRFMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
