@@ -35,7 +35,6 @@ export function CashFlow() {
     <div className="pagina-cashflow">
       <PageHeader
         titulo="Cash flow"
-        subtitulo="La plata que entró y salió de verdad, y lo que vence en todas las obras."
       />
       {cargando ? (
         <Cargando texto="Cargando el cash flow..." />

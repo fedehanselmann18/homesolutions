@@ -107,7 +107,6 @@ export function Catalogos() {
     <div className="catalogos">
       <PageHeader
         titulo="Ajustes"
-        subtitulo="Impuestos, categorías, tipos de factura, condiciones de pago, cotizaciones del dólar y fases que se usan al cargar obras, compras, gastos y cobros."
       />
 
       <Tabs tabs={tabs} activa={tabActiva} onCambiar={setTabActiva} etiqueta="Ajustes" />
@@ -125,8 +124,7 @@ export function Catalogos() {
           detalle={detalleImpuesto}
           textos={{
             singular: "impuesto",
-            descripcion:
-              "Se aplican a las compras (IVA, percepciones, etc.). Con alícuota, el monto se calcula solo; los del mismo grupo suman juntos en el Análisis.",
+            descripcion: "Agregar un impuesto",
             nuevo: "Nuevo impuesto",
             creado: "Impuesto creado.",
             tituloNuevo: "Nuevo impuesto",
@@ -150,7 +148,7 @@ export function Catalogos() {
           icono={Receipt}
           textos={{
             singular: "categoría de gasto",
-            descripcion: "Clasifican los gastos de cada obra (flete, viáticos, etc.).",
+            descripcion: "Agregar una categoría de gasto",
             nuevo: "Nueva categoría",
             creado: "Categoría de gasto creada.",
             tituloNuevo: "Nueva categoría de gasto",
@@ -177,8 +175,7 @@ export function Catalogos() {
           icono={FileText}
           textos={{
             singular: "tipo de factura",
-            descripcion:
-              "El comprobante de cada compra, gasto, cobro y nota (Factura A, Remito…). Uno nuevo va al final, antes de «Otros». «Otros» no se borra, y uno que ya tiene movimientos tampoco.",
+            descripcion: "Agregar un tipo de factura",
             nuevo: "Nuevo tipo",
             creado: "Tipo de factura creado.",
             tituloNuevo: "Nuevo tipo de factura",
@@ -207,8 +204,7 @@ export function Catalogos() {
           detalle={(condicion) => describirDias(condicion.dias)}
           textos={{
             singular: "condición de pago",
-            descripcion:
-              "Cuándo se paga una compra o un gasto. 30/60 = mitad a 30 días y mitad a 60, contados desde la fecha de la factura. «Contado» no se borra, y una que ya usaste tampoco.",
+            descripcion: "Agregar una condición de pago",
             nuevo: "Nueva condición",
             creado: "Condición de pago creada.",
             tituloNuevo: "Nueva condición de pago",
@@ -233,7 +229,7 @@ export function Catalogos() {
           icono={Tag}
           textos={{
             singular: "categoría de producto",
-            descripcion: "Clasifican los productos de los proveedores.",
+            descripcion: "Agregar una categoría de producto",
             nuevo: "Nueva categoría",
             creado: "Categoría de producto creada.",
             tituloEliminar: "Eliminar categoría de producto",
@@ -257,8 +253,7 @@ export function Catalogos() {
           icono={Layers}
           textos={{
             singular: "fase predeterminada",
-            descripcion:
-              "Las opciones del nombre al crear una fase, en este orden. Una nueva va al final. Cambiarlas o borrarlas no toca las fases ya creadas, y siempre se puede escribir un nombre a mano.",
+            descripcion: "Agregar una fase predeterminada",
             nuevo: "Nueva fase",
             creado: "Fase predeterminada creada.",
             tituloNuevo: "Nueva fase predeterminada",

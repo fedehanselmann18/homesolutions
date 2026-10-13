@@ -33,13 +33,10 @@ const nombreMes = (mes) => {
 };
 
 /**
- * Cash flow (general o de una obra): lo que entró y salió de verdad y lo
- * que vence (ver utils/cashflow.js). Un plazo sin pagar nunca cuenta como
- * salida. Arriba los KPIs; abajo la vista por mes (real + proyectado) o por
- * semana (lo que vence en las próximas 8), y la lista de vencimientos.
- *
- * Recibe los datos ya cargados: la página general pasa todo, la pestaña de
- * una obra sólo lo de esa obra (`mostrarObra=false` saca la columna Obra).
+ * Cash flow (general o por obra): ingresos/egresos reales y vencimientos
+ * (ver utils/cashflow.js). Un plazo sin pagar no computa como egreso.
+ * KPIs arriba; vista por mes (real + proyección) o semana; lista de vencimientos.
+ * `mostrarObra=false` oculta la columna Obra (pestaña de proyecto).
  */
 export function CashFlow({
   compras = [],
@@ -103,16 +100,16 @@ export function CashFlow({
 
       {vista === "mes" ? (
         <Seccion
-          titulo="Mes a mes"
-          descripcion="Lo que entró y salió de verdad, y lo que vence. Los meses que vienen son proyección: suponen que se paga cada plazo en su fecha (lo vencido, este mes)."
+          titulo="Evolución mensual"
+          descripcion="Ingresos y egresos reales + proyección de vencimientos. Meses futuros: vencimientos a su fecha (vencidos al mes actual)."
         >
           <div className="cashflow__tabla-scroll">
             <table className="analisis-tabla cashflow__tabla">
               <thead>
                 <tr>
                   <th>Mes</th>
-                  <th>Entró</th>
-                  <th>Salió</th>
+                  <th>Ingreso</th>
+                  <th>Egreso</th>
                   <th>A pagar</th>
                   <th>Saldo</th>
                 </tr>
@@ -129,8 +126,8 @@ export function CashFlow({
                       {nombreMes(m.mes)}
                       {m.actual && <span className="cashflow__marca"> · hoy</span>}
                     </td>
-                    <td className="cifra">{m.entro ? fm(m.entro) : "—"}</td>
-                    <td className="cifra">{m.salio ? fm(m.salio) : "—"}</td>
+                    <td className="cifra">{m.ingreso ? fm(m.ingreso) : "—"}</td>
+                    <td className="cifra">{m.egreso ? fm(m.egreso) : "—"}</td>
                     <td className="cifra">{m.aPagar ? fm(m.aPagar) : "—"}</td>
                     <td className={`cifra${m.saldo < 0 ? " cashflow__negativo" : ""}`}>
                       {fm(m.saldo)}
@@ -174,8 +171,8 @@ export function CashFlow({
       )}
 
       <Seccion
-        titulo="Próximos vencimientos"
-        descripcion="Plazos sin pagar, del más viejo al más nuevo. Se marcan pagados desde la ficha de cada compra o gasto."
+        titulo="Vencimientos pendientes"
+        descripcion="Plazos sin pagar, del más viejo al más nuevo. Se marcan pagados en la ficha de la compra o el gasto."
       >
         {vencimientos.length === 0 ? (
           <EstadoVacio mensaje="No hay nada pendiente de pago." />

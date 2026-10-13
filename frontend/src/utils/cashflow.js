@@ -1,17 +1,14 @@
-// Cash flow: la plata que entró y salió de verdad, y lo que vence.
+// Cash flow: ingresos y egresos reales, y vencimientos.
 //
-// Reglas (decididas con Fede, 09/10/2026):
-// - Entró: cobros (y sus notas) en su fecha. Un cobro no tiene plazos.
-// - Salió: SÓLO plazos pagados, en su fecha de pago. Un plazo sin pagar
-//   nunca cuenta como salida, aunque la compra esté cargada.
-// - A pagar: plazos pendientes por su vencimiento. Los que vencieron antes
-//   de hoy son "vencido" (en la vista por mes, caen en el mes actual: se
-//   asume que se pagan ya).
-// - Falta cobrar: precio acordado − cobrado, en dólares (es lo del contrato)
-//   y sin fecha (los cobros no tienen plazos).
-// - Pesos o dólares: cada plazo se pasa a dólares con la cotización
-//   congelada de su compra o gasto (no tiene USD propio); cobros y notas
-//   traen las dos cifras.
+// Reglas:
+// - Ingresos: cobros (y sus notas) en su fecha. Un cobro no tiene plazos.
+// - Egresos: SÓLO plazos pagados, en su fecha de pago. Un plazo sin pagar
+//   nunca cuenta como egreso, aunque la compra esté cargada.
+// - A pagar: plazos pendientes por vencimiento. Los vencidos caen en el mes
+//   actual (se asume pago inmediato).
+// - Por cobrar: precio acordado − cobrado, en USD (contrato), sin fecha.
+// - Moneda: cada plazo se pasa a USD con la cotización congelada de su
+//   compra/gasto; cobros y notas traen ambas cifras.
 //
 // Puro: recibe los datos que ya baja la app y `hoy` ("YYYY-MM-DD").
 import { saldoPorCobrar, montoCobroNeto } from "./moneda";
@@ -104,8 +101,8 @@ function faltaCobrarUsd(proyectos, cobros) {
 }
 
 /**
- * Mes a mes: lo que entró, salió y vence, con el saldo acumulado. Los meses
- * pasados son reales; los que vienen, proyectados (sólo vencimientos).
+ * Mes a mes: ingresos, egresos y vencimientos con saldo acumulado.
+ * Meses pasados = reales; futuros = proyección (solo vencimientos).
  */
 function porMes({ reales, pendientes, hoy, mesesAtras }) {
   const actual = mesDe(hoy);
@@ -119,17 +116,17 @@ function porMes({ reales, pendientes, hoy, mesesAtras }) {
   const meses = [];
   for (let mes = desde; mes <= fin; mes = sumarMeses(mes, 1)) {
     const delMes = reales.filter((r) => mesDe(r.fecha) === mes);
-    const entro = delMes.filter((r) => r.monto > 0).reduce((s, r) => s + r.monto, 0);
-    const salio = delMes.filter((r) => r.monto < 0).reduce((s, r) => s - r.monto, 0);
-    // Lo vencido se asume que se paga ahora: va al mes actual.
+    const ingreso = delMes.filter((r) => r.monto > 0).reduce((s, r) => s + r.monto, 0);
+    const egreso = delMes.filter((r) => r.monto < 0).reduce((s, r) => s - r.monto, 0);
+    // Vencidos al mes actual.
     const aPagar = pendientes
       .filter((p) => (p.vencido ? actual : mesDe(p.fecha)) === mes)
       .reduce((s, p) => s + p.monto, 0);
-    saldo += entro - salio - aPagar;
+    saldo += ingreso - egreso - aPagar;
     meses.push({
       mes,
-      entro,
-      salio,
+      ingreso,
+      egreso,
       aPagar,
       saldo,
       actual: mes === actual,
