@@ -62,11 +62,11 @@ describe("CashFlow", () => {
 
   it("cambia entre la vista por mes y por semana", async () => {
     render(<CashFlow {...props} />);
-    expect(screen.getByText("Mes a mes")).toBeInTheDocument();
+    expect(screen.getByText("Evolución mensual")).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Por semana" }));
     expect(screen.getByText("Próximas 8 semanas")).toBeInTheDocument();
-    expect(screen.queryByText("Mes a mes")).toBeNull();
+    expect(screen.queryByText("Evolución mensual")).toBeNull();
   });
 
   it("sin nada pendiente lo dice", () => {

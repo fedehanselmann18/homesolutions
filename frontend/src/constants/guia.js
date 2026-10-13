@@ -235,12 +235,12 @@ export const SECCIONES_GUIA = [
       {
         tipo: "parrafo",
         texto:
-          "El cash flow (en el menú, y en cada proyecto como pestaña) muestra la plata que entró y salió de verdad, y lo que vence. Arriba: el saldo de caja de hoy, lo vencido sin pagar, lo que hay que pagar en los próximos 30 días y lo que falta cobrar del contrato. Abajo lo ves por mes, con los meses que vienen como proyección, o por semana, y la lista de próximos vencimientos. Se ve en pesos o en dólares, como el Análisis.",
+          "El cash flow (menú principal y pestaña de cada proyecto) muestra ingresos y egresos reales, y los vencimientos. Arriba: saldo de caja actual, vencidos sin pagar, pagos próximos 30 días y por cobrar del contrato. Debajo: vista mensual (con proyección), semanal y lista de vencimientos. Disponible en pesos y dólares, igual que el Análisis.",
       },
       {
         tipo: "aviso",
         texto:
-          "Un plazo sin pagar nunca cuenta como plata que salió, aunque la compra esté cargada. Lo vencido se muestra aparte, en rojo.",
+          "Un plazo sin pagar no computa como egreso, aunque la compra esté cargada. Los vencidos se destacan en rojo.",
       },
     ],
   },

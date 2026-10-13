@@ -84,7 +84,7 @@ describe("calcularCashFlow", () => {
   it("KPIs: saldo real, vencido, a pagar en 30 días y falta cobrar", () => {
     const { kpis } = calcularCashFlow({ ...datos, moneda: "ars" });
 
-    // Entró 3.000.000 − 100.000 (NC del cobro); salió 500.000 + 50.000.
+    // Ingresos 3.000.000 − 100.000 (NC del cobro); egresos 500.000 + 50.000.
     expect(kpis.saldoHoy).toBe(2350000);
     expect(kpis.vencido).toBe(200000);
     expect(kpis.cantidadVencidos).toBe(1);
@@ -93,11 +93,11 @@ describe("calcularCashFlow", () => {
     expect(kpis.faltaCobrarUsd).toBe(7100);
   });
 
-  it("un plazo sin pagar no cuenta como salida", () => {
+  it("un plazo sin pagar no cuenta como egreso", () => {
     const { porMes } = calcularCashFlow({ ...datos, moneda: "ars" });
     const mayo = porMes.find((m) => m.mes === "2026-05");
 
-    expect(mayo.salio).toBe(500000); // sólo el plazo pagado
+    expect(mayo.egreso).toBe(500000); // sólo el plazo pagado
     expect(mayo.aPagar).toBe(700000); // el de 31/05 + el gasto vencido (va al mes actual)
   });
 
@@ -105,7 +105,7 @@ describe("calcularCashFlow", () => {
     const { porMes } = calcularCashFlow({ ...datos, moneda: "ars" });
 
     expect(porMes.map((m) => m.mes)).toEqual(["2026-03", "2026-04", "2026-05"]);
-    expect(porMes.map((m) => [m.entro, m.salio])).toEqual([
+    expect(porMes.map((m) => [m.ingreso, m.egreso])).toEqual([
       [3000000, 0],
       [0, 150000], // NC del cobro 100.000 + flete 50.000
       [0, 500000],
