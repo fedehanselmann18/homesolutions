@@ -39,7 +39,7 @@ export const SECCIONES_GUIA = [
       {
         tipo: "pasos",
         items: [
-          "Proveedores: en Proveedores tocá «Nuevo proveedor».",
+          "Proveedores: en Proveedores tocá «Nuevo proveedor». Sólo el nombre es obligatorio: CUIT, teléfono, email y dirección los completás cuando los tengas (en la lista, la tarjeta de cada proveedor te muestra cuáles faltan).",
           "Productos de cada proveedor: abrí el proveedor, andá a la pestaña «Catálogo» y cargá los productos con «Producto», o traelos de una lista con «Importar».",
           "El dólar del día: en Ajustes, pestaña «Cotizaciones», tocá «Nueva cotización». Si lo cargás ahora, después la app lo sugiere sola en cada compra, gasto y cobro.",
           "El proyecto: en Proyectos tocá «Nuevo proyecto» y poné el precio acordado en dólares.",

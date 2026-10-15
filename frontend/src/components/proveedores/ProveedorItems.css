@@ -1,4 +1,4 @@
-/* Avatar de iniciales: 32px en una fila, 40 en la card de deuda. */
+/* Avatar de iniciales: 32px por defecto, 40 en la tarjeta y en el detalle. */
 .proveedor-avatar {
   display: flex;
   align-items: center;
@@ -20,142 +20,155 @@
   font-size: var(--text-base);
 }
 
-/* --- card de deuda --- */
+/* --- tarjeta de proveedor (variante 1c) ---
+   Receta de card de DESIGN.md §10: clickeable, así que en hover el borde
+   pasa a línea fuerte y aparece la sombra; el fondo queda blanco. */
 
-.proveedor-deuda {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
-  gap: var(--space-1) var(--space-3);
-  align-items: center;
+.proveedor-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
   padding: var(--space-card);
   border: 1px solid var(--color-linea);
   border-radius: var(--radius-lg);
   background: var(--color-superficie);
+  cursor: pointer;
+  transition:
+    border-color var(--transicion),
+    box-shadow var(--transicion);
 }
 
-.proveedor-deuda .proveedor-avatar {
-  grid-row: span 2;
+.proveedor-tarjeta:hover {
+  border-color: var(--color-linea-fuerte);
+  box-shadow: var(--shadow-hover);
 }
 
-.proveedor-deuda__nombre {
-  min-width: 0;
-  font-size: var(--text-md);
-  font-weight: 600;
-  overflow-wrap: anywhere;
+.proveedor-tarjeta:focus-visible {
+  outline: none;
+  border-color: var(--color-oliva);
+  box-shadow: var(--shadow-foco);
 }
 
-.proveedor-deuda__monto {
-  font-size: var(--text-xl);
-  font-weight: 700;
-  text-align: right;
-  white-space: nowrap;
-}
-
-.proveedor-deuda__detalle {
-  min-width: 0;
-  font-size: var(--text-sm);
-  color: var(--color-tinta-muted);
-}
-
-.proveedor-deuda .badge {
-  justify-self: end;
-}
-
-.proveedor-deuda__acciones {
-  grid-column: 2 / span 2;
+.proveedor-tarjeta__cabecera {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  padding-top: var(--space-2-5);
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
 }
 
-/* --- fila "al día" --- */
-
-.proveedor-fila {
-  grid-template-columns: 32px minmax(0, 1fr) 200px 140px 64px 16px;
-  padding-left: 0;
-  padding-right: 0;
-}
-
-.proveedor-fila__texto {
+.proveedor-tarjeta__titulo {
   display: flex;
+  flex: 1;
   flex-direction: column;
   gap: 2px;
   min-width: 0;
 }
 
-.proveedor-fila__nombre {
-  font-size: var(--text-base);
+.proveedor-tarjeta__nombre {
+  font-size: var(--text-md);
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.proveedor-fila__meta {
+.proveedor-tarjeta__cuit {
   font-size: var(--text-xs);
   color: var(--color-tinta-tenue);
 }
 
-.proveedor-fila__telefono {
+/* En touch se ven siempre, al lado del nombre. Con mouse aparecen en hover
+   (`.fila-con-acciones`, DESIGN.md §8) y van superpuestas en la esquina: si
+   no, ocultas igual le comerían ~60px al nombre y lo cortarían antes. */
+.proveedor-tarjeta__acciones {
   display: flex;
-  align-items: center;
-  gap: var(--space-1-5);
-  min-width: 0;
-  font-size: var(--text-sm);
-  color: var(--color-tinta-muted);
+  flex-shrink: 0;
+  gap: 2px;
+  align-self: flex-start;
 }
 
-.proveedor-fila__telefono svg {
+@media (hover: hover) and (pointer: fine) {
+  .proveedor-tarjeta {
+    position: relative;
+  }
+
+  .proveedor-tarjeta__acciones {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    border-radius: var(--radius-sm);
+    background: var(--color-superficie);
+  }
+}
+
+.proveedor-tarjeta__contacto {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+}
+
+.proveedor-tarjeta__dato {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  color: var(--color-tinta);
+}
+
+.proveedor-tarjeta__dato svg {
   flex-shrink: 0;
   color: var(--color-tinta-tenue);
 }
 
-.proveedor-fila__total {
+.proveedor-tarjeta__valor {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* La dirección se lee como dato secundario; lo que falta, atenuado. */
+.proveedor-tarjeta__dato--tenue {
+  color: var(--color-tinta-muted);
+}
+
+.proveedor-tarjeta__dato--falta {
+  color: var(--color-tinta-tenue);
+}
+
+/* Total y "comprado · N productos" apilados a la izquierda; a la derecha, el
+   aviso de deuda si hay. Todas las tarjetas tienen el mismo pie, con o sin
+   aviso, así siguen midiendo igual. */
+.proveedor-tarjeta__pie {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-3);
+  margin-top: auto;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-linea-suave);
+}
+
+.proveedor-tarjeta__comprado {
   display: flex;
   flex-direction: column;
-  align-items: flex-end;
-  text-align: right;
-  font-size: var(--text-base);
+  gap: 2px;
+  min-width: 0;
 }
 
-/* Sin esto el monto al lado de "Al día" no decía si era deuda o qué. */
-.proveedor-fila__total-etiqueta {
+.proveedor-tarjeta__total {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.proveedor-tarjeta__pie-detalle {
   font-size: var(--text-xs);
   color: var(--color-tinta-tenue);
-}
-
-.proveedor-fila__acciones {
-  display: flex;
-  justify-content: flex-end;
-  gap: 2px;
-}
-
-.proveedor-fila__chevron {
-  color: var(--color-tinta-tenue);
-}
-
-@media (max-width: 900px) {
-  .proveedor-fila {
-    grid-template-columns: 32px minmax(0, 1fr) 120px 64px 16px;
-  }
-
-  .proveedor-fila__telefono {
-    display: none;
-  }
-}
-
-@media (max-width: 640px) {
-  .proveedor-fila {
-    grid-template-columns: 32px minmax(0, 1fr) auto;
-    row-gap: var(--space-1);
-  }
-
-  .proveedor-fila__acciones {
-    grid-column: 2 / span 2;
-  }
-
-  .proveedor-fila__chevron {
-    display: none;
-  }
 }

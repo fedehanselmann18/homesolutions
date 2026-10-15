@@ -1,77 +1,57 @@
-/* Lista de proveedores — variante 4N: "Con deuda" en cards de a dos, "Al
-   día" en filas. El encabezado, el buscador y los botones son PageHeader,
-   Buscador y `.btn`/`.campo`. */
+/* Lista de proveedores — variante 1c: todos en tarjetas de a tres. Filtro,
+   buscador y botones van en el encabezado (PageHeader), como en el diseño;
+   los controles son Buscador y `.btn`/`.campo`. */
 
 .proveedores-container {
   display: flex;
   flex-direction: column;
-  gap: var(--space-7);
   font-family: var(--font-ui);
 }
 
-.proveedores-container > .page-header {
-  margin-bottom: 0;
-}
-
-.proveedores-seccion {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.proveedores-seccion__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  padding-bottom: var(--space-2-5);
-  border-bottom: 1px solid var(--color-linea);
-}
-
-/* La lista de "Al día" arranca pegada a la línea del header: es su borde de
-   arriba, no hace falta aire entre los dos. */
-.proveedores-seccion__header + .planilla {
-  margin-top: calc(-1 * var(--space-3));
-}
-
-.proveedores-seccion__titulo {
-  margin: 0;
-  font-size: var(--text-lg);
-  font-weight: 700;
-  color: var(--color-tinta);
-}
-
-.proveedores-deudas {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
-}
-
-.proveedores-filtros {
+/* Filtros y botones van en dos grupos: cuando no entran en una línea (tablet)
+   se parte por grupo, filtros arriba y botones abajo, en vez de dejar un
+   botón suelto en la segunda línea. */
+.proveedores-filtros,
+.proveedores-botones {
   display: flex;
   gap: var(--space-2);
 }
 
-.proveedores-filtros__select {
+.proveedores-filtro-categoria {
   width: auto;
   min-width: 200px;
 }
 
+/* Las filas de la grilla se estiran a la tarjeta más alta y el pie de cada
+   una va abajo (`margin-top: auto`): los totales quedan alineados. */
+.proveedores-tarjetas {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
 @media (max-width: 900px) {
-  .proveedores-deudas {
-    grid-template-columns: 1fr;
+  .proveedores-tarjetas {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 640px) {
-  .proveedores-filtros {
-    flex-direction: column;
-    width: 100%;
+  .proveedores-tarjetas {
+    grid-template-columns: 1fr;
   }
 
-  .proveedores-filtros__select {
+  /* Como el resto de PageHeader en celular: todo apilado y a lo ancho. */
+  .proveedores-filtros,
+  .proveedores-botones {
+    flex-direction: column;
+  }
+
+  .proveedores-botones > .btn {
+    justify-content: center;
+  }
+
+  .proveedores-filtro-categoria {
     width: 100%;
     min-width: 0;
   }

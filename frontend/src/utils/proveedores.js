@@ -83,3 +83,28 @@ export function calcularResumenProveedor(
     totalNotasDebito: sumarNotasDebito(notas),
   };
 }
+
+const sinSeparadores = (texto) => texto.replace(/[\s.()-]/g, "");
+
+/**
+ * Si el proveedor coincide con lo que se escribió en el buscador de la lista:
+ * por nombre y también por los datos que muestra su ficha (CUIT, teléfono,
+ * email, dirección). CUIT y teléfono se comparan además sin guiones, puntos ni
+ * espacios: "30712345678" encuentra "30-71234567-8".
+ */
+export function coincideBusquedaProveedor(proveedor, busqueda) {
+  const texto = busqueda.trim().toLowerCase();
+  if (!texto) return true;
+
+  const { nombre, cuit, telefono, email, direccion } = proveedor;
+  const coincideTexto = [nombre, cuit, telefono, email, direccion].some((campo) =>
+    (campo ?? "").toLowerCase().includes(texto)
+  );
+  if (coincideTexto) return true;
+
+  const numero = sinSeparadores(texto);
+  return (
+    /^\d+$/.test(numero) &&
+    [cuit, telefono].some((campo) => sinSeparadores(campo ?? "").includes(numero))
+  );
+}

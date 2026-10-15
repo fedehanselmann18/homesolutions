@@ -1,14 +1,9 @@
-import { Banknote, ChevronRight, Pencil, Phone, ShoppingCart, Trash2 } from "lucide-react";
+import { Mail, MapPin, Pencil, Phone, Trash2 } from "lucide-react";
 
 import { formatMoneda, iniciales, pluralizar } from "../../utils/formato";
 import "./ProveedorItems.css";
 
-/**
- * Las dos formas de un proveedor en la lista "primero a quién se le debe"
- * (variante 4N de HS General.dc.html): una card para
- * los que tienen deuda, con lo que se debe bien grande y la acción para
- * resolverlo, y una fila para los que están al día.
- */
+/** Un proveedor en la lista de Proveedores, y su avatar de iniciales. */
 
 export function Avatar({ nombre, grande = false }) {
   return (
@@ -22,59 +17,34 @@ export function Avatar({ nombre, grande = false }) {
 }
 
 /**
- * `proyectos`: nombres de las obras donde están las compras impagas.
- * `onRegistrarPago` sólo viene para un admin.
+ * Tarjeta de un proveedor (variante 1c, "Fichas en grilla", de Rediseño de
+ * lista de proveedores.zip). Se llama "tarjeta" y no "ficha" porque
+ * `.proveedor-ficha` ya es el panel lateral de ProveedorDetalle.
+ *
+ * Siempre las mismas líneas —CUIT, teléfono, email, dirección— y lo que falta
+ * queda atenuado ("Sin email"): así todas las tarjetas de la grilla miden
+ * igual y se ve de un vistazo a quién le faltan datos. Si se le debe algo, un
+ * aviso chico en el pie: ámbar, o rojo si algún plazo ya venció (el mismo
+ * criterio que el detalle del proveedor). `onEditar`/`onEliminar` sólo para
+ * un admin.
  */
-export function ProveedorDeudaCard({ resumen, proyectos = [], onRegistrarPago, onVerCompras }) {
+export function ProveedorTarjeta({ resumen, onAbrir, onEditar, onEliminar }) {
   const {
     proveedor,
+    cantidadProductos,
+    totalComprado,
     deuda,
     comprasImpagas,
-    diasDeudaMasVieja: dias,
     diasVencidaMasVieja,
   } = resumen;
-  // Rojo si algún plazo venció sin pagarse (antes: 90 días o más).
-  const vencida = Boolean(diasVencidaMasVieja);
-  const detalle = [
-    pluralizar(comprasImpagas.length, "compra sin pagar", "compras sin pagar"),
-    proyectos.join(", "),
-  ]
-    .filter(Boolean)
-    .join(" · ");
-
-  return (
-    <article className="proveedor-deuda">
-      <Avatar nombre={proveedor.nombre} grande />
-      <span className="proveedor-deuda__nombre">{proveedor.nombre}</span>
-      <span className="proveedor-deuda__monto cifra">{formatMoneda(deuda)}</span>
-      <span className="proveedor-deuda__detalle">{detalle}</span>
-      <span className={`badge badge--sm ${vencida ? "badge--peligro" : "badge--atencion"}`}>
-        {vencida
-          ? `Vencida hace ${pluralizar(diasVencidaMasVieja, "día")}`
-          : comprasImpagas.length > 1
-            ? `Más vieja: ${dias} días`
-            : pluralizar(dias, "día")}
-      </span>
-      <div className="proveedor-deuda__acciones">
-        {onRegistrarPago && (
-          <button type="button" className="btn btn--sm btn-primary" onClick={onRegistrarPago}>
-            <Banknote aria-hidden="true" />
-            Registrar pago
-          </button>
-        )}
-        <button type="button" className="btn btn--sm btn-secondary" onClick={onVerCompras}>
-          <ShoppingCart aria-hidden="true" />
-          Ver compras
-        </button>
-      </div>
-    </article>
-  );
-}
-
-/** Fila de 54px de un proveedor al día. `onEditar`/`onEliminar` sólo para un admin. */
-export function ProveedorFila({ resumen, onAbrir, onEditar, onEliminar }) {
-  const { proveedor, cantidadProductos, totalComprado } = resumen;
-  const meta = pluralizar(cantidadProductos, "producto");
+  const debe = deuda > 0;
+  const vencida = debe && Boolean(diasVencidaMasVieja);
+  const avisoDeuda = debe && `Debe ${formatMoneda(deuda)}${vencida ? " · vencida" : ""}`;
+  const contacto = [
+    { icono: Phone, valor: proveedor.telefono, falta: "Sin teléfono" },
+    { icono: Mail, valor: proveedor.email, falta: "Sin email" },
+    { icono: MapPin, valor: proveedor.direccion, falta: "Sin dirección", tenue: true },
+  ];
 
   const detener = (fn) => (e) => {
     e.stopPropagation();
@@ -82,8 +52,8 @@ export function ProveedorFila({ resumen, onAbrir, onEditar, onEliminar }) {
   };
 
   return (
-    <div
-      className="planilla__fila proveedor-fila"
+    <article
+      className="proveedor-tarjeta fila-con-acciones"
       onClick={onAbrir}
       onKeyDown={(e) => {
         if (e.target !== e.currentTarget) return;
@@ -94,55 +64,81 @@ export function ProveedorFila({ resumen, onAbrir, onEditar, onEliminar }) {
       }}
       role="link"
       tabIndex={0}
-      aria-label={proveedor.nombre}
+      aria-label={debe ? `${proveedor.nombre}. ${avisoDeuda}` : proveedor.nombre}
     >
-      <Avatar nombre={proveedor.nombre} />
-      <span className="proveedor-fila__texto">
-        <span className="proveedor-fila__nombre">{proveedor.nombre}</span>
-        <span className="proveedor-fila__meta">{meta}</span>
-      </span>
-      <span className="proveedor-fila__telefono">
-        {proveedor.telefono && (
-          <>
-            <Phone size={14} strokeWidth={1.75} aria-hidden="true" />
-            {proveedor.telefono}
-          </>
+      <div className="proveedor-tarjeta__cabecera">
+        <Avatar nombre={proveedor.nombre} grande />
+        <span className="proveedor-tarjeta__titulo">
+          <span className="proveedor-tarjeta__nombre">{proveedor.nombre}</span>
+          <span className="proveedor-tarjeta__cuit cifra">
+            {proveedor.cuit ? `CUIT ${proveedor.cuit}` : "Sin CUIT"}
+          </span>
+        </span>
+        {(onEditar || onEliminar) && (
+          <span className="acciones proveedor-tarjeta__acciones">
+            {onEditar && (
+              <button
+                type="button"
+                className="btn-icono btn-icono--sm"
+                title="Editar"
+                aria-label={`Editar ${proveedor.nombre}`}
+                onClick={detener(onEditar)}
+              >
+                <Pencil aria-hidden="true" />
+              </button>
+            )}
+            {onEliminar && (
+              <button
+                type="button"
+                className="btn-icono btn-icono--sm btn-icono--peligro"
+                title="Eliminar"
+                aria-label={`Eliminar ${proveedor.nombre}`}
+                onClick={detener(onEliminar)}
+              >
+                <Trash2 aria-hidden="true" />
+              </button>
+            )}
+          </span>
         )}
-      </span>
-      <span className="proveedor-fila__total" title="Total comprado a este proveedor">
-        <span className="cifra">{formatMoneda(totalComprado)}</span>
-        <span className="proveedor-fila__total-etiqueta">comprado en total</span>
-      </span>
-      <span className="acciones proveedor-fila__acciones">
-        {onEditar && (
-          <button
-            type="button"
-            className="btn-icono btn-icono--sm"
-            title="Editar"
-            aria-label={`Editar ${proveedor.nombre}`}
-            onClick={detener(onEditar)}
+      </div>
+
+      <ul className="proveedor-tarjeta__contacto">
+        {contacto.map(({ icono: Icono, valor, falta, tenue }) => {
+          const modificador = !valor
+            ? " proveedor-tarjeta__dato--falta"
+            : tenue
+              ? " proveedor-tarjeta__dato--tenue"
+              : "";
+          return (
+            <li key={falta} className={`proveedor-tarjeta__dato${modificador}`}>
+              <Icono size={15} strokeWidth={1.75} aria-hidden="true" />
+              <span className="proveedor-tarjeta__valor">{valor || falta}</span>
+            </li>
+          );
+        })}
+      </ul>
+
+      <div className="proveedor-tarjeta__pie">
+        <span className="proveedor-tarjeta__comprado" title="Total comprado a este proveedor">
+          <span className="proveedor-tarjeta__total cifra">{formatMoneda(totalComprado)}</span>
+          <span className="proveedor-tarjeta__pie-detalle">
+            comprado · {pluralizar(cantidadProductos, "producto")}
+          </span>
+        </span>
+        {debe && (
+          <span
+            className={`badge badge--sm cifra ${vencida ? "badge--peligro" : "badge--atencion"}`}
+            title={[
+              pluralizar(comprasImpagas.length, "compra sin pagar", "compras sin pagar"),
+              vencida && `un plazo venció hace ${pluralizar(diasVencidaMasVieja, "día")}`,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           >
-            <Pencil aria-hidden="true" />
-          </button>
+            {avisoDeuda}
+          </span>
         )}
-        {onEliminar && (
-          <button
-            type="button"
-            className="btn-icono btn-icono--sm btn-icono--peligro"
-            title="Eliminar"
-            aria-label={`Eliminar ${proveedor.nombre}`}
-            onClick={detener(onEliminar)}
-          >
-            <Trash2 aria-hidden="true" />
-          </button>
-        )}
-      </span>
-      <ChevronRight
-        className="proveedor-fila__chevron"
-        size={16}
-        strokeWidth={1.75}
-        aria-hidden="true"
-      />
-    </div>
+      </div>
+    </article>
   );
 }
