@@ -75,8 +75,6 @@ def get_compra_by_id(
             joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
             selectinload(models.Compra.plazos),
             joinedload(models.Compra.condicion_pago),
-            selectinload(models.Compra.plazos),
-            joinedload(models.Compra.condicion_pago),
             joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
             joinedload(models.Compra.notas)
             .joinedload(models.NotaCompra.impuestos_aplicados)
@@ -105,8 +103,6 @@ def get_compras_by_fase(
             .joinedload(models.DetalleCompra.producto)
             .joinedload(models.Producto.categorias),
             joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
-            selectinload(models.Compra.plazos),
-            joinedload(models.Compra.condicion_pago),
             selectinload(models.Compra.plazos),
             joinedload(models.Compra.condicion_pago),
             joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
@@ -138,8 +134,6 @@ def get_compras_by_proyecto(
             .joinedload(models.DetalleCompra.producto)
             .joinedload(models.Producto.categorias),
             joinedload(models.Compra.impuestos_aplicados).joinedload(models.CompraImpuesto.impuesto),
-            selectinload(models.Compra.plazos),
-            joinedload(models.Compra.condicion_pago),
             selectinload(models.Compra.plazos),
             joinedload(models.Compra.condicion_pago),
             joinedload(models.Compra.notas).joinedload(models.NotaCompra.detalles),
