@@ -1,6 +1,7 @@
 import {
   ArrowRightLeft,
   Building2,
+  ChartColumn,
   CircleDollarSign,
   FileSignature,
   ListChecks,
@@ -327,6 +328,43 @@ export const SECCIONES_GUIA = [
         tipo: "aviso",
         texto:
           "Con un filtro puesto, el saldo de cada fila se calcula solo con lo que estás viendo. El saldo real de la obra es el de arriba de todo, que no cambia con los filtros.",
+      },
+    ],
+  },
+  {
+    id: "metricas",
+    titulo: "Métricas",
+    icono: ChartColumn,
+    resumen: "Cuánto entró, cuánto salió y cuánto dejó cada obra en un período.",
+    bloques: [
+      {
+        tipo: "parrafo",
+        texto:
+          "En Métricas ves todas las obras juntas: ingresos (lo cobrado), egresos (compras y gastos), resultado (la diferencia) y rentabilidad (qué parte de lo cobrado quedó como resultado). Arriba elegís el período, una obra o todas, y si lo querés ver en dólares o en pesos.",
+      },
+      {
+        tipo: "lista",
+        items: [
+          "Ingresos y egresos: las dos barras de cada mes del período.",
+          "Rentabilidad por obra: de la que más deja a la que menos. Una obra sin cobros en el período no aparece.",
+          "Egresos por categoría: los gastos por su categoría, y todas las compras juntas en «Compras a proveedores».",
+          "Proveedores: a quién le compraste más en el período.",
+          "Obras: cada obra con sus números. Tocá una fila para abrir el proyecto.",
+        ],
+      },
+      {
+        tipo: "lista",
+        items: [
+          "En margen: la obra viene bien.",
+          "Ejecución alta: ya se gastó más del 85 % del precio acordado.",
+          "Resultado negativo: en toda la obra se gastó más de lo que se cobró.",
+          "Sin precio acordado: falta cargar el precio en el proyecto, así que no hay % para medir.",
+        ],
+      },
+      {
+        tipo: "aviso",
+        texto:
+          "La rentabilidad y el % ejecutado salen siempre de los dólares, también si lo mirás en pesos: así la inflación no se confunde con ganancia. Y la situación de cada obra mira la obra entera, no el período elegido: un mes con muchos gastos no la pone en rojo si el anticipo se cobró antes.",
       },
     ],
   },

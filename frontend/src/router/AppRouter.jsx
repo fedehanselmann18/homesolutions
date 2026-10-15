@@ -12,6 +12,7 @@ import { RUTA_RESETEO } from "../constants/manager";
 // pesadas del bundle: van primero en la lista de lazy imports.
 const Comparador = lazy(() => import("../pages/Comparador"));
 const Dashboard = lazy(() => import("../pages/Dashboard").then((m) => ({ default: m.Dashboard })));
+const Metricas = lazy(() => import("../pages/Metricas"));
 const Proyectos = lazy(() => import("../pages/Proyectos").then((m) => ({ default: m.Proyectos })));
 const ProyectoDetalle = lazy(() => import("../pages/ProyectoDetalle"));
 const FaseDetalle = lazy(() => import("../pages/FaseDetalle"));
@@ -47,6 +48,8 @@ export function AppRouter() {
         <Route element={<ProtectedRoute />}>
           <Route element={<MainLayout />}>
             <Route path="/" element={<Dashboard />} />
+            {/* Mismos permisos que el Panel: admin y lectura. */}
+            <Route path="/metricas" element={<Metricas />} />
             <Route path="/proyectos" element={<Proyectos />} />
             <Route path="/proyectos/:id" element={<ProyectoDetalle />} />
             <Route path="/proyectos/:proyectoId/fases/:faseId" element={<FaseDetalle />} />

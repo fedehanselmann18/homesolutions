@@ -61,6 +61,7 @@ describe("Guia", () => {
       "plazos-cashflow",
       "notas",
       "libro-obra",
+      "metricas",
     ]);
   });
 

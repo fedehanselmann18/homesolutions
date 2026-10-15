@@ -1019,7 +1019,7 @@ animación.
 |---|---|---|
 | Cargando (página o sección) | `<Cargando>` | Isotipo de marca pulsando + texto de qué se está cargando. `compacto` para una sección. |
 | Esperando (dentro de un control) | `<LogoCargando>` | El mismo isotipo, a 13–14px, reemplazando al ícono del botón. |
-| Cargando (Panel) | `.skeleton` | **Excepción a propósito.** Sólo donde el layout es estable y conocido de antemano. No replicar. |
+| Cargando (Panel y Métricas) | `.skeleton` (base en `index.css`) | **Excepción a propósito.** Sólo donde el layout es estable y conocido de antemano. No sumar otras páginas sin ese requisito. |
 | Vacío | `<EstadoVacio>` | Isotipo de marca a baja opacidad + mensaje muted. `grande` para página entera. |
 | Error | `<EstadoError>` | Ícono `CircleAlert` + mensaje en `--color-error-texto`, con `role="alert"`. |
 | Éxito | `<ToastStack>` | Toast abajo a la derecha, con borde izquierdo del color del resultado. |

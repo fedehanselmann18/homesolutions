@@ -33,6 +33,15 @@ const PAR_ATENCION = { color: ATENCION, bg: ATENCION_TINT, fg: ATENCION_TEXTO };
 const PAR_PROBLEMA = { color: ERROR, bg: ERROR_TINT, fg: ERROR_TEXTO };
 const PAR_NEUTRO = { color: TINTA_MUTED, bg: RELLENO, fg: TINTA_MUTED };
 
+// El semáforo de cuatro posiciones, para otros badges que digan lo mismo
+// (el estado de una obra en Métricas) sin redefinir los pares.
+export const PARES_SEMAFORO = {
+  resuelto: RESUELTO,
+  atencion: PAR_ATENCION,
+  problema: PAR_PROBLEMA,
+  neutro: PAR_NEUTRO,
+};
+
 const ESTADO_PAGO = {
   pendiente: { ...PAR_ATENCION, label: "A pagar", icono: Wallet },
   pagado: { ...RESUELTO, label: "Pagado", icono: Wallet },

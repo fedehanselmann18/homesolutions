@@ -1,0 +1,320 @@
+/* Métricas — ingresos, egresos, resultado y rentabilidad de las obras.
+   Misma gramática que el Panel: KPIs separados por reglas, sin cards ni
+   sombras (jerarquía por borde y peso, DESIGN.md §10). Sólo tokens. */
+
+.metricas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  font-family: var(--font-ui);
+}
+
+.metricas-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+/* --- filtros --- */
+
+.metricas-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.metricas-filtros__derecha {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.metricas-filtros__obra {
+  width: auto;
+  min-width: 0;
+  max-width: 260px;
+}
+
+/* --- KPIs: 4 en fila, 2×2 en tablet, una columna en móvil --- */
+
+.metricas-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-8);
+}
+
+.metricas-kpis > * {
+  min-width: 0;
+}
+
+.metricas-kpis > * + * {
+  padding-left: var(--space-8);
+  border-left: 1px solid var(--color-linea);
+}
+
+/* --- secciones (gráfico, tabla): título con regla abajo, como el Panel --- */
+
+.metricas-seccion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.metricas-seccion__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2-5);
+  border-bottom: 1px solid var(--color-linea);
+}
+
+.metricas-seccion__titulo {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-tinta);
+}
+
+.metricas-leyenda {
+  display: flex;
+  gap: var(--space-5);
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+.metricas-leyenda__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1-5);
+}
+
+.metricas-leyenda__cuadro {
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-xs);
+}
+
+.metricas-tooltip {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-2-5) var(--space-3);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-md);
+  background: var(--color-superficie);
+  box-shadow: var(--shadow-overlay);
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.metricas-tooltip strong {
+  color: var(--color-tinta);
+  text-transform: capitalize;
+}
+
+/* --- grilla de tres bloques (ranking, categorías, proveedores): una caja
+   con reglas entre celdas, como la grilla de métricas del diseño 1b. --- */
+
+.metricas-bloques {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.metricas-bloque {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-5);
+}
+
+.metricas-bloque + .metricas-bloque {
+  border-left: 1px solid var(--color-linea);
+}
+
+.metricas-barras {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.metricas-barras__item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1-5);
+}
+
+.metricas-barras__texto {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--space-3);
+  font-size: var(--text-base);
+}
+
+.metricas-barras__nombre {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--color-tinta);
+}
+
+.metricas-barras__valor {
+  flex-shrink: 0;
+  font-weight: 600;
+  color: var(--color-tinta);
+}
+
+.metricas-barras__detalle {
+  margin-left: var(--space-2);
+  font-weight: 400;
+  color: var(--color-tinta-tenue);
+}
+
+/* --- tabla de obras --- */
+
+.metricas-tabla-caja {
+  min-width: 0;
+}
+
+/* Sin esto las filas heredan el tamaño del body y las cifras de columnas
+   vecinas se tocan. */
+.planilla.metricas-tabla {
+  font-size: var(--text-base);
+}
+
+.planilla.metricas-tabla .metricas-tabla__fila {
+  grid-template-columns:
+    minmax(160px, 2fr) 110px repeat(5, minmax(96px, 1fr))
+    140px 170px;
+}
+
+.metricas-tabla__num {
+  text-align: right;
+}
+
+.metricas-tabla__obra {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.metricas-tabla__obra a {
+  color: var(--color-tinta);
+  text-decoration: none;
+}
+
+.metricas-tabla__obra a:hover {
+  color: var(--color-oliva);
+}
+
+.metricas-tabla__fuerte {
+  font-weight: 600;
+}
+
+.metricas-tabla__negativo {
+  color: var(--color-error-texto);
+}
+
+.metricas-tabla__ejecutado {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-tinta-muted);
+}
+
+/* --- skeleton (base y tamaños comunes en index.css) --- */
+
+.metricas-kpi-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.skeleton--barra {
+  height: var(--space-6);
+  margin-top: var(--space-3);
+}
+
+@media (max-width: 900px) {
+  .metricas-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    row-gap: var(--space-6);
+  }
+
+  /* En 2×2 la regla vertical va sólo en la columna de la derecha. */
+  .metricas-kpis > :nth-child(odd) {
+    padding-left: 0;
+    border-left: none;
+  }
+
+  .metricas-bloques {
+    grid-template-columns: 1fr;
+  }
+
+  .metricas-bloque + .metricas-bloque {
+    border-left: none;
+    border-top: 1px solid var(--color-linea);
+  }
+
+  /* La tabla scrollea horizontal dentro de su caja (DESIGN.md §11). */
+  .metricas-tabla-caja {
+    overflow-x: auto;
+  }
+
+  .planilla.metricas-tabla {
+    min-width: 1080px;
+  }
+}
+
+@media (max-width: 640px) {
+  .metricas-filtros,
+  .metricas-filtros__derecha {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .metricas-filtros__obra {
+    max-width: none;
+    width: 100%;
+  }
+
+  /* US$ / Pesos con su ancho, no estirado a todo el renglón. */
+  .metricas-filtros__derecha > .segmentado {
+    align-self: flex-start;
+  }
+
+  .metricas-kpis {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+
+  .metricas-kpis > * + *,
+  .metricas-kpis > :nth-child(odd) {
+    padding: var(--space-4) 0 0;
+    border-left: none;
+    border-top: 1px solid var(--color-linea);
+  }
+
+  .metricas-kpis > :first-child {
+    padding-top: 0;
+    border-top: none;
+  }
+}

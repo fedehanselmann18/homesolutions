@@ -1319,3 +1319,60 @@ select.campo,
 .cifra {
   font-variant-numeric: tabular-nums;
 }
+
+/* Skeleton de carga: bloque placeholder con brillo mientras llega el fetch
+   inicial. Sólo en las páginas de layout estable y conocido de antemano
+   (Panel y Métricas, DESIGN.md §16); cada una define sus tamaños con
+   modificadores en su .css. La regla de prefers-reduced-motion de arriba ya
+   cubre la animación. */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--color-relleno) 25%,
+    var(--color-linea) 37%,
+    var(--color-relleno) 63%
+  );
+  background-size: 400% 100%;
+  animation: skeleton-shimmer 1.4s ease infinite;
+  border-radius: var(--radius-sm);
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+/* Tamaños comunes del skeleton (Panel y Métricas). */
+.skeleton--titulo {
+  width: 220px;
+  height: var(--space-8);
+}
+
+.skeleton--kpi-label {
+  width: 60%;
+  height: var(--space-3);
+}
+
+.skeleton--kpi-valor {
+  width: 80%;
+  height: var(--space-7);
+}
+
+.skeleton--grafico {
+  height: 200px;
+}
+
+.skeleton--seccion-titulo {
+  width: 160px;
+  height: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.skeleton--fila {
+  height: 54px;
+  margin-top: var(--space-2);
+}

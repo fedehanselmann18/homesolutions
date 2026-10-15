@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
+  ChartColumn,
   Building2,
   Truck,
   SlidersHorizontal,
@@ -38,6 +39,7 @@ import "./Sidebar.css";
 
 const ITEMS_NAV = [
   { to: "/", label: "Panel", icono: LayoutDashboard, contador: null },
+  { to: "/metricas", label: "Métricas", icono: ChartColumn, contador: null },
   { to: "/proyectos", label: "Proyectos", icono: Building2, contador: (c) => c.proyectos },
   { to: "/proveedores", label: "Proveedores", icono: Truck, contador: (c) => c.proveedores },
   { to: "/cash-flow", label: "Cash flow", icono: Wallet, contador: null },

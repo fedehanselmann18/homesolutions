@@ -42,7 +42,7 @@ function impuestosDeCompra(compra, moneda) {
  * en partes iguales entre ellas para que la suma del gráfico dé exactamente el
  * total de gastos del proyecto y no se cuente el mismo gasto dos veces.
  */
-function gastosPorCategoria(gastos, moneda) {
+export function gastosPorCategoria(gastos, moneda) {
   const acumulado = {};
   gastos.forEach((gasto) => {
     const categorias = gasto.categorias?.length ? gasto.categorias : [{ nombre: SIN_CATEGORIA }];
@@ -210,7 +210,7 @@ function cobradoPorFase(fases, compras, totalGastos, totalCobrado, totalEgresos,
   return filas.map((f) => ({ ...f, pct: porcentaje(f.monto, base) }));
 }
 
-function topProveedores(compras, proveedores, moneda, limite = 5) {
+export function topProveedores(compras, proveedores, moneda, limite = 5) {
   const acumulado = {};
   compras.forEach((compra) => {
     const nombre =

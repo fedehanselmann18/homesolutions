@@ -365,64 +365,11 @@
 
 /* --- Skeleton de carga: misma estructura que el panel real, con bloques
    placeholder en vez de contenido, mientras se resuelve el fetch inicial.
-   Es la única pantalla con skeleton, a propósito (DESIGN.md §16). --- */
-
-.skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--color-relleno) 25%,
-    var(--color-linea) 37%,
-    var(--color-relleno) 63%
-  );
-  background-size: 400% 100%;
-  animation: skeleton-shimmer 1.4s ease infinite;
-  border-radius: var(--radius-sm);
-}
-
-@keyframes skeleton-shimmer {
-  0% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0 50%;
-  }
-}
-
-.skeleton--titulo {
-  width: 220px;
-  height: var(--space-8);
-}
+   La clase base `.skeleton` (y su animación) vive en index.css: la comparte
+   con Métricas (DESIGN.md §16). Acá queda sólo la celda de KPI del Panel. --- */
 
 .panel-kpi-skeleton {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 }
-
-.skeleton--kpi-label {
-  width: 60%;
-  height: var(--space-3);
-}
-
-.skeleton--kpi-valor {
-  width: 80%;
-  height: var(--space-7);
-}
-
-.skeleton--grafico {
-  height: 200px;
-}
-
-.skeleton--seccion-titulo {
-  width: 160px;
-  height: var(--space-4);
-  margin-bottom: var(--space-3);
-}
-
-.skeleton--fila {
-  height: 54px;
-  margin-top: var(--space-2);
-}
-
-/* La regla de `prefers-reduced-motion` es global (index.css) y ya cubre
-   esta animación. */
