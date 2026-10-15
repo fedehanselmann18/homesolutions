@@ -13,6 +13,8 @@ name: Backup de la base
 #   BACKUP_S3_ACCESS_KEY_ID     ACCESS_KEY_ID del bucket de backups
 #   BACKUP_S3_SECRET_ACCESS_KEY SECRET_ACCESS_KEY del bucket de backups
 #   BACKUP_S3_BUCKET            BUCKET del bucket de backups (no el nombre visible)
+#   BACKUP_AGE_RECIPIENT        clave PÚBLICA de age ("age1...") con la que se cifra
+#                               el dump. Ver "Cifrado" abajo.
 # Variables opcionales:
 #   BACKUP_S3_REGION            REGION del bucket (default "auto")
 #   BACKUP_S3_ADDRESSING_STYLE  "virtual" (default) o "path"
@@ -22,9 +24,22 @@ name: Backup de la base
 # Retención: acá no se borra nada; borrar a mano los dumps viejos de vez en
 # cuando (o con una regla de lifecycle si el proveedor la tiene).
 #
+# Cifrado: el dump tiene toda la plata de las obras y los hashes de las
+# contraseñas, así que se cifra con age ANTES de salir del runner. El bucket
+# solo ve un .sql.gz.age que sin la clave privada no sirve de nada.
+#   Una sola vez, en tu compu:  age-keygen -o homesolutions-backup.key
+#   La línea "public key: age1..." va al secret BACKUP_AGE_RECIPIENT.
+#   El archivo .key (la clave PRIVADA) se guarda en un gestor de contraseñas o
+#   un pendrive: NUNCA en GitHub, Railway ni el repo. Sin ella los backups no
+#   se pueden restaurar.
+# Si BACKUP_AGE_RECIPIENT no está cargado, el backup se sube igual SIN cifrar
+# y el run queda con un warning: un backup que deja de hacerse es peor que uno
+# sin cifrar.
+#
 # Restaurar (pisa los datos de la base destino):
-#   aws s3 cp s3://$BACKUP_S3_BUCKET/<archivo>.sql.gz . --endpoint-url $BACKUP_S3_ENDPOINT_URL
-#   gunzip -c <archivo>.sql.gz | psql "$DATABASE_URL"
+#   aws s3 cp s3://$BACKUP_S3_BUCKET/<archivo>.sql.gz.age . --endpoint-url $BACKUP_S3_ENDPOINT_URL
+#   age -d -i homesolutions-backup.key <archivo>.sql.gz.age | gunzip -c | psql "$DATABASE_URL"
+# (Los backups viejos, de antes del cifrado, son .sql.gz: gunzip -c directo.)
 
 on:
   schedule:
@@ -43,6 +58,7 @@ jobs:
       S3_ENDPOINT: ${{ secrets.BACKUP_S3_ENDPOINT_URL }}
       S3_ADDRESSING_STYLE: ${{ vars.BACKUP_S3_ADDRESSING_STYLE || 'virtual' }}
       BUCKET: ${{ secrets.BACKUP_S3_BUCKET }}
+      AGE_RECIPIENT: ${{ secrets.BACKUP_AGE_RECIPIENT }}
     steps:
       # Hasta que se carguen los secrets, el cron no falla todos los días:
       # avisa y sale.
@@ -69,6 +85,20 @@ jobs:
           test "$(stat -c %s "$ARCHIVO")" -gt 1000
           echo "ARCHIVO=$ARCHIVO" >> "$GITHUB_ENV"
           ls -lh "$ARCHIVO"
+
+      - name: Cifrar con age
+        if: steps.config.outputs.listo == 'true'
+        shell: bash
+        run: |
+          if [ -z "$AGE_RECIPIENT" ]; then
+            echo "::warning::Falta BACKUP_AGE_RECIPIENT: el backup se sube SIN cifrar."
+            exit 0
+          fi
+          sudo apt-get update -qq && sudo apt-get install -y -qq --no-install-recommends age >/dev/null
+          age -r "$AGE_RECIPIENT" -o "$ARCHIVO.age" "$ARCHIVO"
+          rm "$ARCHIVO"
+          echo "ARCHIVO=$ARCHIVO.age" >> "$GITHUB_ENV"
+          ls -lh "$ARCHIVO.age"
 
       - name: Subir al bucket de backups
         if: steps.config.outputs.listo == 'true'
