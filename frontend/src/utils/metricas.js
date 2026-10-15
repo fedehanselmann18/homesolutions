@@ -1,14 +1,7 @@
 import { calcularAnalisis, gastosPorCategoria, topProveedores } from "./analisis";
 import { armarEvolucion } from "./panel";
 import { hoyISO } from "./formato";
-import { sumarDias } from "./plazos";
-import {
-  MONEDA_ANALISIS_DEFAULT,
-  montoCobroNeto,
-  montoGasto,
-  precioAcordado as precioAcordadoEn,
-  precioTotalCompra,
-} from "./moneda";
+import { MONEDA_ANALISIS_DEFAULT, precioAcordado as precioAcordadoEn } from "./moneda";
 import {
   CATEGORIA_COMPRAS,
   PCT_EJECUTADO_ATENCION,
@@ -59,12 +52,6 @@ function primeroDelMes(fecha) {
 
 function mesesEntre(desde, hasta) {
   return (hasta.getFullYear() - desde.getFullYear()) * 12 + hasta.getMonth() - desde.getMonth() + 1;
-}
-
-/** "2026-07-27" -> milisegundos de ese día a las 0 h locales (eje X de las curvas). */
-function msLocal(fecha) {
-  const [anio, mes, dia] = String(fecha).split("-").map(Number);
-  return new Date(anio, mes - 1, dia).getTime();
 }
 
 /**
@@ -125,52 +112,6 @@ export function rangoAnterior(periodo, hoy = new Date()) {
 }
 
 /**
- * Ingresos y egresos acumulados día a día: un punto por día con
- * movimientos, uno en cero el día anterior al primero y uno en `hoy` para
- * que la curva llegue hasta la fecha.
- */
-function acumuladoDiario({ gastos = [], cobros = [], compras = [], moneda, hoy }) {
-  const porDia = new Map();
-  const sumarDia = (fecha, clave, monto) => {
-    const dia = porDia.get(fecha) ?? { ingresos: 0, egresos: 0 };
-    dia[clave] += monto;
-    porDia.set(fecha, dia);
-  };
-  cobros.forEach((c) => sumarDia(String(c.fecha), "ingresos", montoCobroNeto(c, moneda)));
-  gastos.forEach((g) => sumarDia(String(g.fecha), "egresos", montoGasto(g, moneda)));
-  compras.forEach((c) => sumarDia(String(c.fecha), "egresos", precioTotalCompra(c, moneda)));
-
-  const fechas = [...porDia.keys()].sort();
-  if (fechas.length === 0) return [];
-
-  let ingresos = 0;
-  let egresos = 0;
-  const punto = (fecha) => ({ t: msLocal(fecha), fecha, ingresos, egresos });
-  const puntos = [punto(sumarDias(fechas[0], -1))];
-  fechas.forEach((fecha) => {
-    ingresos += porDia.get(fecha).ingresos;
-    egresos += porDia.get(fecha).egresos;
-    puntos.push(punto(fecha));
-  });
-  if (hoy > fechas[fechas.length - 1]) puntos.push(punto(hoy));
-  return puntos;
-}
-
-/**
- * Curva de una obra: cobrado y gastado acumulados como % de su precio
- * acordado, en dólares y en toda su historia (no sólo el período).
- */
-export function curvaObra({ gastos = [], cobros = [], compras = [], precioUsd, hoy }) {
-  if (!(precioUsd > 0)) return [];
-  return acumuladoDiario({ gastos, cobros, compras, moneda: "usd", hoy }).map((p) => ({
-    t: p.t,
-    fecha: p.fecha,
-    cobrado: (p.ingresos / precioUsd) * 100,
-    gastado: (p.egresos / precioUsd) * 100,
-  }));
-}
-
-/**
  * Badge de la obra, mirando la obra ENTERA contra su contrato (no el
  * período): un filtro de "mes actual" no puede pintar de rojo una obra
  * porque este mes hubo gastos y el anticipo se cobró en julio.
@@ -187,7 +128,6 @@ export function nivelObra({ resultadoUsd, pctEjecutado }) {
  *
  * - `periodo`: un value de PERIODOS_METRICAS. Filtra cada movimiento por SU
  *   fecha (una nota viaja con la fecha de su compra o cobro, como en el Panel).
- * - `obras`: ids de proyecto a incluir; vacío o null = todas.
  * - `moneda`: "usd" | "ars" para los montos. Los % siempre en USD.
  * - `cotizacionActual`: sólo para el precio acordado en pesos.
  *
@@ -202,14 +142,10 @@ export function calcularMetricas({
   compras = [],
   proveedores = [],
   periodo = PERIODO_METRICAS_DEFAULT,
-  obras = null,
   moneda = MONEDA_ANALISIS_DEFAULT,
   cotizacionActual = null,
   hoy = new Date(),
 }) {
-  const idsObras = obras?.length ? new Set(obras.map(String)) : null;
-  const seleccionados = proyectos.filter((p) => !idsObras || idsObras.has(String(p.id)));
-
   const proyectoDeFase = new Map(fases.map((f) => [f.id, f.proyecto_id]));
   const fasesPorProyecto = agrupar(fases, (f) => f.proyecto_id);
   const gastosPorProyecto = agrupar(gastos, (g) => g.proyecto_id);
@@ -219,7 +155,7 @@ export function calcularMetricas({
   const desde = inicioPeriodo(periodo, hoy);
   const enPeriodo = (items) => (desde ? items.filter((m) => String(m.fecha) >= desde) : items);
 
-  const resumenes = seleccionados.map((proyecto) => {
+  const resumenes = proyectos.map((proyecto) => {
     const fasesDelProyecto = fasesPorProyecto.get(proyecto.id) ?? [];
     const todo = {
       gastos: gastosPorProyecto.get(proyecto.id) ?? [],
@@ -331,16 +267,6 @@ export function calcularMetricas({
     }))
     .sort((a, b) => b.gastado - a.gastado);
 
-  // Con UNA obra elegida, su curva de cobrado y gastado en el tiempo.
-  const unica = idsObras?.size === 1 ? conMovimientos[0] : null;
-  const curvaObraElegida = unica
-    ? curvaObra({
-        ...unica.todo,
-        precioUsd: precioAcordadoEn(unica.proyecto, "usd"),
-        hoy: hoyISO(hoy),
-      })
-    : null;
-
   // El mismo tramo del período anterior, con las mismas obras y la misma
   // cuenta (calcularAnalisis), para la variación de cada KPI.
   const anterior = rangoAnterior(periodo, hoy);
@@ -432,7 +358,6 @@ export function calcularMetricas({
     rangoAnterior: anterior,
     evolucionMensual,
     obrasContrato,
-    curvaObraElegida,
     rentabilidadPorObra,
     egresosPorCategoria,
     topProveedores: proveedoresTop,

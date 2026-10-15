@@ -340,7 +340,7 @@ export const SECCIONES_GUIA = [
       {
         tipo: "parrafo",
         texto:
-          "En Métricas ves todas las obras juntas: ingresos (lo cobrado), egresos (compras y gastos), resultado (la diferencia) y rentabilidad (qué parte de lo cobrado quedó como resultado). Arriba elegís el período, una obra o todas, y si lo querés ver en dólares o en pesos.",
+          "En Métricas ves todas las obras juntas: ingresos (lo cobrado), egresos (compras y gastos), resultado (la diferencia) y rentabilidad (qué parte de lo cobrado quedó como resultado). Arriba elegís el período y si lo querés ver en dólares o en pesos.",
       },
       {
         tipo: "lista",
@@ -348,7 +348,6 @@ export const SECCIONES_GUIA = [
           "Al lado de cada número, cuánto cambió contra el mismo tramo del período anterior; debajo, cuánto era antes.",
           "Mes a mes: las columnas son lo cobrado y lo gastado de cada mes, y la línea es el saldo acumulado desde el inicio del período, o sea cuánto te queda.",
           "Obras contra el contrato: por cada obra, qué parte del precio acordado ya cobraste (verde) y qué parte ya gastaste (gris). Si la gris es más larga, la obra gastó más de lo que cobró.",
-          "Si elegís una obra arriba, en vez de la lista ves su avance en el tiempo: lo cobrado y lo gastado mes a mes contra el contrato.",
           "Rentabilidad por obra: de la que más deja a la que menos. Una obra sin cobros en el período no aparece.",
           "Egresos por categoría: los gastos por su categoría, y todas las compras juntas en «Compras a proveedores».",
           "Proveedores: a quién le compraste más en el período.",

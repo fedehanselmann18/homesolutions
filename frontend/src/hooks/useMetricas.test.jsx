@@ -24,12 +24,12 @@ describe("useFiltrosMetricas", () => {
 
   it("sin parámetros usa los valores por defecto", () => {
     const { result } = renderFiltros();
-    expect(result.current.filtros).toMatchObject({ periodo: "6m", obra: null, moneda: "usd" });
+    expect(result.current.filtros).toMatchObject({ periodo: "6m", moneda: "usd" });
   });
 
-  it("lee período, obra y moneda de la URL", () => {
-    const { result } = renderFiltros("/metricas?periodo=12m&obra=3&moneda=ars");
-    expect(result.current.filtros).toMatchObject({ periodo: "12m", obra: "3", moneda: "ars" });
+  it("lee período y moneda de la URL", () => {
+    const { result } = renderFiltros("/metricas?periodo=12m&moneda=ars");
+    expect(result.current.filtros).toMatchObject({ periodo: "12m", moneda: "ars" });
   });
 
   it("un período o una moneda que no existen caen al default", () => {
@@ -46,15 +46,6 @@ describe("useFiltrosMetricas", () => {
 
     act(() => result.current.filtros.setPeriodo("6m"));
     expect(result.current.location.search).toBe("");
-  });
-
-  it("elegir una obra y volver a todas", () => {
-    const { result } = renderFiltros("/metricas?periodo=anio");
-    act(() => result.current.filtros.setObra("3"));
-    expect(result.current.location.search).toBe("?periodo=anio&obra=3");
-
-    act(() => result.current.filtros.setObra(null));
-    expect(result.current.location.search).toBe("?periodo=anio");
   });
 
   it("cambiar la moneda la guarda en la URL y en la elección global de la app", () => {

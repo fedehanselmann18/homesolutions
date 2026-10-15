@@ -14,7 +14,7 @@ import { calcularMetricas } from "../utils/metricas";
 import { MONEDAS } from "../utils/moneda";
 import { PERIODOS_METRICAS, PERIODO_METRICAS_DEFAULT } from "../constants/metricas";
 
-// Filtros de Métricas en la URL (?periodo=12m&obra=3&moneda=ars): se pueden
+// Filtros de Métricas en la URL (?periodo=12m&moneda=ars): se pueden
 // compartir y sobreviven a recargar. Un valor por default no se escribe, así
 // la URL de entrada queda limpia (/metricas).
 //
@@ -22,7 +22,7 @@ import { PERIODOS_METRICAS, PERIODO_METRICAS_DEFAULT } from "../constants/metric
 // la URL no la trae, se usa la global, y al cambiarla acá se cambian las dos,
 // para que el Panel y el Análisis no queden en otra moneda que Métricas.
 
-const PARAM = { periodo: "periodo", obra: "obra", moneda: "moneda" };
+const PARAM = { periodo: "periodo", moneda: "moneda" };
 
 const esPeriodo = (valor) => PERIODOS_METRICAS.some((p) => p.value === valor);
 
@@ -32,7 +32,6 @@ export function useFiltrosMetricas() {
 
   const periodoUrl = searchParams.get(PARAM.periodo);
   const periodo = esPeriodo(periodoUrl) ? periodoUrl : PERIODO_METRICAS_DEFAULT;
-  const obra = searchParams.get(PARAM.obra) || null;
   const monedaUrl = searchParams.get(PARAM.moneda);
   const moneda = MONEDAS[monedaUrl] ? monedaUrl : monedaGlobal;
 
@@ -57,7 +56,6 @@ export function useFiltrosMetricas() {
     (valor) => cambiarParam(PARAM.periodo, valor, PERIODO_METRICAS_DEFAULT),
     [cambiarParam]
   );
-  const setObra = useCallback((valor) => cambiarParam(PARAM.obra, valor, null), [cambiarParam]);
   const setMoneda = useCallback(
     (valor) => {
       cambiarMonedaGlobal(valor);
@@ -66,7 +64,7 @@ export function useFiltrosMetricas() {
     [cambiarMonedaGlobal, cambiarParam]
   );
 
-  return { periodo, obra, moneda, setPeriodo, setObra, setMoneda };
+  return { periodo, moneda, setPeriodo, setMoneda };
 }
 
 /**
@@ -88,7 +86,7 @@ export function useMetricas() {
   const cargando = queries.some((q) => q.isLoading);
   const error = queries.find((q) => q.isError)?.error ?? null;
 
-  const { periodo, obra, moneda } = filtros;
+  const { periodo, moneda } = filtros;
   const metricas = useMemo(() => {
     if (cargando || error) return null;
     return calcularMetricas({
@@ -99,7 +97,6 @@ export function useMetricas() {
       compras: comprasQuery.data,
       proveedores: proveedoresQuery.data ?? [],
       periodo,
-      obras: obra ? [obra] : null,
       moneda,
       cotizacionActual,
     });
@@ -113,15 +110,12 @@ export function useMetricas() {
     comprasQuery.data,
     proveedoresQuery.data,
     periodo,
-    obra,
     moneda,
     cotizacionActual,
   ]);
 
   return {
     metricas,
-    // Opciones del filtro de obra: todas, en el orden de la lista de Proyectos.
-    proyectos: proyectosQuery.data ?? [],
     cargando,
     error,
     filtros,

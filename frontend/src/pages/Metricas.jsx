@@ -7,7 +7,6 @@ import { FiltrosMetricas } from "../components/metricas/FiltrosMetricas";
 import { TarjetaVariacion } from "../components/metricas/TarjetaVariacion";
 import { GraficoMesAMes } from "../components/metricas/GraficoMesAMes";
 import { ObrasContraContrato } from "../components/metricas/ObrasContraContrato";
-import { GraficoAvance } from "../components/metricas/GraficoAvance";
 import { RankingRentabilidad } from "../components/metricas/RankingRentabilidad";
 import { EgresosPorCategoria } from "../components/metricas/EgresosPorCategoria";
 import { TablaObras } from "../components/metricas/TablaObras";
@@ -65,7 +64,7 @@ function MetricasSkeleton() {
 
 const formatPct = (valor) => (valor == null ? E.sinValor : `${formatNumero(valor, 1)} %`);
 
-function CuerpoMetricas({ metricas, unaObra }) {
+function CuerpoMetricas({ metricas }) {
   const { kpis, kpisAnterior, variacion, moneda } = metricas;
   const fm = (monto) => formatMoneda(monto, moneda);
   const tarjetas = [
@@ -93,13 +92,7 @@ function CuerpoMetricas({ metricas, unaObra }) {
 
       <div className="metricas-graficos">
         <GraficoMesAMes meses={metricas.evolucionMensual} moneda={moneda} />
-        {/* Con una obra elegida, su curva en el tiempo; con todas, cada una
-            contra su contrato. */}
-        {unaObra ? (
-          <GraficoAvance puntos={metricas.curvaObraElegida ?? []} />
-        ) : (
-          <ObrasContraContrato obras={metricas.obrasContrato} />
-        )}
+        <ObrasContraContrato obras={metricas.obrasContrato} />
       </div>
 
       <div className="metricas-bloques">
@@ -125,18 +118,18 @@ function CuerpoMetricas({ metricas, unaObra }) {
 
 export function Metricas() {
   usePageTitle(E.titulo);
-  const { metricas, proyectos, cargando, error, filtros } = useMetricas();
+  const { metricas, cargando, error, filtros } = useMetricas();
 
   let cuerpo;
   if (cargando) cuerpo = <MetricasSkeleton />;
   else if (error || !metricas) cuerpo = <EstadoError mensaje={E.errorCarga} grande />;
   else if (metricas.filasObras.length === 0) cuerpo = <EstadoVacio mensaje={E.sinDatos} grande />;
-  else cuerpo = <CuerpoMetricas metricas={metricas} unaObra={Boolean(filtros.obra)} />;
+  else cuerpo = <CuerpoMetricas metricas={metricas} />;
 
   return (
     <div className="metricas">
       <PageHeader titulo={E.titulo} />
-      <FiltrosMetricas filtros={filtros} proyectos={proyectos} />
+      <FiltrosMetricas filtros={filtros} />
       {cuerpo}
     </div>
   );

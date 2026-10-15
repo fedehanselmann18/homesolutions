@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calcularMetricas, curvaObra, inicioPeriodo, nivelObra, rangoAnterior } from "./metricas";
+import { calcularMetricas, inicioPeriodo, nivelObra, rangoAnterior } from "./metricas";
 import { calcularAnalisis } from "./analisis";
 import { CATEGORIA_COMPRAS } from "../constants/metricas";
 
@@ -290,14 +290,6 @@ describe("calcularMetricas", () => {
     expect(terravista.nivel).toBe("sin_dato");
   });
 
-  it("filtra por obra (los ids pueden llegar como texto desde la URL)", () => {
-    const r = calcularMetricas({ ...BASE, obras: ["2"] });
-    expect(r.filasObras.map((f) => f.id)).toEqual([2]);
-    expect(r.kpis.ingresos).toBe(8000);
-    expect(r.kpis.egresos).toBe(4000);
-    expect(r.topProveedores.map((p) => p.nombre)).toEqual(["Casa del Cobre"]);
-  });
-
   it("en pesos los montos salen de las cifras en pesos y la rentabilidad sigue siendo la de USD", () => {
     const enPesos = {
       ...BASE,
@@ -417,35 +409,5 @@ describe("calcularMetricas · tendencia y comparación", () => {
       proyectos: [{ ...BASE.proyectos[0], precio_acordado_usd: 0 }, BASE.proyectos[1]],
     });
     expect(r.obrasContrato.map((o) => o.id)).toEqual([2]);
-  });
-
-  it("la curva de la obra sólo se arma con una obra elegida", () => {
-    expect(calcularMetricas(BASE).curvaObraElegida).toBeNull();
-    const r = calcularMetricas({ ...BASE, obras: ["1"] });
-    const ultimo = r.curvaObraElegida.at(-1);
-    expect(ultimo.fecha).toBe("2026-10-15");
-    expect(ultimo.cobrado).toBeCloseTo(50);
-    expect(ultimo.gastado).toBeCloseTo(29.2);
-  });
-});
-
-describe("curvaObra", () => {
-  it("sin precio acordado no hay curva", () => {
-    expect(curvaObra({ cobros: [cobro(1, 1, "2026-06-01", 100)], precioUsd: 0 })).toEqual([]);
-  });
-
-  it("arranca en cero el día antes del primer movimiento", () => {
-    const puntos = curvaObra({
-      cobros: [cobro(1, 1, "2026-06-01", 500)],
-      gastos: [gasto(1, 1, "2026-06-03", 250)],
-      precioUsd: 1000,
-      hoy: "2026-06-10",
-    });
-    expect(puntos.map((p) => [p.fecha, p.cobrado, p.gastado])).toEqual([
-      ["2026-05-31", 0, 0],
-      ["2026-06-01", 50, 0],
-      ["2026-06-03", 50, 25],
-      ["2026-06-10", 50, 25],
-    ]);
   });
 });
