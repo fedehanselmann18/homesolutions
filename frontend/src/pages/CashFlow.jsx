@@ -33,9 +33,7 @@ export function CashFlow() {
 
   return (
     <div className="pagina-cashflow">
-      <PageHeader
-        titulo="Cash flow"
-      />
+      <PageHeader titulo="Cash flow" />
       {cargando ? (
         <Cargando texto="Cargando el cash flow..." />
       ) : error ? (

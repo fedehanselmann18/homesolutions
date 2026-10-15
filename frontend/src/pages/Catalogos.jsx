@@ -105,9 +105,7 @@ export function Catalogos() {
 
   return (
     <div className="catalogos">
-      <PageHeader
-        titulo="Ajustes"
-      />
+      <PageHeader titulo="Ajustes" />
 
       <Tabs tabs={tabs} activa={tabActiva} onCambiar={setTabActiva} etiqueta="Ajustes" />
 
