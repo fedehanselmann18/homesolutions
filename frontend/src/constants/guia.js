@@ -87,7 +87,7 @@ export const SECCIONES_GUIA = [
       {
         tipo: "parrafo",
         texto:
-          "El «En curso hace 12 días» cuenta desde el momento en que pasaste la fase a En curso. Editar el nombre o la descripción no reinicia el contador; en cambio, si la sacás de En curso y la volvés a poner, arranca de cero. Cuando una fase lleva 30 días o más en curso, el Panel la marca como estancada para que no se te pase.",
+          "El «En curso hace 12 días» cuenta desde la fecha «En curso desde» que elegís al pasar la fase a En curso (hoy, si no la cambiás). Si la fase arranca sola con una compra o un gasto, toma la fecha de ese movimiento, aunque lo cargues días después. Si te equivocaste, la corregís editando la fase; editar el nombre o la descripción no la toca. Cuando una fase lleva 30 días o más en curso, el Panel la marca como estancada para que no se te pase.",
       },
       {
         tipo: "aviso",

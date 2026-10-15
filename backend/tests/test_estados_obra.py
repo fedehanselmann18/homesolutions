@@ -26,7 +26,7 @@ def _obra(db_session, estado_proyecto="a_iniciar", estado_fase="por_empezar"):
     return proyecto, fase, proveedor
 
 
-def _crear_compra(client, headers, fase, proveedor):
+def _crear_compra(client, headers, fase, proveedor, fecha="2026-10-08"):
     return client.post(
         "/compras/crear",
         json={
@@ -36,7 +36,7 @@ def _crear_compra(client, headers, fase, proveedor):
             "precio_neto_ars": 100000,
             **COTIZACION,
             "tipo_factura": "factura_a",
-            "fecha": "2026-10-08",
+            "fecha": fecha,
             "medio_pago": "efectivo",
             "estado_pago": "pagado",
             "estado_envio": "entregado",
@@ -55,8 +55,30 @@ def test_primera_compra_pasa_fase_y_obra_a_en_curso(client, db_session, headers_
     db_session.refresh(fase)
     db_session.refresh(proyecto)
     assert fase.estado == "en_curso"
-    assert fase.fecha_en_curso_desde is not None
+    # En curso desde la fecha de la compra, no desde el día en que se cargó.
+    assert fase.fecha_en_curso_desde == date(2026, 10, 8)
     assert proyecto.estado == "en_curso"
+
+
+def test_compra_vieja_arranca_la_fase_en_su_fecha(client, db_session, headers_admin):
+    """Cargar hoy una compra de agosto deja la fase en curso desde agosto."""
+    _, fase, proveedor = _obra(db_session)
+
+    assert _crear_compra(client, headers_admin, fase, proveedor, fecha="2026-08-03").status_code == 201
+
+    db_session.refresh(fase)
+    assert fase.fecha_en_curso_desde == date(2026, 8, 3)
+
+
+def test_compra_anterior_a_la_fecha_de_en_curso_la_retrocede(client, db_session, headers_admin):
+    """Si después se carga algo más viejo, la fase arrancó con eso."""
+    _, fase, proveedor = _obra(db_session)
+    _crear_compra(client, headers_admin, fase, proveedor, fecha="2026-09-10")
+    _crear_compra(client, headers_admin, fase, proveedor, fecha="2026-07-01")
+    _crear_compra(client, headers_admin, fase, proveedor, fecha="2026-09-30")
+
+    db_session.refresh(fase)
+    assert fase.fecha_en_curso_desde == date(2026, 7, 1)
 
 
 def test_gasto_sin_fase_pasa_solo_la_obra(client, db_session, headers_admin):

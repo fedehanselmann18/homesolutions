@@ -362,7 +362,11 @@ class Fase(TimestampMixin, Base):
     # descripción, etc.), no solo con el cambio de estado, así que "en curso
     # hace 0 días" aparecía cada vez que se tocaba algo de una fase que ya
     # estaba en curso. Se pone en None cuando la fase sale de en_curso.
-    fecha_en_curso_desde: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Es una FECHA (oct 2026), no un instante: la elige el usuario al pasarla
+    # a en curso, o es la del primer movimiento que la arrancó. Antes era el
+    # momento en que se cargaba, y cargar una compra vieja dejaba la fase "en
+    # curso desde hoy".
+    fecha_en_curso_desde: Mapped[date | None] = mapped_column()
 
     proyecto: Mapped["Proyecto"] = relationship(back_populates="fases")
     # Compra NO puede existir sin Fase -> se borra en cascada junto con ella (ver Compra.fase_id).

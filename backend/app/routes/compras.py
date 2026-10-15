@@ -216,7 +216,7 @@ def create_compra(
     condicion = plazos.buscar_condicion(db, compra.condicion_pago_id)
     plazos.armar_plazos(nueva_compra, condicion, pagado=compra.estado_pago == plazos.PAGADO)
 
-    activar_por_movimiento(db, fase=fase)
+    activar_por_movimiento(db, fase=fase, fecha=nueva_compra.fecha)
 
     try:
         db.add(nueva_compra)

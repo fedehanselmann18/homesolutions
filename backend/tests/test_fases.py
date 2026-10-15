@@ -182,20 +182,11 @@ def test_editar_otro_campo_no_pisa_fecha_en_curso_desde(client, db_session, head
     está en curso."""
     proyecto = _crear_proyecto(db_session)
     fase = _crear_fase_via_api(client, headers_admin, proyecto.id, "Montaje")
-
-    respuesta = client.put(f"/fases/{fase['id']}", json={"estado": "en_curso"}, headers=headers_admin)
-    fecha_original = respuesta.json()["fecha_en_curso_desde"]
-    assert fecha_original is not None
-
-    # Como en el fixture de tests todo corre "al mismo instante", se fuerza
-    # a mano la fecha bien atrás para poder distinguir "se mantuvo" de "se
-    # pisó con la hora actual" sin depender de que pase tiempo real.
-    fase_db = db_session.query(models.Fase).filter_by(id=fase["id"]).first()
-    from datetime import datetime, timedelta, timezone
-
-    fecha_vieja = datetime.now(timezone.utc) - timedelta(days=10)
-    fase_db.fecha_en_curso_desde = fecha_vieja
-    db_session.commit()
+    client.put(
+        f"/fases/{fase['id']}",
+        json={"estado": "en_curso", "fecha_en_curso_desde": "2026-08-01"},
+        headers=headers_admin,
+    )
 
     respuesta = client.put(
         f"/fases/{fase['id']}", json={"descripcion": "Instalación de equipos"}, headers=headers_admin
@@ -203,9 +194,89 @@ def test_editar_otro_campo_no_pisa_fecha_en_curso_desde(client, db_session, head
     assert respuesta.status_code == 200
     cuerpo = respuesta.json()
     assert cuerpo["descripcion"] == "Instalación de equipos"
-    # La fecha de "entró en curso" no se movió por editar la descripción.
-    assert cuerpo["fecha_en_curso_desde"] is not None
-    assert abs((datetime.fromisoformat(cuerpo["fecha_en_curso_desde"]) - fecha_vieja).total_seconds()) < 1
+    assert cuerpo["fecha_en_curso_desde"] == "2026-08-01"
+
+
+def test_crear_fase_en_curso_con_fecha_elegida(client, db_session, headers_admin):
+    proyecto = _crear_proyecto(db_session)
+    respuesta = client.post(
+        "/fases/crear",
+        json={
+            "proyecto_id": str(proyecto.id),
+            "nombre": "Montaje",
+            "estado": "en_curso",
+            "fecha_en_curso_desde": "2026-05-04",
+        },
+        headers=headers_admin,
+    )
+    assert respuesta.status_code == 201
+    assert respuesta.json()["fecha_en_curso_desde"] == "2026-05-04"
+
+
+def test_crear_fase_por_empezar_ignora_la_fecha(client, db_session, headers_admin):
+    proyecto = _crear_proyecto(db_session)
+    respuesta = client.post(
+        "/fases/crear",
+        json={
+            "proyecto_id": str(proyecto.id),
+            "nombre": "Entrega",
+            "estado": "por_empezar",
+            "fecha_en_curso_desde": "2026-05-04",
+        },
+        headers=headers_admin,
+    )
+    assert respuesta.json()["fecha_en_curso_desde"] is None
+
+
+def test_pasar_a_en_curso_con_fecha_elegida(client, db_session, headers_admin):
+    proyecto = _crear_proyecto(db_session)
+    fase = _crear_fase_via_api(client, headers_admin, proyecto.id, "Montaje")
+
+    respuesta = client.put(
+        f"/fases/{fase['id']}",
+        json={"estado": "en_curso", "fecha_en_curso_desde": "2026-06-15"},
+        headers=headers_admin,
+    )
+    assert respuesta.status_code == 200
+    assert respuesta.json()["fecha_en_curso_desde"] == "2026-06-15"
+
+
+def test_corregir_la_fecha_de_una_fase_ya_en_curso(client, db_session, headers_admin):
+    proyecto = _crear_proyecto(db_session)
+    fase = _crear_fase_via_api(client, headers_admin, proyecto.id, "Montaje")
+    client.put(f"/fases/{fase['id']}", json={"estado": "en_curso"}, headers=headers_admin)
+
+    respuesta = client.put(
+        f"/fases/{fase['id']}", json={"fecha_en_curso_desde": "2026-03-02"}, headers=headers_admin
+    )
+    assert respuesta.status_code == 200
+    assert respuesta.json()["fecha_en_curso_desde"] == "2026-03-02"
+
+
+def test_pasar_a_en_curso_sin_fecha_es_hoy(client, db_session, headers_admin):
+    from app.plazos import hoy
+
+    proyecto = _crear_proyecto(db_session)
+    fase = _crear_fase_via_api(client, headers_admin, proyecto.id, "Montaje")
+    respuesta = client.put(f"/fases/{fase['id']}", json={"estado": "en_curso"}, headers=headers_admin)
+    assert respuesta.json()["fecha_en_curso_desde"] == hoy().isoformat()
+
+
+def test_fecha_en_curso_futura_se_rechaza(client, db_session, headers_admin):
+    from datetime import timedelta
+
+    from app.plazos import hoy
+
+    proyecto = _crear_proyecto(db_session)
+    fase = _crear_fase_via_api(client, headers_admin, proyecto.id, "Montaje")
+    manana = (hoy() + timedelta(days=1)).isoformat()
+    respuesta = client.put(
+        f"/fases/{fase['id']}",
+        json={"estado": "en_curso", "fecha_en_curso_desde": manana},
+        headers=headers_admin,
+    )
+    assert respuesta.status_code == 400
+    assert "futura" in respuesta.json()["detail"]
 
 
 def test_salir_de_en_curso_limpia_fecha_en_curso_desde(client, db_session, headers_admin):

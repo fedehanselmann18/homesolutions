@@ -596,3 +596,38 @@ describe("ModalFase: nombre de la lista o a mano", () => {
     expect(screen.queryByRole("button", { name: "elegir de la lista" })).toBeNull();
   });
 });
+
+describe("ModalFase: en curso desde", () => {
+  it("la fecha sólo aparece con la fase en curso, y viaja con lo que se guarda", async () => {
+    const onGuardar = vi.fn();
+    render(<ModalFase onGuardar={onGuardar} onCerrar={noop} />);
+    expect(screen.queryByLabelText(/en curso desde/i)).toBeNull();
+
+    await userEvent.type(screen.getByRole("textbox", { name: /nombre/i }), "Montaje");
+    await userEvent.click(screen.getByRole("radio", { name: /en curso/i }));
+    const fecha = screen.getByLabelText(/en curso desde/i);
+    await userEvent.clear(fecha);
+    await userEvent.type(fecha, "2026-05-04");
+    await userEvent.click(screen.getByRole("button", { name: "Crear fase" }));
+
+    expect(onGuardar).toHaveBeenCalledWith(
+      expect.objectContaining({ estado: "en_curso", fecha_en_curso_desde: "2026-05-04" })
+    );
+  });
+
+  it("al editar trae la fecha guardada, y si la fase no queda en curso no la manda", async () => {
+    const onGuardar = vi.fn();
+    render(
+      <ModalFase
+        fase={{ id: 1, nombre: "Montaje", estado: "en_curso", fecha_en_curso_desde: "2026-03-02" }}
+        onGuardar={onGuardar}
+        onCerrar={noop}
+      />
+    );
+    expect(screen.getByLabelText(/en curso desde/i)).toHaveValue("2026-03-02");
+
+    await userEvent.click(screen.getByRole("radio", { name: /terminada/i }));
+    await userEvent.click(screen.getByRole("button", { name: "Guardar cambios" }));
+    expect(onGuardar.mock.calls[0][0]).not.toHaveProperty("fecha_en_curso_desde");
+  });
+});

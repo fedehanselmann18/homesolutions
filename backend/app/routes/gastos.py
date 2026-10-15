@@ -147,7 +147,7 @@ def create_gasto(
     condicion = plazos.buscar_condicion(db, gasto.condicion_pago_id)
     plazos.armar_plazos(nuevo_gasto, condicion, pagado=gasto.estado_pago == plazos.PAGADO)
 
-    activar_por_movimiento(db, fase=fase, proyecto=proyecto)
+    activar_por_movimiento(db, fase=fase, proyecto=proyecto, fecha=nuevo_gasto.fecha)
 
     try:
         db.add(nuevo_gasto)

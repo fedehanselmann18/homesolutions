@@ -4,6 +4,7 @@ import { Building2, Layers, PenLine } from "lucide-react";
 import ModalShell, { AccionesFormulario } from "./ModalShell";
 import { ControlOpcion } from "../shared/ControlOpcion";
 import { ESTADO_LABELS } from "../../constants/estados";
+import { hoyISO } from "../../utils/formato";
 
 // El estado de una fase se elige mirando el mismo semáforo del resto de la
 // app (estados.js): cada tile lleva el ícono de su badge.
@@ -27,6 +28,9 @@ const OPCION_A_MANO = "__a_mano__";
  * «Otra (escribir a mano)» se tipea uno libre: la fase guarda el nombre como
  * texto, no una referencia, así que cualquiera vale. Sin sugerencias (todavía
  * cargando, o la lista vacía) queda directo el input de texto.
+ *
+ * En curso pide desde qué fecha: la elegís vos (hoy por default), así una
+ * fase que arrancó hace meses no queda "en curso desde hoy" al cargarla.
  */
 export function ModalFase({ fase, contexto, nombresSugeridos = [], onGuardar, onCerrar }) {
   const esEdicion = Boolean(fase);
@@ -36,6 +40,7 @@ export function ModalFase({ fase, contexto, nombresSugeridos = [], onGuardar, on
     nombre: "",
     descripcion: "",
     estado: "por_empezar",
+    fecha_en_curso_desde: hoyISO(),
   });
   const [guardando, setGuardando] = useState(false);
   // A mano si se eligió «Otra», o si la fase que se edita tiene un nombre
@@ -53,6 +58,7 @@ export function ModalFase({ fase, contexto, nombresSugeridos = [], onGuardar, on
         nombre: fase.nombre ?? "",
         descripcion: fase.descripcion ?? "",
         estado: fase.estado ?? "por_empezar",
+        fecha_en_curso_desde: fase.fecha_en_curso_desde ?? hoyISO(),
       });
     }
   }, [fase]);
@@ -96,8 +102,11 @@ export function ModalFase({ fase, contexto, nombresSugeridos = [], onGuardar, on
     // el componente padre debe agregarlo antes de llamar al service:
     // onGuardar({ ...form, proyecto_id: proyectoId })
     setGuardando(true);
+    // La fecha sólo viaja si la fase queda en curso.
+    const datos = { ...form };
+    if (datos.estado !== "en_curso") delete datos.fecha_en_curso_desde;
     try {
-      await onGuardar(form);
+      await onGuardar(datos);
     } finally {
       setGuardando(false);
     }
@@ -185,6 +194,20 @@ export function ModalFase({ fase, contexto, nombresSugeridos = [], onGuardar, on
         variante="tiles"
         disabled={guardando}
       />
+
+      {form.estado === "en_curso" && (
+        <label>
+          En curso desde
+          <input
+            type="date"
+            name="fecha_en_curso_desde"
+            value={form.fecha_en_curso_desde}
+            onChange={handleChange}
+            max={hoyISO()}
+            required
+          />
+        </label>
+      )}
     </ModalShell>
   );
 }

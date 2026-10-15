@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import func
@@ -9,6 +9,7 @@ from app.auth.oAuth2 import get_current_user, requiere_admin
 from app.db import models
 from app.db.db import get_db
 from app.files.storage import eliminar_comprobante
+from app.plazos import hoy
 from app.schemas import FaseCreate, FaseOut, FaseReordenar, FaseUpdate
 
 router = APIRouter(prefix="/fases", tags=["fases"])
@@ -42,6 +43,16 @@ def get_fases_by_proyecto(
     )
 
 
+def _fecha_en_curso(elegida: date | None) -> date:
+    """La fecha que eligió el usuario, o hoy. No puede ser futura: una fase
+    no puede estar en curso desde mañana."""
+    if elegida is None:
+        return hoy()
+    if elegida > hoy():
+        raise HTTPException(status_code=400, detail="La fecha de en curso no puede ser futura")
+    return elegida
+
+
 @router.post("/crear", response_model=FaseOut, status_code=status.HTTP_201_CREATED)
 def create_fase(
     fase: FaseCreate, db: Session = Depends(get_db), current_user: models.Usuario = Depends(requiere_admin)
@@ -64,7 +75,9 @@ def create_fase(
         descripcion=fase.descripcion,
         estado=fase.estado,
         orden=siguiente_orden,
-        fecha_en_curso_desde=datetime.now(timezone.utc) if fase.estado == "en_curso" else None,
+        fecha_en_curso_desde=(
+            _fecha_en_curso(fase.fecha_en_curso_desde) if fase.estado == "en_curso" else None
+        ),
     )
 
     try:
@@ -132,18 +145,22 @@ def update_fase(
         raise HTTPException(status_code=404, detail="Fase no encontrada")
 
     estado_anterior = fase_existente.estado
+    cambios = fase.model_dump(exclude_unset=True)
+    fecha_elegida = cambios.pop("fecha_en_curso_desde", None)
 
-    for key, value in fase.model_dump(exclude_unset=True).items():
+    for key, value in cambios.items():
         setattr(fase_existente, key, value)
 
     # "Días en curso" se cuenta desde que la fase ENTRÓ en curso, no desde
     # la última edición cualquiera -- fecha_actualizacion se pisa con
     # cualquier cambio (nombre, descripción...), así que usarla para esto
     # hacía aparecer "en curso hace 0 días" apenas se tocaba algo de una
-    # fase que ya estaba en curso hace rato.
-    if fase_existente.estado == "en_curso" and estado_anterior != "en_curso":
-        fase_existente.fecha_en_curso_desde = datetime.now(timezone.utc)
-    elif fase_existente.estado != "en_curso" and estado_anterior == "en_curso":
+    # fase que ya estaba en curso hace rato. La fecha la elige el usuario
+    # (oct 2026); si no manda ninguna al pasarla a en curso, es hoy.
+    if fase_existente.estado == "en_curso":
+        if fecha_elegida is not None or estado_anterior != "en_curso":
+            fase_existente.fecha_en_curso_desde = _fecha_en_curso(fecha_elegida)
+    else:
         fase_existente.fecha_en_curso_desde = None
 
     try:

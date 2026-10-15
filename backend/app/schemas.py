@@ -485,12 +485,17 @@ class FaseBase(BaseModel):
 
 class FaseCreate(FaseBase):
     proyecto_id: uuid.UUID
+    # Sólo cuenta si la fase queda en curso; sin ella, hoy.
+    fecha_en_curso_desde: date | None = None
 
 
 class FaseUpdate(BaseModel):
     nombre: str | None = None
     descripcion: str | None = None
     estado: str | None = None
+    # Desde cuándo está en curso, elegida por el usuario. Al pasar a en
+    # curso sin ella, hoy. Se ignora si la fase no queda en curso.
+    fecha_en_curso_desde: date | None = None
 
 
 class FaseReordenar(BaseModel):
@@ -507,7 +512,7 @@ class FaseOut(FaseBase, TimestampOut):
     orden: int
     # Desde cuándo está en curso (None si nunca lo estuvo o ya no lo está).
     # El front lo usa para "en curso hace X días" en vez de fecha_actualizacion.
-    fecha_en_curso_desde: datetime | None = None
+    fecha_en_curso_desde: date | None = None
 
 
 # ---------------------------------------------------------------------------
