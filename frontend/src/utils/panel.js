@@ -233,7 +233,7 @@ function armarParaResolver(enCurso, nombreProveedor, hoy) {
 
 /**
  * Cobrado y gastado por mes, de los últimos `cantidad` meses hasta el de
- * `hoy` inclusive (los meses sin movimientos van en cero). Lo usan el Panel y
+ * `hoy` inclusive (los meses sin movimientos van en cero). Lo usan Métricas y
  * el saldo de la obra en Acciones.
  */
 export function armarEvolucion(gastos, cobros, compras, hoy, moneda, cantidad = MESES_EVOLUCION) {
@@ -492,6 +492,5 @@ export function calcularPanel({
     proyectosResumen,
     moneda,
     actividad: armarActividad(resumenes, moneda),
-    evolucion: armarEvolucion(gastos, cobros, compras, hoy, moneda),
   };
 }

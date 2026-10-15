@@ -34,59 +34,13 @@
   border-left: 1px solid var(--color-linea);
 }
 
-/* --- gráfico --- */
+/* --- próximos 30 días: en dos columnas, así seis pagos no ocupan media
+   pantalla --- */
 
-.panel-grafico {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  min-width: 0;
-}
-
-.panel-grafico__header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-}
-
-.panel-leyenda {
-  display: flex;
-  gap: var(--space-5);
-  font-size: var(--text-sm);
-  color: var(--color-tinta-muted);
-}
-
-.panel-leyenda__item {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-1-5);
-}
-
-.panel-leyenda__cuadro {
-  width: 10px;
-  height: 10px;
-  border-radius: var(--radius-xs);
-}
-
-.panel-tooltip {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  padding: var(--space-2-5) var(--space-3);
-  border: 1px solid var(--color-linea);
-  border-radius: var(--radius-md);
-  background: var(--color-superficie);
-  box-shadow: var(--shadow-overlay);
-  font-size: var(--text-sm);
-  color: var(--color-tinta-muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.panel-tooltip strong {
-  color: var(--color-tinta);
-  text-transform: capitalize;
+.panel-proximos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--space-10);
 }
 
 /* --- las dos listas --- */
@@ -344,6 +298,10 @@
 }
 
 @media (max-width: 900px) {
+  .panel-proximos {
+    grid-template-columns: 1fr;
+  }
+
   .panel-listas {
     grid-template-columns: 1fr;
     gap: var(--space-8);

@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ChevronRight, Clock, Paperclip, Truck, Wallet } from "lucide-react";
 import {
   useProyectos,
@@ -18,7 +17,9 @@ import { usePageTitle } from "../hooks/usePageTitle";
 
 import { TarjetaKpi } from "../components/shared/TarjetaKpi";
 import { calcularPanel } from "../utils/panel";
-import { formatFecha, formatMoneda, formatMonedaCorta } from "../utils/formato";
+import { calcularCashFlow } from "../utils/cashflow";
+import { diasEntre, sumarDias } from "../utils/plazos";
+import { formatFecha, formatMoneda, hoyISO, pluralizar } from "../utils/formato";
 import { getTipoMovimiento, signoTexto, TINTE_PASTILLA } from "../constants/tipoMovimiento";
 import {
   OLIVA,
@@ -27,9 +28,6 @@ import {
   ERROR_TINT,
   ATENCION_TINT,
   ATENCION_TEXTO,
-  TINTA_TENUE,
-  LINEA_SUAVE,
-  GRIS_CLARO,
 } from "../constants/colores";
 import { EstadoVacio } from "../components/shared/EstadoVacio";
 import { PageHeader } from "../components/shared/PageHeader";
@@ -73,7 +71,12 @@ function DashboardSkeleton() {
         ))}
       </div>
 
-      <div className="skeleton skeleton--grafico" />
+      <section className="panel-lista">
+        <div className="skeleton skeleton--seccion-titulo" />
+        {[0, 1, 2].map((j) => (
+          <div key={j} className="skeleton skeleton--fila" />
+        ))}
+      </section>
 
       <div className="panel-listas">
         <div className="panel-columna">
@@ -109,20 +112,16 @@ function ListaPanel({ titulo, link, className = "", children }) {
   );
 }
 
-function TooltipEvolucion({ active, payload, moneda }) {
-  if (!active || !payload?.length) return null;
-  const mes = payload[0].payload;
-  return (
-    <div className="panel-tooltip">
-      <strong>{mes.etiquetaCompleta}</strong>
-      <span>Cobrado {formatMoneda(mes.cobrado, moneda)}</span>
-      <span>Compras y gastos {formatMoneda(mes.gastado, moneda)}</span>
-    </div>
-  );
-}
-
 // Cuántos movimientos recientes entran en el Panel.
 const MOVIMIENTOS_EN_PANEL = 5;
+
+// "Próximos 30 días": los pagos (plazos sin pagar) que vencen en ese tramo,
+// del mismo cálculo que la pantalla Cash flow. Los vencidos no van acá: ya
+// están en "Para resolver" como problema.
+const DIAS_PROXIMOS = 30;
+const PROXIMOS_EN_PANEL = 6;
+
+const cuandoVence = (dias) => (dias === 0 ? "Hoy" : `En ${pluralizar(dias, "día")}`);
 
 const capitalizar = (texto = "") => texto.charAt(0).toUpperCase() + texto.slice(1);
 
@@ -190,11 +189,24 @@ export function Dashboard() {
   );
   const fm = (monto) => (monto == null ? "sin cotización" : formatMoneda(monto, moneda));
 
+  const hoy = hoyISO();
+  const proximos = useMemo(() => {
+    if (!datos) return [];
+    const limite = sumarDias(hoy, DIAS_PROXIMOS);
+    // En pesos: es la moneda en que se le paga a un proveedor (como la deuda).
+    return calcularCashFlow({
+      ...datos,
+      proveedores: proveedores ?? [],
+      moneda: "ars",
+      hoy,
+    }).vencimientos.filter((v) => !v.vencido && v.fecha <= limite);
+  }, [datos, proveedores, hoy]);
+
   if (cargando) return <DashboardSkeleton />;
   if (error || !panel)
     return <EstadoError mensaje="No se pudieron cargar los datos del panel." grande />;
 
-  const { kpis, proyectosActivos, paraResolver, totalParaResolver, evolucion } = panel;
+  const { kpis, proyectosActivos, paraResolver, totalParaResolver } = panel;
   // calcularPanel trae 8; en el Panel entran 5 (los últimos movimientos son
   // un vistazo, el listado completo está en cada proyecto).
   const ultimosMovimientos = panel.actividad.slice(0, MOVIMIENTOS_EN_PANEL);
@@ -216,7 +228,18 @@ export function Dashboard() {
 
   return (
     <div className="panel">
-      <PageHeader titulo={saludo} acciones={<SelectorMoneda />} />
+      <PageHeader
+        titulo={saludo}
+        acciones={
+          <>
+            <Link to="/metricas" className="panel-lista__link">
+              Ver métricas
+              <ChevronRight size={14} strokeWidth={1.75} aria-hidden="true" />
+            </Link>
+            <SelectorMoneda />
+          </>
+        }
+      />
 
       <div className="panel-kpis">
         <TarjetaKpi
@@ -229,59 +252,48 @@ export function Dashboard() {
         <TarjetaKpi titulo="Deuda con proveedores" valor={formatMoneda(deuda.monto)} />
       </div>
 
-      <section className="panel-grafico" aria-label="Cobrado y gastado, últimos 6 meses">
-        <div className="panel-grafico__header">
-          <h2 className="panel-lista__titulo">Últimos 6 meses</h2>
-          <div className="panel-leyenda">
-            <span className="panel-leyenda__item">
-              <span className="panel-leyenda__cuadro" style={{ background: OLIVA }} />
-              Cobros
-            </span>
-            <span className="panel-leyenda__item">
-              <span className="panel-leyenda__cuadro" style={{ background: GRIS_CLARO }} />
-              Compras y gastos
-            </span>
-          </div>
-        </div>
-        <ResponsiveContainer width="100%" height={180}>
-          <BarChart data={evolucion} margin={{ top: 8, right: 0, left: 0, bottom: 0 }} barGap={5}>
-            <CartesianGrid vertical={false} stroke={LINEA_SUAVE} />
-            <XAxis
-              dataKey="label"
-              tickLine={false}
-              axisLine={{ stroke: GRIS_CLARO }}
-              tick={{ fontSize: 12, fill: TINTA_TENUE }}
-            />
-            <YAxis
-              tickFormatter={(v) => formatMonedaCorta(v, moneda)}
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 12, fill: TINTA_TENUE }}
-              width={72}
-            />
-            <Tooltip
-              content={<TooltipEvolucion moneda={moneda} />}
-              cursor={{ fill: LINEA_SUAVE }}
-            />
-            <Bar
-              dataKey="cobrado"
-              name="Cobros"
-              fill={OLIVA}
-              barSize={22}
-              isAnimationActive={false}
-              radius={[3, 3, 0, 0]}
-            />
-            <Bar
-              dataKey="gastado"
-              name="Compras y gastos"
-              fill={GRIS_CLARO}
-              barSize={22}
-              isAnimationActive={false}
-              radius={[3, 3, 0, 0]}
-            />
-          </BarChart>
-        </ResponsiveContainer>
-      </section>
+      <ListaPanel
+        titulo={`Próximos ${DIAS_PROXIMOS} días`}
+        link={
+          <Link to="/cash-flow" className="panel-lista__link">
+            {proximos.length > PROXIMOS_EN_PANEL
+              ? `Ver los ${proximos.length} en Cash flow`
+              : "Ver cash flow"}
+            <ChevronRight size={14} strokeWidth={1.75} aria-hidden="true" />
+          </Link>
+        }
+      >
+        {proximos.length === 0 ? (
+          <EstadoVacio mensaje={`No vence ningún pago en los próximos ${DIAS_PROXIMOS} días.`} />
+        ) : (
+          <ul className="panel-lista__items panel-proximos">
+            {proximos.slice(0, PROXIMOS_EN_PANEL).map((v) => (
+              <li key={v.id}>
+                <button
+                  type="button"
+                  className="panel-pendiente"
+                  onClick={() => navigate("/cash-flow")}
+                  title={formatFecha(v.fecha)}
+                >
+                  <span className="panel-pendiente__icono">
+                    <Wallet size={15} strokeWidth={1.75} aria-hidden="true" />
+                  </span>
+                  <span className="panel-pendiente__titulo">{v.descripcion}</span>
+                  <span className="badge badge--sm badge--neutro">
+                    {cuandoVence(diasEntre(hoy, v.fecha))}
+                  </span>
+                  <span className="panel-pendiente__contexto">
+                    {[v.quien, v.proyecto].filter(Boolean).join(" · ")}
+                  </span>
+                  <span className="panel-pendiente__monto cifra">
+                    {formatMoneda(v.monto, "ars")}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </ListaPanel>
 
       {/* Dos columnas que terminan juntas: a la izquierda los proyectos y
           abajo los últimos movimientos; a la derecha "Para resolver", que

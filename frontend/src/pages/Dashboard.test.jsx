@@ -2,6 +2,8 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { Dashboard } from "./Dashboard";
+import { hoyISO } from "../utils/formato";
+import { sumarDias } from "../utils/plazos";
 import {
   useProyectos,
   useFases,
@@ -116,5 +118,71 @@ describe("Dashboard", () => {
     expect(filas).toHaveLength(5);
     expect(filas[0].textContent).toContain("Cobro 6");
     expect(filas[4].textContent).toContain("Cobro 2");
+  });
+
+  it("Próximos 30 días lista los pagos sin pagar que vencen en ese tramo, no los vencidos ni los lejanos", () => {
+    const hoy = hoyISO();
+    const plazo = (id, dias, pagado = false) => ({
+      id,
+      numero: 1,
+      fecha_vencimiento: sumarDias(hoy, dias),
+      monto: 1000,
+      pagado,
+    });
+    const gasto = (id, descripcion, plazos) => ({
+      id,
+      proyecto_id: 1,
+      descripcion,
+      fecha: hoy,
+      monto_ars: 1000,
+      monto_usd: 1,
+      cotizacion_dolar: 1000,
+      plazos,
+      comprobantes: [{ id: 1 }],
+    });
+    mockQueries({
+      isLoading: false,
+      data: {
+        proyectos: [
+          { id: 1, estado: "en_curso", precio_acordado_usd: 10000, nombre: "Depto Centro" },
+        ],
+        fases: [],
+        cobros: [],
+        compras: [],
+        gastos: [
+          gasto("g1", "Flete en 10 días", [plazo("p1", 10)]),
+          gasto("g2", "Flete en 45 días", [plazo("p2", 45)]),
+          gasto("g3", "Flete vencido", [plazo("p3", -5)]),
+          gasto("g4", "Flete pagado", [plazo("p4", 3, true)]),
+        ],
+      },
+    });
+    const { container } = renderDashboard();
+
+    expect(screen.getByRole("heading", { name: "Próximos 30 días" })).toBeInTheDocument();
+    const filas = container.querySelectorAll(".panel-proximos .panel-pendiente");
+    expect(filas).toHaveLength(1);
+    expect(filas[0]).toHaveTextContent("Flete en 10 días");
+    expect(filas[0]).toHaveTextContent("En 10 días");
+  });
+
+  it("el Panel ya no tiene el gráfico de 6 meses y lleva a Métricas", () => {
+    mockQueries({
+      isLoading: false,
+      data: {
+        proyectos: [{ id: 1, estado: "en_curso", precio_acordado_usd: 1, nombre: "Obra" }],
+        fases: [],
+        gastos: [],
+        cobros: [],
+        compras: [],
+      },
+    });
+    renderDashboard();
+
+    expect(screen.queryByText("Últimos 6 meses")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /ver métricas/i })).toHaveAttribute(
+      "href",
+      "/metricas"
+    );
   });
 });

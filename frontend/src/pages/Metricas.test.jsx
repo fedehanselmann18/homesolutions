@@ -128,8 +128,10 @@ describe("Metricas", () => {
     });
     const { container } = renderMetricas();
     const ingresos = () =>
-      within(container.querySelector(".metricas-kpis")).getByText(ETIQUETAS_METRICAS.ingresos)
-        .nextSibling.textContent;
+      within(container.querySelector(".metricas-kpis"))
+        .getByText(ETIQUETAS_METRICAS.ingresos)
+        .closest(".kpi")
+        .querySelector(".kpi-valor").textContent;
 
     // 6 meses por defecto: entran los dos cobros.
     expect(ingresos()).toMatch(/6\.000/);

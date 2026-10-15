@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { calcularMetricas, inicioPeriodo, nivelObra } from "./metricas";
+import { calcularMetricas, curvaObra, inicioPeriodo, nivelObra, rangoAnterior } from "./metricas";
 import { calcularAnalisis } from "./analisis";
 import { CATEGORIA_COMPRAS } from "../constants/metricas";
 
@@ -338,6 +338,114 @@ describe("calcularMetricas", () => {
     expect(r.topProveedores).toEqual([
       { nombre: "Casa del Cobre", monto: 3000, pct: (3000 / 5420) * 100 },
       { nombre: "Distribuidora LG", monto: 2420, pct: (2420 / 5420) * 100 },
+    ]);
+  });
+});
+
+describe("rangoAnterior", () => {
+  it("es el mismo tramo del período anterior, a la misma fecha", () => {
+    expect(rangoAnterior("mes", HOY)).toEqual({ desde: "2026-09-01", hasta: "2026-09-15" });
+    expect(rangoAnterior("6m", HOY)).toEqual({ desde: "2025-11-01", hasta: "2026-04-15" });
+    expect(rangoAnterior("anio", HOY)).toEqual({ desde: "2025-01-01", hasta: "2025-10-15" });
+  });
+
+  it("recorta el día al último del mes (31 de octubre → 30 de septiembre)", () => {
+    expect(rangoAnterior("mes", new Date(2026, 9, 31))).toEqual({
+      desde: "2026-09-01",
+      hasta: "2026-09-30",
+    });
+  });
+
+  it("en Todo no hay período anterior", () => {
+    expect(rangoAnterior("todo", HOY)).toBeNull();
+  });
+});
+
+describe("calcularMetricas · tendencia y comparación", () => {
+  // Movimientos entre nov 2025 y abr 2026: el período anterior a "6 meses".
+  const conAnterior = {
+    ...BASE,
+    cobros: [...BASE.cobros, cobro(9, 1, "2026-03-01", 4000)],
+    gastos: [...BASE.gastos, gasto(9, 1, "2026-04-10", 1000)],
+  };
+
+  it("compara cada KPI con el mismo tramo del período anterior", () => {
+    const r = calcularMetricas(conAnterior);
+    expect(r.kpisAnterior).toMatchObject({ ingresos: 4000, egresos: 1000, resultado: 3000 });
+    expect(r.kpisAnterior.rentabilidad).toBeCloseTo(75);
+    expect(r.variacion.ingresos).toBeCloseTo(225); // 13000 contra 4000
+    expect(r.variacion.egresos).toBeCloseTo(592); // 6920 contra 1000
+    // La rentabilidad varía en puntos: 46,77 % − 75 %.
+    expect(r.variacion.rentabilidad).toBeCloseTo((6080 / 13000) * 100 - 75);
+  });
+
+  it("sin movimientos en el período anterior, o en Todo, no hay variación", () => {
+    expect(calcularMetricas(BASE).variacion).toBeNull();
+    expect(calcularMetricas({ ...conAnterior, periodo: "todo" }).variacion).toBeNull();
+  });
+
+  it("el saldo acumulado mes a mes termina en el resultado del período", () => {
+    const r = calcularMetricas(BASE);
+    expect(r.evolucionMensual.map((m) => m.resultadoAcumulado)).toEqual([
+      0, // may
+      5000 - 2920, // jun: cobro de Olleros, gasto y compra
+      2080 + 8000, // jul: cobro de Terravista
+      10080 - 1000, // ago: gasto de Terravista
+      9080 - 3000, // sept: compra de Terravista
+      6080, // oct
+    ]);
+    expect(r.evolucionMensual.at(-1).resultadoAcumulado).toBeCloseTo(r.kpis.resultado);
+  });
+
+  it("obras contra el contrato: % cobrado y gastado de toda la obra, la más gastada primero", () => {
+    const r = calcularMetricas({ ...conAnterior, periodo: "3m" });
+    // En agosto–octubre sólo se movió Terravista: es la única obra.
+    expect(r.obrasContrato.map((o) => o.nombre)).toEqual(["Terravista"]);
+
+    const todo = calcularMetricas(conAnterior);
+    expect(todo.obrasContrato.map((o) => o.nombre)).toEqual(["Olleros", "Terravista"]);
+    // Olleros, toda la obra: 9000 cobrados y 3920 gastados de 10000.
+    expect(todo.obrasContrato[0].cobrado).toBeCloseTo(90);
+    expect(todo.obrasContrato[0].gastado).toBeCloseTo(39.2);
+    // Terravista: 8000 y 4000 de 20000.
+    expect(todo.obrasContrato[1]).toMatchObject({ cobrado: 40, gastado: 20 });
+  });
+
+  it("una obra sin precio acordado no entra en obras contra el contrato", () => {
+    const r = calcularMetricas({
+      ...BASE,
+      proyectos: [{ ...BASE.proyectos[0], precio_acordado_usd: 0 }, BASE.proyectos[1]],
+    });
+    expect(r.obrasContrato.map((o) => o.id)).toEqual([2]);
+  });
+
+  it("la curva de la obra sólo se arma con una obra elegida", () => {
+    expect(calcularMetricas(BASE).curvaObraElegida).toBeNull();
+    const r = calcularMetricas({ ...BASE, obras: ["1"] });
+    const ultimo = r.curvaObraElegida.at(-1);
+    expect(ultimo.fecha).toBe("2026-10-15");
+    expect(ultimo.cobrado).toBeCloseTo(50);
+    expect(ultimo.gastado).toBeCloseTo(29.2);
+  });
+});
+
+describe("curvaObra", () => {
+  it("sin precio acordado no hay curva", () => {
+    expect(curvaObra({ cobros: [cobro(1, 1, "2026-06-01", 100)], precioUsd: 0 })).toEqual([]);
+  });
+
+  it("arranca en cero el día antes del primer movimiento", () => {
+    const puntos = curvaObra({
+      cobros: [cobro(1, 1, "2026-06-01", 500)],
+      gastos: [gasto(1, 1, "2026-06-03", 250)],
+      precioUsd: 1000,
+      hoy: "2026-06-10",
+    });
+    expect(puntos.map((p) => [p.fecha, p.cobrado, p.gastado])).toEqual([
+      ["2026-05-31", 0, 0],
+      ["2026-06-01", 50, 0],
+      ["2026-06-03", 50, 25],
+      ["2026-06-10", 50, 25],
     ]);
   });
 });

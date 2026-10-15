@@ -39,12 +39,12 @@ import "./Sidebar.css";
 
 const ITEMS_NAV = [
   { to: "/", label: "Panel", icono: LayoutDashboard, contador: null },
-  { to: "/metricas", label: "Métricas", icono: ChartColumn, contador: null },
   { to: "/proyectos", label: "Proyectos", icono: Building2, contador: (c) => c.proyectos },
-  { to: "/proveedores", label: "Proveedores", icono: Truck, contador: (c) => c.proveedores },
+  { to: "/metricas", label: "Métricas", icono: ChartColumn, contador: null },
   { to: "/cash-flow", label: "Cash flow", icono: Wallet, contador: null },
-  { to: "/ajustes", label: "Ajustes", icono: SlidersHorizontal, contador: null },
+  { to: "/proveedores", label: "Proveedores", icono: Truck, contador: (c) => c.proveedores },
   { to: "/comparador", label: "Comparador", icono: GitCompare, contador: null },
+  { to: "/ajustes", label: "Ajustes", icono: SlidersHorizontal, contador: null },
   // La guía es sólo para admin (ver RUTAS_SOLO_ADMIN en ProtectedRoute).
   { to: "/guia", label: "Guía", icono: BookOpen, contador: null, soloAdmin: true },
 ];

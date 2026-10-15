@@ -1,6 +1,6 @@
 import { hoyISO } from "./formato";
 import { describe, it, expect } from "vitest";
-import { calcularPanel } from "./panel";
+import { armarEvolucion, calcularPanel } from "./panel";
 import { armarBandeja, calcularSeguimiento } from "./seguimiento";
 import { DIAS_DEUDA_VENCIDA } from "../constants/estadoCompra";
 
@@ -24,7 +24,6 @@ describe("calcularPanel", () => {
     expect(resultado.kpis.gananciaNetaMes).toBe(0);
     expect(resultado.proyectosActivos).toEqual([]);
     expect(resultado.actividad).toEqual([]);
-    expect(resultado.evolucion).toHaveLength(6);
   });
 
   it("cuenta proyectos por estado (en_curso / terminado / a_iniciar)", () => {
@@ -193,11 +192,11 @@ describe("calcularPanel", () => {
     expect(resultado.actividad[0].fecha).toBe("2026-08-10"); // el más reciente primero
   });
 
-  it("evolucion arma 6 meses terminando en 'hoy', con cobrado/gastado en cero si no hay movimientos", () => {
-    const resultado = calcularPanel({ hoy: HOY });
-    expect(resultado.evolucion).toHaveLength(6);
-    expect(resultado.evolucion.at(-1).mes).toBe("2026-08");
-    resultado.evolucion.forEach((m) => {
+  it("armarEvolucion arma 6 meses terminando en 'hoy', con cobrado/gastado en cero si no hay movimientos", () => {
+    const evolucion = armarEvolucion([], [], [], HOY, "usd");
+    expect(evolucion).toHaveLength(6);
+    expect(evolucion.at(-1).mes).toBe("2026-08");
+    evolucion.forEach((m) => {
       expect(m.cobrado).toBe(0);
       expect(m.gastado).toBe(0);
     });

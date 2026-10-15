@@ -37,21 +37,97 @@
   max-width: 260px;
 }
 
-/* --- KPIs: 4 en fila, 2×2 en tablet, una columna en móvil --- */
+/* --- KPIs: una caja con reglas entre celdas (diseño 1b). 4 en fila, 2×2 en
+   tablet, una columna en móvil. --- */
 
 .metricas-kpis {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-8);
+  border: 1px solid var(--color-linea);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 .metricas-kpis > * {
   min-width: 0;
+  padding: var(--space-5);
 }
 
 .metricas-kpis > * + * {
-  padding-left: var(--space-8);
   border-left: 1px solid var(--color-linea);
+}
+
+.metricas-tarjeta__cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* --- fila de dos gráficos: mes a mes (más ancho) y obras contra el
+   contrato / avance de la obra --- */
+
+.metricas-graficos {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: var(--space-8);
+}
+
+/* --- obras contra el contrato: nombre, dos barras (cobrado y gastado sobre
+   la pista del 100 %) y sus % --- */
+
+.metricas-contrato {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.metricas-contrato__fila {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2-5) 0;
+  border-bottom: 1px solid var(--color-linea-suave);
+}
+
+.metricas-contrato__fila:last-child {
+  border-bottom: none;
+}
+
+.metricas-contrato__obra {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-tinta);
+  text-decoration: none;
+}
+
+.metricas-contrato__obra:hover {
+  color: var(--color-oliva);
+}
+
+.metricas-contrato__barras {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+/* Ancho fijo: si la columna se ajustara a "100 %" o "85 %", cada pista
+   arrancaría en otro lugar. */
+.metricas-contrato__cifras {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  width: var(--space-10);
+  font-size: var(--text-xs);
+  line-height: 1.2;
+  color: var(--color-tinta-muted);
 }
 
 /* --- secciones (gráfico, tabla): título con regla abajo, como el Panel --- */
@@ -93,6 +169,12 @@
   gap: var(--space-1-5);
 }
 
+.metricas-leyenda__linea {
+  width: 14px;
+  height: 2px;
+  border-radius: var(--radius-pill);
+}
+
 .metricas-leyenda__cuadro {
   width: 10px;
   height: 10px;
@@ -111,6 +193,11 @@
   font-size: var(--text-sm);
   color: var(--color-tinta-muted);
   font-variant-numeric: tabular-nums;
+}
+
+.metricas-tooltip__fuerte {
+  font-weight: 600;
+  color: var(--color-tinta);
 }
 
 .metricas-tooltip strong {
@@ -256,13 +343,19 @@
 @media (max-width: 900px) {
   .metricas-kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    row-gap: var(--space-6);
   }
 
-  /* En 2×2 la regla vertical va sólo en la columna de la derecha. */
+  /* En 2×2: regla vertical sólo entre columnas, y horizontal entre filas. */
   .metricas-kpis > :nth-child(odd) {
-    padding-left: 0;
     border-left: none;
+  }
+
+  .metricas-kpis > :nth-child(n + 3) {
+    border-top: 1px solid var(--color-linea);
+  }
+
+  .metricas-graficos {
+    grid-template-columns: 1fr;
   }
 
   .metricas-bloques {
@@ -303,18 +396,10 @@
 
   .metricas-kpis {
     grid-template-columns: 1fr;
-    gap: var(--space-4);
   }
 
-  .metricas-kpis > * + *,
-  .metricas-kpis > :nth-child(odd) {
-    padding: var(--space-4) 0 0;
+  .metricas-kpis > * + * {
     border-left: none;
     border-top: 1px solid var(--color-linea);
-  }
-
-  .metricas-kpis > :first-child {
-    padding-top: 0;
-    border-top: none;
   }
 }

@@ -1,7 +1,14 @@
 import { calcularAnalisis, gastosPorCategoria, topProveedores } from "./analisis";
 import { armarEvolucion } from "./panel";
 import { hoyISO } from "./formato";
-import { MONEDA_ANALISIS_DEFAULT, precioAcordado as precioAcordadoEn } from "./moneda";
+import { sumarDias } from "./plazos";
+import {
+  MONEDA_ANALISIS_DEFAULT,
+  montoCobroNeto,
+  montoGasto,
+  precioAcordado as precioAcordadoEn,
+  precioTotalCompra,
+} from "./moneda";
 import {
   CATEGORIA_COMPRAS,
   PCT_EJECUTADO_ATENCION,
@@ -54,6 +61,38 @@ function mesesEntre(desde, hasta) {
   return (hasta.getFullYear() - desde.getFullYear()) * 12 + hasta.getMonth() - desde.getMonth() + 1;
 }
 
+/** "2026-07-27" -> milisegundos de ese día a las 0 h locales (eje X de las curvas). */
+function msLocal(fecha) {
+  const [anio, mes, dia] = String(fecha).split("-").map(Number);
+  return new Date(anio, mes - 1, dia).getTime();
+}
+
+/**
+ * La misma fecha `meses` meses antes, con el día recortado al último del mes
+ * de destino (31 de octubre menos un mes = 30 de septiembre, no 1 de octubre).
+ */
+function restarMeses(fecha, meses) {
+  const destino = new Date(fecha.getFullYear(), fecha.getMonth() - meses, 1);
+  const ultimoDia = new Date(destino.getFullYear(), destino.getMonth() + 1, 0).getDate();
+  destino.setDate(Math.min(fecha.getDate(), ultimoDia));
+  return destino;
+}
+
+const enRango = (items, desde, hasta) =>
+  items.filter((m) => {
+    const fecha = String(m.fecha);
+    return (!desde || fecha >= desde) && (!hasta || fecha <= hasta);
+  });
+
+const cantidadMovimientos = ({ gastos, cobros, compras }) =>
+  gastos.length + cobros.length + compras.length;
+
+/** Variación en % contra el período anterior; null si no hay con qué comparar. */
+function variacion(actual, anterior) {
+  if (!anterior) return null;
+  return ((actual - anterior) / Math.abs(anterior)) * 100;
+}
+
 /**
  * Fecha desde la que cuenta el período ("AAAA-MM-DD", local) o null para
  * "todo". Los períodos son meses calendario completos contando el actual.
@@ -65,6 +104,70 @@ export function inicioPeriodo(periodo, hoy = new Date()) {
     PERIODOS_METRICAS.find((p) => p.value === periodo) ??
     PERIODOS_METRICAS.find((p) => p.value === PERIODO_METRICAS_DEFAULT);
   return hoyISO(new Date(hoy.getFullYear(), hoy.getMonth() - (definicion.meses - 1), 1));
+}
+
+/**
+ * El mismo tramo del período anterior, con los dos extremos inclusive: con
+ * "6 meses" el 15 de octubre (may 1 – oct 15) es nov 1 – abr 15; con "Año",
+ * enero a hoy del año pasado. Así se compara mes a la fecha contra mes a la
+ * fecha y no contra un mes entero. null en "todo": no hay período anterior.
+ */
+export function rangoAnterior(periodo, hoy = new Date()) {
+  const desde = inicioPeriodo(periodo, hoy);
+  if (!desde) return null;
+  const meses =
+    periodo === "anio" ? 12 : (PERIODOS_METRICAS.find((p) => p.value === periodo)?.meses ?? 6);
+  const [anio, mes, dia] = desde.split("-").map(Number);
+  return {
+    desde: hoyISO(restarMeses(new Date(anio, mes - 1, dia), meses)),
+    hasta: hoyISO(restarMeses(hoy, meses)),
+  };
+}
+
+/**
+ * Ingresos y egresos acumulados día a día: un punto por día con
+ * movimientos, uno en cero el día anterior al primero y uno en `hoy` para
+ * que la curva llegue hasta la fecha.
+ */
+function acumuladoDiario({ gastos = [], cobros = [], compras = [], moneda, hoy }) {
+  const porDia = new Map();
+  const sumarDia = (fecha, clave, monto) => {
+    const dia = porDia.get(fecha) ?? { ingresos: 0, egresos: 0 };
+    dia[clave] += monto;
+    porDia.set(fecha, dia);
+  };
+  cobros.forEach((c) => sumarDia(String(c.fecha), "ingresos", montoCobroNeto(c, moneda)));
+  gastos.forEach((g) => sumarDia(String(g.fecha), "egresos", montoGasto(g, moneda)));
+  compras.forEach((c) => sumarDia(String(c.fecha), "egresos", precioTotalCompra(c, moneda)));
+
+  const fechas = [...porDia.keys()].sort();
+  if (fechas.length === 0) return [];
+
+  let ingresos = 0;
+  let egresos = 0;
+  const punto = (fecha) => ({ t: msLocal(fecha), fecha, ingresos, egresos });
+  const puntos = [punto(sumarDias(fechas[0], -1))];
+  fechas.forEach((fecha) => {
+    ingresos += porDia.get(fecha).ingresos;
+    egresos += porDia.get(fecha).egresos;
+    puntos.push(punto(fecha));
+  });
+  if (hoy > fechas[fechas.length - 1]) puntos.push(punto(hoy));
+  return puntos;
+}
+
+/**
+ * Curva de una obra: cobrado y gastado acumulados como % de su precio
+ * acordado, en dólares y en toda su historia (no sólo el período).
+ */
+export function curvaObra({ gastos = [], cobros = [], compras = [], precioUsd, hoy }) {
+  if (!(precioUsd > 0)) return [];
+  return acumuladoDiario({ gastos, cobros, compras, moneda: "usd", hoy }).map((p) => ({
+    t: p.t,
+    fecha: p.fecha,
+    cobrado: (p.ingresos / precioUsd) * 100,
+    gastado: (p.egresos / precioUsd) * 100,
+  }));
 }
 
 /**
@@ -141,7 +244,7 @@ export function calcularMetricas({
     const periodoUsd = moneda === "usd" ? periodoMoneda : analizar(delPeriodo, "usd");
     const obraUsd = analizar(todo, "usd");
 
-    return { proyecto, delPeriodo, periodoMoneda, periodoUsd, obraUsd };
+    return { proyecto, fasesDelProyecto, todo, delPeriodo, periodoMoneda, periodoUsd, obraUsd };
   });
 
   // Sólo las obras con algún movimiento en el período: una obra sin nada no
@@ -168,6 +271,7 @@ export function calcularMetricas({
       resultadoUsd: periodoUsd.totales.disponible,
       rentabilidad: rentabilidad(periodoUsd.totales.disponible, periodoUsd.totales.cobrado),
       pctEjecutado,
+      pctCobrado: precioAcordadoUsd > 0 ? obraUsd.totales.pctCobrado : null,
       nivel: nivelObra({ resultadoUsd: obraUsd.totales.disponible, pctEjecutado }),
     };
   });
@@ -193,20 +297,84 @@ export function calcularMetricas({
   const ultima = fechas.length ? primeroDelMes(fechas[fechas.length - 1]) : null;
   const fin = ultima && ultima > hoy ? ultima : hoy;
   const inicio = primeroDelMes(desde ?? fechas[0] ?? hoyISO(hoy));
-  const evolucionMensual = armarEvolucion(
+  const evolucion = armarEvolucion(
     movimientos.gastos,
     movimientos.cobros,
     movimientos.compras,
     fin,
     moneda,
     Math.max(1, mesesEntre(inicio, fin))
-  ).map(({ mes, label, etiquetaCompleta, cobrado, gastado }) => ({
-    mes,
-    label,
-    etiquetaCompleta,
-    ingresos: cobrado,
-    egresos: gastado,
-  }));
+  );
+  // El saldo acumulado mes a mes es la línea del gráfico "Mes a mes".
+  let saldo = 0;
+  const evolucionMensual = evolucion.map(({ mes, label, etiquetaCompleta, cobrado, gastado }) => {
+    saldo += cobrado - gastado;
+    return {
+      mes,
+      label,
+      etiquetaCompleta,
+      ingresos: cobrado,
+      egresos: gastado,
+      resultadoAcumulado: saldo,
+    };
+  });
+
+  // Cada obra contra su contrato: % cobrado y % gastado de toda la obra. Las
+  // obras sin precio acordado no tienen contra qué medirse.
+  const obrasContrato = filas
+    .filter((f) => f.pctEjecutado != null)
+    .map(({ id, nombre, pctCobrado, pctEjecutado }) => ({
+      id,
+      nombre,
+      cobrado: pctCobrado,
+      gastado: pctEjecutado,
+    }))
+    .sort((a, b) => b.gastado - a.gastado);
+
+  // Con UNA obra elegida, su curva de cobrado y gastado en el tiempo.
+  const unica = idsObras?.size === 1 ? conMovimientos[0] : null;
+  const curvaObraElegida = unica
+    ? curvaObra({
+        ...unica.todo,
+        precioUsd: precioAcordadoEn(unica.proyecto, "usd"),
+        hoy: hoyISO(hoy),
+      })
+    : null;
+
+  // El mismo tramo del período anterior, con las mismas obras y la misma
+  // cuenta (calcularAnalisis), para la variación de cada KPI.
+  const anterior = rangoAnterior(periodo, hoy);
+  let kpisAnterior = null;
+  if (anterior) {
+    const resumenesAnteriores = resumenes
+      .map((r) => {
+        const movs = {
+          gastos: enRango(r.todo.gastos, anterior.desde, anterior.hasta),
+          cobros: enRango(r.todo.cobros, anterior.desde, anterior.hasta),
+          compras: enRango(r.todo.compras, anterior.desde, anterior.hasta),
+        };
+        if (cantidadMovimientos(movs) === 0) return null;
+        const analizar = (monedaAnalisis) =>
+          calcularAnalisis({
+            proyecto: r.proyecto,
+            fases: r.fasesDelProyecto,
+            ...movs,
+            moneda: monedaAnalisis,
+            cotizacionActual,
+          }).totales;
+        return { enMoneda: analizar(moneda), enUsd: analizar("usd") };
+      })
+      .filter(Boolean);
+    if (resumenesAnteriores.length) {
+      const total = (clave, campo) => sumar(resumenesAnteriores, (r) => r[clave][campo]);
+      kpisAnterior = {
+        ingresos: total("enMoneda", "cobrado"),
+        egresos: total("enMoneda", "egresos"),
+        resultado: total("enMoneda", "disponible"),
+        rentabilidad: rentabilidad(total("enUsd", "disponible"), total("enUsd", "cobrado")),
+      };
+    }
+  }
 
   const egresosPorCategoria = [
     ...gastosPorCategoria(movimientos.gastos, moneda),
@@ -232,6 +400,16 @@ export function calcularMetricas({
     }))
     .sort((a, b) => b.rentabilidad - a.rentabilidad);
 
+  const kpis = {
+    ingresos,
+    egresos,
+    resultado: sumar(filas, (f) => f.resultado),
+    rentabilidad: rentabilidad(
+      sumar(filas, (f) => f.resultadoUsd),
+      sumar(filas, (f) => f.ingresosUsd)
+    ),
+  };
+
   const filasObras = [...filas].sort(
     (a, b) => PESO_NIVEL_OBRA[b.nivel] - PESO_NIVEL_OBRA[a.nivel] || b.egresos - a.egresos
   );
@@ -239,16 +417,22 @@ export function calcularMetricas({
   return {
     moneda,
     rango: { desde, hasta: hoyISO(hoy) },
-    kpis: {
-      ingresos,
-      egresos,
-      resultado: sumar(filas, (f) => f.resultado),
-      rentabilidad: rentabilidad(
-        sumar(filas, (f) => f.resultadoUsd),
-        sumar(filas, (f) => f.ingresosUsd)
-      ),
+    kpis,
+    kpisAnterior,
+    variacion: kpisAnterior && {
+      ingresos: variacion(kpis.ingresos, kpisAnterior.ingresos),
+      egresos: variacion(kpis.egresos, kpisAnterior.egresos),
+      resultado: variacion(kpis.resultado, kpisAnterior.resultado),
+      // La rentabilidad ya es un %: su variación va en puntos, no en %.
+      rentabilidad:
+        kpis.rentabilidad != null && kpisAnterior.rentabilidad != null
+          ? kpis.rentabilidad - kpisAnterior.rentabilidad
+          : null,
     },
+    rangoAnterior: anterior,
     evolucionMensual,
+    obrasContrato,
+    curvaObraElegida,
     rentabilidadPorObra,
     egresosPorCategoria,
     topProveedores: proveedoresTop,
