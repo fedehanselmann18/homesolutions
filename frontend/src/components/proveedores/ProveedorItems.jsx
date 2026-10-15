@@ -1,6 +1,6 @@
 import { Banknote, ChevronRight, Pencil, Phone, ShoppingCart, Trash2 } from "lucide-react";
 
-import { formatFecha, formatMoneda, iniciales, pluralizar } from "../../utils/formato";
+import { formatMoneda, iniciales, pluralizar } from "../../utils/formato";
 import "./ProveedorItems.css";
 
 /**
@@ -73,11 +73,8 @@ export function ProveedorDeudaCard({ resumen, proyectos = [], onRegistrarPago, o
 
 /** Fila de 54px de un proveedor al día. `onEditar`/`onEliminar` sólo para un admin. */
 export function ProveedorFila({ resumen, onAbrir, onEditar, onEliminar }) {
-  const { proveedor, cantidadProductos, totalComprado, ultimaCompra } = resumen;
-  const meta = [
-    pluralizar(cantidadProductos, "producto"),
-    ultimaCompra ? `última compra ${formatFecha(ultimaCompra).slice(0, 5)}` : "sin compras",
-  ].join(" · ");
+  const { proveedor, cantidadProductos, totalComprado } = resumen;
+  const meta = pluralizar(cantidadProductos, "producto");
 
   const detener = (fn) => (e) => {
     e.stopPropagation();

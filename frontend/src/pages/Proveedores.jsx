@@ -1,12 +1,22 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Sparkles, Truck } from "lucide-react";
 
-import { useProveedores } from "../hooks/useProveedores";
-import { getProductos } from "../services/productoService";
-import { getCompras, actualizarCompra } from "../services/compraService";
-import { useFases, useProyectos } from "../hooks/queries";
-import { getCategorias } from "../services/categoriaService";
+import {
+  crearProveedor,
+  actualizarProveedor,
+  eliminarProveedor,
+} from "../services/proveedorService";
+import { actualizarCompra } from "../services/compraService";
+import {
+  useCategorias,
+  useCompras,
+  useFases,
+  useProductos,
+  useProveedores,
+  useProyectos,
+} from "../hooks/queries";
 import { getTipoProducto } from "../constants/tipoProducto";
 import { calcularResumenProveedor, rubroPrincipal } from "../utils/proveedores";
 import { formatMoneda, pluralizar } from "../utils/formato";
@@ -25,6 +35,10 @@ import { Buscador } from "../components/shared/Buscador";
 import { EstadoVacio } from "../components/shared/EstadoVacio";
 import "./Proveedores.css";
 
+// Mientras una query carga: siempre el mismo array, para no invalidar los
+// useMemo de abajo con uno nuevo en cada render.
+const SIN_DATOS = [];
+
 // Lista de proveedores — variante 4N de HS General.dc.html
 // ("Primero a quién se le debe"): arriba los que tienen deuda, ordenados por
 // lo que se debe, como cards con la acción para resolverlo; abajo los que
@@ -36,20 +50,18 @@ export function Proveedores() {
   const { usuario } = useAuth();
   const canManage = usuario?.rol === "admin";
   const toast = useToast();
+  const queryClient = useQueryClient();
+  const invalidar = (...recursos) =>
+    Promise.all(recursos.map((recurso) => queryClient.invalidateQueries({ queryKey: [recurso] })));
 
-  const {
-    proveedores,
-    loading,
-    error,
-    agregarProveedor,
-    editarProveedor,
-    borrarProveedor,
-    recargar,
-  } = useProveedores();
-
-  const [productos, setProductos] = useState([]);
-  const [compras, setCompras] = useState([]);
-  const [categorias, setCategorias] = useState([]);
+  // Las mismas queries que el resto de la app. La pantalla espera sólo a los
+  // proveedores para dibujarse: productos, compras y categorías completan la
+  // deuda y los filtros cuando llegan.
+  const proveedoresQuery = useProveedores();
+  const proveedores = proveedoresQuery.data ?? SIN_DATOS;
+  const productos = useProductos().data ?? SIN_DATOS;
+  const compras = useCompras().data ?? SIN_DATOS;
+  const categorias = useCategorias().data ?? SIN_DATOS;
 
   const [busqueda, setBusqueda] = useState("");
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
@@ -69,34 +81,6 @@ export function Proveedores() {
     const nombres = new Map((proyectos ?? []).map((p) => [p.id, p.nombre]));
     return (faseId) => nombres.get(proyectoDeFase.get(faseId)) ?? null;
   }, [fases, proyectos]);
-
-  const refetchProductos = async () => {
-    setProductos(await getProductos());
-  };
-
-  // El modal de importar puede crear una categoría sin cerrarse (ver
-  // ChipsCategorias) -- refrescamos para que aparezca como chip elegible.
-  const refetchCategorias = async () => {
-    setCategorias(await getCategorias());
-  };
-
-  useEffect(() => {
-    const fetchDatos = async () => {
-      try {
-        const [productosData, comprasData, categoriasData] = await Promise.all([
-          getProductos(),
-          getCompras(),
-          getCategorias(),
-        ]);
-        setProductos(productosData);
-        setCompras(comprasData);
-        setCategorias(categoriasData);
-      } catch (err) {
-        console.error("Error fetching datos de proveedores:", err);
-      }
-    };
-    fetchDatos();
-  }, []);
 
   const resumenes = useMemo(() => {
     return proveedores.map((proveedor) => {
@@ -141,10 +125,12 @@ export function Proveedores() {
   const handleGuardar = async (datos) => {
     try {
       if (proveedorSeleccionado) {
-        await editarProveedor(proveedorSeleccionado.id, datos);
+        await actualizarProveedor(proveedorSeleccionado.id, datos);
       } else {
-        await agregarProveedor(datos);
+        await crearProveedor(datos);
       }
+      // Se espera el refetch: al cerrarse el modal la lista ya está al día.
+      await invalidar("proveedores");
       cerrarModal();
     } catch (err) {
       console.error("Error guardando proveedor:", err);
@@ -163,12 +149,14 @@ export function Proveedores() {
       await Promise.all(
         comprasImpagas.map((c) => actualizarCompra(c.id, { estado_pago: "pagado" }))
       );
-      setCompras(await getCompras());
       toast.success(`Listo: las compras a ${proveedor.nombre} quedaron pagadas.`);
     } catch (err) {
       console.error("Error registrando el pago:", err);
       toast.error("No se pudo registrar el pago. Revisá las compras del proveedor.");
-      setCompras(await getCompras());
+    } finally {
+      // Aunque falle a la mitad, algunas pueden haber quedado pagadas. Por
+      // prefijo: también refresca las compras de cada obra y fase.
+      await invalidar("compras");
     }
   };
 
@@ -176,15 +164,17 @@ export function Proveedores() {
     const proveedor = proveedorAEliminar;
     setProveedorAEliminar(null);
     try {
-      await borrarProveedor(proveedor.id);
+      await eliminarProveedor(proveedor.id);
+      // Sus productos se borran en cascada con él.
+      await invalidar("proveedores", "productos");
     } catch (err) {
       console.error("Error eliminando proveedor:", err);
       toast.error("No se pudo eliminar el proveedor.");
     }
   };
 
-  if (loading) return <Cargando texto="Cargando proveedores..." />;
-  if (error) return <p>Error al cargar los proveedores.</p>;
+  if (proveedoresQuery.isLoading) return <Cargando texto="Cargando proveedores..." />;
+  if (proveedoresQuery.error) return <p>Error al cargar los proveedores.</p>;
 
   return (
     <div className="proveedores-container">
@@ -333,12 +323,12 @@ export function Proveedores() {
           proveedoresDisponibles={proveedores}
           productosTodos={productos}
           categoriasDisponibles={categorias}
-          onImportado={async () => {
-            await Promise.all([recargar(), refetchProductos()]);
-          }}
+          onImportado={() => invalidar("proveedores", "productos")}
           onCerrar={() => setModalImportarAbierto(false)}
           onCargarAMano={abrirModalCrear}
-          onCategoriaCreada={refetchCategorias}
+          // Puede crear una categoría sin cerrarse (ver ChipsCategorias):
+          // refrescamos para que aparezca como chip elegible.
+          onCategoriaCreada={() => invalidar("categorias")}
         />
       )}
     </div>

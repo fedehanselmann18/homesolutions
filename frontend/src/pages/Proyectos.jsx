@@ -1,8 +1,16 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Pencil, Trash2 } from "lucide-react";
-import { useProyectos } from "../hooks/useProyectos";
-import { useFases, useGastos, useCobros, useCompras, useUltimaCotizacion } from "../hooks/queries";
+import {
+  useProyectos,
+  useFases,
+  useGastos,
+  useCobros,
+  useCompras,
+  useUltimaCotizacion,
+} from "../hooks/queries";
+import { crearProyecto, actualizarProyecto, eliminarProyecto } from "../services/proyectoService";
 import { useMonedaAnalisis } from "../hooks/useMonedaAnalisis";
 import { SelectorMoneda } from "../components/shared/SelectorMoneda";
 import { calcularPanel } from "../utils/panel";
@@ -44,14 +52,13 @@ export function Proyectos() {
   const navigate = useNavigate();
   const { usuario } = useAuth();
   const toast = useToast();
+  const queryClient = useQueryClient();
 
-  const { proyectos, loading, error, agregarProyecto, editarProyecto, borrarProyecto } =
-    useProyectos();
-
-  // El listado en sí viene del hook de arriba (con sus altas/bajas/ediciones
-  // locales); disponible/presupuesto/fases por proyecto necesitan además
-  // fases/gastos/cobros/compras completos -- mismo cálculo que el Panel
-  // (calcularPanel), para que los números nunca diverjan entre pantallas.
+  // Mismas queries que el Panel y el detalle de cada obra (React Query las
+  // comparte): disponible/presupuesto/fases por proyecto salen de
+  // calcularPanel, para que los números nunca diverjan entre pantallas.
+  const proyectosQuery = useProyectos();
+  const proyectos = proyectosQuery.data;
   const fasesQuery = useFases();
   const gastosQuery = useGastos();
   const cobrosQuery = useCobros();
@@ -69,13 +76,17 @@ export function Proyectos() {
   const [ordenarPor, setOrdenarPor] = useState("disponible");
 
   const cargando =
-    loading ||
+    proyectosQuery.isLoading ||
     fasesQuery.isLoading ||
     gastosQuery.isLoading ||
     cobrosQuery.isLoading ||
     comprasQuery.isLoading;
   const errorCarga =
-    error || fasesQuery.error || gastosQuery.error || cobrosQuery.error || comprasQuery.error;
+    proyectosQuery.error ||
+    fasesQuery.error ||
+    gastosQuery.error ||
+    cobrosQuery.error ||
+    comprasQuery.error;
 
   const panel = useMemo(() => {
     if (cargando || errorCarga) return null;
@@ -153,10 +164,12 @@ export function Proyectos() {
   const handleGuardar = async (datosProyecto) => {
     try {
       if (proyectoSeleccionado) {
-        await editarProyecto(proyectoSeleccionado.id, datosProyecto);
+        await actualizarProyecto(proyectoSeleccionado.id, datosProyecto);
       } else {
-        await agregarProyecto(datosProyecto);
+        await crearProyecto(datosProyecto);
       }
+      // Se espera el refetch: al cerrarse el modal la lista ya está al día.
+      await queryClient.invalidateQueries({ queryKey: ["proyectos"] });
       cerrarModal();
     } catch (err) {
       console.error("Error guardando proyecto:", err);
@@ -172,7 +185,14 @@ export function Proyectos() {
     const proyecto = proyectoAEliminar;
     setProyectoAEliminar(null);
     try {
-      await borrarProyecto(proyecto.id);
+      await eliminarProyecto(proyecto.id);
+      // El backend borra en cascada sus fases, compras, gastos y cobros: que
+      // el Panel y los totales no sigan contándolos.
+      await Promise.all(
+        ["proyectos", "fases", "gastos", "cobros", "compras"].map((recurso) =>
+          queryClient.invalidateQueries({ queryKey: [recurso] })
+        )
+      );
     } catch (err) {
       console.error("Error eliminando proyecto:", err);
       toast.error("No se pudo eliminar el proyecto.");

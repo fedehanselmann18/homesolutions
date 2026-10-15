@@ -1,9 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { TrendingDown } from "lucide-react";
 
-import { useProveedores } from "../hooks/useProveedores";
-import { getProductos } from "../services/productoService";
-import { getCategorias } from "../services/categoriaService";
+import { useCategorias, useProductos, useProveedores } from "../hooks/queries";
 import { TIPOS_PRODUCTO, getTipoProducto } from "../constants/tipoProducto";
 import { formatMoneda } from "../utils/formato";
 import { agruparPorProducto, filtrarProductos } from "../utils/comparador";
@@ -16,6 +14,10 @@ import { FiltrosSegmentados } from "../components/shared/FiltrosSegmentados";
 import { usePageTitle } from "../hooks/usePageTitle";
 
 import "./Comparador.css";
+
+// Mientras una query carga: siempre el mismo array, para no invalidar los
+// useMemo de abajo con uno nuevo en cada render.
+const SIN_DATOS = [];
 
 const OPCIONES_TIPO = [
   { key: "", label: "Todos" },
@@ -41,36 +43,21 @@ function TipoProducto({ tipo }) {
 //    hay match exacto pero igual querés ver precios de la zona/categoría.
 export function Comparador() {
   usePageTitle("Comparador de precios");
-  const { proveedores, loading: cargandoProveedores } = useProveedores();
-  const [productos, setProductos] = useState([]);
-  const [categorias, setCategorias] = useState([]);
-  const [cargando, setCargando] = useState(true);
-  const [error, setError] = useState(null);
+  // Las mismas queries que Proveedores y el resto de la app: si ya se
+  // bajaron, el comparador abre sin volver a pedirlas.
+  const proveedoresQuery = useProveedores();
+  const productosQuery = useProductos();
+  const categoriasQuery = useCategorias();
+  const proveedores = proveedoresQuery.data ?? SIN_DATOS;
+  const productos = productosQuery.data ?? SIN_DATOS;
+  const categorias = categoriasQuery.data ?? SIN_DATOS;
+  const cargando =
+    proveedoresQuery.isLoading || productosQuery.isLoading || categoriasQuery.isLoading;
+  const error = proveedoresQuery.error || productosQuery.error || categoriasQuery.error;
 
   const [categoriaFiltro, setCategoriaFiltro] = useState("");
   const [tipoFiltro, setTipoFiltro] = useState("");
   const [busqueda, setBusqueda] = useState("");
-
-  useEffect(() => {
-    const fetchDatos = async () => {
-      try {
-        setCargando(true);
-        setError(null);
-        const [productosData, categoriasData] = await Promise.all([
-          getProductos(),
-          getCategorias(),
-        ]);
-        setProductos(productosData);
-        setCategorias(categoriasData);
-      } catch (err) {
-        console.error("Error fetching datos del comparador:", err);
-        setError(err);
-      } finally {
-        setCargando(false);
-      }
-    };
-    fetchDatos();
-  }, []);
 
   const grupos = useMemo(
     () => agruparPorProducto(productos, proveedores),
@@ -87,7 +74,7 @@ export function Comparador() {
     [productos, proveedores, categoriaFiltro, tipoFiltro, busqueda]
   );
 
-  if (cargando || cargandoProveedores) return <Cargando texto="Cargando comparador..." />;
+  if (cargando) return <Cargando texto="Cargando comparador..." />;
   if (error) return <EstadoError mensaje="No se pudo cargar el comparador." grande />;
 
   // Los contadores de los chips de tipo respetan la búsqueda y la categoría:
