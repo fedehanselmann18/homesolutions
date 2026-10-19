@@ -293,11 +293,11 @@
      con scroll de costado. Ahora las columnas fijas se achican y entra. */
   @container libro (max-width: 1000px) {
     .libro__scroll {
-      --libro-cols: 28px minmax(200px, 1fr) 132px 24px 144px 112px;
+      --libro-cols: 28px minmax(184px, 1fr) 164px 24px 144px 112px;
     }
 
     .libro--admin .libro__scroll {
-      --libro-cols: 28px minmax(200px, 1fr) 132px 24px 144px 112px 84px;
+      --libro-cols: 28px minmax(184px, 1fr) 164px 24px 144px 112px 84px;
     }
 
     .libro__columnas,
@@ -321,7 +321,7 @@
     }
   }
 
-  @container libro (max-width: 800px) {
+  @container libro (max-width: 812px) {
     .libro--admin .libro__scroll {
       overflow-x: auto;
       overscroll-behavior-x: contain;
@@ -331,7 +331,7 @@
     .libro--admin .libro__columnas,
     .libro--admin .libro__fila,
     .libro--admin .libro__dia {
-      min-width: 800px;
+      min-width: 812px;
     }
   }
 }
