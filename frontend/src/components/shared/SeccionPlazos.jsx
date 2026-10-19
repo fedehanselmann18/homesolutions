@@ -9,7 +9,7 @@ import { marcarPlazoPago } from "../../services/plazoPagoService";
 import { obtenerMensajeError } from "../../utils/errorHandling";
 import { formatFecha, formatMonedaDual, hoyISO, pluralizar } from "../../utils/formato";
 import { describirDias, diasEntre } from "../../utils/plazos";
-import { getMedioPagoLabel } from "../../constants/medioPago";
+import { useEtiquetaMedioPago } from "../../hooks/useMediosPago";
 import { SeccionDetalle } from "../modals/PiezasDetalle";
 
 import "./SeccionPlazos.css";
@@ -29,12 +29,13 @@ export function SeccionPlazos({ movimiento }) {
   const toast = useToast();
   const queryClient = useQueryClient();
   const [ocupado, setOcupado] = useState(null);
+  const etiquetaMedioPago = useEtiquetaMedioPago();
 
   const plazos = movimiento.plazos ?? [];
   if (plazos.length === 0) return null;
   const hoy = hoyISO();
   const usd = (ars) => Number(ars) / Number(movimiento.cotizacion_dolar || 1);
-  const medio = getMedioPagoLabel(movimiento.medio_pago);
+  const medio = etiquetaMedioPago(movimiento.medio_pago);
   const condicion = movimiento.condicion_pago;
 
   const marcar = async (plazo, pagado) => {

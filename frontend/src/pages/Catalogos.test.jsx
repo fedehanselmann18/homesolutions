@@ -15,11 +15,17 @@ import {
   useImpuestos,
   useTiposFactura,
   useCondicionesPago,
+  useMediosPago,
 } from "../hooks/queries";
+import { actualizarMedioPago } from "../services/medioPagoService";
 import { crearImpuesto, eliminarImpuesto } from "../services/impuestosService";
 import { crearCondicionPago } from "../services/condicionPagoService";
 import { crearCotizacion } from "../services/cotizacionService";
-import { CONDICIONES_PAGO_PRUEBA, TIPOS_FACTURA_PRUEBA } from "../test/tiposFactura";
+import {
+  CONDICIONES_PAGO_PRUEBA,
+  MEDIOS_PAGO_PRUEBA,
+  TIPOS_FACTURA_PRUEBA,
+} from "../test/tiposFactura";
 
 let rolActual = "admin";
 const toastError = vi.fn();
@@ -32,6 +38,7 @@ vi.mock("../services/cotizacionService");
 vi.mock("../services/fasePredeterminadaService");
 vi.mock("../services/tipoFacturaService");
 vi.mock("../services/condicionPagoService");
+vi.mock("../services/medioPagoService");
 vi.mock("../context/useAuth", () => ({
   default: () => ({ usuario: { rol: rolActual } }),
   useAuth: () => ({ usuario: { rol: rolActual } }),
@@ -60,6 +67,7 @@ beforeEach(() => {
   );
   useTiposFactura.mockReturnValue(ok(TIPOS_FACTURA_PRUEBA));
   useCondicionesPago.mockReturnValue(ok(CONDICIONES_PAGO_PRUEBA));
+  useMediosPago.mockReturnValue(ok(MEDIOS_PAGO_PRUEBA));
   useFasesPredeterminadas.mockReturnValue(
     ok([
       { id: "f1", orden: 1, nombre: "Relevamiento y anteproyecto" },
@@ -129,6 +137,55 @@ describe("Catalogos", () => {
     await userEvent.click(screen.getByRole("tab", { name: /^Categorías de gasto/ }));
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.getByText("Todavía no hay categorías de gasto cargadas.")).toBeInTheDocument();
+  });
+
+  describe("pestaña Medios de pago", () => {
+    const abrirMedios = () => userEvent.click(screen.getByRole("tab", { name: /^Medios de pago/ }));
+
+    it("lista los medios en el orden de carga y marca los desactivados", async () => {
+      useMediosPago.mockReturnValue(
+        ok([
+          { id: "m1", codigo: "efectivo", nombre: "Efectivo", orden: 1, activo: true },
+          { id: "m2", codigo: "cheque", nombre: "Cheque", orden: 2, activo: false },
+        ])
+      );
+      renderCatalogos();
+      await abrirMedios();
+
+      expect(screen.getByText("Efectivo")).toBeInTheDocument();
+      expect(screen.getByText("Desactivado")).toBeInTheDocument();
+    });
+
+    it("al editar, un admin puede desactivar un medio", async () => {
+      actualizarMedioPago.mockResolvedValue({});
+      renderCatalogos();
+      await abrirMedios();
+
+      await userEvent.click(screen.getByRole("button", { name: "Editar Cheque" }));
+      const dialogo = screen.getByRole("dialog");
+      await userEvent.click(within(dialogo).getByRole("radio", { name: "Desactivado" }));
+      await userEvent.click(within(dialogo).getByRole("button", { name: "Guardar cambios" }));
+
+      expect(actualizarMedioPago).toHaveBeenCalledWith("m3", { nombre: "Cheque", activo: false });
+    });
+
+    it("al crear no se pregunta por «activo»: nace activo", async () => {
+      renderCatalogos();
+      await abrirMedios();
+
+      await userEvent.click(screen.getByRole("button", { name: /nuevo medio/i }));
+
+      expect(within(screen.getByRole("dialog")).queryByRole("radio")).toBeNull();
+    });
+
+    it("el rol lectura ve la lista sin controles de escritura", async () => {
+      rolActual = "lectura";
+      renderCatalogos();
+      await abrirMedios();
+
+      expect(screen.getByText("Tarjeta")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /nuevo|editar|eliminar/i })).toBeNull();
+    });
   });
 
   describe("pestaña Cotizaciones", () => {

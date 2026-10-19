@@ -8,6 +8,10 @@ import { marcarPlazoPago } from "../../services/plazoPagoService";
 let rolActual = "admin";
 const invalidar = vi.fn();
 vi.mock("../../services/plazoPagoService");
+vi.mock("../../hooks/queries", async () => {
+  const { MEDIOS_PAGO_PRUEBA } = await import("../../test/tiposFactura");
+  return { useMediosPago: () => ({ data: MEDIOS_PAGO_PRUEBA }) };
+});
 vi.mock("../../context/useAuth", () => ({ default: () => ({ usuario: { rol: rolActual } }) }));
 vi.mock("../../context/useToast", () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn() }),

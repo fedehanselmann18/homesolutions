@@ -11,6 +11,14 @@ export const TIPOS_FACTURA_PRUEBA = [
   { id: "t7", codigo: "otros", nombre: "Otros", orden: 7, protegido: true },
 ];
 
+// Lo que devuelve GET /medios-pago/ recién migrado.
+export const MEDIOS_PAGO_PRUEBA = [
+  { id: "m1", codigo: "efectivo", nombre: "Efectivo", orden: 1, activo: true },
+  { id: "m2", codigo: "transferencia", nombre: "Transferencia", orden: 2, activo: true },
+  { id: "m3", codigo: "cheque", nombre: "Cheque", orden: 3, activo: true },
+  { id: "m4", codigo: "tarjeta", nombre: "Tarjeta", orden: 4, activo: true },
+];
+
 // Lo que devuelve GET /condiciones-pago/ recién migrado.
 export const CONDICIONES_PAGO_PRUEBA = [
   { id: "cp0", nombre: "Contado", dias: [], orden: 1, protegido: true },

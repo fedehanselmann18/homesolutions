@@ -31,6 +31,9 @@ import "./SeccionCatalogo.css";
  * renombrarlo. Alta y borrado no las afectan: un registro recién creado no
  * está en uso, y uno en uso no se puede borrar.
  *
+ * `conActivo`: el registro se puede desactivar desde su modal de edición (medios
+ * de pago); los desactivados se marcan en la lista.
+ *
  * Un registro con `protegido: true` (hoy sólo «Otros» de tipos de factura)
  * se puede editar pero no muestra el botón de borrar.
  */
@@ -42,6 +45,7 @@ export function SeccionCatalogo({
   // El ícono de la pestaña: el botón de alta lleva el de lo que crea.
   icono: Icono = Plus,
   conTipo = false,
+  conActivo = false,
   // false: se respeta el orden en que llegan del backend (las fases
   // predeterminadas van en el orden de la obra, no alfabético).
   ordenAlfabetico = true,
@@ -147,6 +151,9 @@ export function SeccionCatalogo({
             <div key={registro.id} className="planilla__fila">
               <span className="seccion-catalogo__nombre">
                 {registro.nombre}
+                {conActivo && registro.activo === false && (
+                  <span className="seccion-catalogo__detalle"> Desactivado</span>
+                )}
                 {detalle?.(registro) && (
                   <span className="seccion-catalogo__detalle"> {detalle(registro)}</span>
                 )}
@@ -222,6 +229,7 @@ export function SeccionCatalogo({
           <ModalCatalogoSimple
             titulo={registroEditando ? textos.tituloEditar : textos.tituloNuevo}
             registro={registroEditando}
+            conActivo={conActivo}
             onGuardar={handleGuardar}
             onCerrar={cerrarModal}
           />

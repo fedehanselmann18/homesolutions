@@ -24,13 +24,15 @@ vi.mock("../../hooks/useExtraccionIA", () => ({
 // La sugerencia del dólar del día (useCotizacionDia): una fija, sin servidor.
 // Y los tipos de factura de Ajustes, los de fábrica.
 vi.mock("../../hooks/queries", async () => {
-  const { TIPOS_FACTURA_PRUEBA, CONDICIONES_PAGO_PRUEBA } = await import("../../test/tiposFactura");
+  const { TIPOS_FACTURA_PRUEBA, CONDICIONES_PAGO_PRUEBA, MEDIOS_PAGO_PRUEBA } =
+    await import("../../test/tiposFactura");
   return {
     useUltimaCotizacion: () => ({
       isLoading: false,
       data: { id: "c1", fecha: "2026-03-01", tipo: "blue", valor: 1250 },
     }),
     useTiposFactura: () => ({ isLoading: false, data: TIPOS_FACTURA_PRUEBA }),
+    useMediosPago: () => ({ isLoading: false, data: MEDIOS_PAGO_PRUEBA }),
     useCondicionesPago: () => ({ isLoading: false, data: CONDICIONES_PAGO_PRUEBA }),
   };
 });

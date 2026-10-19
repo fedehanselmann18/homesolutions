@@ -3,7 +3,7 @@ import { useEtiquetaTipoFactura } from "../../hooks/useTiposFactura";
 import { OLIVA, ATENCION } from "../../constants/colores";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
 import { getEstadoPagoConVencimiento } from "../../constants/estadoCompra";
-import { getMedioPagoLabel } from "../../constants/medioPago";
+import { useEtiquetaMedioPago } from "../../hooks/useMediosPago";
 import { diasVencida } from "../../utils/plazos";
 import { BadgeEstado } from "../shared/BadgeEstado";
 import { SeccionPlazos } from "../shared/SeccionPlazos";
@@ -33,6 +33,7 @@ export function ModalDetalleGasto({
   onEliminar,
 }) {
   const etiquetaFactura = useEtiquetaTipoFactura();
+  const etiquetaMedioPago = useEtiquetaMedioPago();
   const comprobantes = gasto.comprobantes ?? [];
   const vencida = diasVencida(gasto, new Date());
 
@@ -75,7 +76,7 @@ export function ModalDetalleGasto({
             },
             gasto.medio_pago && {
               label: "Medio de pago",
-              valor: getMedioPagoLabel(gasto.medio_pago),
+              valor: etiquetaMedioPago(gasto.medio_pago),
             },
             usuarioNombre && { label: "Cargado por", valor: usuarioNombre },
           ]}

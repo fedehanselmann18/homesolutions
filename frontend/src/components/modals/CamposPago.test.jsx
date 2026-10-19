@@ -5,8 +5,11 @@ import userEvent from "@testing-library/user-event";
 import { CamposPago } from "./CamposPago";
 
 vi.mock("../../hooks/queries", async () => {
-  const { CONDICIONES_PAGO_PRUEBA } = await import("../../test/tiposFactura");
-  return { useCondicionesPago: () => ({ data: CONDICIONES_PAGO_PRUEBA }) };
+  const { CONDICIONES_PAGO_PRUEBA, MEDIOS_PAGO_PRUEBA } = await import("../../test/tiposFactura");
+  return {
+    useCondicionesPago: () => ({ data: CONDICIONES_PAGO_PRUEBA }),
+    useMediosPago: () => ({ data: MEDIOS_PAGO_PRUEBA }),
+  };
 });
 
 const base = {

@@ -214,7 +214,7 @@ export const SECCIONES_GUIA = [
       {
         tipo: "parrafo",
         texto:
-          "Cada compra y cada gasto lleva su condición de pago: «Contado» (se paga el día de la factura) o a plazos, como «30/60 días» (la mitad a 30 días y la mitad a 60, contados desde la fecha de la factura). Al elegirla, debajo ves cómo quedan los pagos. Aparte elegís, si querés, el medio de pago: efectivo, transferencia, cheque o tarjeta.",
+          "Cada compra y cada gasto lleva su condición de pago: «Contado» (se paga el día de la factura) o a plazos, como «30/60 días» (la mitad a 30 días y la mitad a 60, contados desde la fecha de la factura). Al elegirla, debajo ves cómo quedan los pagos. Aparte elegís, si querés, el medio de pago (efectivo, transferencia, cheque, tarjeta…). Esa lista la armás vos en Ajustes, pestaña «Medios de pago»: podés agregar uno, cambiarle el nombre o desactivarlo (deja de ofrecerse al cargar, pero se sigue viendo en lo que ya cargaste). Uno que ya usaste en algún movimiento no se puede borrar, sólo desactivar.",
       },
       {
         tipo: "pasos",

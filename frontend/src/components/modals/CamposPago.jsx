@@ -1,5 +1,5 @@
 import { useCondicionesPago } from "../../hooks/queries";
-import { MEDIOS_PAGO } from "../../constants/medioPago";
+import { useOpcionesMedioPago } from "../../hooks/useMediosPago";
 import { formatFecha, formatMoneda } from "../../utils/formato";
 import { condicionPorDefecto, previsualizarPlazos } from "../../utils/plazos";
 import { ControlOpcion } from "../shared/ControlOpcion";
@@ -36,6 +36,7 @@ export function CamposPago({
   disabled = false,
 }) {
   const { data: condiciones = [] } = useCondicionesPago();
+  const opcionesMedio = useOpcionesMedioPago(medio);
   const elegida =
     condiciones.find((c) => c.id === condicionId) ??
     (condicionId ? null : condicionPorDefecto(condiciones));
@@ -62,7 +63,7 @@ export function CamposPago({
       <ControlOpcion
         etiqueta="Medio de pago"
         opcional
-        opciones={MEDIOS_PAGO}
+        opciones={opcionesMedio}
         valor={medio}
         onCambiar={(valor) => onCambiarMedio(valor === medio ? "" : valor)}
         disabled={disabled}

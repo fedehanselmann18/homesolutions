@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { CalendarClock, DollarSign, FileText, Layers, Percent, Receipt, Tag } from "lucide-react";
+import {
+  Banknote,
+  CalendarClock,
+  DollarSign,
+  FileText,
+  Layers,
+  Percent,
+  Receipt,
+  Tag,
+} from "lucide-react";
 
 import {
   useCategorias,
@@ -8,6 +17,7 @@ import {
   useFasesPredeterminadas,
   useImpuestos,
   useTiposFactura,
+  useMediosPago,
   useCondicionesPago,
 } from "../hooks/queries";
 import { queryKeys } from "../lib/queryKeys";
@@ -34,6 +44,11 @@ import {
   eliminarTipoFactura,
 } from "../services/tipoFacturaService";
 import {
+  crearMedioPago,
+  actualizarMedioPago,
+  eliminarMedioPago,
+} from "../services/medioPagoService";
+import {
   crearCondicionPago,
   actualizarCondicionPago,
   eliminarCondicionPago,
@@ -53,6 +68,7 @@ const TABS = [
   { key: "impuestos", label: "Impuestos", icono: Percent },
   { key: "categoriasGasto", label: "Categorías de gasto", icono: Receipt },
   { key: "tiposFactura", label: "Tipos de factura", icono: FileText },
+  { key: "mediosPago", label: "Medios de pago", icono: Banknote },
   { key: "condicionesPago", label: "Condiciones de pago", icono: CalendarClock },
   { key: "categorias", label: "Categorías de producto", icono: Tag },
   { key: "cotizaciones", label: "Cotizaciones", icono: DollarSign },
@@ -62,7 +78,7 @@ const TABS = [
 /**
  * Ajustes (antes «Catálogos»): alta, edición y borrado de las listas que usan
  * los formularios de carga: impuestos (ModalCompra), categorías de gasto
- * (ModalGasto), tipos de factura (compras, gastos, cobros y notas, y el
+ * (ModalGasto), medios de pago (compras y gastos), tipos de factura (compras, gastos, cobros y notas, y el
  * filtro de las listas), categorías de producto (ModalProducto, importar
  * catálogo) y fases predeterminadas (el select de nombre de ModalFase). Y la tabla de
  * cotizaciones del dólar, de la que los forms de carga sugieren el valor del día.
@@ -89,6 +105,7 @@ export function Catalogos() {
   const fasesPredeterminadasQuery = useFasesPredeterminadas();
   const tiposFacturaQuery = useTiposFactura();
   const condicionesPagoQuery = useCondicionesPago();
+  const mediosPagoQuery = useMediosPago();
 
   // Cada pestaña cuenta lo que tiene, como "Catálogo 7" en un proveedor. Las
   // queries son las mismas que usan las secciones (React Query las dedupea).
@@ -96,6 +113,7 @@ export function Catalogos() {
     impuestos: impuestosQuery.data?.length,
     categoriasGasto: categoriasGastoQuery.data?.length,
     tiposFactura: tiposFacturaQuery.data?.length,
+    mediosPago: mediosPagoQuery.data?.length,
     condicionesPago: condicionesPagoQuery.data?.length,
     categorias: categoriasQuery.data?.length,
     cotizaciones: cotizacionesQuery.data?.length,
@@ -182,6 +200,35 @@ export function Catalogos() {
             cargando: "Cargando tipos de factura...",
             vacio: "Todavía no hay tipos de factura cargados.",
             error: "No se pudieron cargar los tipos de factura.",
+          }}
+        />
+      )}
+
+      {tabActiva === "mediosPago" && (
+        <SeccionCatalogo
+          query={mediosPagoQuery}
+          // Los movimientos guardan el código, no el nombre: renombrar no deja
+          // nada viejo fuera de esta misma lista.
+          queryKey={queryKeys.mediosPago.all}
+          // En el orden del control de carga, no alfabético.
+          ordenAlfabetico={false}
+          // Uno en uso no se borra: se desactiva desde el modal de edición.
+          conActivo
+          crear={crearMedioPago}
+          actualizar={actualizarMedioPago}
+          eliminar={eliminarMedioPago}
+          icono={Banknote}
+          textos={{
+            singular: "medio de pago",
+            descripcion: "Agregar un medio de pago",
+            nuevo: "Nuevo medio",
+            creado: "Medio de pago creado.",
+            tituloNuevo: "Nuevo medio de pago",
+            tituloEditar: "Editar medio de pago",
+            tituloEliminar: "Eliminar medio de pago",
+            cargando: "Cargando medios de pago...",
+            vacio: "Todavía no hay medios de pago cargados.",
+            error: "No se pudieron cargar los medios de pago.",
           }}
         />
       )}

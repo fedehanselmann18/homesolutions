@@ -47,6 +47,9 @@ export const queryKeys = {
   tiposFactura: {
     all: ["tiposFactura"],
   },
+  mediosPago: {
+    all: ["mediosPago"],
+  },
   condicionesPago: {
     all: ["condicionesPago"],
   },

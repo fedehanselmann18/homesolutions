@@ -4,7 +4,7 @@ import { useEtiquetaTipoFactura } from "../../hooks/useTiposFactura";
 import { getEstadoPagoConVencimiento, getEstadoEnvio } from "../../constants/estadoCompra";
 import { totalNotasCredito, totalNotasDebito } from "../../utils/notas";
 import { diasVencida } from "../../utils/plazos";
-import { getMedioPagoLabel } from "../../constants/medioPago";
+import { useEtiquetaMedioPago } from "../../hooks/useMediosPago";
 import { SeccionPlazos } from "../shared/SeccionPlazos";
 import { OLIVA, ATENCION } from "../../constants/colores";
 import { TIPOS_MOVIMIENTO } from "../../constants/tipoMovimiento";
@@ -47,6 +47,7 @@ export function ModalDetalleCompra({
   canManage = false,
 }) {
   const etiquetaFactura = useEtiquetaTipoFactura();
+  const etiquetaMedioPago = useEtiquetaMedioPago();
   const pagado = compra.estado_pago === "pagado";
   const entregado = compra.estado_envio === "entregado";
   const vencida = diasVencida(compra, new Date());
@@ -151,7 +152,7 @@ export function ModalDetalleCompra({
             { label: "Condición de pago", valor: compra.condicion_pago?.nombre ?? "Contado" },
             compra.medio_pago && {
               label: "Medio de pago",
-              valor: getMedioPagoLabel(compra.medio_pago),
+              valor: etiquetaMedioPago(compra.medio_pago),
             },
             { label: "Pago", valor: titulosEstado.pago, punto: estadoPago.color },
             { label: "Envío", valor: titulosEstado.envio, punto: estadoEnvio.color },

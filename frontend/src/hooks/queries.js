@@ -16,6 +16,7 @@ import { getCategoriasGasto } from "../services/categoriaGastoService";
 import { getImpuestos } from "../services/impuestosService";
 import { getFasesPredeterminadas } from "../services/fasePredeterminadaService";
 import { getTiposFactura } from "../services/tipoFacturaService";
+import { getMediosPago } from "../services/medioPagoService";
 import { getCondicionesPago } from "../services/condicionPagoService";
 import { getCotizaciones, getUltimaCotizacion } from "../services/cotizacionService";
 import { queryKeys } from "../lib/queryKeys";
@@ -107,6 +108,9 @@ export const useFasesPredeterminadas = () =>
 
 export const useTiposFactura = () =>
   useQuery({ queryKey: queryKeys.tiposFactura.all, queryFn: getTiposFactura });
+
+export const useMediosPago = () =>
+  useQuery({ queryKey: queryKeys.mediosPago.all, queryFn: getMediosPago });
 
 export const useCondicionesPago = () =>
   useQuery({ queryKey: queryKeys.condicionesPago.all, queryFn: getCondicionesPago });
