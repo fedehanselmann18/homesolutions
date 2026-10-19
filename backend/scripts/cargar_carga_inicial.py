@@ -13,11 +13,10 @@ Qué carga (secciones 1 a 6 del form):
 
 Qué NO carga (también sección 6): la pregunta "la condición de pago puede
 ser" del form lista en realidad MEDIOS de pago (contado, cheque,
-transferencia...). Desde oct 2026 los medios son una lista fija en el código
-(frontend/src/constants/medioPago.js) y las condiciones (Contado, 30/60
-días...) las siembra la migración y se arman en Ajustes. El script solo
-avisa si Agus agregó algún medio que la app no tiene, porque eso es un
-cambio de código. Los tipos de comprobante que Agus no tildó tampoco se
+transferencia...). Los medios de pago los siembra la migración (efectivo,
+transferencia, cheque, tarjeta) y se administran en Ajustes, igual que las
+condiciones (Contado, 30/60 días...). El script solo avisa si Agus agregó
+algún medio que la app no tiene, para que lo cargues a mano en Ajustes. Los tipos de comprobante que Agus no tildó tampoco se
 borran: el script nunca borra (se sacan a mano desde Ajustes).
 
 Va por la API (no directo a la base): no hace falta la URL de la base de
@@ -71,7 +70,7 @@ PREFIJO_OBSERVACIONES = "observaciones"
 RUBROS = ["Instalación Sanitaria", "Instalación Eléctrica", "Instalación de Aire Acondicionado"]
 OFICIOS = ["Plomero", "Electricista", "Instalador de Caños"]
 
-# Sección 6: los medios de pago que tiene el código (constants/medioPago.js).
+# Sección 6: los medios de pago que siembra la migración c3f8a2d6e1b7.
 # "Contado" y "Cuenta corriente" del form son condiciones, no medios: se
 # aceptan sin aviso porque ya existen como condición (Contado / plazos).
 MEDIOS_PAGO_CODIGO = ["Efectivo", "Transferencia", "Cheque", "Tarjeta"]
@@ -302,10 +301,10 @@ def imprimir_plan(plan: dict):
         nuevos, _ = diferencias_con_codigo(elegidos, MEDIOS_PAGO_CODIGO + YA_SON_CONDICIONES)
         if nuevos:
             avisos.append(f"Agus agregó medio de pago: {', '.join(nuevos)}")
-    print("\n== Medios de pago (viven en el código, no se cargan) ==")
+    print("\n== Medios de pago (los siembra la migración, no se cargan) ==")
     if avisos:
         for a in avisos:
-            print(f"  ! {a} -> si lo querés reflejar, es un cambio de código.")
+            print(f"  ! {a} -> si lo querés, agregalo a mano en Ajustes > Medios de pago.")
     else:
         print("  Coincide con lo que ya tiene la app. No hay nada que hacer.")
 

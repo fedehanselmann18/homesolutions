@@ -455,6 +455,25 @@ class TipoFactura(TimestampMixin, Base):
     orden: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 
 
+class MedioPago(TimestampMixin, Base):
+    """Cómo se paga una compra o un gasto (efectivo, transferencia...): las
+    opciones del control «Medio de pago». Se administran desde Ajustes.
+
+    Igual que TipoFactura: los movimientos guardan el `codigo` con FK
+    RESTRICT, y el código sale del nombre al crear y no cambia. Diferencia:
+    no hay ninguno protegido, y uno con movimientos se desactiva (`activo`)
+    en vez de borrarse: no aparece al cargar pero se sigue viendo bien en los
+    movimientos viejos (ver app/medios_pago.py)."""
+
+    __tablename__ = "medios_pago"
+
+    id: Mapped[uuid.UUID] = uuid_pk()
+    codigo: Mapped[str] = mapped_column(String(30), unique=True, nullable=False)
+    nombre: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
+    orden: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+    activo: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True, server_default="true")
+
+
 def _condicion_contado(context):
     """Default de condicion_pago_id: «Contado». Las rutas lo ponen siempre
     (con sus plazos); esto cubre lo que se crea directo con el ORM (scripts,
@@ -593,8 +612,10 @@ class Compra(CotizacionCongeladaMixin, TimestampMixin, Base):
     condicion_pago_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("condiciones_pago.id", ondelete="RESTRICT"), nullable=False, default=_condicion_contado
     )
-    # Cómo se paga (efectivo/transferencia/cheque/tarjeta), opcional. Lista fija en el front.
-    medio_pago: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    # Cómo se paga, opcional: código de un MedioPago (se administra en Ajustes).
+    medio_pago: Mapped[str | None] = mapped_column(
+        String(30), ForeignKey("medios_pago.codigo", ondelete="RESTRICT"), nullable=True
+    )
     # pendiente/pagado. DERIVADO de los plazos (pagado = todos pagados): se
     # guarda para que filtros, Panel y PDF no tengan que recorrer plazos.
     estado_pago: Mapped[str] = mapped_column(String(20), nullable=False)
@@ -928,7 +949,9 @@ class Gasto(CotizacionCongeladaMixin, TimestampMixin, Base):
     condicion_pago_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("condiciones_pago.id", ondelete="RESTRICT"), nullable=False, default=_condicion_contado
     )
-    medio_pago: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    medio_pago: Mapped[str | None] = mapped_column(
+        String(30), ForeignKey("medios_pago.codigo", ondelete="RESTRICT"), nullable=True
+    )
     estado_pago: Mapped[str] = mapped_column(String(20), nullable=False, default="pagado")
 
     condicion_pago: Mapped["CondicionPago"] = relationship()

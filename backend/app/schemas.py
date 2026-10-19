@@ -680,6 +680,27 @@ class PlazoPagoUpdate(BaseModel):
     fecha_pago: date | None = None
 
 
+class MedioPagoCreate(TipoFacturaBase):
+    pass
+
+
+class MedioPagoUpdate(BaseModel):
+    # El código no se edita nunca: nombre y activo.
+    nombre: str | None = Field(default=None, max_length=100)
+    activo: bool | None = None
+
+    _limpiar_nombre = field_validator("nombre")(_nombre_tipo_factura_limpio)
+
+
+class MedioPagoOut(TipoFacturaBase, TimestampOut):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    codigo: str
+    orden: int
+    activo: bool
+
+
 class TipoFacturaOut(TipoFacturaBase, TimestampOut):
     model_config = ConfigDict(from_attributes=True)
 

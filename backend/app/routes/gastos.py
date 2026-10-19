@@ -10,6 +10,7 @@ from app.db.db import get_db
 from app.estados_obra import activar_por_movimiento
 from app.files.storage import eliminar_comprobante, subir_comprobante, ver_comprobante
 from app.limiter import limiter
+from app.medios_pago import validar_medio_pago
 from app.pagination import ParametrosPaginacion
 from app.schemas import ComprobanteGastoOut, GastoCreate, GastoOut, GastoUpdate
 from app.tipo_cambio import a_usd
@@ -117,6 +118,7 @@ def create_gasto(
             raise HTTPException(status_code=404, detail="Fase no encontrada")
 
     validar_tipo_factura(db, gasto.tipo_factura)
+    validar_medio_pago(db, gasto.medio_pago)
 
     categorias = []
     if gasto.categoria_gasto_ids:
@@ -176,6 +178,9 @@ def update_gasto(
 
     if "tipo_factura" in datos:
         validar_tipo_factura(db, datos["tipo_factura"])
+
+    if "medio_pago" in datos:
+        validar_medio_pago(db, datos["medio_pago"], actual=gasto_existente.medio_pago)
 
     if "fase_id" in datos and datos["fase_id"] is not None:
         fase = db.query(models.Fase).filter(models.Fase.id == datos["fase_id"]).first()

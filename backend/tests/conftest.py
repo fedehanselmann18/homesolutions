@@ -81,6 +81,26 @@ CONDICIONES_PAGO_DE_FABRICA = [
 ]
 
 
+# Lo mismo que siembra la migración c3f8a2d6e1b7: la FK de medio_pago.
+MEDIOS_PAGO_DE_FABRICA = [
+    ("efectivo", "Efectivo"),
+    ("transferencia", "Transferencia"),
+    ("cheque", "Cheque"),
+    ("tarjeta", "Tarjeta"),
+]
+
+
+def _sembrar_medios_pago(engine):
+    with sessionmaker(bind=engine)() as session:
+        existentes = set(session.scalars(select(models.MedioPago.codigo)))
+        session.add_all(
+            models.MedioPago(codigo=codigo, nombre=nombre, orden=orden)
+            for orden, (codigo, nombre) in enumerate(MEDIOS_PAGO_DE_FABRICA, start=1)
+            if codigo not in existentes
+        )
+        session.commit()
+
+
 def _sembrar_condiciones_pago(engine):
     with sessionmaker(bind=engine)() as session:
         existentes = set(session.scalars(select(models.CondicionPago.nombre)))
@@ -112,6 +132,7 @@ def db_engine():
     Base.metadata.create_all(bind=engine)
     _sembrar_tipos_factura(engine)
     _sembrar_condiciones_pago(engine)
+    _sembrar_medios_pago(engine)
     yield engine
     Base.metadata.drop_all(bind=engine)
     engine.dispose()

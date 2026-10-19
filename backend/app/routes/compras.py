@@ -14,6 +14,7 @@ from app.db.db import get_db
 from app.estados_obra import activar_por_movimiento
 from app.files.storage import eliminar_comprobante, subir_comprobante, ver_comprobante
 from app.limiter import limiter
+from app.medios_pago import validar_medio_pago
 from app.pagination import ParametrosPaginacion
 from app.schemas import (
     CompraCreate,
@@ -168,6 +169,7 @@ def create_compra(
         raise HTTPException(status_code=404, detail="Proveedor no encontrado")
 
     validar_tipo_factura(db, compra.tipo_factura)
+    validar_medio_pago(db, compra.medio_pago)
 
     nueva_compra = models.Compra(
         fase_id=compra.fase_id,
@@ -333,6 +335,9 @@ def update_compra(
 
     if "tipo_factura" in datos:
         validar_tipo_factura(db, datos["tipo_factura"])
+
+    if "medio_pago" in datos:
+        validar_medio_pago(db, datos["medio_pago"], actual=compra_existente.medio_pago)
 
     if "fase_id" in datos:
         fase = db.query(models.Fase).filter(models.Fase.id == datos["fase_id"]).first()

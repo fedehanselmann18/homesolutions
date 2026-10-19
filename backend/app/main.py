@@ -28,6 +28,7 @@ from app.routes import (
     ia,
     impuestos,
     login,
+    medios_pago,
     plazos_pago,
     productos,
     proveedores,
@@ -128,6 +129,7 @@ app.include_router(categorias.router)
 app.include_router(categoriagasto.router)
 app.include_router(fases_predeterminadas.router)
 app.include_router(impuestos.router)
+app.include_router(medios_pago.router)
 app.include_router(tipos_factura.router)
 app.include_router(condiciones_pago.router)
 app.include_router(plazos_pago.router)
