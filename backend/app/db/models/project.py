@@ -38,11 +38,9 @@ class Project(TimestampMixin, Base):
 
     fases: Mapped[list["Phase"]] = relationship(back_populates="proyecto", cascade="all, delete-orphan")
     gastos: Mapped[list["Expense"]] = relationship(back_populates="proyecto", cascade="all, delete-orphan")
-    # Sin cascade de borrado, a diferencia de fases y gastos: una obra
-    # con cobros no se borra (ver api/projects.py). Con `delete-orphan` el ORM
-    # se adelantaba a borrarlos uno por uno y el RESTRICT de la base nunca
-    # llegaba a saltar; passive_deletes deja que decida la base.
-    cobros: Mapped[list["ClientPayment"]] = relationship(back_populates="proyecto", passive_deletes="all")
+    cobros: Mapped[list["ClientPayment"]] = relationship(
+        back_populates="proyecto", cascade="all, delete-orphan"
+    )
 
 
 class Phase(TimestampMixin, Base):

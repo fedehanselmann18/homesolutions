@@ -17,10 +17,6 @@ export function ModalConfirmar({
   // -- ver la página de Manager, donde confirma cambios de rol, cierres de
   // sesión y bajas de cuenta.
   textoConfirmar = "Eliminar",
-  // Sin `onConfirmar` el modal es sólo un aviso: no hay nada que confirmar,
-  // así que va un único botón que cierra (y no uno destructivo que va a
-  // fallar). Lo usa el borrado de una obra con cobros.
-  textoCerrar = "Entendido",
   // "peligro" (borrar: botón rojo y el ícono de alerta) o "neutro" (una
   // acción que no destruye nada, como marcar compras como pagadas).
   tono = "peligro",
@@ -33,24 +29,18 @@ export function ModalConfirmar({
       titulo={titulo}
       onCerrar={onCancelar}
       acciones={
-        onConfirmar ? (
-          <>
-            <button type="button" className="btn btn--lg btn-secondary" onClick={onCancelar}>
-              Cancelar
-            </button>
-            <button
-              type="button"
-              className={`btn btn--lg ${peligro ? "btn-peligro" : "btn-primary"}`}
-              onClick={onConfirmar}
-            >
-              {textoConfirmar}
-            </button>
-          </>
-        ) : (
-          <button type="button" className="btn btn--lg btn-primary" onClick={onCancelar}>
-            {textoCerrar}
+        <>
+          <button type="button" className="btn btn--lg btn-secondary" onClick={onCancelar}>
+            Cancelar
           </button>
-        )
+          <button
+            type="button"
+            className={`btn btn--lg ${peligro ? "btn-peligro" : "btn-primary"}`}
+            onClick={onConfirmar}
+          >
+            {textoConfirmar}
+          </button>
+        </>
       }
     >
       <div className="modal-confirmar">

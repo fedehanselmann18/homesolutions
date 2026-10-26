@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { bloqueadaPorCobros, contarParaBorrar, lineasDeBorrado } from "./proyectos";
+import { contarParaBorrar, lineasDeBorrado } from "./proyectos";
 
 // Una obra con dos fases y movimientos propios, más los de OTRA obra, que no
 // tienen que contarse.
@@ -34,7 +34,7 @@ describe("contarParaBorrar", () => {
     });
   });
 
-  it("cuenta los cobros de la obra, que son los que bloquean el borrado", () => {
+  it("cuenta los cobros de la obra, que también se van con ella", () => {
     expect(contarParaBorrar({ proyectoId: "p-1", fases, gastos, compras, cobros }).cobros).toBe(2);
   });
 
@@ -64,22 +64,15 @@ describe("lineasDeBorrado", () => {
     expect(lineasDeBorrado({ compras: 2, gastos: 0 })).toEqual(["2 compras"]);
   });
 
-  it("no lista los cobros: con el bloqueo no se borran nunca", () => {
-    // Una obra con cobros ni llega a este aviso (ver `bloqueadaPorCobros`).
-    expect(lineasDeBorrado({ compras: 2, gastos: 1, cobros: 5 })).toEqual(["2 compras", "1 gasto"]);
+  it("lista los cobros al final: también se borran con la obra", () => {
+    expect(lineasDeBorrado({ compras: 2, gastos: 1, cobros: 5 })).toEqual([
+      "2 compras",
+      "1 gasto",
+      "5 cobros",
+    ]);
   });
 
   it("una obra vacía no deja ninguna línea", () => {
     expect(lineasDeBorrado({ compras: 0, gastos: 0 })).toEqual([]);
-  });
-});
-
-describe("bloqueadaPorCobros", () => {
-  it("una obra con cobros no se puede borrar", () => {
-    expect(bloqueadaPorCobros({ compras: 0, gastos: 0, cobros: 2 })).toBe(true);
-  });
-
-  it("sin cobros se puede, por más movimientos que tenga", () => {
-    expect(bloqueadaPorCobros({ compras: 9, gastos: 9, cobros: 0 })).toBe(false);
   });
 });

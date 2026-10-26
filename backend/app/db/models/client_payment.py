@@ -21,12 +21,8 @@ class ClientPayment(FrozenExchangeRateMixin, TimestampMixin, Base):
     __tablename__ = "cobros"
 
     id: Mapped[uuid.UUID] = uuid_pk()
-    # RESTRICT y no CASCADE: borrar una obra con cobros tiene que fallar.
-    # El chequeo lindo (409 con cuántos hay) lo hace api/projects.py; esto es
-    # el failsafe de la base para cualquier otro camino -- un script, una
-    # consulta a mano o un endpoint nuevo que se olvide del chequeo.
     proyecto_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("proyectos.id", ondelete="RESTRICT"), nullable=False, index=True
+        ForeignKey("proyectos.id", ondelete="CASCADE"), nullable=False, index=True
     )
     usuario_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("usuarios.id", ondelete="RESTRICT"), nullable=False, index=True

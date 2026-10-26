@@ -644,13 +644,13 @@ describe("ModalConfirmar: lo que se va a borrar", () => {
         titulo="Eliminar proyecto"
         mensaje="No se puede deshacer."
         nombreRecurso="Terravista"
-        detalles={["3 compras", "1 gasto"]}
+        detalles={["3 compras", "1 gasto", "2 cobros"]}
         onConfirmar={noop}
         onCancelar={noop}
       />
     );
     expect(screen.getByText("Terravista")).toBeInTheDocument();
-    ["3 compras", "1 gasto"].forEach((linea) =>
+    ["3 compras", "1 gasto", "2 cobros"].forEach((linea) =>
       expect(screen.getByText(linea)).toBeInTheDocument()
     );
   });
@@ -666,26 +666,5 @@ describe("ModalConfirmar: lo que se va a borrar", () => {
       />
     );
     expect(container.querySelector(".modal-confirmar-detalles")).toBeNull();
-  });
-});
-
-// Sin onConfirmar el modal es un aviso: no puede ofrecer un botón destructivo
-// que el backend va a rechazar (una obra con cobros no se borra).
-describe("ModalConfirmar como aviso", () => {
-  it("sin onConfirmar muestra un solo botón, que cierra", async () => {
-    const onCancelar = vi.fn();
-    render(
-      <ModalConfirmar
-        titulo="No se puede borrar la obra"
-        mensaje="Tiene 5 cobros cargados."
-        nombreRecurso="Terravista"
-        onCancelar={onCancelar}
-      />
-    );
-    expect(screen.queryByRole("button", { name: "Eliminar" })).toBeNull();
-    expect(screen.queryByRole("button", { name: "Cancelar" })).toBeNull();
-
-    await userEvent.click(screen.getByRole("button", { name: "Entendido" }));
-    expect(onCancelar).toHaveBeenCalled();
   });
 });

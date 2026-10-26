@@ -65,12 +65,10 @@ def test_actualizar_proyecto_solo_pisa_los_campos_enviados(client, db_session, h
     assert cuerpo["nombre"] == "Casa Vieja"  # no pisado por el PUT parcial
 
 
-def _armar_arbol_completo(db_session, usuario, proveedor, con_cobro=True):
+def _armar_arbol_completo(db_session, usuario, proveedor):
     """Proyecto con una Fase (+ Compra con comprobante), un Gasto (con
-    comprobante, sin fase) y, si `con_cobro`, un Cobro (con comprobante).
-
-    El cobro es opcional porque una obra CON cobros ya no se puede borrar
-    (ver delete_project): la plata que entró no se tira por un clic."""
+    comprobante, sin fase) y un Cobro (con comprobante) -- las tres ramas
+    que delete_project tiene que recorrer y limpiar."""
     proyecto = models.Project(
         nombre="Proyecto Cascada",
         direccion="Calle 1",
@@ -109,27 +107,22 @@ def _armar_arbol_completo(db_session, usuario, proveedor, con_cobro=True):
     )
     gasto.comprobantes = [models.ExpenseReceipt(archivo_path="uploads/comprobantes_gasto/g1/b.pdf")]
 
-    cobro = None
-    if con_cobro:
-        cobro = models.ClientPayment(
-            proyecto=proyecto,
-            usuario_id=usuario.id,
-            monto_usd=200,
-            monto_ars=200000,
-            cotizacion_dolar=1000,
-            tipo_cambio="blue",
-            descripcion="Cobro test",
-            fecha=date(2026, 1, 1),
-            tipo_factura="factura_a",
-        )
-        cobro.comprobantes = [
-            models.ClientPaymentReceipt(archivo_path="uploads/comprobantes_cobro/co1/c.pdf")
-        ]
+    cobro = models.ClientPayment(
+        proyecto=proyecto,
+        usuario_id=usuario.id,
+        monto_usd=200,
+        monto_ars=200000,
+        cotizacion_dolar=1000,
+        tipo_cambio="blue",
+        descripcion="Cobro test",
+        fecha=date(2026, 1, 1),
+        tipo_factura="factura_a",
+    )
+    cobro.comprobantes = [models.ClientPaymentReceipt(archivo_path="uploads/comprobantes_cobro/co1/c.pdf")]
 
-    objetos = [proyecto, fase, compra, gasto] + ([cobro] if con_cobro else [])
-    db_session.add_all(objetos)
+    db_session.add_all([proyecto, fase, compra, gasto, cobro])
     db_session.commit()
-    for obj in objetos:
+    for obj in (proyecto, fase, compra, gasto, cobro):
         db_session.refresh(obj)
     return proyecto, fase, compra, gasto, cobro
 
@@ -142,9 +135,7 @@ def test_eliminar_proyecto_borra_en_cascada_y_limpia_comprobantes(
     db_session.commit()
     db_session.refresh(proveedor)
 
-    proyecto, fase, compra, gasto, _ = _armar_arbol_completo(
-        db_session, usuario_admin, proveedor, con_cobro=False
-    )
+    proyecto, fase, compra, gasto, cobro = _armar_arbol_completo(db_session, usuario_admin, proveedor)
 
     rutas_borradas = []
     monkeypatch.setattr(ruta_proyectos, "eliminar_comprobante", lambda path: rutas_borradas.append(path))
@@ -152,11 +143,12 @@ def test_eliminar_proyecto_borra_en_cascada_y_limpia_comprobantes(
     respuesta = client.delete(f"/proyectos/{proyecto.id}", headers=headers_admin)
     assert respuesta.status_code == 200
 
-    # Los comprobantes (compra y gasto) tienen que haberse "borrado" (mock)
-    # antes de que el CASCADE de la DB se lleve las filas.
+    # Los tres comprobantes (compra/gasto/cobro) tienen que haberse "borrado"
+    # (mock) antes de que el CASCADE de la DB se lleve las filas.
     assert set(rutas_borradas) == {
         "uploads/comprobantes_compra/c1/a.pdf",
         "uploads/comprobantes_gasto/g1/b.pdf",
+        "uploads/comprobantes_cobro/co1/c.pdf",
     }
 
     # El árbol entero desaparece de la DB, no solo el proyecto.
@@ -164,36 +156,9 @@ def test_eliminar_proyecto_borra_en_cascada_y_limpia_comprobantes(
     assert db_session.query(models.Phase).filter_by(id=fase.id).first() is None
     assert db_session.query(models.Purchase).filter_by(id=compra.id).first() is None
     assert db_session.query(models.Expense).filter_by(id=gasto.id).first() is None
+    assert db_session.query(models.ClientPayment).filter_by(id=cobro.id).first() is None
     # El proveedor NO se toca (RESTRICT, y de todos modos no cuelga del proyecto).
     assert db_session.query(models.Supplier).filter_by(id=proveedor.id).first() is not None
-
-
-def test_no_se_puede_eliminar_una_obra_con_cobros(
-    client, db_session, headers_admin, usuario_admin, monkeypatch
-):
-    """Decisión de producto (25/10/2026): la plata que entró no se borra por un
-    clic. Una obra con cobros se bloquea y el error dice cuántos hay, para
-    poder borrarlos a mano si de verdad se quiere."""
-    proveedor = models.Supplier(nombre="Proveedor Cobros", cuit="20-12345670-1")
-    db_session.add(proveedor)
-    db_session.commit()
-    db_session.refresh(proveedor)
-    proyecto, _, compra, gasto, cobro = _armar_arbol_completo(db_session, usuario_admin, proveedor)
-
-    rutas_borradas = []
-    monkeypatch.setattr(ruta_proyectos, "eliminar_comprobante", lambda path: rutas_borradas.append(path))
-
-    respuesta = client.delete(f"/proyectos/{proyecto.id}", headers=headers_admin)
-
-    assert respuesta.status_code == 409
-    assert "1 cobro" in respuesta.json()["detail"]
-    # Nada se tocó: ni la obra, ni sus movimientos, ni los archivos. El chequeo
-    # va ANTES de la limpieza de comprobantes, que no tiene vuelta atrás.
-    assert rutas_borradas == []
-    assert db_session.query(models.Project).filter_by(id=proyecto.id).first() is not None
-    assert db_session.query(models.ClientPayment).filter_by(id=cobro.id).first() is not None
-    assert db_session.query(models.Purchase).filter_by(id=compra.id).first() is not None
-    assert db_session.query(models.Expense).filter_by(id=gasto.id).first() is not None
 
 
 def test_eliminar_proyecto_sin_ser_admin_es_rechazado(client, db_session, headers_lectura):

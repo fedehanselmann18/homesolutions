@@ -82,24 +82,6 @@ def delete_project(
     if not proyecto:
         raise HTTPException(status_code=404, detail="Proyecto no encontrado")
 
-    # La obra con cobros NO se borra (decisión de Fede, 25/10/2026): compras,
-    # gastos se rehacen, pero la plata que entró del cliente es el
-    # registro de lo que el cliente pagó y no se tira por un clic. Para
-    # borrarla de verdad hay que borrar los cobros a mano, de a uno.
-    #
-    # Va ANTES de eliminar_comprobante: esa limpieza no tiene vuelta atrás.
-    # El failsafe de la base es la FK de cobros.proyecto_id, en RESTRICT.
-    cobros = len(proyecto.cobros)
-    if cobros:
-        raise HTTPException(
-            status_code=409,
-            detail=(
-                f"No se puede borrar la obra: tiene {cobros} "
-                f"{'cobro cargado' if cobros == 1 else 'cobros cargados'}. "
-                "Borralos primero desde la obra."
-            ),
-        )
-
     proyecto_data = ProjectOut.model_validate(proyecto)
 
     # Limpiar archivos físicos de todo el árbol antes del CASCADE
@@ -109,6 +91,9 @@ def delete_project(
                 eliminar_comprobante(comprobante.archivo_path)
     for gasto in proyecto.gastos:
         for comprobante in gasto.comprobantes:
+            eliminar_comprobante(comprobante.archivo_path)
+    for cobro in proyecto.cobros:
+        for comprobante in cobro.comprobantes:
             eliminar_comprobante(comprobante.archivo_path)
 
     db.delete(proyecto)

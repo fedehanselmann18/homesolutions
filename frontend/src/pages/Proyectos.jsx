@@ -15,7 +15,7 @@ import { useMonedaAnalisis } from "../hooks/useMonedaAnalisis";
 import { SelectorMoneda } from "../components/shared/SelectorMoneda";
 import { calcularPanel } from "../utils/panel";
 import { obtenerMensajeError } from "../utils/errorHandling";
-import { bloqueadaPorCobros, contarParaBorrar, lineasDeBorrado } from "../utils/proyectos";
+import { contarParaBorrar, lineasDeBorrado } from "../utils/proyectos";
 import { ProyectoCard } from "../components/proyectos/ProyectoCard";
 import ModalProyecto from "../components/modals/ModalProyecto";
 import ModalConfirmar from "../components/modals/ModalConfirmar";
@@ -198,8 +198,8 @@ export function Proyectos() {
       );
     } catch (err) {
       console.error("Error eliminando proyecto:", err);
-      // El backend explica por qué (ej. 409 por cobros): repetir un genérico
-      // dejaría a Agus sin saber qué hacer.
+      // El backend explica por qué (ej. algo que la base retiene): repetir
+      // un genérico dejaría a Agus sin saber qué hacer.
       toast.error(obtenerMensajeError(err));
     }
   };
@@ -207,12 +207,8 @@ export function Proyectos() {
   const canManage = usuario.rol === "admin";
 
   /**
-   * El aviso de borrado. Dos caras:
-   * - con cobros, no se borra: un aviso con un solo botón, que dice cuántos
-   *   hay. El bloqueo real es el 409 del backend (api/projects.py); esto evita
-   *   ofrecer un botón que va a fallar.
-   * - sin cobros, la confirmación de siempre, listando lo que se va con la
-   *   obra.
+   * La confirmación de borrado, listando lo que se va con la obra: sus
+   * compras, sus gastos y sus cobros (el backend los borra en cascada).
    */
   function ModalBorrarProyecto() {
     const conteos = contarParaBorrar({
@@ -223,18 +219,6 @@ export function Proyectos() {
       cobros: cobrosQuery.data,
     });
     const cerrar = () => setProyectoAEliminar(null);
-
-    if (bloqueadaPorCobros(conteos)) {
-      const cobros = `${conteos.cobros} ${conteos.cobros === 1 ? "cobro" : "cobros"}`;
-      return (
-        <ModalConfirmar
-          titulo="No se puede borrar la obra"
-          mensaje={`Tiene ${cobros} cargados: la plata que entró no se borra junto con la obra. Borralos desde la obra y volvé a intentar.`}
-          nombreRecurso={proyectoAEliminar.nombre}
-          onCancelar={cerrar}
-        />
-      );
-    }
 
     return (
       <ModalConfirmar
