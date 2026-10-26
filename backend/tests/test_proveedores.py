@@ -1,6 +1,6 @@
-"""Tests de integración de routes/proveedores.py, centrados en la
+"""Tests de integración de app/api/suppliers.py, centrados en la
 validación de formato/dígito verificador de CUIT (ver _validar_cuit en
-schemas.py, B-08)."""
+schemas/, B-08)."""
 
 
 def _payload(cuit):
@@ -35,7 +35,7 @@ def test_crear_proveedor_con_formato_invalido_es_rechazado(client, headers_admin
 def test_actualizar_proveedor_con_cuit_invalido_es_rechazado(client, db_session, headers_admin):
     from app.db import models
 
-    proveedor = models.Proveedor(nombre="Proveedor Test", cuit="20-12345678-6")
+    proveedor = models.Supplier(nombre="Proveedor Test", cuit="20-12345678-6")
     db_session.add(proveedor)
     db_session.commit()
     db_session.refresh(proveedor)
@@ -80,7 +80,7 @@ def test_crear_proveedor_con_cuit_vacio_se_guarda_como_null(client, headers_admi
 def test_borrar_el_cuit_de_un_proveedor_existente(client, db_session, headers_admin):
     from app.db import models
 
-    proveedor = models.Proveedor(nombre="Proveedor Test", cuit="20-12345678-6")
+    proveedor = models.Supplier(nombre="Proveedor Test", cuit="20-12345678-6")
     db_session.add(proveedor)
     db_session.commit()
     db_session.refresh(proveedor)

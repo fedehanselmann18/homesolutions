@@ -6,6 +6,7 @@ __pycache__/
 *.pyc
 backups/
 .pytest_cache/
+.ruff_cache/
 .claude
 
 # Comprobantes subidos por usuarios (facturas, notas, etc.). Son datos

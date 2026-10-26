@@ -12,14 +12,14 @@ import uuid
 
 import pytest
 
-from app.auth.oAuth2 import NOMBRE_USUARIO_MANAGER, create_access_token
+from app.auth.oauth2 import NOMBRE_USUARIO_MANAGER, create_access_token
 from app.auth.verification import hash_password
 from app.db import models
 
 
 @pytest.fixture()
 def usuario_manager(db_session):
-    manager = models.Usuario(
+    manager = models.User(
         nombre_usuario=NOMBRE_USUARIO_MANAGER,
         hashed_password=hash_password("clave-de-test-123"),
         rol="lectura",
@@ -148,8 +148,8 @@ def test_no_se_puede_revocar_la_autorizacion_de_manager(
     autorización siga existiendo.
     """
     autorizacion = (
-        db_session.query(models.UsuarioAutorizado)
-        .filter(models.UsuarioAutorizado.nombre_usuario == NOMBRE_USUARIO_MANAGER)
+        db_session.query(models.AuthorizedUser)
+        .filter(models.AuthorizedUser.nombre_usuario == NOMBRE_USUARIO_MANAGER)
         .first()
     )
 
@@ -157,8 +157,8 @@ def test_no_se_puede_revocar_la_autorizacion_de_manager(
 
     assert respuesta.status_code == 400
     assert (
-        db_session.query(models.UsuarioAutorizado)
-        .filter(models.UsuarioAutorizado.nombre_usuario == NOMBRE_USUARIO_MANAGER)
+        db_session.query(models.AuthorizedUser)
+        .filter(models.AuthorizedUser.nombre_usuario == NOMBRE_USUARIO_MANAGER)
         .first()
         is not None
     )

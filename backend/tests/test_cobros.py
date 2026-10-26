@@ -1,14 +1,14 @@
-"""Tests de integración de routes/cobros.py: creación, edición y notas de
+"""Tests de integración de app/api/client_payments.py: creación, edición y notas de
 cuenta corriente (más simples que las de Compra: sin líneas de producto)."""
 
 from datetime import date
 
+from app.api import client_payments as ruta_cobros
 from app.db import models
-from app.routes import cobros as ruta_cobros
 
 
 def _crear_proyecto(db_session):
-    proyecto = models.Proyecto(
+    proyecto = models.Project(
         nombre="Proyecto Test",
         direccion="Calle Falsa 123",
         fecha_inicio=date(2026, 1, 1),
@@ -65,7 +65,7 @@ def test_crear_cobro_sin_ser_admin_es_rechazado(client, db_session, headers_lect
 
 def test_actualizar_cobro(client, db_session, headers_admin, usuario_admin, cotizacion):
     proyecto = _crear_proyecto(db_session)
-    cobro = models.Cobro(
+    cobro = models.ClientPayment(
         proyecto=proyecto,
         usuario_id=usuario_admin.id,
         monto_usd=100,
@@ -98,7 +98,7 @@ def test_crear_nota_cobro_actualiza_monto_neto(
     monkeypatch.setattr(ruta_cobros, "subir_comprobante", lambda *a, **k: "notas_cobro/fake/nota.pdf")
 
     proyecto = _crear_proyecto(db_session)
-    cobro = models.Cobro(
+    cobro = models.ClientPayment(
         proyecto=proyecto,
         usuario_id=usuario_admin.id,
         monto_usd=100,
@@ -164,7 +164,7 @@ def test_nota_de_cobro_sin_cotizacion_valida_se_rechaza(
 ):
     monkeypatch.setattr(ruta_cobros, "subir_comprobante", lambda *a, **k: "notas_cobro/fake/nota.pdf")
     proyecto = _crear_proyecto(db_session)
-    cobro = models.Cobro(
+    cobro = models.ClientPayment(
         proyecto=proyecto,
         usuario_id=usuario_admin.id,
         monto_usd=100,

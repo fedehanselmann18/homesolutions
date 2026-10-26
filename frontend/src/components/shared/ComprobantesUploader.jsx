@@ -10,7 +10,7 @@ import { obtenerMensajeError } from "../../utils/errorHandling";
 import "./ComprobantesUploader.css";
 
 const EXTENSIONES_PERMITIDAS = [".pdf", ".jpg", ".jpeg", ".png"];
-const TAMANIO_MAXIMO_BYTES = 10 * 1024 * 1024; // 10MB, espejo de backend/app/files/storage.py
+const TAMANIO_MAXIMO_BYTES = 10 * 1024 * 1024; // 10MB, espejo de backend/app/file_management/storage.py
 
 let contadorLocalId = 0;
 const nuevoLocalId = () => `pendiente-${++contadorLocalId}`;

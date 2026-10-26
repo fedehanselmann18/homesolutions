@@ -2,7 +2,7 @@
 Tests de /ia/extraer-comprobante.
 
 No pega contra Gemini de verdad (costaría plata y sería flaky): se mockea
-`extraer_comprobante` en el namespace de app.routes.ia, así se prueba el
+`extraer_comprobante` en el namespace de app.api.ai, así se prueba el
 endpoint (auth, validación de archivo, manejo de errores) sin depender de la
 API real. La lógica de _validar_y_limpiar (qué hace con lo que devuelve el
 modelo) se prueba aparte, directo contra la función pura, sin mock.
@@ -12,14 +12,14 @@ import io
 import uuid
 
 from app import schemas
+from app.ai.extractor import AIExtractionError, _armar_prompt, _validar_y_limpiar
 from app.db import models
-from app.ia.extractor import ExtraccionIAError, _armar_prompt, _validar_y_limpiar
 
 ARCHIVO_PDF_FALSO = ("factura.pdf", io.BytesIO(b"%PDF-1.4 contenido falso"), "application/pdf")
 
 
 def _mock_ok(**kwargs):
-    return schemas.IAExtraccionComprobante(
+    return schemas.AIReceiptExtraction(
         monto=15000.0,
         fecha="2026-07-20",
         tipo_factura="factura_b",
@@ -70,7 +70,7 @@ def test_extension_no_permitida(client, headers_admin):
 
 
 def test_archivo_supera_tamanio_maximo(client, headers_admin, monkeypatch):
-    import app.routes.ia as ruta_ia
+    import app.api.ai as ruta_ia
 
     monkeypatch.setattr(
         ruta_ia, "TAMANIO_MAXIMO_BYTES", 10
@@ -87,7 +87,7 @@ def test_archivo_supera_tamanio_maximo(client, headers_admin, monkeypatch):
 
 
 def test_extraccion_ok_devuelve_lo_que_da_el_extractor(client, headers_admin, monkeypatch):
-    import app.routes.ia as ruta_ia
+    import app.api.ai as ruta_ia
 
     monkeypatch.setattr(ruta_ia, "extraer_comprobante", lambda **kwargs: _mock_ok())
 
@@ -107,9 +107,9 @@ def test_extraccion_ok_devuelve_lo_que_da_el_extractor(client, headers_admin, mo
 def test_extraccion_le_pasa_los_tipos_de_factura_de_la_base(client, headers_admin, db_session, monkeypatch):
     """Los tipos salen de la tabla (incluido uno que agregó Agus), no de una
     lista fija ni de lo que mande el front en el contexto."""
-    import app.routes.ia as ruta_ia
+    import app.api.ai as ruta_ia
 
-    db_session.add(models.TipoFactura(codigo="ticket", nombre="Ticket", orden=99))
+    db_session.add(models.InvoiceType(codigo="ticket", nombre="Ticket", orden=99))
     db_session.commit()
     recibido = {}
 
@@ -134,10 +134,10 @@ def test_extraccion_le_pasa_los_tipos_de_factura_de_la_base(client, headers_admi
 
 
 def test_extraccion_con_error_de_ia_da_502(client, headers_admin, monkeypatch):
-    import app.routes.ia as ruta_ia
+    import app.api.ai as ruta_ia
 
     def _mock_error(**kwargs):
-        raise ExtraccionIAError("Falta configurar GEMINI_API_KEY en el .env del backend.")
+        raise AIExtractionError("Falta configurar GEMINI_API_KEY en el .env del backend.")
 
     monkeypatch.setattr(ruta_ia, "extraer_comprobante", _mock_error)
 

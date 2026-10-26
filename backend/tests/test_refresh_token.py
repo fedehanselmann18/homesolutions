@@ -12,7 +12,7 @@ Tests del refresh token y la revocación de sesión (B-06):
 
 from sqlalchemy import text
 
-from app.auth.oAuth2 import create_access_token, create_refresh_token
+from app.auth.oauth2 import create_access_token, create_refresh_token
 
 
 def test_login_setea_las_tres_cookies(client, usuario_admin):

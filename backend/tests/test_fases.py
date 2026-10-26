@@ -24,7 +24,7 @@ from app.db import models
 
 
 def _crear_proyecto(db_session, nombre="Proyecto Fases"):
-    proyecto = models.Proyecto(
+    proyecto = models.Project(
         nombre=nombre,
         direccion="Calle 1",
         fecha_inicio=date(2026, 1, 1),
@@ -254,7 +254,7 @@ def test_corregir_la_fecha_de_una_fase_ya_en_curso(client, db_session, headers_a
 
 
 def test_pasar_a_en_curso_sin_fecha_es_hoy(client, db_session, headers_admin):
-    from app.plazos import hoy
+    from app.domain.payment_terms import hoy
 
     proyecto = _crear_proyecto(db_session)
     fase = _crear_fase_via_api(client, headers_admin, proyecto.id, "Montaje")
@@ -265,7 +265,7 @@ def test_pasar_a_en_curso_sin_fecha_es_hoy(client, db_session, headers_admin):
 def test_fecha_en_curso_futura_se_rechaza(client, db_session, headers_admin):
     from datetime import timedelta
 
-    from app.plazos import hoy
+    from app.domain.payment_terms import hoy
 
     proyecto = _crear_proyecto(db_session)
     fase = _crear_fase_via_api(client, headers_admin, proyecto.id, "Montaje")

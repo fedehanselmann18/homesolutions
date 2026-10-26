@@ -401,7 +401,10 @@ export function ProveedorDetalle() {
       refetchProductos();
     } catch (err) {
       console.error("Error eliminando producto:", err);
-      toast.error("No se pudo eliminar el producto.");
+      // El backend explica POR QUÉ no se puede (producto ya usado en una
+      // compra, RESTRICT de detalle_compra). Con el texto genérico, Agus
+      // reintentaba el borrado sin saber que nunca iba a andar.
+      toast.error(obtenerMensajeError(err));
     }
   };
 

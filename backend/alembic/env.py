@@ -4,8 +4,8 @@ from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
-from app.config import settings
-from app.db.db import Base
+from app.core.config import settings
+from app.db.database import Base
 
 # IMPORTANTE: importa los modelos para que SQLAlchemy registre las tablas
 from app.db import models

@@ -20,11 +20,11 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, event, select
 from sqlalchemy.orm import sessionmaker
 
-from app.auth.oAuth2 import NOMBRE_USUARIO_MANAGER, create_access_token
+from app.auth.oauth2 import NOMBRE_USUARIO_MANAGER, create_access_token
 from app.auth.verification import hash_password
-from app.config import settings
+from app.core.config import settings
 from app.db import models
-from app.db.db import Base, get_db
+from app.db.database import Base, get_db
 from app.main import app
 
 TEST_DB_NAME = f"{settings.database_name}_test"
@@ -92,9 +92,9 @@ MEDIOS_PAGO_DE_FABRICA = [
 
 def _sembrar_medios_pago(engine):
     with sessionmaker(bind=engine)() as session:
-        existentes = set(session.scalars(select(models.MedioPago.codigo)))
+        existentes = set(session.scalars(select(models.PaymentMethod.codigo)))
         session.add_all(
-            models.MedioPago(codigo=codigo, nombre=nombre, orden=orden)
+            models.PaymentMethod(codigo=codigo, nombre=nombre, orden=orden)
             for orden, (codigo, nombre) in enumerate(MEDIOS_PAGO_DE_FABRICA, start=1)
             if codigo not in existentes
         )
@@ -103,9 +103,9 @@ def _sembrar_medios_pago(engine):
 
 def _sembrar_condiciones_pago(engine):
     with sessionmaker(bind=engine)() as session:
-        existentes = set(session.scalars(select(models.CondicionPago.nombre)))
+        existentes = set(session.scalars(select(models.PaymentCondition.nombre)))
         session.add_all(
-            models.CondicionPago(nombre=nombre, dias=dias, orden=orden, protegido=protegido)
+            models.PaymentCondition(nombre=nombre, dias=dias, orden=orden, protegido=protegido)
             for orden, (nombre, dias, protegido) in enumerate(CONDICIONES_PAGO_DE_FABRICA, start=1)
             if nombre not in existentes
         )
@@ -116,9 +116,9 @@ def _sembrar_tipos_factura(engine):
     # Idempotente: si una corrida anterior se cortó antes del drop_all, las
     # tablas (y los tipos) ya están.
     with sessionmaker(bind=engine)() as session:
-        existentes = set(session.scalars(select(models.TipoFactura.codigo)))
+        existentes = set(session.scalars(select(models.InvoiceType.codigo)))
         session.add_all(
-            models.TipoFactura(codigo=codigo, nombre=nombre, orden=orden)
+            models.InvoiceType(codigo=codigo, nombre=nombre, orden=orden)
             for orden, (codigo, nombre) in enumerate(TIPOS_FACTURA_DE_FABRICA, start=1)
             if codigo not in existentes
         )
@@ -180,7 +180,7 @@ def client(db_session):
 
 
 def _crear_usuario(db_session, rol):
-    usuario = models.Usuario(
+    usuario = models.User(
         nombre_usuario=f"{rol}_test_{uuid.uuid4().hex[:8]}",
         hashed_password=hash_password("clave-de-test-123"),
         rol=rol,
@@ -202,10 +202,10 @@ def equipo_autorizado(db_session):
     test de POST /usuarios/crear daría 403.
     """
     autorizados = [
-        models.UsuarioAutorizado(nombre_usuario="Agustin", rol="admin"),
-        models.UsuarioAutorizado(nombre_usuario="Aldana", rol="admin"),
-        models.UsuarioAutorizado(nombre_usuario="Alejandro", rol="lectura"),
-        models.UsuarioAutorizado(nombre_usuario=NOMBRE_USUARIO_MANAGER, rol="lectura"),
+        models.AuthorizedUser(nombre_usuario="Agustin", rol="admin"),
+        models.AuthorizedUser(nombre_usuario="Aldana", rol="admin"),
+        models.AuthorizedUser(nombre_usuario="Alejandro", rol="lectura"),
+        models.AuthorizedUser(nombre_usuario=NOMBRE_USUARIO_MANAGER, rol="lectura"),
     ]
     db_session.add_all(autorizados)
     db_session.commit()
@@ -238,10 +238,37 @@ def headers_lectura(usuario_lectura):
 
 
 @pytest.fixture()
+def usuario_manager(db_session):
+    """
+    La cuenta de mantenimiento (ver requiere_manager): la única que administra
+    el equipo. Rol "lectura" a propósito, para no
+    arrastrar permisos de admin en el resto de los endpoints.
+
+    OJO: test_auditoria.py y test_mantenimiento_cuentas.py definen su propia
+    copia de esta fixture, que tapa a esta cuando corren. Son anteriores a que
+    estuviera acá; no se tocaron para no meter ruido en esos archivos.
+    """
+    manager = models.User(
+        nombre_usuario=NOMBRE_USUARIO_MANAGER,
+        hashed_password=hash_password("clave-de-test-123"),
+        rol="lectura",
+    )
+    db_session.add(manager)
+    db_session.commit()
+    db_session.refresh(manager)
+    return manager
+
+
+@pytest.fixture()
+def headers_manager(usuario_manager):
+    return _headers_para(usuario_manager)
+
+
+@pytest.fixture()
 def cotizacion():
     """
     Lo que todo movimiento de plata manda al crearse (ver
-    schemas.CotizacionCongeladaIn). 1000 pesos por dólar a propósito: así
+    schemas.FrozenExchangeRateIn). 1000 pesos por dólar a propósito: así
     las cuentas de los asserts se leen de un vistazo (15.000 ARS = 15 USD).
     Se usa como **cotizacion en el json de los POST, o en el constructor del
     modelo al armar movimientos directo en la base.
@@ -258,7 +285,7 @@ def _resetear_rate_limiter():
     contadores "sucios" para el siguiente test que también pegue contra
     login, haciendo que la suite sea flaky según el orden en que corran.
     """
-    from app.limiter import limiter
+    from app.core.limiter import limiter
 
     limiter.reset()
     yield

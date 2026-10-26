@@ -70,7 +70,7 @@ function coincideComprobante(comprobantes, filtroComprobante) {
 
 /**
  * `proyectoDeCompra` es opcional: la Compra guarda fase_id, no proyecto_id
- * (ver models.py), así que quien quiera filtrar por proyecto tiene que pasar
+ * (ver models/), así que quien quiera filtrar por proyecto tiene que pasar
  * cómo resolverlo (fase -> proyecto). Sin ese resolver el filtro de proyecto
  * simplemente no aplica, que es lo correcto donde ya estás parado adentro de
  * un proyecto.

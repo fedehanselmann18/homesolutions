@@ -10,25 +10,25 @@ from datetime import date
 from decimal import Decimal
 
 from app.db import models
-from app.medios_pago import MEDIO_INVALIDO
+from app.domain.payment_methods import MEDIO_INVALIDO
 
 COTIZACION = {"cotizacion_dolar": 1000, "tipo_cambio": "blue"}
 
 
 def _medio(db_session, codigo):
-    return db_session.query(models.MedioPago).filter(models.MedioPago.codigo == codigo).one()
+    return db_session.query(models.PaymentMethod).filter(models.PaymentMethod.codigo == codigo).one()
 
 
 def _crear_fase_y_proveedor(db_session):
-    proyecto = models.Proyecto(
+    proyecto = models.Project(
         nombre="Proyecto Test",
         direccion="Calle Falsa 123",
         fecha_inicio=date(2026, 1, 1),
         estado="en_curso",
         precio_acordado_usd=1000000,
     )
-    fase = models.Fase(nombre="Fase Test", estado="en_curso", proyecto=proyecto)
-    proveedor = models.Proveedor(nombre="Proveedor Test", cuit="20-12345678-9")
+    fase = models.Phase(nombre="Fase Test", estado="en_curso", proyecto=proyecto)
+    proveedor = models.Supplier(nombre="Proveedor Test", cuit="20-12345678-9")
     db_session.add_all([proyecto, fase, proveedor])
     db_session.commit()
     return proyecto, fase, proveedor
@@ -36,7 +36,7 @@ def _crear_fase_y_proveedor(db_session):
 
 def _crear_compra(db_session, usuario, medio_pago="efectivo"):
     _, fase, proveedor = _crear_fase_y_proveedor(db_session)
-    compra = models.Compra(
+    compra = models.Purchase(
         fase_id=fase.id,
         proveedor_id=proveedor.id,
         usuario_id=usuario.id,

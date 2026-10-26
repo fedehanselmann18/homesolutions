@@ -1,6 +1,6 @@
 """
 Transición automática a "en curso" con el primer movimiento
-(app/estados_obra.py): una compra o un gasto arrancan la fase y la obra; un
+(app/domain/project_status.py): una compra o un gasto arrancan la fase y la obra; un
 cobro (anticipo) no; y nunca se reabre algo terminado.
 """
 
@@ -12,15 +12,15 @@ COTIZACION = {"cotizacion_dolar": 1000, "tipo_cambio": "blue"}
 
 
 def _obra(db_session, estado_proyecto="a_iniciar", estado_fase="por_empezar"):
-    proyecto = models.Proyecto(
+    proyecto = models.Project(
         nombre="Terravista",
         direccion="Lote 514",
         fecha_inicio=date(2026, 10, 1),
         estado=estado_proyecto,
         precio_acordado_usd=103000,
     )
-    fase = models.Fase(nombre="Instalación", estado=estado_fase, proyecto=proyecto)
-    proveedor = models.Proveedor(nombre="Proveedor Test", cuit="20-12345678-9")
+    fase = models.Phase(nombre="Instalación", estado=estado_fase, proyecto=proyecto)
+    proveedor = models.Supplier(nombre="Proveedor Test", cuit="20-12345678-9")
     db_session.add_all([proyecto, fase, proveedor])
     db_session.commit()
     return proyecto, fase, proveedor

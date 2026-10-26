@@ -633,3 +633,59 @@ describe("ModalFase: en curso desde", () => {
     expect(onGuardar.mock.calls[0][0]).not.toHaveProperty("fecha_en_curso_desde");
   });
 });
+
+// El aviso de lo que se borra en cascada (ver utils/proyectos.js, que arma las
+// líneas). Acá sólo se prueba que el modal las muestre y que sin líneas no
+// dibuje una lista vacía.
+describe("ModalConfirmar: lo que se va a borrar", () => {
+  it("lista una línea por cosa, debajo del nombre de la obra", () => {
+    render(
+      <ModalConfirmar
+        titulo="Eliminar proyecto"
+        mensaje="No se puede deshacer."
+        nombreRecurso="Terravista"
+        detalles={["3 compras", "1 gasto"]}
+        onConfirmar={noop}
+        onCancelar={noop}
+      />
+    );
+    expect(screen.getByText("Terravista")).toBeInTheDocument();
+    ["3 compras", "1 gasto"].forEach((linea) =>
+      expect(screen.getByText(linea)).toBeInTheDocument()
+    );
+  });
+
+  it("sin nada que listar no dibuja la lista", () => {
+    const { container } = render(
+      <ModalConfirmar
+        mensaje="No se puede deshacer."
+        nombreRecurso="Obra nueva"
+        detalles={[]}
+        onConfirmar={noop}
+        onCancelar={noop}
+      />
+    );
+    expect(container.querySelector(".modal-confirmar-detalles")).toBeNull();
+  });
+});
+
+// Sin onConfirmar el modal es un aviso: no puede ofrecer un botón destructivo
+// que el backend va a rechazar (una obra con cobros no se borra).
+describe("ModalConfirmar como aviso", () => {
+  it("sin onConfirmar muestra un solo botón, que cierra", async () => {
+    const onCancelar = vi.fn();
+    render(
+      <ModalConfirmar
+        titulo="No se puede borrar la obra"
+        mensaje="Tiene 5 cobros cargados."
+        nombreRecurso="Terravista"
+        onCancelar={onCancelar}
+      />
+    );
+    expect(screen.queryByRole("button", { name: "Eliminar" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Cancelar" })).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: "Entendido" }));
+    expect(onCancelar).toHaveBeenCalled();
+  });
+});

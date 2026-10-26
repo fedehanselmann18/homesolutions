@@ -43,7 +43,7 @@ def test_escritura_requiere_admin(client, headers_lectura, prefijo, extra, _mens
 
 
 def test_borrar_categoria_de_gasto_en_uso_explica_el_motivo(client, db_session, headers_admin, cotizacion):
-    proyecto = models.Proyecto(
+    proyecto = models.Project(
         nombre="Proyecto Test",
         direccion="Calle Falsa 123",
         fecha_inicio=date(2026, 1, 1),

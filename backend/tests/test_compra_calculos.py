@@ -1,6 +1,6 @@
 """
 Tests unitarios de los cálculos de plata de Compra (ver properties en
-app/db/models.py). Si esto se rompe, se rompen los totales que ve Agus en
+app/db/models/). Si esto se rompe, se rompen los totales que ve Agus en
 toda la app (Panel, detalle de proveedor, seguimiento de proyecto...).
 
 A propósito NO tocan la base de datos: se arman los objetos en memoria
@@ -16,15 +16,15 @@ from decimal import Decimal
 import pytest
 
 from app.db import models
-from app.tipo_cambio import a_ars, a_usd
+from app.domain.exchange_rate import a_ars, a_usd
 
 
 def _categoria(nombre="Aires", tipo="equipo"):
-    return models.Categoria(id=uuid.uuid4(), nombre=nombre, tipo=tipo)
+    return models.Category(id=uuid.uuid4(), nombre=nombre, tipo=tipo)
 
 
 def _producto(tipo="equipo", categorias=None):
-    producto = models.Producto(
+    producto = models.Product(
         id=uuid.uuid4(),
         proveedor_id=uuid.uuid4(),
         marca="Surrey",
@@ -37,7 +37,7 @@ def _producto(tipo="equipo", categorias=None):
 
 
 def _linea(producto, cantidad=1, precio_unitario=Decimal("100000")):
-    return models.DetalleCompra(
+    return models.PurchaseItem(
         id=uuid.uuid4(),
         producto_id=producto.id,
         cantidad=cantidad,
@@ -52,8 +52,8 @@ COTIZACION = Decimal("1000")
 
 
 def _compra(neto_ars, cotizacion=COTIZACION):
-    """Compra con su USD congelado como lo haría la route (ver app/tipo_cambio.py)."""
-    return models.Compra(
+    """Compra con su USD congelado como lo haría la route (ver app/domain/exchange_rate.py)."""
+    return models.Purchase(
         precio_neto_ars=neto_ars,
         precio_neto_usd=a_usd(neto_ars, cotizacion),
         cotizacion_dolar=cotizacion,
@@ -62,7 +62,7 @@ def _compra(neto_ars, cotizacion=COTIZACION):
 
 
 def _cobro(monto_usd, cotizacion=COTIZACION):
-    return models.Cobro(
+    return models.ClientPayment(
         monto_usd=monto_usd,
         monto_ars=a_ars(monto_usd, cotizacion),
         cotizacion_dolar=cotizacion,
@@ -71,8 +71,8 @@ def _cobro(monto_usd, cotizacion=COTIZACION):
 
 
 def _impuesto_aplicado(monto, nombre="IVA"):
-    impuesto = models.Impuesto(id=uuid.uuid4(), nombre=nombre)
-    return models.CompraImpuesto(id=uuid.uuid4(), monto=monto, impuesto=impuesto)
+    impuesto = models.Tax(id=uuid.uuid4(), nombre=nombre)
+    return models.PurchaseTax(id=uuid.uuid4(), monto=monto, impuesto=impuesto)
 
 
 def _nota_compra(
@@ -84,7 +84,7 @@ def _nota_compra(
     impuestos_aplicados=None,
     cotizacion=COTIZACION,
 ):
-    nota = models.NotaCompra(
+    nota = models.PurchaseNote(
         id=uuid.uuid4(),
         archivo_path="x.pdf",
         tipo=tipo,
@@ -103,7 +103,7 @@ def _nota_compra(
 
 
 def _nota_cobro(tipo, monto_usd, origen=None, tipo_factura="factura_a", cotizacion=COTIZACION):
-    return models.NotaCobro(
+    return models.ClientPaymentNote(
         id=uuid.uuid4(),
         archivo_path="x.pdf",
         tipo=tipo,
@@ -119,7 +119,7 @@ def _nota_cobro(tipo, monto_usd, origen=None, tipo_factura="factura_a", cotizaci
 
 
 def _nota_compra_detalle(detalle_compra_id, cantidad, precio_unitario):
-    return models.NotaCompraDetalle(
+    return models.PurchaseNoteItem(
         id=uuid.uuid4(),
         detalle_compra_id=detalle_compra_id,
         cantidad=cantidad,
@@ -282,7 +282,7 @@ def test_monto_neto_cobro_combina_credito_y_debito():
 def test_nota_credito_devolucion_producto_admite_varias_lineas():
     """Una nota de devolución puede traer más de un producto (ver
     NotaCompraDetalle) -- el monto en sí sigue siendo lo que calculó/congeló
-    la route al crearla (ver routes/compras.py: crear_nota_compra), acá solo
+    la route al crearla (ver app/api/purchases.py: crear_nota_compra), acá solo
     se verifica que el modelo sostiene la relación uno-a-muchos sin problema."""
     detalle_id_a = uuid.uuid4()
     detalle_id_b = uuid.uuid4()
@@ -304,7 +304,7 @@ def test_nota_credito_devolucion_producto_admite_varias_lineas():
 def test_nota_debito_reposicion_producto_suma_al_total_como_cualquier_debito():
     """reposicion_producto (solo nota_debito) usa el mismo selector de
     producto+cantidad que devolucion_producto (ver ModalNota.jsx y
-    routes/compras.py: crear_nota_compra), pero sin tope de restante -- caso
+    app/api/purchases.py: crear_nota_compra), pero sin tope de restante -- caso
     típico: te cambian 3 aires fallados (nota_credito devolucion_producto) y
     te facturan los 3 nuevos con esta nota_debito reposicion_producto. Acá
     solo se verifica que, sea cual sea el origen, una nota_debito sigue
@@ -353,15 +353,15 @@ def test_precio_total_de_compra_usa_el_monto_frozen_de_la_nota_no_recalcula_deta
 
 def test_validar_integridad_nota_compra_no_hace_nada_si_coinciden():
     proveedor_id = uuid.uuid4()
-    compra = models.Compra(id=uuid.uuid4(), proveedor_id=proveedor_id)
-    nota = models.NotaCompra(id=uuid.uuid4(), proveedor_id=proveedor_id)
+    compra = models.Purchase(id=uuid.uuid4(), proveedor_id=proveedor_id)
+    nota = models.PurchaseNote(id=uuid.uuid4(), proveedor_id=proveedor_id)
 
     models.validar_integridad_nota_compra(nota, compra)  # no levanta nada
 
 
 def test_validar_integridad_nota_compra_rechaza_proveedor_distinto():
-    compra = models.Compra(id=uuid.uuid4(), proveedor_id=uuid.uuid4())
-    nota = models.NotaCompra(id=uuid.uuid4(), proveedor_id=uuid.uuid4())  # otro proveedor
+    compra = models.Purchase(id=uuid.uuid4(), proveedor_id=uuid.uuid4())
+    nota = models.PurchaseNote(id=uuid.uuid4(), proveedor_id=uuid.uuid4())  # otro proveedor
 
     with pytest.raises(ValueError, match="proveedor"):
         models.validar_integridad_nota_compra(nota, compra)

@@ -1,5 +1,5 @@
 """
-Tests de app/files/storage.py, centrados en el cambio de B-15: _validar ya
+Tests de app/file_management/storage.py, centrados en el cambio de B-15: _validar ya
 no lee el archivo entero a memoria de Python, solo los primeros
 BYTES_FIRMA bytes para el chequeo de magic bytes, y repone el puntero a 0
 para que subir_comprobante pueda streamear el contenido completo al
@@ -11,7 +11,7 @@ import io
 import pytest
 from fastapi import HTTPException, UploadFile
 
-from app.files import storage
+from app.file_management import storage
 
 
 def _upload(nombre, contenido):

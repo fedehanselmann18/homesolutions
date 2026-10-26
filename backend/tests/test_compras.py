@@ -1,5 +1,5 @@
 """
-Tests de integración de routes/compras.py: creación completa (detalle +
+Tests de integración de app/api/purchases.py: creación completa (detalle +
 impuestos), edición, y el sub-recurso de notas (cuenta corriente), que es la
 parte con más lógica de negocio del router (ver crear_nota_compra).
 """
@@ -9,8 +9,8 @@ from decimal import Decimal
 
 from sqlalchemy.orm import joinedload
 
+from app.api import purchases as ruta_compras
 from app.db import models
-from app.routes import compras as ruta_compras
 
 # Mismo valor que el fixture `cotizacion` de conftest.py; acá va como
 # constante porque lo usan helpers que no reciben fixtures.
@@ -18,7 +18,7 @@ COTIZACION = {"cotizacion_dolar": 1000, "tipo_cambio": "blue"}
 
 
 def _crear_proveedor(db_session):
-    proveedor = models.Proveedor(nombre="Proveedor Test", cuit="20-12345678-9")
+    proveedor = models.Supplier(nombre="Proveedor Test", cuit="20-12345678-9")
     db_session.add(proveedor)
     db_session.commit()
     db_session.refresh(proveedor)
@@ -26,7 +26,7 @@ def _crear_proveedor(db_session):
 
 
 def _crear_producto(db_session, proveedor, precio=100000):
-    producto = models.Producto(
+    producto = models.Product(
         proveedor_id=proveedor.id,
         marca="Surrey",
         modelo="3000F",
@@ -40,7 +40,7 @@ def _crear_producto(db_session, proveedor, precio=100000):
 
 
 def _crear_impuesto(db_session, nombre="IVA"):
-    impuesto = models.Impuesto(nombre=nombre)
+    impuesto = models.Tax(nombre=nombre)
     db_session.add(impuesto)
     db_session.commit()
     db_session.refresh(impuesto)
@@ -48,14 +48,14 @@ def _crear_impuesto(db_session, nombre="IVA"):
 
 
 def _crear_fase(db_session):
-    proyecto = models.Proyecto(
+    proyecto = models.Project(
         nombre="Proyecto Test",
         direccion="Calle Falsa 123",
         fecha_inicio=date(2026, 1, 1),
         estado="en_curso",
         precio_acordado_usd=1000000,
     )
-    fase = models.Fase(nombre="Fase Test", estado="en_curso", proyecto=proyecto)
+    fase = models.Phase(nombre="Fase Test", estado="en_curso", proyecto=proyecto)
     db_session.add_all([proyecto, fase])
     db_session.commit()
     db_session.refresh(fase)
@@ -279,7 +279,7 @@ def test_crear_nota_compra_con_integridad_de_proveedor_rota_es_rechazada(
 # precio_total con eager loading real (B-04): a diferencia de
 # test_compra_calculos.py (objetos en memoria, sin DB, ver su docstring),
 # esto arma los datos en Postgres y vuelve a traer la Compra con el MISMO
-# patrón de joinedload que usa get_compra_by_id en routes/compras.py --
+# patrón de joinedload que usa get_compra_by_id en app/api/purchases.py --
 # confirma que la property funciona contra relaciones eager-loaded de
 # verdad, no solo contra relaciones asignadas a mano en memoria.
 # ---------------------------------------------------------------------------
@@ -292,7 +292,7 @@ def test_precio_total_con_impuestos_y_notas_eager_loaded_desde_la_db(
     impuesto = _crear_impuesto(db_session)
     fase = _crear_fase(db_session)
 
-    compra = models.Compra(
+    compra = models.Purchase(
         fase_id=fase.id,
         proveedor_id=proveedor.id,
         usuario_id=usuario_admin.id,
@@ -310,11 +310,9 @@ def test_precio_total_con_impuestos_y_notas_eager_loaded_desde_la_db(
     db_session.commit()
     db_session.refresh(compra)
 
+    db_session.add(models.PurchaseTax(compra_id=compra.id, impuesto_id=impuesto.id, monto=Decimal("21000")))
     db_session.add(
-        models.CompraImpuesto(compra_id=compra.id, impuesto_id=impuesto.id, monto=Decimal("21000"))
-    )
-    db_session.add(
-        models.NotaCompra(
+        models.PurchaseNote(
             compra_id=compra.id,
             proveedor_id=proveedor.id,
             usuario_id=usuario_admin.id,
@@ -337,12 +335,12 @@ def test_precio_total_con_impuestos_y_notas_eager_loaded_desde_la_db(
     # este mismo test pasaría igual (lazy load silencioso), lo que importa
     # acá es que el patrón de la ruta real (ver get_compra_by_id) funciona.
     compra_recargada = (
-        db_session.query(models.Compra)
+        db_session.query(models.Purchase)
         .options(
-            joinedload(models.Compra.impuestos_aplicados),
-            joinedload(models.Compra.notas),
+            joinedload(models.Purchase.impuestos_aplicados),
+            joinedload(models.Purchase.notas),
         )
-        .filter(models.Compra.id == compra.id)
+        .filter(models.Purchase.id == compra.id)
         .one()
     )
 

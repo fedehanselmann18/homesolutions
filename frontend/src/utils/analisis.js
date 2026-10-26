@@ -14,7 +14,7 @@ import {
 // Doble moneda: todo el análisis es UN
 // cuerpo de fórmulas que recibe la moneda y solo elige qué columna congelada
 // sumar de cada movimiento (accessors de utils/moneda.js). Mismo criterio que
-// backend/app/reportes/calculos.py, que es el que arma el PDF.
+// backend/app/reports/calculations.py, que es el que arma el PDF.
 
 const SIN_CATEGORIA = "Sin categoría";
 const SIN_FASE = "Sin fase";
@@ -57,7 +57,7 @@ export function gastosPorCategoria(gastos, moneda) {
 /**
  * Impuestos agrupados por su `grupo` ("IVA" junta IVA 21 e IVA 10,5); los
  * que no tienen grupo, por su nombre. Mismo criterio que el PDF
- * (reportes/calculos.py, _impuestos_por_tipo).
+ * (app/reports/calculations.py, _impuestos_por_tipo).
  */
 function impuestosPorTipo(compras, moneda) {
   const acumulado = {};

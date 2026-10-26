@@ -8,10 +8,10 @@ from jwt import PyJWTError
 from sqlalchemy.orm import Session
 
 from app.auth.exceptions import invalid_token_exception
-from app.config import settings
+from app.core.config import settings
 from app.db import models
-from app.db.db import get_db
-from app.schemas import DatosToken
+from app.db.database import get_db
+from app.schemas import TokenData
 
 # auto_error=False: si no viene Authorization header no explota acá, sigue
 # a get_token que prueba con la cookie antes de rendirse.
@@ -88,14 +88,14 @@ def create_refresh_token(data: dict) -> str:
 
     El "jti" (id único por token) es lo que permite dar de baja ESTE refresh
     token en /auth/logout sin tocar las otras sesiones de la persona (ver
-    models.RefreshTokenRevocado).
+    models.RevokedRefreshToken).
     """
     return _crear_token(
         {**data, "jti": secrets.token_urlsafe(16)}, timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS), "refresh"
     )
 
 
-def _verificar_token(token: str, tipo_esperado: str, credentials_exception) -> DatosToken:
+def _verificar_token(token: str, tipo_esperado: str, credentials_exception) -> TokenData:
     try:
         decoded_token = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
@@ -109,7 +109,7 @@ def _verificar_token(token: str, tipo_esperado: str, credentials_exception) -> D
             raise credentials_exception
 
         exp = decoded_token.get("exp")
-        token_data = DatosToken(
+        token_data = TokenData(
             user_id=id,
             iat=datetime.fromtimestamp(iat, tz=timezone.utc),
             jti=decoded_token.get("jti"),
@@ -122,11 +122,11 @@ def _verificar_token(token: str, tipo_esperado: str, credentials_exception) -> D
     return token_data
 
 
-def verify_access_token(token: str, credentials_exception) -> DatosToken:
+def verify_access_token(token: str, credentials_exception) -> TokenData:
     return _verificar_token(token, "access", credentials_exception)
 
 
-def verify_refresh_token(token: str, credentials_exception) -> DatosToken:
+def verify_refresh_token(token: str, credentials_exception) -> TokenData:
     """
     Además de firma/tipo/vencimiento, exige "jti": sin él no hay forma de
     revocarlo en el logout. Los refresh tokens emitidos antes de que existiera
@@ -139,10 +139,10 @@ def verify_refresh_token(token: str, credentials_exception) -> DatosToken:
 
 
 def refresh_token_revocado(db: Session, jti: str) -> bool:
-    return db.get(models.RefreshTokenRevocado, jti) is not None
+    return db.get(models.RevokedRefreshToken, jti) is not None
 
 
-def _registrar_actividad_si_corresponde(db: Session, user: models.Usuario) -> None:
+def _registrar_actividad_si_corresponde(db: Session, user: models.User) -> None:
     """
     Actualiza ultima_actividad, pero SOLO si pasó THROTTLE_ULTIMA_ACTIVIDAD
     desde el último ping -- evita un UPDATE en cada request autenticado (el
@@ -152,7 +152,7 @@ def _registrar_actividad_si_corresponde(db: Session, user: models.Usuario) -> No
     nada, ni siquiera un SELECT extra.
 
     CRÍTICO: el UPDATE se arma con fecha_actualizacion reasignada A SÍ MISMA
-    (models.Usuario.fecha_actualizacion, no un valor nuevo). Sin esa línea,
+    (models.User.fecha_actualizacion, no un valor nuevo). Sin esa línea,
     onupdate=func.now() de esa columna se dispara igual -- se probó
     empíricamente que un bulk update de SQLAlchemy toca las columnas con
     onupdate aunque no estén en el dict de valores -- y como
@@ -165,10 +165,10 @@ def _registrar_actividad_si_corresponde(db: Session, user: models.Usuario) -> No
     if user.ultima_actividad is not None and ahora - user.ultima_actividad < THROTTLE_ULTIMA_ACTIVIDAD:
         return
 
-    db.query(models.Usuario).filter(models.Usuario.id == user.id).update(
+    db.query(models.User).filter(models.User.id == user.id).update(
         {
             "ultima_actividad": ahora,
-            "fecha_actualizacion": models.Usuario.fecha_actualizacion,
+            "fecha_actualizacion": models.User.fecha_actualizacion,
         },
         synchronize_session=False,
     )
@@ -176,7 +176,7 @@ def _registrar_actividad_si_corresponde(db: Session, user: models.Usuario) -> No
     user.ultima_actividad = ahora
 
 
-def resolver_usuario_vigente(token_data: DatosToken, db: Session, credentials_exception) -> models.Usuario:
+def resolver_usuario_vigente(token_data: TokenData, db: Session, credentials_exception) -> models.User:
     """
     Busca el Usuario del token y chequea revocación (B-06): si el token se
     emitió antes de user.fecha_actualizacion (con TOLERANCIA_REVOCACION de
@@ -185,7 +185,7 @@ def resolver_usuario_vigente(token_data: DatosToken, db: Session, credentials_ex
     refresh tokens por igual, sin necesitar una blacklist aparte. Usado
     tanto por get_current_user como por POST /auth/refresh.
     """
-    user = db.query(models.Usuario).filter(models.Usuario.id == token_data.user_id).first()
+    user = db.query(models.User).filter(models.User.id == token_data.user_id).first()
     if user is None:
         raise credentials_exception
 
@@ -204,19 +204,19 @@ def resolver_usuario_vigente(token_data: DatosToken, db: Session, credentials_ex
     return user
 
 
-def get_current_user(token: str = Depends(get_token), db: Session = Depends(get_db)) -> models.Usuario:
+def get_current_user(token: str = Depends(get_token), db: Session = Depends(get_db)) -> models.User:
     token_data = verify_access_token(token, invalid_token_exception)
     return resolver_usuario_vigente(token_data, db, invalid_token_exception)
 
 
-def requiere_admin(current_user: models.Usuario = Depends(get_current_user)):
+def requiere_admin(current_user: models.User = Depends(get_current_user)):
     if current_user.rol != "admin":
         raise HTTPException(status_code=403, detail="No tienes permisos para realizar esta acción")
     return current_user
 
 
 # El único poder especial de la cuenta "Manager" (resetear contraseñas
-# ajenas, ver routes/usuarios.py) va gateado por nombre de usuario y NO por
+# ajenas, ver app/api/users.py) va gateado por nombre de usuario y NO por
 # rol: es a propósito que los admins del equipo (rol == "admin") no puedan
 # resetearle la contraseña a nadie. La cuenta se registra una sola vez
 # desde /registro (está en la whitelist, ver migración e7b2f4c19a83) o por
@@ -226,7 +226,7 @@ def requiere_admin(current_user: models.Usuario = Depends(get_current_user)):
 NOMBRE_USUARIO_MANAGER = "Manager"
 
 
-def requiere_manager(current_user: models.Usuario = Depends(get_current_user)):
+def requiere_manager(current_user: models.User = Depends(get_current_user)):
     if current_user.nombre_usuario != NOMBRE_USUARIO_MANAGER:
         raise HTTPException(status_code=403, detail="No tienes permisos para realizar esta acción")
     return current_user

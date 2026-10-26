@@ -1,6 +1,6 @@
 """
-Tests de app/config.py. Desde que la whitelist de autoregistro pasó a la
-tabla usuarios_autorizados (ver models.UsuarioAutorizado), SECRET_KEY es la
+Tests de app/core/config.py. Desde que la whitelist de autoregistro pasó a la
+tabla usuarios_autorizados (ver models.AuthorizedUser), SECRET_KEY es la
 única pieza de config con validación propia, así que es lo que queda para
 cubrir directo, sin pegarle a un endpoint.
 
@@ -11,7 +11,7 @@ Los tests de la whitelist en sí viven ahora en test_equipo_autorizado.py
 import pytest
 from pydantic import ValidationError
 
-from app.config import Settings
+from app.core.config import Settings
 
 _BASE_KWARGS = dict(
     database_host="localhost",

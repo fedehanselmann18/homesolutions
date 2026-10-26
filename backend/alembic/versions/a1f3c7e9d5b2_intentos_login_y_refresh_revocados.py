@@ -6,9 +6,9 @@ Create Date: 2026-10-13 00:00:00.000000
 
 Dos tablas nuevas, sin tocar nada existente (migración aditiva):
 - intentos_login: logins fallidos seguidos por cuenta, para el bloqueo con
-  espera creciente (ver app/intentos_login.py).
+  espera creciente (ver app/login_attempts.py).
 - refresh_tokens_revocados: jti de los refresh tokens dados de baja con
-  /auth/logout (ver routes/login.py).
+  /auth/logout (ver api/authentication.py).
 """
 
 from typing import Sequence, Union

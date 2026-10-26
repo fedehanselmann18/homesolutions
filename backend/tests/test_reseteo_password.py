@@ -1,7 +1,7 @@
 """
 Tests del reseteo manual de contraseñas (POST /usuarios/{id}/resetear-password),
 la única cosa que puede hacer la cuenta "Manager" (ver requiere_manager en
-app/auth/oAuth2.py). Mismo estilo de fixtures que test_login.py.
+app/auth/oauth2.py). Mismo estilo de fixtures que test_login.py.
 
 La revocación de la sesión de la persona a la que le resetean la contraseña
 (el UPDATE toca fecha_actualizacion y resolver_usuario_vigente invalida los
@@ -16,7 +16,7 @@ import uuid
 
 import pytest
 
-from app.auth.oAuth2 import NOMBRE_USUARIO_MANAGER, create_access_token
+from app.auth.oauth2 import NOMBRE_USUARIO_MANAGER, create_access_token
 from app.auth.verification import hash_password
 from app.db import models
 
@@ -27,7 +27,7 @@ def usuario_manager(db_session):
     La cuenta "Manager" tal como la crea scripts/crear_usuario_manager.py:
     rol "lectura" a propósito, su permiso especial NO viene del rol.
     """
-    manager = models.Usuario(
+    manager = models.User(
         nombre_usuario=NOMBRE_USUARIO_MANAGER,
         hashed_password=hash_password("clave-de-test-123"),
         rol="lectura",

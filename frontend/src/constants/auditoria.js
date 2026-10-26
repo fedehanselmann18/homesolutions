@@ -1,5 +1,5 @@
 // Rastro de auditoría: espejo de la tabla `auditoria` del backend (ver
-// app/db/models.py y app/audit.py). Solo lo ve la cuenta "Manager".
+// app/db/models/ y app/core/audit.py). Solo lo ve la cuenta "Manager".
 
 // Las acciones del CRUD de negocio viajan en inglés porque así las viene
 // escribiendo log_auditoria desde antes de que existiera la tabla; se
@@ -22,5 +22,5 @@ export function getAccionAuditoria(accion) {
 
 // Cuántas filas por página. La tabla crece sin techo, así que esta es la
 // única pantalla de la app con paginado real contra el backend (el resto
-// pide la lista completa, ver app/pagination.py).
+// pide la lista completa, ver app/core/pagination.py).
 export const FILAS_POR_PAGINA = 25;

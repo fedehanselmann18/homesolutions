@@ -1,6 +1,6 @@
 // Cuenta corriente: nota de crédito / nota de débito, adjuntas a una Compra o
 // un Cobro puntual. Espejo de NotaCompra/NotaCobro en el backend
-// (app/db/models.py). No confundir con Comprobante* (factura, remito...),
+// (app/db/models/). No confundir con Comprobante* (factura, remito...),
 // que es solo el archivo sin plata propia.
 
 export const TIPOS_NOTA = [

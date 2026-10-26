@@ -6,7 +6,7 @@ para el autoregistro, y el endpoint público reducido para el combo de login.
 
 import uuid
 
-from app.auth.oAuth2 import create_access_token
+from app.auth.oauth2 import create_access_token
 
 # ---------------------------------------------------------------------------
 # Endpoint público reducido de usuarios
@@ -152,7 +152,7 @@ def test_rate_limit_de_login_no_se_saltea_cambiando_x_forwarded_for(client, usua
     )
     assert respuesta.status_code == 429
     # Tiene que ser el 429 del límite por IP (slowapi, sin "detail") y no el
-    # del bloqueo por cuenta (app/intentos_login.py), que también salta a los
+    # del bloqueo por cuenta (app/login_attempts.py), que también salta a los
     # 5 fallos -- si no, este test pasaría aunque el límite por IP se
     # salteara cambiando el X-Forwarded-For.
     assert "detail" not in respuesta.json()

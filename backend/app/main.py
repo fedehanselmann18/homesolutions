@@ -10,39 +10,39 @@ from slowapi.middleware import SlowAPIMiddleware
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
-from app.config import settings
-from app.db.db import get_db
-from app.limiter import limiter
-from app.routes import (
-    auditoria,
-    categoriagasto,
-    categorias,
-    cobros,
-    compras,
-    condiciones_pago,
-    configuracion,
-    cotizaciones,
-    fases,
-    fases_predeterminadas,
-    gastos,
-    ia,
-    impuestos,
-    login,
-    medios_pago,
-    plazos_pago,
-    productos,
-    proveedores,
-    proyectos,
-    storage,
-    tipos_factura,
-    usuarios,
+from app.api import (
+    ai,
+    audit_log,
+    authentication,
+    categories,
+    client_payments,
+    configuration,
+    default_phases,
+    exchange_rates,
+    expense_categories,
+    expenses,
+    files,
+    invoice_types,
+    payment_conditions,
+    payment_installments,
+    payment_methods,
+    phases,
+    products,
+    projects,
+    purchases,
+    suppliers,
+    taxes,
+    users,
 )
-from app.security_middleware import (
+from app.core.config import settings
+from app.core.limiter import limiter
+from app.core.security_middleware import (
     CSRFMiddleware,
-    LimiteTamanioRequestMiddleware,
+    RequestSizeLimitMiddleware,
     SecurityHeadersMiddleware,
     UnhandledExceptionMiddleware,
 )
+from app.db.database import get_db
 
 logging.basicConfig(
     level=logging.INFO,
@@ -111,7 +111,7 @@ app.add_middleware(UnhandledExceptionMiddleware)
 app.add_middleware(SlowAPIMiddleware)
 # Adentro de CORS (como CSRF): un 413 que corta acá vuelve igual por CORS y el
 # browser lo ve como 413 y no como "bloqueado por CORS".
-app.add_middleware(LimiteTamanioRequestMiddleware)
+app.add_middleware(RequestSizeLimitMiddleware)
 app.add_middleware(CSRFMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
@@ -122,28 +122,28 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization", "X-CSRF-Token"],
 )
 
-app.include_router(login.router)
-app.include_router(usuarios.router)
-app.include_router(proyectos.router)
-app.include_router(categorias.router)
-app.include_router(categoriagasto.router)
-app.include_router(fases_predeterminadas.router)
-app.include_router(impuestos.router)
-app.include_router(medios_pago.router)
-app.include_router(tipos_factura.router)
-app.include_router(condiciones_pago.router)
-app.include_router(plazos_pago.router)
-app.include_router(cotizaciones.router)
-app.include_router(proveedores.router)
-app.include_router(fases.router)
-app.include_router(productos.router)
-app.include_router(compras.router)
-app.include_router(cobros.router)
-app.include_router(gastos.router)
-app.include_router(ia.router)
-app.include_router(auditoria.router)
-app.include_router(configuracion.router)
-app.include_router(storage.router)
+app.include_router(authentication.router)
+app.include_router(users.router)
+app.include_router(projects.router)
+app.include_router(categories.router)
+app.include_router(expense_categories.router)
+app.include_router(default_phases.router)
+app.include_router(taxes.router)
+app.include_router(payment_methods.router)
+app.include_router(invoice_types.router)
+app.include_router(payment_conditions.router)
+app.include_router(payment_installments.router)
+app.include_router(exchange_rates.router)
+app.include_router(suppliers.router)
+app.include_router(phases.router)
+app.include_router(products.router)
+app.include_router(purchases.router)
+app.include_router(client_payments.router)
+app.include_router(expenses.router)
+app.include_router(ai.router)
+app.include_router(audit_log.router)
+app.include_router(configuration.router)
+app.include_router(files.router)
 
 
 @app.get("/")

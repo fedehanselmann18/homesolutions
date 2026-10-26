@@ -1,11 +1,11 @@
 """
-Tests de la auditoría persistida (tabla `auditoria`, ver models.Auditoria).
+Tests de la auditoría persistida (tabla `auditoria`, ver models.AuditLog).
 
 Dos mitades:
 
 1. Que las acciones auditadas DEJEN la fila -- tanto el CRUD de negocio
-   (log_auditoria en routes/proyectos.py y compañía) como el mantenimiento
-   de cuentas (_log_accion_manager en routes/usuarios.py).
+   (log_auditoria en app/api/projects.py y compañía) como el mantenimiento
+   de cuentas (_log_accion_manager en app/api/users.py).
 2. Que GET /auditoria la devuelva bien: gateado por requiere_manager,
    ordenado del más nuevo al más viejo, con filtros y paginado.
 
@@ -19,15 +19,15 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from app.auth.oAuth2 import NOMBRE_USUARIO_MANAGER, create_access_token
+from app.api import projects as ruta_proyectos
+from app.auth.oauth2 import NOMBRE_USUARIO_MANAGER, create_access_token
 from app.auth.verification import hash_password
 from app.db import models
-from app.routes import proyectos as ruta_proyectos
 
 
 @pytest.fixture()
 def usuario_manager(db_session):
-    manager = models.Usuario(
+    manager = models.User(
         nombre_usuario=NOMBRE_USUARIO_MANAGER,
         hashed_password=hash_password("clave-de-test-123"),
         rol="lectura",
@@ -52,7 +52,7 @@ def _crear_auditoria(db_session, usuario, **overrides):
         "recurso_id": str(uuid.uuid4()),
     }
     datos.update(overrides)
-    fila = models.Auditoria(**datos)
+    fila = models.AuditLog(**datos)
     db_session.add(fila)
     db_session.commit()
     db_session.refresh(fila)
@@ -80,7 +80,7 @@ def test_crear_un_proyecto_deja_fila_de_auditoria(client, db_session, headers_ad
     respuesta = client.post("/proyectos/crear", json=_proyecto_payload(), headers=headers_admin)
     assert respuesta.status_code == 201
 
-    fila = db_session.query(models.Auditoria).one()
+    fila = db_session.query(models.AuditLog).one()
     assert fila.accion == "create"
     assert fila.tipo_recurso == "Proyecto"
     assert fila.recurso_id == respuesta.json()["id"]
@@ -104,13 +104,13 @@ def test_la_auditoria_del_borrado_sobrevive_al_recurso_borrado(
     borrado = client.delete(f"/proyectos/{proyecto_id}", headers=headers_admin)
     assert borrado.status_code == 200
 
-    assert db_session.query(models.Proyecto).filter(models.Proyecto.id == proyecto_id).first() is None
+    assert db_session.query(models.Project).filter(models.Project.id == proyecto_id).first() is None
 
     acciones = [
         fila.accion
-        for fila in db_session.query(models.Auditoria)
-        .filter(models.Auditoria.recurso_id == proyecto_id)
-        .order_by(models.Auditoria.creado_en)
+        for fila in db_session.query(models.AuditLog)
+        .filter(models.AuditLog.recurso_id == proyecto_id)
+        .order_by(models.AuditLog.creado_en)
         .all()
     ]
     assert acciones == ["create", "delete"]
@@ -122,7 +122,7 @@ def test_una_accion_de_manager_deja_fila_con_el_usuario_objetivo_en_detalle(
     respuesta = client.post(f"/usuarios/{usuario_lectura.id}/desactivar", headers=headers_manager)
     assert respuesta.status_code == 200
 
-    fila = db_session.query(models.Auditoria).one()
+    fila = db_session.query(models.AuditLog).one()
     assert fila.accion == "desactivar"
     assert fila.tipo_recurso == "Usuario"
     assert fila.recurso_id == str(usuario_lectura.id)
@@ -140,7 +140,7 @@ def test_revocar_autorizacion_se_audita_aunque_la_fila_ya_no_exista(
     respuesta = client.delete(f"/usuarios/autorizados/{autorizado_id}", headers=headers_manager)
     assert respuesta.status_code == 204
 
-    fila = db_session.query(models.Auditoria).one()
+    fila = db_session.query(models.AuditLog).one()
     assert fila.accion == "revocar autorización"
     assert fila.tipo_recurso == "Autorizacion"
     assert fila.recurso_id == str(autorizado_id)
@@ -154,7 +154,7 @@ def test_una_accion_fallida_no_deja_rastro_de_auditoria(client, db_session, head
     """
     respuesta = client.post(f"/usuarios/{uuid.uuid4()}/desactivar", headers=headers_manager)
     assert respuesta.status_code == 404
-    assert db_session.query(models.Auditoria).count() == 0
+    assert db_session.query(models.AuditLog).count() == 0
 
 
 # ---------------------------------------------------------------------------
@@ -264,4 +264,4 @@ def test_no_hay_forma_de_borrar_auditoria_desde_la_api(client, db_session, heade
     # 404 y no 405: la ruta directamente no existe, ni siquiera para otro
     # verbo. El historial no se borra desde la app, a propósito.
     assert respuesta.status_code == 404
-    assert db_session.query(models.Auditoria).count() == 1
+    assert db_session.query(models.AuditLog).count() == 1

@@ -1,4 +1,4 @@
-"""Tests de integración de routes/gastos.py: creación, edición y el chequeo
+"""Tests de integración de app/api/expenses.py: creación, edición y el chequeo
 de que solo un admin puede escribir (mismo criterio que el resto de routers)."""
 
 from datetime import date
@@ -7,7 +7,7 @@ from app.db import models
 
 
 def _crear_proyecto(db_session):
-    proyecto = models.Proyecto(
+    proyecto = models.Project(
         nombre="Proyecto Test",
         direccion="Calle Falsa 123",
         fecha_inicio=date(2026, 1, 1),
@@ -21,7 +21,7 @@ def _crear_proyecto(db_session):
 
 
 def _crear_categoria_gasto(db_session, nombre="Flete"):
-    categoria = models.CategoriaGasto(nombre=nombre)
+    categoria = models.ExpenseCategory(nombre=nombre)
     db_session.add(categoria)
     db_session.commit()
     db_session.refresh(categoria)
@@ -97,7 +97,7 @@ def test_actualizar_gasto_reemplaza_categorias_no_las_suma(
     flete = _crear_categoria_gasto(db_session, "Flete")
     bancarios = _crear_categoria_gasto(db_session, "Gastos bancarios")
 
-    gasto = models.Gasto(
+    gasto = models.Expense(
         proyecto=proyecto,
         usuario_id=usuario_admin.id,
         monto_ars=1000,

@@ -12,20 +12,20 @@ from decimal import Decimal
 
 import pytest
 
+from app.api import client_payments as ruta_cobros
+from app.api import purchases as ruta_compras
 from app.db import models
-from app.routes import cobros as ruta_cobros
-from app.routes import compras as ruta_compras
-from app.tipos_factura import TIPO_INVALIDO, generar_codigo
+from app.domain.invoice_types import TIPO_INVALIDO, generar_codigo
 
 COTIZACION = {"cotizacion_dolar": 1000, "tipo_cambio": "blue"}
 
 
 def _tipo(db_session, codigo):
-    return db_session.query(models.TipoFactura).filter(models.TipoFactura.codigo == codigo).one()
+    return db_session.query(models.InvoiceType).filter(models.InvoiceType.codigo == codigo).one()
 
 
 def _crear_proyecto(db_session):
-    proyecto = models.Proyecto(
+    proyecto = models.Project(
         nombre="Proyecto Test",
         direccion="Calle Falsa 123",
         fecha_inicio=date(2026, 1, 1),
@@ -39,7 +39,7 @@ def _crear_proyecto(db_session):
 
 
 def _crear_cobro(db_session, usuario, tipo_factura="factura_a"):
-    cobro = models.Cobro(
+    cobro = models.ClientPayment(
         proyecto=_crear_proyecto(db_session),
         usuario_id=usuario.id,
         monto_usd=100,
@@ -57,11 +57,11 @@ def _crear_cobro(db_session, usuario, tipo_factura="factura_a"):
 
 def _crear_compra(db_session, usuario):
     proyecto = _crear_proyecto(db_session)
-    fase = models.Fase(nombre="Fase Test", estado="en_curso", proyecto=proyecto)
-    proveedor = models.Proveedor(nombre="Proveedor Test", cuit="20-12345678-9")
+    fase = models.Phase(nombre="Fase Test", estado="en_curso", proyecto=proyecto)
+    proveedor = models.Supplier(nombre="Proveedor Test", cuit="20-12345678-9")
     db_session.add_all([fase, proveedor])
     db_session.commit()
-    compra = models.Compra(
+    compra = models.Purchase(
         fase_id=fase.id,
         proveedor_id=proveedor.id,
         usuario_id=usuario.id,
@@ -181,7 +181,7 @@ def test_borrar_tipo_sin_uso(client, db_session, headers_admin):
     respuesta = client.delete(f"/tipos-factura/{tipo.id}", headers=headers_admin)
 
     assert respuesta.status_code == 200
-    assert db_session.query(models.TipoFactura).filter_by(codigo="factura_c").first() is None
+    assert db_session.query(models.InvoiceType).filter_by(codigo="factura_c").first() is None
 
 
 def test_borrar_tipo_en_uso_da_400(client, db_session, headers_admin, usuario_admin):
@@ -192,7 +192,7 @@ def test_borrar_tipo_en_uso_da_400(client, db_session, headers_admin, usuario_ad
 
     assert respuesta.status_code == 400
     assert "movimientos asociados" in respuesta.json()["detail"]
-    assert db_session.query(models.TipoFactura).filter_by(codigo="recibo").first() is not None
+    assert db_session.query(models.InvoiceType).filter_by(codigo="recibo").first() is not None
 
 
 def test_otros_no_se_borra_pero_se_renombra(client, db_session, headers_admin):
@@ -270,7 +270,7 @@ def test_gasto_con_tipo_nuevo_se_guarda(client, db_session, headers_admin):
 
 def test_editar_gasto_con_tipo_inexistente_da_400(client, db_session, headers_admin, usuario_admin):
     proyecto = _crear_proyecto(db_session)
-    gasto = models.Gasto(
+    gasto = models.Expense(
         proyecto_id=proyecto.id,
         usuario_id=usuario_admin.id,
         monto_ars=1000,

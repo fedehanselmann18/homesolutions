@@ -1,7 +1,7 @@
 // Doble moneda. Cada movimiento trae del
 // backend sus DOS cifras ya congeladas (sufijos _ars/_usd), así que acá no
 // se convierte nada al leer: solo se elige qué columna mirar según la moneda.
-// Son la contraparte de _Montos en backend/app/reportes/calculos.py -- si
+// Son la contraparte de _Amounts en backend/app/reports/calculations.py -- si
 // cambia una, cambia la otra.
 import { formatCotizacion, formatMoneda, formatMonedaDual } from "./formato";
 
@@ -116,7 +116,7 @@ export function formatMontoDeItem({ monto, montoOtra, moneda }) {
 /**
  * "≈ US$ 19": el equivalente de un monto en la otra moneda con la cotización
  * del form, para el sufijo del CampoMonto. Es un preview: la cifra que se
- * guarda la calcula el backend con la misma cuenta (app/tipo_cambio.py).
+ * guarda la calcula el backend con la misma cuenta (app/domain/exchange_rate.py).
  */
 export function textoEquivalente(monto, monedaMonto, cotizacion) {
   const montoNumero = Number(monto);

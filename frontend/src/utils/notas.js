@@ -50,7 +50,7 @@ export function totalNotasDebito(notas = [], moneda = "ars") {
  * Cuánto de una línea de compra (DetalleCompra) queda disponible para
  * devolver: la cantidad comprada menos lo ya acreditado en notas de
  * devolución anteriores de esa misma compra. Mismo criterio que
- * `_restante_detalle_compra` en el backend (routes/compras.py) -- se usa acá
+ * `_restante_detalle_compra` en el backend (app/api/purchases.py) -- se usa acá
  * SOLO para limitar la cantidad en el formulario antes de mandar el POST; la
  * validación real (la que importa) la vuelve a hacer el backend.
  */

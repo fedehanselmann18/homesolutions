@@ -1,5 +1,5 @@
 """
-Reporte del proyecto en las dos monedas (ver app/reportes/calculos.py).
+Reporte del proyecto en las dos monedas (ver app/reports/calculations.py).
 
 El escenario es el del problema de negocio, con números redondos: precio
 acordado 100.000 USD, se cobraron 65.000 USD con el dólar a 1000, y después
@@ -16,21 +16,21 @@ from decimal import Decimal
 import pytest
 
 from app.db import models
-from app.reportes.calculos import calcular_analisis_proyecto, calcular_reporte_proyecto
-from app.tipo_cambio import a_ars, a_usd
+from app.domain.exchange_rate import a_ars, a_usd
+from app.reports.calculations import calcular_analisis_proyecto, calcular_reporte_proyecto
 
 
 def _escenario():
-    proyecto = models.Proyecto(id=uuid.uuid4(), nombre="Obra", precio_acordado_usd=Decimal("100000"))
-    fase = models.Fase(id=uuid.uuid4(), nombre="Instalación", estado="en_curso")
-    proveedor = models.Proveedor(id=uuid.uuid4(), nombre="Frío SA")
+    proyecto = models.Project(id=uuid.uuid4(), nombre="Obra", precio_acordado_usd=Decimal("100000"))
+    fase = models.Phase(id=uuid.uuid4(), nombre="Instalación", estado="en_curso")
+    proveedor = models.Supplier(id=uuid.uuid4(), nombre="Frío SA")
 
-    cobro = models.Cobro(
+    cobro = models.ClientPayment(
         monto_usd=Decimal("65000"), monto_ars=a_ars(65000, 1000), cotizacion_dolar=1000, tipo_cambio="blue"
     )
     cobro.notas = []
 
-    gasto = models.Gasto(
+    gasto = models.Expense(
         fase_id=fase.id,
         monto_ars=Decimal("10000000"),
         monto_usd=a_usd(10000000, 1250),
@@ -39,7 +39,7 @@ def _escenario():
     )
     gasto.categorias = []
 
-    compra = models.Compra(
+    compra = models.Purchase(
         fase_id=fase.id,
         estado_pago="pendiente",
         precio_neto_ars=Decimal("50000000"),
@@ -49,7 +49,7 @@ def _escenario():
     )
     compra.proveedor = proveedor
     compra.impuestos_aplicados = [
-        models.CompraImpuesto(monto=Decimal("10500000"), impuesto=models.Impuesto(nombre="IVA"))
+        models.PurchaseTax(monto=Decimal("10500000"), impuesto=models.Tax(nombre="IVA"))
     ]
     compra.notas = []
 
@@ -118,17 +118,17 @@ def test_reporte_trae_las_dos_monedas_y_la_deuda_en_pesos_primero():
 
 
 def _cargar_proyecto(db_session, usuario):
-    proyecto = models.Proyecto(
+    proyecto = models.Project(
         nombre="Obra PDF",
         direccion="Calle 1",
         fecha_inicio=date(2026, 1, 1),
         estado="en_curso",
         precio_acordado_usd=100000,
     )
-    fase = models.Fase(nombre="Fase 1", estado="en_curso", proyecto=proyecto)
-    proveedor = models.Proveedor(nombre="Frío SA")
+    fase = models.Phase(nombre="Fase 1", estado="en_curso", proyecto=proyecto)
+    proveedor = models.Supplier(nombre="Frío SA")
     congelado = {"cotizacion_dolar": 1250, "tipo_cambio": "blue"}
-    compra = models.Compra(
+    compra = models.Purchase(
         fase=fase,
         proveedor=proveedor,
         usuario_id=usuario.id,
@@ -142,7 +142,7 @@ def _cargar_proyecto(db_session, usuario):
         estado_pago="pendiente",
         estado_envio="pedido",
     )
-    gasto = models.Gasto(
+    gasto = models.Expense(
         proyecto=proyecto,
         fase=fase,
         usuario_id=usuario.id,
@@ -153,7 +153,7 @@ def _cargar_proyecto(db_session, usuario):
         fecha=date(2026, 3, 1),
         tipo_factura="factura_b",
     )
-    cobro = models.Cobro(
+    cobro = models.ClientPayment(
         proyecto=proyecto,
         usuario_id=usuario.id,
         monto_usd=65000,
@@ -175,7 +175,7 @@ def test_pdf_del_proyecto_se_genera_con_y_sin_cotizacion(
 ):
     proyecto = _cargar_proyecto(db_session, usuario_admin)
     if con_cotizacion:
-        db_session.add(models.Cotizacion(fecha=date(2026, 3, 1), tipo="blue", valor=1500))
+        db_session.add(models.ExchangeRate(fecha=date(2026, 3, 1), tipo="blue", valor=1500))
         db_session.commit()
 
     respuesta = client.get(f"/proyectos/{proyecto.id}/reporte-pdf", headers=headers_admin)

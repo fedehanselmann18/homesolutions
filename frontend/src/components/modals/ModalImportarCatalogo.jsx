@@ -19,13 +19,13 @@ import "./ModalImportarCatalogo.css";
 import { LogoCargando } from "../shared/LogoCargando";
 
 const EXTENSIONES_PERMITIDAS = [".pdf", ".jpg", ".jpeg", ".png", ".xlsx", ".csv"];
-const TAMANIO_MAXIMO_BYTES = 10 * 1024 * 1024; // 10MB, espejo de backend/app/routes/ia.py
+const TAMANIO_MAXIMO_BYTES = 10 * 1024 * 1024; // 10MB, espejo de backend/app/api/ai.py
 
 let contadorFilaTemp = 0;
 const nuevaFilaId = () => `catalogo-${++contadorFilaTemp}`;
 
 // Comparación laxa (minúsculas, sin puntuación, espacios colapsados), mismo
-// criterio que _normalizar en backend/app/ia/catalogo.py -- se usa para
+// criterio que _normalizar en backend/app/ai/catalog.py -- se usa para
 // reclasificar en el momento cuando el usuario resuelve un proveedor
 // "en caliente" (ver resolverProveedorExistente) sin volver a llamar a la IA.
 const normalizar = (texto) =>

@@ -1,5 +1,5 @@
 """
-Condiciones y plazos de pago (ver app/plazos.py): cómo se arman los plazos,
+Condiciones y plazos de pago (ver app/payment_terms.py): cómo se arman los plazos,
 cómo se reparte lo que falta cuando cambia el total, y que el estado de la
 compra o el gasto sea derivado (pagado sólo con todos los plazos pagados).
 """
@@ -9,28 +9,28 @@ from decimal import Decimal
 
 import pytest
 
-from app import plazos
+from app.api import purchases as ruta_compras
 from app.db import models
-from app.routes import compras as ruta_compras
+from app.domain import payment_terms
 
 COTIZACION = {"cotizacion_dolar": 1000, "tipo_cambio": "blue"}
 
 
 def _condicion(db_session, nombre):
-    return db_session.query(models.CondicionPago).filter_by(nombre=nombre).one()
+    return db_session.query(models.PaymentCondition).filter_by(nombre=nombre).one()
 
 
 def _escenario(db_session):
-    proyecto = models.Proyecto(
+    proyecto = models.Project(
         nombre="Obra",
         direccion="Calle 1",
         fecha_inicio=date(2026, 1, 1),
         estado="en_curso",
         precio_acordado_usd=100000,
     )
-    fase = models.Fase(nombre="Fase", estado="en_curso", proyecto=proyecto)
-    proveedor = models.Proveedor(nombre="Frío Sur", cuit="20-12345678-9")
-    producto = models.Producto(proveedor=proveedor, marca="LG", modelo="VRF", tipo="equipo", precio=1000000)
+    fase = models.Phase(nombre="Fase", estado="en_curso", proyecto=proyecto)
+    proveedor = models.Supplier(nombre="Frío Sur", cuit="20-12345678-9")
+    producto = models.Product(proveedor=proveedor, marca="LG", modelo="VRF", tipo="equipo", precio=1000000)
     db_session.add_all([proyecto, fase, proveedor, producto])
     db_session.commit()
     return proyecto, fase, proveedor, producto
@@ -83,7 +83,7 @@ def _compra(client, headers, compra_id):
     ],
 )
 def test_dividir_en_partes_iguales_el_ultimo_absorbe(total, partes, esperado):
-    assert [str(m) for m in plazos.dividir(total, partes)] == esperado
+    assert [str(m) for m in payment_terms.dividir(total, partes)] == esperado
 
 
 # ---------------------------------------------------------------------------
@@ -114,7 +114,7 @@ def test_compra_a_30_60_arma_dos_plazos_iguales(client, db_session, headers_admi
 
 def test_los_plazos_van_sobre_el_total_con_impuestos(client, db_session, headers_admin):
     proyecto, fase, proveedor, producto = _escenario(db_session)
-    iva = models.Impuesto(nombre="IVA 21", alicuota=21, grupo="IVA")
+    iva = models.Tax(nombre="IVA 21", alicuota=21, grupo="IVA")
     db_session.add(iva)
     db_session.commit()
 

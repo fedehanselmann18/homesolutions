@@ -13,7 +13,7 @@ el MISMO token sin volver a loguearse.
 
 from datetime import datetime, timedelta, timezone
 
-from app.auth import oAuth2
+from app.auth import oauth2
 from app.db import models
 
 
@@ -44,7 +44,7 @@ def test_un_segundo_request_dentro_del_throttle_no_reescribe_el_valor(
 
 def test_un_request_fuera_del_throttle_actualiza_el_valor(client, db_session, headers_admin, usuario_admin):
     hace_rato = datetime.now(timezone.utc) - timedelta(hours=1)
-    db_session.query(models.Usuario).filter(models.Usuario.id == usuario_admin.id).update(
+    db_session.query(models.User).filter(models.User.id == usuario_admin.id).update(
         {"ultima_actividad": hace_rato}
     )
     db_session.commit()
@@ -94,7 +94,7 @@ def test_throttle_se_puede_ajustar_sin_tocar_el_codigo_del_helper(
     client, db_session, headers_admin, usuario_admin, monkeypatch
 ):
     """Documenta que la ventana es un solo valor configurable en un lugar."""
-    monkeypatch.setattr(oAuth2, "THROTTLE_ULTIMA_ACTIVIDAD", timedelta(seconds=0))
+    monkeypatch.setattr(oauth2, "THROTTLE_ULTIMA_ACTIVIDAD", timedelta(seconds=0))
 
     client.get("/usuarios/me", headers=headers_admin)
     db_session.refresh(usuario_admin)

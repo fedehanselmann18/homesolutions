@@ -11,16 +11,16 @@ import uuid
 from datetime import date
 from decimal import Decimal
 
+from app.api import purchases as ruta_compras
 from app.db import models
-from app.reportes.calculos import calcular_analisis_proyecto
-from app.routes import compras as ruta_compras
-from app.tipo_cambio import a_usd
+from app.domain.exchange_rate import a_usd
+from app.reports.calculations import calcular_analisis_proyecto
 
 COTIZACION = {"cotizacion_dolar": 1000, "tipo_cambio": "blue"}
 
 
 def _iva(db_session, nombre, alicuota, grupo="IVA"):
-    impuesto = models.Impuesto(nombre=nombre, alicuota=alicuota, grupo=grupo)
+    impuesto = models.Tax(nombre=nombre, alicuota=alicuota, grupo=grupo)
     db_session.add(impuesto)
     db_session.commit()
     db_session.refresh(impuesto)
@@ -28,16 +28,16 @@ def _iva(db_session, nombre, alicuota, grupo="IVA"):
 
 
 def _fase_y_proveedor(db_session):
-    proyecto = models.Proyecto(
+    proyecto = models.Project(
         nombre="Obra",
         direccion="Calle 1",
         fecha_inicio=date(2026, 1, 1),
         estado="en_curso",
         precio_acordado_usd=100000,
     )
-    fase = models.Fase(nombre="Fase", estado="en_curso", proyecto=proyecto)
-    proveedor = models.Proveedor(nombre="Frío Sur", cuit="20-12345678-9")
-    producto = models.Producto(proveedor=proveedor, marca="LG", modelo="VRF", tipo="equipo", precio=100000)
+    fase = models.Phase(nombre="Fase", estado="en_curso", proyecto=proyecto)
+    proveedor = models.Supplier(nombre="Frío Sur", cuit="20-12345678-9")
+    producto = models.Product(proveedor=proveedor, marca="LG", modelo="VRF", tipo="equipo", precio=100000)
     db_session.add_all([proyecto, fase, proveedor, producto])
     db_session.commit()
     return fase, proveedor, producto
@@ -220,7 +220,7 @@ def test_nota_de_devolucion_con_dos_iva_da_400_sin_subir_archivo(
 
 
 def _compra_con_impuesto(impuesto, monto):
-    compra = models.Compra(
+    compra = models.Purchase(
         fase_id=uuid.uuid4(),
         estado_pago="pagado",
         precio_neto_ars=Decimal("100000"),
@@ -228,17 +228,17 @@ def _compra_con_impuesto(impuesto, monto):
         cotizacion_dolar=1000,
         tipo_cambio="blue",
     )
-    compra.proveedor = models.Proveedor(id=uuid.uuid4(), nombre="Frío Sur")
-    compra.impuestos_aplicados = [models.CompraImpuesto(monto=Decimal(monto), impuesto=impuesto)]
+    compra.proveedor = models.Supplier(id=uuid.uuid4(), nombre="Frío Sur")
+    compra.impuestos_aplicados = [models.PurchaseTax(monto=Decimal(monto), impuesto=impuesto)]
     compra.notas = []
     return compra
 
 
 def test_pdf_agrupa_iva_21_y_10_5_como_iva():
-    iva21 = models.Impuesto(nombre="IVA 21", alicuota=21, grupo="IVA")
-    iva105 = models.Impuesto(nombre="IVA 10,5", alicuota=10.5, grupo="IVA")
-    percepcion = models.Impuesto(nombre="Percepción IIBB")
-    proyecto = models.Proyecto(id=uuid.uuid4(), nombre="Obra", precio_acordado_usd=Decimal("100000"))
+    iva21 = models.Tax(nombre="IVA 21", alicuota=21, grupo="IVA")
+    iva105 = models.Tax(nombre="IVA 10,5", alicuota=10.5, grupo="IVA")
+    percepcion = models.Tax(nombre="Percepción IIBB")
+    proyecto = models.Project(id=uuid.uuid4(), nombre="Obra", precio_acordado_usd=Decimal("100000"))
     compras = [
         _compra_con_impuesto(iva21, "21000"),
         _compra_con_impuesto(iva105, "10500"),

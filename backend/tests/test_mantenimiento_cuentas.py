@@ -16,10 +16,10 @@ import jwt
 import pytest
 from sqlalchemy import text
 
-from app.auth.oAuth2 import ALGORITHM, NOMBRE_USUARIO_MANAGER, SECRET_KEY, create_access_token
+from app.api import authentication as ruta_login
+from app.auth.oauth2 import ALGORITHM, NOMBRE_USUARIO_MANAGER, SECRET_KEY, create_access_token
 from app.auth.verification import hash_password
 from app.db import models
-from app.routes import login as ruta_login
 
 
 def _token_con_iat_viejo(usuario, segundos: int) -> str:
@@ -44,7 +44,7 @@ def _token_con_iat_viejo(usuario, segundos: int) -> str:
 
 @pytest.fixture()
 def usuario_manager(db_session):
-    manager = models.Usuario(
+    manager = models.User(
         nombre_usuario=NOMBRE_USUARIO_MANAGER,
         hashed_password=hash_password("clave-de-test-123"),
         rol="lectura",

@@ -7,15 +7,15 @@ bucket/Gemini).
 
 import pytest
 
-from app.auth.oAuth2 import NOMBRE_USUARIO_MANAGER, create_access_token
+from app.auth.oauth2 import NOMBRE_USUARIO_MANAGER, create_access_token
 from app.auth.verification import hash_password
-from app.config import settings
+from app.core.config import settings
 from app.db import models
 
 
 @pytest.fixture()
 def usuario_manager(db_session):
-    manager = models.Usuario(
+    manager = models.User(
         nombre_usuario=NOMBRE_USUARIO_MANAGER,
         hashed_password=hash_password("clave-de-test-123"),
         rol="lectura",
@@ -50,7 +50,7 @@ def test_sin_fila_el_valor_efectivo_es_el_del_env(client, headers_manager):
 
 
 def test_con_fila_el_valor_efectivo_es_el_de_la_tabla(client, db_session, headers_manager):
-    db_session.add(models.Configuracion(clave="GEMINI_MODEL", valor="gemini-piloto"))
+    db_session.add(models.Setting(clave="GEMINI_MODEL", valor="gemini-piloto"))
     db_session.commit()
 
     cuerpo = client.get("/configuracion/", headers=headers_manager).json()
@@ -94,19 +94,19 @@ def test_edita_crea_la_fila_si_no_existia(client, db_session, headers_manager):
     assert cuerpo["valor"] == "gemini-nuevo"
     assert cuerpo["personalizado"] is True
 
-    fila = db_session.query(models.Configuracion).filter(models.Configuracion.clave == "GEMINI_MODEL").one()
+    fila = db_session.query(models.Setting).filter(models.Setting.clave == "GEMINI_MODEL").one()
     assert fila.valor == "gemini-nuevo"
 
 
 def test_editar_pisa_la_fila_existente_en_vez_de_duplicarla(client, db_session, headers_manager):
-    db_session.add(models.Configuracion(clave="GEMINI_MODEL", valor="viejo"))
+    db_session.add(models.Setting(clave="GEMINI_MODEL", valor="viejo"))
     db_session.commit()
 
     respuesta = client.patch("/configuracion/GEMINI_MODEL", json={"valor": "nuevo"}, headers=headers_manager)
 
     assert respuesta.status_code == 200
     assert respuesta.json()["valor"] == "nuevo"
-    assert db_session.query(models.Configuracion).count() == 1
+    assert db_session.query(models.Setting).count() == 1
 
 
 def test_editar_deja_fila_de_auditoria_con_el_valor_nuevo(
@@ -114,7 +114,7 @@ def test_editar_deja_fila_de_auditoria_con_el_valor_nuevo(
 ):
     client.patch("/configuracion/GEMINI_MODEL", json={"valor": "gemini-piloto"}, headers=headers_manager)
 
-    fila = db_session.query(models.Auditoria).one()
+    fila = db_session.query(models.AuditLog).one()
     assert fila.accion == "editar"
     assert fila.tipo_recurso == "Configuracion"
     assert fila.recurso_id == "GEMINI_MODEL"
@@ -128,7 +128,7 @@ def test_editar_deja_fila_de_auditoria_con_el_valor_nuevo(
 
 
 def test_restaurar_borra_la_fila_y_vuelve_al_valor_del_env(client, db_session, headers_manager):
-    db_session.add(models.Configuracion(clave="GEMINI_MODEL", valor="gemini-piloto"))
+    db_session.add(models.Setting(clave="GEMINI_MODEL", valor="gemini-piloto"))
     db_session.commit()
 
     respuesta = client.delete("/configuracion/GEMINI_MODEL", headers=headers_manager)
@@ -137,14 +137,14 @@ def test_restaurar_borra_la_fila_y_vuelve_al_valor_del_env(client, db_session, h
     cuerpo = respuesta.json()
     assert cuerpo["valor"] == settings.GEMINI_MODEL
     assert cuerpo["personalizado"] is False
-    assert db_session.query(models.Configuracion).count() == 0
+    assert db_session.query(models.Setting).count() == 0
 
 
 def test_restaurar_una_clave_ya_en_default_no_falla_ni_audita(client, db_session, headers_manager):
     respuesta = client.delete("/configuracion/GEMINI_MODEL", headers=headers_manager)
 
     assert respuesta.status_code == 200
-    assert db_session.query(models.Auditoria).count() == 0
+    assert db_session.query(models.AuditLog).count() == 0
 
 
 def test_restaurar_una_clave_inexistente_da_404(client, headers_manager):

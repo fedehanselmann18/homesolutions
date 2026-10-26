@@ -58,7 +58,7 @@ def test_escritura_requiere_admin(client, headers_admin, headers_lectura):
 
 def test_renombrar_y_borrar_no_tocan_las_fases_creadas(client, db_session, headers_admin):
     predeterminada = _crear(client, headers_admin, "Calefacción")
-    proyecto = models.Proyecto(
+    proyecto = models.Project(
         nombre="Proyecto Test",
         direccion="Calle Falsa 123",
         fecha_inicio=date(2026, 1, 1),

@@ -11,7 +11,7 @@ from app.db import models
 
 
 def _crear_proveedor(db_session):
-    proveedor = models.Proveedor(nombre="Proveedor Test", cuit="20-12345678-9")
+    proveedor = models.Supplier(nombre="Proveedor Test", cuit="20-12345678-9")
     db_session.add(proveedor)
     db_session.commit()
     db_session.refresh(proveedor)
@@ -19,7 +19,7 @@ def _crear_proveedor(db_session):
 
 
 def _crear_categoria(db_session, nombre="Aires", tipo="equipo"):
-    categoria = models.Categoria(nombre=nombre, tipo=tipo)
+    categoria = models.Category(nombre=nombre, tipo=tipo)
     db_session.add(categoria)
     db_session.commit()
     db_session.refresh(categoria)
@@ -91,7 +91,7 @@ def test_actualizar_producto_reemplaza_categorias_no_las_suma(client, db_session
     aires = _crear_categoria(db_session, "Aires", "equipo")
     cafeteras = _crear_categoria(db_session, "Cafeteras", "equipo")
 
-    producto = models.Producto(
+    producto = models.Product(
         proveedor_id=proveedor.id, marca="Surrey", modelo="3000F", tipo="equipo", precio=150000
     )
     producto.categorias = [aires]
@@ -113,31 +113,31 @@ def test_actualizar_producto_reemplaza_categorias_no_las_suma(client, db_session
 def test_eliminar_producto_usado_en_una_compra_es_rechazado(client, db_session, headers_admin):
     """
     Cubre la regla RESTRICT de DetalleCompra.producto_id (ver comentario en
-    models.py): no se puede borrar un producto que ya fue comprado, porque se
+    models/): no se puede borrar un producto que ya fue comprado, porque se
     perdería la trazabilidad de esa compra.
     """
     proveedor = _crear_proveedor(db_session)
-    producto = models.Producto(
+    producto = models.Product(
         proveedor_id=proveedor.id, marca="Surrey", modelo="3000F", tipo="equipo", precio=150000
     )
     db_session.add(producto)
 
-    usuario = models.Usuario(nombre_usuario="autor_compra_test", hashed_password="x", rol="admin")
-    proyecto = models.Proyecto(
+    usuario = models.User(nombre_usuario="autor_compra_test", hashed_password="x", rol="admin")
+    proyecto = models.Project(
         nombre="Proyecto Test",
         direccion="Calle Falsa 123",
         fecha_inicio=date(2026, 1, 1),
         estado="en_curso",
         precio_acordado_usd=1000000,
     )
-    fase = models.Fase(nombre="Fase Test", estado="en_curso", proyecto=proyecto)
+    fase = models.Phase(nombre="Fase Test", estado="en_curso", proyecto=proyecto)
     db_session.add_all([usuario, proyecto, fase])
     db_session.commit()
     db_session.refresh(producto)
     db_session.refresh(fase)
     db_session.refresh(usuario)
 
-    compra = models.Compra(
+    compra = models.Purchase(
         fase_id=fase.id,
         proveedor_id=proveedor.id,
         usuario_id=usuario.id,
@@ -156,7 +156,7 @@ def test_eliminar_producto_usado_en_una_compra_es_rechazado(client, db_session, 
     db_session.commit()
     db_session.refresh(compra)
 
-    detalle = models.DetalleCompra(
+    detalle = models.PurchaseItem(
         compra_id=compra.id, producto_id=producto.id, cantidad=1, precio_unitario=150000
     )
     db_session.add(detalle)

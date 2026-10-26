@@ -4,7 +4,7 @@ GET /storage/reconciliacion (huérfanos y rotos) y POST
 /storage/reconciliacion/purgar.
 
 No pega contra el bucket de verdad: se mockea `listar_objetos_bucket` y
-`eliminar_comprobante` en el namespace de app.routes.storage (mismo patrón
+`eliminar_comprobante` en el namespace de app.api.files (mismo patrón
 que test_ia.py con extraer_comprobante), y se fuerza bucket_configurado=True
 pisando las 4 variables de las que depende esa property -- no se puede
 monkeypatchear la property en sí porque Settings no le define setter.
@@ -14,15 +14,15 @@ from datetime import date, datetime, timezone
 
 import pytest
 
-from app.auth.oAuth2 import NOMBRE_USUARIO_MANAGER, create_access_token
+from app.auth.oauth2 import NOMBRE_USUARIO_MANAGER, create_access_token
 from app.auth.verification import hash_password
-from app.config import settings
+from app.core.config import settings
 from app.db import models
 
 
 @pytest.fixture()
 def usuario_manager(db_session):
-    manager = models.Usuario(
+    manager = models.User(
         nombre_usuario=NOMBRE_USUARIO_MANAGER,
         hashed_password=hash_password("clave-de-test-123"),
         rol="lectura",
@@ -49,7 +49,7 @@ def bucket_configurado(monkeypatch):
 
 
 def _comprobante_gasto(db_session, archivo_path, usuario):
-    proyecto = models.Proyecto(
+    proyecto = models.Project(
         nombre="Proyecto Test",
         direccion="Calle Falsa 123",
         fecha_inicio=date(2026, 1, 1),
@@ -59,7 +59,7 @@ def _comprobante_gasto(db_session, archivo_path, usuario):
     db_session.add(proyecto)
     db_session.flush()
 
-    gasto = models.Gasto(
+    gasto = models.Expense(
         proyecto=proyecto,
         usuario_id=usuario.id,
         monto_ars=1000,
@@ -73,7 +73,7 @@ def _comprobante_gasto(db_session, archivo_path, usuario):
     db_session.add(gasto)
     db_session.flush()
 
-    comprobante = models.ComprobanteGasto(gasto=gasto, archivo_path=archivo_path)
+    comprobante = models.ExpenseReceipt(gasto=gasto, archivo_path=archivo_path)
     db_session.add(comprobante)
     db_session.commit()
     db_session.refresh(comprobante)
@@ -101,7 +101,7 @@ def test_un_admin_que_no_es_manager_no_puede_ver_la_reconciliacion(client, heade
 def test_objeto_sin_fila_en_db_es_huerfano(
     client, db_session, headers_manager, bucket_configurado, monkeypatch
 ):
-    import app.routes.storage as ruta_storage
+    import app.api.files as ruta_storage
 
     monkeypatch.setattr(
         ruta_storage, "listar_objetos_bucket", lambda: [_objeto_bucket("comprobantes_gasto/x/1.pdf")]
@@ -122,7 +122,7 @@ def test_objeto_sin_fila_en_db_es_huerfano(
 def test_objeto_con_fila_en_db_no_es_huerfano(
     client, db_session, headers_manager, usuario_admin, bucket_configurado, monkeypatch
 ):
-    import app.routes.storage as ruta_storage
+    import app.api.files as ruta_storage
 
     comprobante = _comprobante_gasto(db_session, "comprobantes_gasto/g1/real.pdf", usuario_admin)
     monkeypatch.setattr(
@@ -138,7 +138,7 @@ def test_objeto_con_fila_en_db_no_es_huerfano(
 def test_fila_en_db_sin_objeto_en_bucket_es_rota(
     client, db_session, headers_manager, usuario_admin, bucket_configurado, monkeypatch
 ):
-    import app.routes.storage as ruta_storage
+    import app.api.files as ruta_storage
 
     comprobante = _comprobante_gasto(db_session, "comprobantes_gasto/g1/roto.pdf", usuario_admin)
     monkeypatch.setattr(ruta_storage, "listar_objetos_bucket", lambda: [])
@@ -173,7 +173,7 @@ def test_lista_de_claves_vacia_es_rechazada(client, headers_manager, bucket_conf
 def test_purga_una_clave_huerfana(
     client, db_session, headers_manager, usuario_manager, bucket_configurado, monkeypatch
 ):
-    import app.routes.storage as ruta_storage
+    import app.api.files as ruta_storage
 
     borradas = []
     monkeypatch.setattr(ruta_storage, "eliminar_comprobante", lambda clave: borradas.append(clave))
@@ -194,7 +194,7 @@ def test_purga_una_clave_huerfana(
 def test_no_purga_una_clave_que_en_realidad_tiene_fila_en_db(
     client, db_session, headers_manager, usuario_admin, bucket_configurado, monkeypatch
 ):
-    import app.routes.storage as ruta_storage
+    import app.api.files as ruta_storage
 
     comprobante = _comprobante_gasto(db_session, "comprobantes_gasto/g1/real.pdf", usuario_admin)
     monkeypatch.setattr(
@@ -218,7 +218,7 @@ def test_una_purga_fallida_queda_omitida_sin_romper_el_resto(
 ):
     from fastapi import HTTPException
 
-    import app.routes.storage as ruta_storage
+    import app.api.files as ruta_storage
 
     def _eliminar(clave):
         if clave == "falla.pdf":
@@ -240,7 +240,7 @@ def test_una_purga_fallida_queda_omitida_sin_romper_el_resto(
 def test_purgar_deja_fila_de_auditoria_con_las_claves_purgadas(
     client, db_session, headers_manager, usuario_manager, bucket_configurado, monkeypatch
 ):
-    import app.routes.storage as ruta_storage
+    import app.api.files as ruta_storage
 
     monkeypatch.setattr(ruta_storage, "eliminar_comprobante", lambda clave: None)
 
@@ -250,7 +250,7 @@ def test_purgar_deja_fila_de_auditoria_con_las_claves_purgadas(
         headers=headers_manager,
     )
 
-    fila = db_session.query(models.Auditoria).one()
+    fila = db_session.query(models.AuditLog).one()
     assert fila.accion == "purgar huérfanos del bucket"
     assert fila.tipo_recurso == "ArchivoBucket"
     assert fila.usuario_id == usuario_manager.id
@@ -260,7 +260,7 @@ def test_purgar_deja_fila_de_auditoria_con_las_claves_purgadas(
 def test_purgar_sin_nada_purgado_no_deja_fila_de_auditoria(
     client, db_session, headers_manager, usuario_admin, bucket_configurado, monkeypatch
 ):
-    import app.routes.storage as ruta_storage
+    import app.api.files as ruta_storage
 
     comprobante = _comprobante_gasto(db_session, "comprobantes_gasto/g1/real.pdf", usuario_admin)
     monkeypatch.setattr(
@@ -273,4 +273,4 @@ def test_purgar_sin_nada_purgado_no_deja_fila_de_auditoria(
         headers=headers_manager,
     )
 
-    assert db_session.query(models.Auditoria).count() == 0
+    assert db_session.query(models.AuditLog).count() == 0

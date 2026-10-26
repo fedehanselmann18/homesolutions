@@ -133,7 +133,7 @@ export const useUltimaCotizacion = ({ tipo, fecha } = {}) =>
  * Cotización de referencia para mostrar el precio acordado de un proyecto en
  * pesos: la última del tipo de dólar con que se acordó (si se registró y hay
  * alguna), si no la última de cualquier tipo. Mismo criterio que el PDF
- * (routes/proyectos.py), así la app y el reporte muestran el mismo número.
+ * (app/api/projects.py), así la app y el reporte muestran el mismo número.
  */
 export function useCotizacionActual(proyecto) {
   const tipo = proyecto?.tipo_cambio_acordado ?? null;

@@ -2,17 +2,17 @@
 Tests de /ia/leer-catalogo.
 
 Mismo patrón que test_ia.py: el endpoint se prueba mockeando `leer_catalogo`
-en el namespace de app.routes.ia (sin pegarle a Gemini de verdad). La lógica
+en el namespace de app.api.ai (sin pegarle a Gemini de verdad). La lógica
 de _validar_y_limpiar (matcheo de proveedor, clasificación de productos,
 descarte de filas inválidas) se prueba aparte, directo contra las funciones
-puras de app.ia.catalogo, sin mock.
+puras de app.ai.catalog, sin mock.
 """
 
 import io
 import uuid
 import zipfile
 
-from app.ia.catalogo import LecturaCatalogoError, _validar_y_limpiar
+from app.ai.catalog import CatalogReadError, _validar_y_limpiar
 
 ARCHIVO_PDF_FALSO = ("catalogo.pdf", io.BytesIO(b"%PDF-1.4 contenido falso"), "application/pdf")
 
@@ -49,13 +49,13 @@ def test_extension_no_permitida(client, headers_admin):
 
 
 def test_xlsx_es_una_extension_permitida(client, headers_admin, monkeypatch):
-    import app.routes.ia as ruta_ia
+    import app.api.ai as ruta_ia
     from app import schemas
 
     monkeypatch.setattr(
         ruta_ia,
         "leer_catalogo",
-        lambda **kwargs: schemas.IALecturaCatalogo(),
+        lambda **kwargs: schemas.AICatalogReading(),
     )
     # Un .zip de verdad (un .xlsx lo es): la firma sola ya no alcanza, porque
     # antes de leerlo se revisa el índice del zip (ver _validar_xlsx_descomprimido).
@@ -73,13 +73,13 @@ def test_xlsx_es_una_extension_permitida(client, headers_admin, monkeypatch):
 
 
 def test_csv_no_necesita_firma_binaria(client, headers_admin, monkeypatch):
-    import app.routes.ia as ruta_ia
+    import app.api.ai as ruta_ia
     from app import schemas
 
     monkeypatch.setattr(
         ruta_ia,
         "leer_catalogo",
-        lambda **kwargs: schemas.IALecturaCatalogo(),
+        lambda **kwargs: schemas.AICatalogReading(),
     )
     archivo = ("catalogo.csv", io.BytesIO(b"marca,modelo,precio\nBGH,Split,100000"), "text/csv")
     resp = client.post(
@@ -92,7 +92,7 @@ def test_csv_no_necesita_firma_binaria(client, headers_admin, monkeypatch):
 
 
 def test_archivo_supera_tamanio_maximo(client, headers_admin, monkeypatch):
-    import app.routes.ia as ruta_ia
+    import app.api.ai as ruta_ia
 
     monkeypatch.setattr(ruta_ia, "TAMANIO_MAXIMO_BYTES", 10)
     archivo = ("catalogo.pdf", io.BytesIO(b"contenido mas largo que 10 bytes"), "application/pdf")
@@ -107,10 +107,10 @@ def test_archivo_supera_tamanio_maximo(client, headers_admin, monkeypatch):
 
 
 def test_lectura_con_error_de_ia_da_502(client, headers_admin, monkeypatch):
-    import app.routes.ia as ruta_ia
+    import app.api.ai as ruta_ia
 
     def _mock_error(**kwargs):
-        raise LecturaCatalogoError("Falta configurar GEMINI_API_KEY en el .env del backend.")
+        raise CatalogReadError("Falta configurar GEMINI_API_KEY en el .env del backend.")
 
     monkeypatch.setattr(ruta_ia, "leer_catalogo", _mock_error)
 
@@ -125,7 +125,7 @@ def test_lectura_con_error_de_ia_da_502(client, headers_admin, monkeypatch):
 
 
 def test_proveedor_id_evita_resolver_proveedor(client, headers_admin, monkeypatch):
-    import app.routes.ia as ruta_ia
+    import app.api.ai as ruta_ia
 
     capturado = {}
 
@@ -133,7 +133,7 @@ def test_proveedor_id_evita_resolver_proveedor(client, headers_admin, monkeypatc
         capturado.update(kwargs)
         from app import schemas
 
-        return schemas.IALecturaCatalogo()
+        return schemas.AICatalogReading()
 
     monkeypatch.setattr(ruta_ia, "leer_catalogo", _mock)
 

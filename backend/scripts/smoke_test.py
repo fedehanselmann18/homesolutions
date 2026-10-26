@@ -18,6 +18,7 @@ Uso:
 Se puede correr después de cada deploy nuevo (Railway y/o Vercel) para
 confirmar que todo sigue andando antes de ponerse a probar a mano.
 """
+
 import argparse
 import json
 import sys
@@ -58,9 +59,19 @@ def chequeo(nombre, fn):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--backend", default=BACKEND_DEFAULT, help="URL del backend (default: el dominio propio de producción)")
-    parser.add_argument("--frontend", default=FRONTEND_DEFAULT, help="URL del frontend (default: el dominio propio de producción)")
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "--backend",
+        default=BACKEND_DEFAULT,
+        help="URL del backend (default: el dominio propio de producción)",
+    )
+    parser.add_argument(
+        "--frontend",
+        default=FRONTEND_DEFAULT,
+        help="URL del frontend (default: el dominio propio de producción)",
+    )
     args = parser.parse_args()
     backend = args.backend.rstrip("/")
     frontend = args.frontend.rstrip("/")
@@ -127,7 +138,7 @@ def main():
     def check_frontend():
         status, _, body = get(f"{frontend}/")
         assert status == 200, f"status {status}"
-        assert b'id="root"' in body, "no parece la SPA de HomeSolutions (sin <div id=\"root\">)"
+        assert b'id="root"' in body, 'no parece la SPA de HomeSolutions (sin <div id="root">)'
 
     resultados = [
         chequeo("Backend responde en /", check_root),
